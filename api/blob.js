@@ -17,6 +17,60 @@ function isAdmin(username) { const allowed = String(process.env[ADMIN_ENV] || ''
 function validLessonKey(v) { return /^[a-zA-Z0-9._:-]{1,180}$/.test(String(v||'')); }
 function parseJsonBody(req){ let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}} return body; }
 
+function validStudentPathname(v) {
+  const p = String(v || '').trim();
+  return p.startsWith('student-library/') &&
+    p.length <= 500 &&
+    !p.includes('..') &&
+    !p.includes('\\') &&
+    !p.includes('\r') &&
+    !p.includes('\n');
+}
+
+async function studentLibraryDownload(req, res) {
+  const u = new URL(req.url, 'http://localhost');
+  const pathname = u.searchParams.get('pathname') || '';
+  if (!validStudentPathname(pathname)) {
+    return sendJson(res, 400, { ok: false, message: 'Đường dẫn tài liệu không hợp lệ.' });
+  }
+
+  const session = await getSession(req);
+  if (!session) return sendJson(res, 401, { ok: false, message: 'Bạn cần đăng nhập để tải tài liệu.' });
+
+  // Verify the pathname belongs to a document currently registered in the student library.
+  const redis = getRedis();
+  const raw = await redis.lrange('phuc:student-library', 0, 499);
+  const items = raw.map(x => {
+    if (!x) return null;
+    if (typeof x === 'object') return x;
+    try { return JSON.parse(x); } catch { return null; }
+  }).filter(Boolean);
+  const item = items.find(x => String(x.pathname || '') === pathname);
+  if (!item) {
+    return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài liệu.' });
+  }
+
+  const result = await getBlob(pathname, { access: 'private' });
+  if (!result || result.statusCode !== 200) {
+    return sendJson(res, 404, { ok: false, message: 'File không còn tồn tại trên máy chủ.' });
+  }
+
+  const originalName = clean(item.original_name, 180) || clean(result.blob?.pathname, 180).split('/').pop() || 'tai-lieu';
+  const mime = result.blob?.contentType || clean(item.mime, 120) || 'application/octet-stream';
+  const size = Number(result.blob?.size || item.size || 0);
+
+  res.statusCode = 200;
+  res.setHeader('Content-Type', mime);
+  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(originalName)}`);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'private, no-store');
+  if (Number.isFinite(size) && size > 0) res.setHeader('Content-Length', String(size));
+  if (result.blob?.etag) res.setHeader('ETag', result.blob.etag);
+
+  for await (const chunk of result.stream) res.write(Buffer.from(chunk));
+  return res.end();
+}
+
 async function lessonStatus(req,res){
   const u=new URL(req.url,'http://localhost'); const key=clean(u.searchParams.get('lessonKey'),180); const download=u.searchParams.get('download')==='1';
   if(!validLessonKey(key)) return sendJson(res,400,{ok:false,message:'lessonKey không hợp lệ.'});
@@ -38,7 +92,12 @@ async function lessonStatus(req,res){
 
 module.exports = async function handler(req,res){
   try{
-    if(req.method==='GET' && String(new URL(req.url,'http://localhost').searchParams.get('kind'))==='lesson-pdf') return lessonStatus(req,res);
+    if(req.method==='GET'){
+      const u = new URL(req.url,'http://localhost');
+      const kind = String(u.searchParams.get('kind') || '');
+      if(kind==='lesson-pdf') return lessonStatus(req,res);
+      if(kind==='student-library' && u.searchParams.get('download')==='1') return studentLibraryDownload(req,res);
+    }
     if(req.method!=='POST') return sendJson(res,405,{ok:false,message:'Blob endpoint chỉ nhận POST.'});
     const session=await getSession(req); if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi upload.'});
     const body=parseJsonBody(req); const requestedKind=clean(body?.kind,40)||'student-library';

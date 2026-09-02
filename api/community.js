@@ -29,7 +29,15 @@ module.exports = async function handler(req, res) {
       }
       return true;
     });
-    return sendJson(res, 200, { ok: true, count: filtered.length, items: filtered.slice(0, 200) });
+    const base = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host || ''}`;
+    const output = filtered.slice(0, 200).map(item => ({
+      ...item,
+      // Always route private student-library files through the authenticated Blob download endpoint.
+      download_url: item.pathname
+        ? `/api/blob?kind=student-library&download=1&pathname=${encodeURIComponent(String(item.pathname))}`
+        : (item.download_url || item.url || '')
+    }));
+    return sendJson(res, 200, { ok: true, count: filtered.length, items: output });
   } catch (err) {
     console.error('community-api', err);
     const status = err?.code === 'REDIS_NOT_CONFIGURED' ? 503 : 500;
