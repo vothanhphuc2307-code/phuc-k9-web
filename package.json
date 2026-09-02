@@ -1,11 +1,14 @@
-# Vercel + Upstash Redis (connect an Upstash Redis database to the project)
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-
-# OpenAI
-OPENAI_API_KEY=
-# Optional. Defaults to gpt-5.6-luna
-OPENAI_MODEL=gpt-5.6-luna
-
-# Vercel Blob: creating a Blob store connected to the project injects this automatically
-# BLOB_READ_WRITE_TOKEN=
+{
+  "name": "hoc-cung-phuc-k9-vercel",
+  "private": true,
+  "version": "1.0.0",
+  "description": "HỌC CÙNG PHÚC K9 - Vercel backend for auth, AI tutor and student library",
+  "dependencies": {
+    "@upstash/redis": "^1.38.3",
+    "@vercel/blob": "^2.8.0",
+    "openai": "^6.48.0"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
