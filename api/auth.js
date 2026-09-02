@@ -18,6 +18,11 @@ const {
   requireCsrf
 } = require('../lib/auth');
 
+function adminUser(username) {
+  const raw = String(process.env.ADMIN_USERNAME || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  return raw.length > 0 && raw.includes(String(username || '').trim().toLowerCase());
+}
+
 function updateStreak(user, now = new Date()) {
   const old = Number(user.streak || 1);
   if (!user.last_active) return 1;
@@ -35,10 +40,10 @@ module.exports = async function handler(req, res) {
     const csrf = session?.csrf || await getCsrf(req, res);
 
     if (action === 'me' && req.method === 'GET') {
-      if (!session) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf });
+      if (!session) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
       setCookie(res, 'phuc_csrf', session.csrf || csrf, { httpOnly: false, maxAge: 60 * 60 * 24 * 30 });
       const user = await redis.get(`${USER_PREFIX}${session.username}`);
-      return sendJson(res, 200, { ok: true, authenticated: !!user, user: safeUser(user), csrf: session.csrf || csrf });
+      return sendJson(res, 200, { ok: true, authenticated: !!user, user: safeUser(user), csrf: session.csrf || csrf, is_admin: adminUser(session.username) });
     }
 
     if (!['register', 'login', 'save-state', 'logout'].includes(action)) {
@@ -79,7 +84,7 @@ module.exports = async function handler(req, res) {
       const created = await redis.set(`${USER_PREFIX}${username}`, user, { nx: true });
       if (!created) return sendJson(res, 409, { ok: false, message: 'Tên đăng nhập đã tồn tại.' });
       await createSession(res, username, csrf);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, message: 'Tạo tài khoản thành công. Dữ liệu đã được lưu trên máy chủ.' });
+      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: adminUser(username), message: 'Tạo tài khoản thành công. Dữ liệu đã được lưu trên máy chủ.' });
     }
 
     if (action === 'login') {
@@ -94,7 +99,7 @@ module.exports = async function handler(req, res) {
       user.last_active = now.toISOString();
       await redis.set(`${USER_PREFIX}${username}`, user);
       await createSession(res, username, csrf);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, message: 'Đăng nhập thành công.' });
+      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: adminUser(username), message: 'Đăng nhập thành công.' });
     }
 
     if (action === 'save-state') {
