@@ -5,6 +5,7 @@ const {
   USER_PREFIX,
   parseCookies,
   clearCookie,
+  setCookie,
   sendJson,
   normalizeUsername,
   validUsername,
@@ -45,7 +46,9 @@ module.exports = async function handler(req, res) {
     }
     if (req.method !== 'POST') return sendJson(res, 405, { ok: false, message: 'API này chỉ nhận POST cho action này.' });
 
-    if (!requireCsrf(req, session, csrf)) {
+    // Login/register are intentionally allowed without a pre-existing CSRF session.
+    // These endpoints create a new session; CSRF is enforced for authenticated state changes.
+    if (!['register', 'login'].includes(action) && !requireCsrf(req, session, csrf)) {
       return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ. Hãy tải lại trang và thử lại.', csrf });
     }
 
