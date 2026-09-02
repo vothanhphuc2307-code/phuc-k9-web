@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
     console.error('ai-api', err);
     if (err?.code === 'OPENAI_NOT_CONFIGURED') return sendJson(res, 503, { ok: false, message: err.message });
     if (err?.status === 401) return sendJson(res, 502, { ok: false, message: 'OPENAI_API_KEY không hợp lệ hoặc đã hết quyền.' });
-    if (err?.status === 429) return sendJson(res, 429, { ok: false, message: 'OpenAI đang giới hạn lượt gọi. Thử lại sau ít giây.' });
+    if (err?.status === 429) { const code = err?.code || err?.error?.code || err?.body?.error?.code; if (code === 'insufficient_quota') return sendJson(res, 429, { ok: false, message: 'OpenAI API đang hết quota/credit. API key đúng nhưng tài khoản API cần có billing/credit.' }); return sendJson(res, 429, { ok: false, message: 'OpenAI đang giới hạn lượt gọi. Thử lại sau 5–10 giây.' }); }
     return sendJson(res, 500, { ok: false, message: 'AI Tutor gặp lỗi máy chủ. Kiểm tra OPENAI_API_KEY và OPENAI_MODEL.' });
   }
 };
