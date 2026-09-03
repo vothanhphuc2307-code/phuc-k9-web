@@ -6,7 +6,7 @@ const {
 } = require('../lib/auth');
 
 function adminUser(username) {
-  const raw = String(process.env.ADMIN_USERNAME || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
   return raw.length > 0 && raw.includes(String(username || '').trim().toLowerCase());
 }
 

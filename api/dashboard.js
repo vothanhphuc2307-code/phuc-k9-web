@@ -2,7 +2,7 @@ const { getRedis } = require('../lib/redis');
 const { USER_PREFIX, getSession, sendJson } = require('../lib/auth');
 
 function isAdmin(username) {
-  return String(process.env.ADMIN_USERNAME || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+  return String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
 }
 
 module.exports = async function handler(req, res) {
