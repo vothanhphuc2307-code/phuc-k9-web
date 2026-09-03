@@ -4,143 +4,122 @@ const {
   validUsername, hashPassword, verifyPassword, safeUser, createSession, getSession,
   getCsrf, requireCsrf
 } = require('../lib/auth');
+const crypto = require('crypto');
 
 function adminUser(username) {
   const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
-  return raw.length > 0 && raw.includes(String(username || '').trim().toLowerCase());
+  return raw.includes(String(username || '').trim().toLowerCase());
 }
-
+function dayKey(v){const d=v instanceof Date?v:new Date(v);return Number.isNaN(d.getTime())?null:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function updateStreak(user, now = new Date()) {
-  const old = Number(user.streak || 1);
+  const old = Math.max(1, Number(user.streak || 1));
   if (!user.last_active) return 1;
-  const a = new Date(user.last_active);
-  const day = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const diff = Math.round((day(now) - day(a)) / 86400000);
-  return diff === 1 ? old + 1 : diff > 1 ? 1 : old;
+  const prev = new Date(user.last_active); if (Number.isNaN(prev.getTime())) return 1;
+  const a=dayKey(prev),b=dayKey(now); if(!a||!b||a===b)return old;
+  const start=new Date(prev.getFullYear(),prev.getMonth(),prev.getDate());
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const diff=Math.round((today-start)/86400000);
+  return diff===1?old+1:diff>1?1:old;
 }
-
-async function adminStats(redis) {
-  let cursor = 0;
-  let users = 0;
-  let today = 0;
-  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
-  do {
-    const scan = await redis.scan(cursor, { match: `${USER_PREFIX}*`, count: 100 });
-    cursor = Number(scan?.[0] ?? 0);
-    const keys = Array.isArray(scan?.[1]) ? scan[1] : [];
-    if (keys.length) {
-      const values = await Promise.all(keys.map(k => redis.get(k).catch(() => null)));
-      values.forEach(u => {
-        if (!u) return;
-        users++;
-        if (u.last_active && new Date(u.last_active) >= dayStart) today++;
-      });
-    }
-  } while (cursor !== 0);
-  let uploads = 0;
-  try { uploads = Number(await redis.llen('phuc:student-library')) || 0; } catch {}
-  return { users, uploads, today, exam_attempts: null, exam_attempts_note: 'Lượt làm đề hiện chưa được lưu server-side.' };
-}
-
-module.exports = async function handler(req, res) {
-  try {
-    const action = String(req.query?.action || 'me').toLowerCase();
-    const redis = getRedis();
-    const session = await getSession(req);
-    const csrf = session?.csrf || await getCsrf(req, res);
-
-    if (action === 'me' && req.method === 'GET') {
-      if (!session) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
-      setCookie(res, 'phuc_csrf', session.csrf || csrf, { httpOnly: false, maxAge: 60 * 60 * 24 * 30 });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
-      const payload = { ok: true, authenticated: !!user, user: safeUser(user), csrf: session.csrf || csrf, is_admin: adminUser(session.username) };
-      if (payload.is_admin) {
-        try { payload.stats = await adminStats(redis); } catch (e) { console.error('auth-admin-stats', e); payload.stats = { users: null, uploads: null, today: null, exam_attempts: null }; }
-      }
-      return sendJson(res, 200, payload);
-    }
-
-    if (!['register', 'login', 'save-state', 'save-profile', 'logout'].includes(action)) {
-      return sendJson(res, 400, { ok: false, message: 'Hành động không hợp lệ.' });
-    }
-    if (req.method !== 'POST') return sendJson(res, 405, { ok: false, message: 'API này chỉ nhận POST cho action này.' });
-
-    if (!['register', 'login'].includes(action) && !requireCsrf(req, session, csrf)) {
-      return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ. Hãy tải lại trang và thử lại.', csrf });
-    }
-
-    let body = req.body || {};
-    if (typeof body === 'string') { try { body = JSON.parse(body || '{}'); } catch { body = {}; } }
-
-    if (action === 'register') {
-      const username = normalizeUsername(body.username);
-      const displayName = String(body.display_name || '').trim();
-      const password = String(body.password || '');
-      if (!validUsername(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập 3–40 ký tự, chỉ gồm chữ, số, dấu chấm, gạch ngang hoặc gạch dưới.' });
-      if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Họ và tên không hợp lệ.' });
-      if (password.length < 6 || password.length > 128) return sendJson(res, 422, { ok: false, message: 'Mật khẩu cần từ 6 đến 128 ký tự.' });
-      const { salt, hash } = hashPassword(password);
-      const now = new Date().toISOString();
-      const user = { username, display_name: displayName, salt, password_hash: hash, created_at: now, last_active: now, streak: 1, progress: { done: {}, resume: null, notes: {} }, settings: { preferred_grade: '2K9' }, google: { linked: false, email: null } };
-      const created = await redis.set(`${USER_PREFIX}${username}`, user, { nx: true });
-      if (!created) return sendJson(res, 409, { ok: false, message: 'Tên đăng nhập đã tồn tại.' });
-      await createSession(res, username, csrf);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: adminUser(username), message: 'Tạo tài khoản thành công. Dữ liệu đã được lưu trên máy chủ.' });
-    }
-
-    if (action === 'login') {
-      const username = normalizeUsername(body.username);
-      const password = String(body.password || '');
-      const user = await redis.get(`${USER_PREFIX}${username}`);
-      if (!user || !verifyPassword(password, user)) return sendJson(res, 401, { ok: false, message: 'Tên đăng nhập hoặc mật khẩu không đúng.', csrf });
-      const now = new Date();
-      user.streak = updateStreak(user, now);
-      user.last_active = now.toISOString();
-      await redis.set(`${USER_PREFIX}${username}`, user);
-      await createSession(res, username, csrf);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: adminUser(username), message: 'Đăng nhập thành công.' });
-    }
-
-    if (action === 'save-profile') {
-      if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.', csrf });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
-      if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
-      const displayName = String(body.display_name ?? user.display_name ?? '').trim();
-      const grade = String(body.preferred_grade ?? user.settings?.preferred_grade ?? '2K9').toUpperCase();
-      if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Tên hiển thị phải từ 2 đến 80 ký tự.', csrf });
-      if (!['2K9', '2K11', '2K12'].includes(grade)) return sendJson(res, 422, { ok: false, message: 'Khóa học ưu tiên không hợp lệ.', csrf });
-      user.display_name = displayName;
-      user.settings = { ...(user.settings || {}), preferred_grade: grade };
-      user.last_active = new Date().toISOString();
-      await redis.set(`${USER_PREFIX}${session.username}`, user);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf: session.csrf || csrf, is_admin: adminUser(session.username), message: 'Đã lưu cài đặt tài khoản.' });
-    }
-
-    if (action === 'save-state') {
-      if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.', csrf });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
-      if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
-      user.progress = {
-        done: body.done && typeof body.done === 'object' ? body.done : {},
-        resume: body.resume && typeof body.resume === 'object' ? body.resume : null,
-        notes: body.notes && typeof body.notes === 'object' ? body.notes : {}
-      };
-      user.last_active = new Date().toISOString();
-      await redis.set(`${USER_PREFIX}${session.username}`, user);
-      return sendJson(res, 200, { ok: true, user: safeUser(user), csrf: session.csrf || csrf });
-    }
-
-    if (action === 'logout') {
-      const cookies = parseCookies(req);
-      if (cookies.phuc_session) await redis.del(`phuc:session:${cookies.phuc_session}`);
-      clearCookie(res, 'phuc_session'); clearCookie(res, 'phuc_csrf');
-      return sendJson(res, 200, { ok: true, authenticated: false, user: null, message: 'Đã đăng xuất.' });
-    }
-
-    return sendJson(res, 400, { ok: false, message: 'Hành động không hợp lệ.' });
-  } catch (err) {
-    console.error('auth-api', err);
-    const status = err?.code === 'REDIS_NOT_CONFIGURED' ? 503 : 500;
-    return sendJson(res, status, { ok: false, message: status === 503 ? err.message : 'Lỗi máy chủ xác thực. Kiểm tra Environment Variables trên Vercel.' });
+async function touchUser(redis,user){
+  const now=new Date(); const next=updateStreak(user,now);
+  if(Number(user.streak||1)!==next || !user.last_active || dayKey(user.last_active)!==dayKey(now)){
+    user.streak=next;user.last_active=now.toISOString();await redis.set(`${USER_PREFIX}${user.username}`,user);
   }
+  return user;
+}
+function safeReturnTo(v){
+  try{const u=new URL(String(v||'/')); if(u.origin===new URL(process.env.APP_ORIGIN||'https://thanhphuc.vercel.app').origin) return u.href;}catch{}
+  return process.env.APP_ORIGIN||'https://thanhphuc.vercel.app/';
+}
+
+async function googleLinkStart(req,res,redis,session){
+  const clientId=process.env.GOOGLE_CLIENT_ID; const clientSecret=process.env.GOOGLE_CLIENT_SECRET;
+  if(!clientId||!clientSecret) return sendJson(res,503,{ok:false,message:'Google OAuth chưa được cấu hình. Thêm GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET và GOOGLE_REDIRECT_URI trên Vercel.'});
+  if(!session) return sendJson(res,401,{ok:false,message:'Hãy đăng nhập trước khi liên kết Google.'});
+  const redirect=process.env.GOOGLE_REDIRECT_URI; if(!redirect) return sendJson(res,503,{ok:false,message:'Thiếu GOOGLE_REDIRECT_URI trên Vercel.'});
+  const state=crypto.randomBytes(24).toString('hex');
+  await redis.set(`phuc:google-state:${state}`,{username:session.username,created_at:Date.now(),return_to:safeReturnTo(req.query?.return_to)},{ex:600});
+  const params=new URLSearchParams({client_id:clientId,redirect_uri:redirect,response_type:'code',scope:'openid email profile',state,access_type:'online',prompt:'select_account'});
+  res.writeHead(302,{Location:`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`});res.end();
+}
+async function googleCallback(req,res,redis){
+  const code=String(req.query?.code||'');const state=String(req.query?.state||'');
+  if(!code||!state) return sendJson(res,400,{ok:false,message:'Google callback thiếu code/state.'});
+  const rec=await redis.get(`phuc:google-state:${state}`); if(!rec) return sendJson(res,400,{ok:false,message:'Liên kết Google đã hết hạn. Hãy thử lại.'});
+  await redis.del(`phuc:google-state:${state}`);
+  const clientId=process.env.GOOGLE_CLIENT_ID,clientSecret=process.env.GOOGLE_CLIENT_SECRET,redirect=process.env.GOOGLE_REDIRECT_URI;
+  if(!clientId||!clientSecret||!redirect) return sendJson(res,503,{ok:false,message:'Google OAuth chưa được cấu hình đầy đủ.'});
+  const tokenResp=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,client_id:clientId,client_secret:clientSecret,redirect_uri:redirect,grant_type:'authorization_code'})});
+  if(!tokenResp.ok) throw new Error('Google token exchange failed');
+  const tok=await tokenResp.json();
+  const profileResp=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:`Bearer ${tok.access_token}`}});
+  if(!profileResp.ok) throw new Error('Google userinfo failed');
+  const gp=await profileResp.json();
+  const user=await redis.get(`${USER_PREFIX}${rec.username}`); if(!user) return sendJson(res,404,{ok:false,message:'Không tìm thấy tài khoản.'});
+  user.google={linked:true,sub:String(gp.sub||''),email:String(gp.email||'').slice(0,180),picture:String(gp.picture||'').slice(0,600)};
+  if(!user.avatar_url && gp.picture) user.avatar_url=String(gp.picture).slice(0,600);
+  user.last_active=new Date().toISOString(); await redis.set(`${USER_PREFIX}${user.username}`,user);
+  const to=safeReturnTo(rec.return_to); res.writeHead(302,{Location:to+(to.includes('?')?'&':'?')+'google_linked=1'});res.end();
+}
+
+module.exports = async function handler(req,res){
+  try{
+    const action=String(req.query?.action||'me').toLowerCase();
+    const redis=getRedis(); const session=await getSession(req); const csrf=session?.csrf||await getCsrf(req,res);
+    if(action==='google-link' && req.method==='GET') return await googleLinkStart(req,res,redis,session);
+    if(action==='google-callback' && req.method==='GET') return await googleCallback(req,res,redis);
+
+    if(action==='me' && req.method==='GET'){
+      if(!session)return sendJson(res,200,{ok:true,authenticated:false,user:null,csrf,is_admin:false});
+      setCookie(res,'phuc_csrf',session.csrf||csrf,{httpOnly:false,maxAge:60*60*24*30});
+      const user=await redis.get(`${USER_PREFIX}${session.username}`); if(!user)return sendJson(res,200,{ok:true,authenticated:false,user:null,csrf,is_admin:false});
+      const fresh=await touchUser(redis,user);
+      return sendJson(res,200,{ok:true,authenticated:true,user:safeUser(fresh),csrf:session.csrf||csrf,is_admin:adminUser(session.username)});
+    }
+    if(!['register','login','save-state','save-profile','logout'].includes(action))return sendJson(res,400,{ok:false,message:'Hành động không hợp lệ.'});
+    if(req.method!=='POST')return sendJson(res,405,{ok:false,message:'API này chỉ nhận POST cho action này.'});
+    if(!['register','login'].includes(action)&&!requireCsrf(req,session,csrf))return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.',csrf});
+    let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}}
+    if(action==='register'){
+      const username=normalizeUsername(body.username),displayName=String(body.display_name||'').trim(),password=String(body.password||'');
+      if(!validUsername(username))return sendJson(res,422,{ok:false,message:'Tên đăng nhập không hợp lệ.'});
+      if(displayName.length<2||displayName.length>80)return sendJson(res,422,{ok:false,message:'Họ và tên không hợp lệ.'});
+      if(password.length<6||password.length>128)return sendJson(res,422,{ok:false,message:'Mật khẩu cần từ 6 đến 128 ký tự.'});
+      const {salt,hash}=hashPassword(password),now=new Date().toISOString();
+      const user={username,display_name:displayName,salt,password_hash:hash,created_at:now,last_active:now,streak:1,progress:{done:{},resume:null,notes:{}},settings:{preferred_grade:'2K9'},google:{linked:false,email:null},avatar_data:null,avatar_url:null};
+      const created=await redis.set(`${USER_PREFIX}${username}`,user,{nx:true});if(!created)return sendJson(res,409,{ok:false,message:'Tên đăng nhập đã tồn tại.'});
+      await createSession(res,username,csrf);return sendJson(res,200,{ok:true,authenticated:true,user:safeUser(user),csrf,is_admin:adminUser(username),message:'Tạo tài khoản thành công.'});
+    }
+    if(action==='login'){
+      const username=normalizeUsername(body.username),password=String(body.password||'');const user=await redis.get(`${USER_PREFIX}${username}`);
+      if(!user||!verifyPassword(password,user))return sendJson(res,401,{ok:false,message:'Tên đăng nhập hoặc mật khẩu không đúng.',csrf});
+      user.streak=updateStreak(user,new Date());user.last_active=new Date().toISOString();await redis.set(`${USER_PREFIX}${username}`,user);await createSession(res,username,csrf);
+      return sendJson(res,200,{ok:true,authenticated:true,user:safeUser(user),csrf,is_admin:adminUser(username),message:'Đăng nhập thành công.'});
+    }
+    if(action==='save-profile'){
+      if(!session)return sendJson(res,401,{ok:false,message:'Phiên đăng nhập đã hết.',csrf});
+      const user=await redis.get(`${USER_PREFIX}${session.username}`);if(!user)return sendJson(res,401,{ok:false,message:'Không tìm thấy tài khoản.',csrf});
+      const displayName=String(body.display_name??user.display_name??'').trim(),preferred=String(body.preferred_grade??user.settings?.preferred_grade??'2K9').toUpperCase();
+      if(displayName.length<2||displayName.length>80)return sendJson(res,422,{ok:false,message:'Tên hiển thị không hợp lệ.',csrf});
+      if(!['2K9','2K11','2K12'].includes(preferred))return sendJson(res,422,{ok:false,message:'Khối ưu tiên không hợp lệ.',csrf});
+      if(Object.prototype.hasOwnProperty.call(body,'avatar_data')){
+        const a=String(body.avatar_data||'');
+        if(a && (!/^data:image\/jpeg;base64,/.test(a) || a.length>220000))return sendJson(res,422,{ok:false,message:'Ảnh đại diện không hợp lệ hoặc quá lớn.',csrf});
+        user.avatar_data=a||null;
+      }
+      user.display_name=displayName;user.settings={...(user.settings||{}),preferred_grade:preferred};user.last_active=new Date().toISOString();await redis.set(`${USER_PREFIX}${session.username}`,user);
+      return sendJson(res,200,{ok:true,user:safeUser(user),csrf:session.csrf||csrf,is_admin:adminUser(session.username),message:'Đã lưu cài đặt tài khoản.'});
+    }
+    if(action==='save-state'){
+      if(!session)return sendJson(res,401,{ok:false,message:'Phiên đăng nhập đã hết.',csrf});
+      const user=await redis.get(`${USER_PREFIX}${session.username}`);if(!user)return sendJson(res,401,{ok:false,message:'Không tìm thấy tài khoản.',csrf});
+      user.streak=updateStreak(user,new Date());user.last_active=new Date().toISOString();user.progress={done:body.done&&typeof body.done==='object'?body.done:{},resume:body.resume&&typeof body.resume==='object'?body.resume:null,notes:body.notes&&typeof body.notes==='object'?body.notes:{}};await redis.set(`${USER_PREFIX}${session.username}`,user);
+      return sendJson(res,200,{ok:true,user:safeUser(user),csrf:session.csrf||csrf,is_admin:adminUser(session.username)});
+    }
+    if(action==='logout'){
+      const cookies=parseCookies(req);if(cookies.phuc_session)await redis.del(`phuc:session:${cookies.phuc_session}`);clearCookie(res,'phuc_session');clearCookie(res,'phuc_csrf');return sendJson(res,200,{ok:true,authenticated:false,user:null,message:'Đã đăng xuất.'});
+    }
+    return sendJson(res,400,{ok:false,message:'Hành động không hợp lệ.'});
+  }catch(err){console.error('auth-api',err);const status=err?.code==='REDIS_NOT_CONFIGURED'?503:500;return sendJson(res,status,{ok:false,message:status===503?err.message:'Lỗi máy chủ xác thực.'});}
 };
