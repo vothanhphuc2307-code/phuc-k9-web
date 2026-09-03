@@ -471,6 +471,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<style id="phuck9-header-slim-v4">
+/* V4: desktop navigation lives in the left sidebar; the top header is intentionally minimal. */
+@media(min-width:1024px){
+  header .legacy-desktop-nav, header .compact-desktop-nav{display:none!important;}
+  header .max-w-7xl{height:64px!important;max-width:none!important;padding-left:18px!important;padding-right:18px!important;}
+  body{padding-left:246px;}
+  #main-content{max-width:1400px!important;}
+}
+#phuck9-header-tools{display:flex;align-items:center;gap:7px;min-width:0;}
+#phuck9-header-tools button,#phuck9-header-tools a{min-width:38px;min-height:38px;}
+@media(max-width:1023px){#phuck9-header-tools{gap:5px}.phuck9-header-wordmark{display:none!important}.phuck9-top-donate-text{display:none!important}}
+.phuck9-top-avatar{width:38px;height:38px;border-radius:12px;object-fit:cover;background:#eef2ff;border:1px solid #c7d2fe;display:block;}
+html.dark-mode header{background:rgba(15,23,42,.96)!important;border-color:#334155!important}
+html.dark-mode header .text-slate-900,html.dark-mode header .text-slate-700{color:#f8fafc!important}
+@media(max-width:1023px){body{padding-left:0}}
+</style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen custom-scrollbar">
 <!-- HEADER / NAVIGATION -->
@@ -645,6 +662,34 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </button>
 </div>
 </div>
+
+<style id="phuck9-sidebar-collapse-v4">
+@media(min-width:1024px){
+ #phuck9-sidebar{width:246px;transition:width .2s ease,transform .2s ease;}
+ #phuck9-sidebar.phuck9-mini{width:72px;}
+ #phuck9-sidebar.phuck9-mini .side-brand,#phuck9-sidebar.phuck9-mini .side-section,#phuck9-sidebar.phuck9-mini .side-btn span,#phuck9-sidebar.phuck9-mini .side-foot{display:none!important;}
+ #phuck9-sidebar.phuck9-mini .side-head{justify-content:center;padding:10px;}
+ #phuck9-sidebar.phuck9-mini .side-btn{justify-content:center;padding:10px 8px;}
+ #phuck9-sidebar.phuck9-mini .side-btn i{width:auto;}
+ body.phuck9-sidebar-mini{padding-left:72px;}
+ body.phuck9-sidebar-mini #main-content{max-width:1480px!important;}
+ .phuck9-side-toggle{width:36px;height:36px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#475569;display:grid;place-items:center;cursor:pointer;flex:none;}
+ html.dark-mode .phuck9-side-toggle{background:#0f172a;border-color:#334155;color:#cbd5e1}
+}
+</style>
+<script id="phuck9-sidebar-collapse-v4-js">
+(function(){
+  function mount(){const side=document.getElementById('phuck9-sidebar');if(!side||side.querySelector('.phuck9-side-toggle'))return;
+    const head=side.querySelector('.side-head'); if(!head)return;
+    const b=document.createElement('button'); b.className='phuck9-side-toggle'; b.type='button'; b.setAttribute('aria-label','Thu gọn menu'); b.innerHTML='<i class="fa-solid fa-chevron-left"></i>';
+    head.appendChild(b);
+    let mini=false; try{mini=localStorage.getItem('phuc_sidebar_mini')==='1'}catch(e){}
+    const apply=()=>{side.classList.toggle('phuck9-mini',mini);document.body.classList.toggle('phuck9-sidebar-mini',mini);b.innerHTML=mini?'<i class="fa-solid fa-chevron-right"></i>':'<i class="fa-solid fa-chevron-left"></i>';b.title=mini?'Mở rộng menu':'Thu gọn menu';};
+    b.addEventListener('click',()=>{mini=!mini;try{localStorage.setItem('phuc_sidebar_mini',mini?'1':'0')}catch(e){};apply();});apply();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true}); else setTimeout(mount,120); setTimeout(mount,1200);
+})();
+</script>
 <!-- MAIN CONTENT AREA -->
 <main id="main-content" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 <!-- TAB 1: TRANG CHỦ (HOME) / HOMEPAGE V2 -->
@@ -1243,6 +1288,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <div class="phuc-settings-head"><div><div class="phuc-dash-kicker">ACCOUNT SETTINGS</div><h3>Cài đặt tài khoản</h3></div><button type="button" onclick="closePhucAccountSettings()" aria-label="Đóng">×</button></div>
     <div class="phuc-settings-grid">
       <label><span>Tên hiển thị</span><input id="phuc-setting-display" type="text" autocomplete="nickname" placeholder="Tên của bạn"></label>
+      <div class="phuc-avatar-settings-card">
+        <div class="phuc-avatar-settings-head"><div><b>Ảnh đại diện</b><p>Ảnh được nén trên trình duyệt trước khi lưu. Tối đa 160 KB sau nén.</p></div><img id="phuc-setting-avatar-preview" class="phuc-avatar-settings-preview" alt="Ảnh đại diện hiện tại"/></div>
+        <div class="phuc-avatar-actions"><label class="phuc-avatar-file"><input id="phuc-setting-avatar-file" type="file" accept="image/jpeg,image/png,image/webp"/> <i class="fa-solid fa-image"></i> Đổi ảnh</label><button type="button" class="phuc-dash-btn" id="phuc-avatar-remove">Xóa ảnh</button></div>
+      </div>
       <label><span>Tài khoản</span><input id="phuc-setting-account" type="text" readonly></label>
       <label><span>Khóa học ưu tiên</span><select id="phuc-setting-grade"><option value="2K9">2K9</option><option value="2K11">2K11</option><option value="2K12">2K12</option></select></label>
       <div class="phuc-google-box"><div><b>Liên kết Google</b><p>Đăng nhập Google nhanh và đồng bộ tài khoản cần bật Google OAuth ở backend.</p></div><button type="button" id="phuc-google-link-btn" class="phuc-dash-btn" onclick="requestPhucGoogleLink()"><i class="fa-brands fa-google"></i> Liên kết</button></div>
@@ -3665,6 +3714,34 @@ function initDgnlMaster(){renderDgnlMasterTabs();renderDgnlMasterOverview();rend
 window.addEventListener('load',initDgnlMaster);
 </script>
 </section>
+<style id="phuck9-exam-quality-v4">
+.exam-v4-hero{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 52%,#7c2d12 100%);border-radius:24px;color:#fff;padding:22px;position:relative;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,.14)}
+.exam-v4-hero:after{content:'';position:absolute;inset:auto -80px -110px auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.24),transparent 68%);pointer-events:none}
+.exam-v4-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}.exam-v4-kpi{padding:10px 12px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);border-radius:14px}.exam-v4-kpi b{display:block;font-size:15px}.exam-v4-kpi span{display:block;font-size:8px;color:#cbd5e1;margin-top:2px;font-weight:800}
+.exam-v4-quality{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;background:#ecfdf5;color:#047857;border:1px solid #bbf7d0;font-size:8px;font-weight:1000}
+.exam-v4-card .exam-v4-thumb{height:92px;border-radius:14px;background:linear-gradient(135deg,#eef2ff,#f8fafc);display:grid;place-items:center;color:#6366f1;font-size:30px;overflow:hidden}.exam-v4-card .exam-v4-thumb img{width:100%;height:100%;object-fit:cover}
+.exam-v4-card .exam-v4-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.exam-v4-meta span{font-size:8px;font-weight:900;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 6px}.exam-v4-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:12px;transition:.18s;box-shadow:0 5px 18px rgba(15,23,42,.035)}.exam-v4-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(15,23,42,.08);border-color:#c7d2fe}.exam-v4-card h4{font-size:12px;font-weight:1000;color:#0f172a;line-height:1.4;margin-top:10px}.exam-v4-card p{font-size:9px;color:#64748b;line-height:1.45;margin-top:4px}.exam-v4-action{display:flex;gap:7px;margin-top:11px}.exam-v4-action button{flex:1;min-height:40px;border-radius:11px;border:1px solid #e2e8f0;font-size:9px;font-weight:1000}.exam-v4-action .primary{background:#4f46e5;color:#fff;border-color:#4f46e5}.exam-v4-action .secondary{background:#fff;color:#475569}
+.exam-v4-filters{position:sticky;top:64px;z-index:25;background:rgba(248,250,252,.94);backdrop-filter:blur(8px);padding:7px 0}.exam-v4-filterbar{display:flex;gap:8px;align-items:center;overflow:auto;padding-bottom:2px}.exam-v4-filterbar button{white-space:nowrap;min-height:40px;border:1px solid #e2e8f0;background:#fff;border-radius:11px;padding:7px 11px;font-size:9px;font-weight:1000;color:#475569}.exam-v4-filterbar button.active{background:#312e81;color:#fff;border-color:#312e81}.exam-v4-filter-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:8px}.exam-v4-search{width:100%;min-height:42px;border:1px solid #dbe3ef;background:#fff;border-radius:11px;padding:9px 11px;font-size:10px;outline:none}.exam-v4-sort{min-height:42px;border:1px solid #dbe3ef;background:#fff;border-radius:11px;padding:8px 10px;font-size:9px;font-weight:900}
+@media(max-width:700px){.exam-v4-kpis{grid-template-columns:repeat(2,1fr)}.exam-v4-filter-row{grid-template-columns:1fr}.exam-v4-filters{top:60px}.exam-v4-hero{padding:17px;border-radius:20px}.exam-v4-hero h2{font-size:1.42rem}.exam-v4-card .exam-v4-thumb{height:78px}}
+html.dark-mode .exam-v4-card{background:#0f172a;border-color:#334155}html.dark-mode .exam-v4-card h4{color:#f8fafc}html.dark-mode .exam-v4-card p{color:#94a3b8}html.dark-mode .exam-v4-meta span,html.dark-mode .exam-v4-action .secondary,html.dark-mode .exam-v4-search,html.dark-mode .exam-v4-sort,.dark-mode .exam-v4-filterbar button{background:#111827;border-color:#334155;color:#cbd5e1}
+@media(prefers-reduced-motion:reduce){.exam-v4-card{transition:none!important;transform:none!important}}
+</style>
+<script id="phuck9-exam-v4-ui">
+(function(){
+ const qualityMeta={math:['22 câu • 90 phút','Mô phỏng phòng thi THPT'],english:['50 phút','Reading • Grammar • Vocabulary'],physics:['50 phút','Trắc nghiệm + Đ/S + TLN'],chemistry:['50 phút','Trắc nghiệm + Đ/S + TLN'],k11math:['45 phút','2K11 • Lớp 10'],k11physics:['45 phút','2K11 • Lớp 10'],k11chemistry:['45 phút','2K11 • Lớp 10'],g10math:['120 phút','2K12 • Ôn thi vào 10']};
+ function decorate(){const root=document.getElementById('tab-exam-bank');if(!root||root.dataset.v4==='1')return; root.dataset.v4='1';
+  const hero=root.querySelector('.exam-bank-hero'); if(hero){hero.outerHTML='<div class="exam-v4-hero"><div class="relative z-10 max-w-5xl"><div class="flex flex-wrap gap-2"><span class="exam-pill bg-white/10 border border-white/20"><i class="fa-solid fa-layer-group mr-1"></i> KHO ĐỀ CÓ HỆ THỐNG</span><span class="exam-pill bg-emerald-400 text-slate-950">Chấm ngay • Chữa ngay</span></div><h2 class="text-2xl sm:text-4xl font-black mt-3">Luyện đề theo đúng mục tiêu — chọn môn, chọn đề, làm bài, xem mình yếu ở đâu</h2><p class="text-xs sm:text-sm text-slate-200 mt-3 max-w-3xl">Mỗi đề có thời gian, cấu trúc và màn hình chữa riêng. Kết quả ưu tiên cho học viên biết <b>đúng phần nào, sai dạng nào, nên ôn gì tiếp theo</b>.</p><div class="exam-v4-kpis"><div class="exam-v4-kpi"><b>⏱ Có bấm giờ</b><span>Giữ nhịp làm bài</span></div><div class="exam-v4-kpi"><b>✓ Chấm theo phần</b><span>TN • Đ/S • TLN</span></div><div class="exam-v4-kpi"><b>🧠 Chữa từng câu</b><span>Có gợi ý kiểm tra</span></div><div class="exam-v4-kpi"><b>📊 Theo dõi tiến bộ</b><span>Lưu kết quả khi đăng nhập</span></div></div></div></div>'}
+  const old=root.querySelector('.bg-white.border.border-slate-200.rounded-2xl.p-4.shadow-sm.space-y-4'); if(old){const wrap=document.createElement('div');wrap.className='exam-v4-filters';wrap.innerHTML='<div class="exam-v4-filterbar" id="exam-v4-grade-tabs"><button class="active" data-grade="all">Tất cả</button><button data-grade="2K9">2K9 • Lớp 12</button><button data-grade="2K11">2K11 • Lớp 10</button><button data-grade="2K12">2K12 • Ôn vào 10</button><button data-grade="quality"><i class="fa-solid fa-shield-heart mr-1"></i>Đề ưu tiên</button></div><div class="exam-v4-filter-row"><input id="exam-v4-search" class="exam-v4-search" placeholder="Tìm theo tên đề, tỉnh/thành, chương, chủ đề..."/><select id="exam-v4-sort" class="exam-v4-sort"><option value="featured">Ưu tiên đề chất lượng</option><option value="az">A → Z</option><option value="za">Z → A</option></select></div>'; old.replaceWith(wrap);}
+  const search=document.getElementById('exam-v4-search'); if(search){const orig=document.getElementById('exam-search'); if(orig){orig.style.display='none'; search.addEventListener('input',()=>{orig.value=search.value;orig.dispatchEvent(new Event('input',{bubbles:true}));decorateCards()})}}
+  document.querySelectorAll('#exam-v4-grade-tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#exam-v4-grade-tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active'); const v=b.dataset.grade; if(v==='2K9'){window.examBankSetSubject?.('math')} else if(v==='2K11'){window.examBankSetSubject?.('k11math')} else if(v==='2K12'){window.examBankSetSubject?.('g10math')} else {window.renderExamBank?.()} }));
+  document.getElementById('exam-v4-sort')?.addEventListener('change',()=>decorateCards());
+  decorateCards();
+ }
+ function decorateCards(){const box=document.getElementById('exam-bank-list');if(!box)return; box.querySelectorAll('button.exam-card').forEach((card,i)=>{card.classList.add('exam-v4-card');const title=card.querySelector('h4')?.textContent||''; if(card.querySelector('.exam-v4-thumb'))return; const thumb=document.createElement('div');thumb.className='exam-v4-thumb';thumb.innerHTML='<i class="fa-solid fa-file-circle-check"></i>';card.prepend(thumb);const meta=document.createElement('div');meta.className='exam-v4-meta';meta.innerHTML='<span><i class="fa-regular fa-clock mr-1"></i>'+((card.textContent.match(/\d+ phút/)||['—'])[0])+'</span><span><i class="fa-solid fa-list-check mr-1"></i>30 phần trả lời</span><span class="exam-v4-quality"><i class="fa-solid fa-shield-check"></i>Đề luyện</span>';card.querySelector('p')?.after(meta);});}
+ const mo=new MutationObserver(()=>setTimeout(()=>decorateCards(),20)); document.addEventListener('DOMContentLoaded',decorate); setTimeout(decorate,700); const box=document.getElementById('exam-bank-list');if(box)mo.observe(box,{childList:true});
+})();
+</script>
+
 <!-- EXAM BANK 2026 START -->
 <style id="exam-bank-2026-style">
 .mobile-nav-item{display:flex;align-items:center;gap:.65rem;padding:.75rem .7rem;border:1px solid #e2e8f0;border-radius:.9rem;background:#fff;font-size:11px;font-weight:800;color:#334155;min-height:44px}
@@ -5075,7 +5152,7 @@ No Toán 12 core chapter/topic entry points to toanmath.com/toan-12 category pag
 </script>
 <script id="student-library-2026-script">
 (function(){
-  'use strict';
+  "use strict";
   const API='/api/community';
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const iconFor=(mime,name)=>{const e=(name||'').split('.').pop().toLowerCase();if(e==='pdf')return 'fa-file-pdf text-red-500';if(['doc','docx'].includes(e))return 'fa-file-word text-blue-500';if(['ppt','pptx'].includes(e))return 'fa-file-powerpoint text-orange-500';if(['xls','xlsx'].includes(e))return 'fa-file-excel text-emerald-500';if(['jpg','jpeg','png','webp'].includes(e))return 'fa-file-image text-fuchsia-500';return 'fa-file-lines text-slate-500'};
@@ -5155,7 +5232,7 @@ No Toán 12 core chapter/topic entry points to toanmath.com/toan-12 category pag
 </style>
 <script id="phuc-vercel-auth-ai-v6">
 (function(){
-  'use strict';
+  "use strict";
   const AUTH='/api/auth',AI='/api/ai',MAX_FILE=25*1024*1024;
   const KEYS={done:'phuc_done_2026',resume:'phuc_resume_2026',notes:'phuc_notes_2026'};
   const state=window.phucAccount=window.phucAccount||{authenticated:false,user:null,csrf:'',ready:false,mode:'server'};
@@ -5346,7 +5423,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 <script id="phuc-v12-stability-script">
 (function(){
-  'use strict';
+  "use strict";
 
   function safeText(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
   // V12 EXAM FIX: keep PRNG helpers local to this IIFE. The older exam script's helpers are scoped to its own IIFE.
@@ -5918,7 +5995,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 <script id="phuc-v13-ui-polish-script">
 (function(){
-  'use strict';
+  "use strict";
   const META={
     '2k9':{title:'2K9 • Lớp 12',desc:'Ôn thi THPT 2026',subjects:[
       ['Toán 12','courses','fa-calculator','Bài giảng & dạng bài'],
@@ -5990,7 +6067,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 <script id="phuc-v14-topnav-repair">
 (function(){
-  'use strict';
+  "use strict";
 
   const TAB_MAP={
     home:'home', courses:'courses', english:'english', physics:'physics', chemistry:'chemistry',
@@ -6104,7 +6181,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 <script id="phuc-v15-dropdown-repair">
 (function(){
-  'use strict';
+  "use strict";
   const map={
     'menu-grade12':'Nhóm Khối 12',
     'menu-grade10':'Nhóm 2K12',
@@ -6206,7 +6283,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 <script id="phuc-v16-dropdown-hard-repair">
 (function(){
-  'use strict';
+  "use strict";
   function closeAll(except){
     document.querySelectorAll('header .compact-dropdown').forEach(function(m){
       if(m!==except)m.classList.add('hidden');
@@ -6321,7 +6398,7 @@ html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}htm
 </style>
 <script id="phuc-lesson-pdf-admin-v17">
 (function(){
-  'use strict';
+  "use strict";
   const API='/api/blob', MAX=25*1024*1024;
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const safeKey=s=>String(s||'').replace(/[^a-zA-Z0-9._:-]/g,'-').slice(0,180);
@@ -6461,7 +6538,7 @@ html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}htm
 </div>
 <script id="phuc-v18-welcome-script">
 (function(){
-  'use strict';
+  "use strict";
   const KEY='phuc-k9-welcome-seen-v21';
   function close(){const m=document.getElementById('phuc-v18-welcome');if(!m)return;m.classList.remove('show');m.setAttribute('aria-hidden','true');document.body.style.overflow='';try{localStorage.setItem(KEY,'1')}catch{}}
   function open(){const m=document.getElementById('phuc-v18-welcome');if(!m)return;m.classList.add('show');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
@@ -6560,7 +6637,7 @@ html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}htm
 </style>
 <script id="phuc-v36-header-compact-script">
 (function(){
-  'use strict';
+  "use strict";
   function closeAll(except){
     document.querySelectorAll('header .compact-dropdown').forEach(function(m){if(m!==except)m.classList.add('hidden')});
     document.querySelectorAll('header .compact-nav-menu').forEach(function(b){b.setAttribute('aria-expanded', b.nextElementSibling===except?'true':'false')});
@@ -6633,7 +6710,7 @@ input:focus,select:focus,textarea:focus{transform:none!important}
 </style>
 <script id="phuc-v39-universal-motion-script">
 (function(){
-  'use strict';
+  "use strict";
   function isInteractive(el){
     return el && el.closest && el.closest('button:not([disabled]),a[href],[role="button"],.cursor-pointer');
   }
@@ -6759,7 +6836,7 @@ html.dark-mode .home-v2-chapter::after{background:linear-gradient(90deg,transpar
 
 <script id="phuc-donate-2026-logic">
 (function(){
-  'use strict';
+  "use strict";
   function modal(){ return document.getElementById('phuc-donate-modal'); }
   function openPhucDonate(){
     const m=modal(); if(!m)return;
@@ -6839,7 +6916,7 @@ html.dark-mode .home-v2-chapter::after{background:linear-gradient(90deg,transpar
 </div>
 <script id="phuc-soft-donate-prompt-script">
 (function(){
-  'use strict';
+  "use strict";
   const BOX=document.getElementById('phuc-soft-donate');
   const BTN=document.getElementById('phuc-soft-donate-main');
   const LATER=document.getElementById('phuc-soft-donate-later');
@@ -6913,7 +6990,7 @@ html.dark-mode .home-v2-chapter::after{background:linear-gradient(90deg,transpar
 </style>
 <script id="phuc-vfinal-system-health">
 (function(){
-  'use strict';
+  "use strict";
   const el=document.getElementById('phuc-vfinal-health-text');
   const dot=document.querySelector('#phuc-vfinal-health .dot');
   if(!el)return;
@@ -6981,7 +7058,7 @@ html.dark-mode .phuc-vnext-challenge.__unused{background:linear-gradient(135deg,
 </style>
 <script id="phuc-vnext-growth-logic">
 (function(){
-  'use strict';
+  "use strict";
   if(window.__phucVNextGrowthLoaded)return;
   window.__phucVNextGrowthLoaded=true;
   const questions=[
@@ -7277,6 +7354,20 @@ img{content-visibility:auto;}
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.phuc-tailieu-tabs button{transition:none!important}}
 </style>
 
+
+<style id="phuck9-avatar-v4">
+.phuc-avatar-settings-card{grid-column:1/-1;border:1px solid #e2e8f0;border-radius:16px;padding:12px;background:#f8fafc}.phuc-avatar-settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.phuc-avatar-settings-head b{font-size:11px;color:#0f172a}.phuc-avatar-settings-head p{font-size:9px;color:#64748b;margin-top:2px}.phuc-avatar-settings-preview{width:58px;height:58px;border-radius:16px;object-fit:cover;background:#e0e7ff;border:1px solid #c7d2fe}.phuc-avatar-actions{display:flex;gap:8px;margin-top:9px}.phuc-avatar-file{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 11px;border:1px solid #e2e8f0;background:#fff;border-radius:11px;font-size:9px;font-weight:1000;color:#475569;cursor:pointer}.phuc-avatar-file input{display:none}.dark-mode .phuc-avatar-settings-card{background:#111827;border-color:#334155}.dark-mode .phuc-avatar-settings-head b{color:#f8fafc}.dark-mode .phuc-avatar-settings-head p{color:#94a3b8}.dark-mode .phuc-avatar-file{background:#0f172a;border-color:#334155;color:#cbd5e1}
+</style>
+<script id="phuck9-avatar-v4-js">
+(function(){
+ const previewId='phuc-setting-avatar-preview'; let pendingAvatar=null;
+ function account(){return window.phucAccount||window.state||window.phucState||{}} function user(){const a=account();return a.user||null}
+ function paint(){const img=document.getElementById(previewId),u=user(); if(!img)return; img.src=u?.avatar_data||u?.avatar_url||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="#e0e7ff"/><text x="32" y="39" text-anchor="middle" font-size="24" fill="#4338ca">P9</text></svg>');}
+ function compress(file){return new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const max=320,scale=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*scale));c.height=Math.max(1,Math.round(im.height*scale));const x=c.getContext('2d');x.drawImage(im,0,0,c.width,c.height);let q=.82,data=c.toDataURL('image/jpeg',q);while(data.length>160000&&q>.45){q-=.06;data=c.toDataURL('image/jpeg',q)} if(data.length>160000)reject(new Error('Ảnh vẫn quá lớn, hãy chọn ảnh khác.')); else resolve(data)};im.onerror=()=>reject(new Error('Không đọc được ảnh.'));im.src=rd.result};rd.onerror=()=>reject(new Error('Không đọc được file.'));rd.readAsDataURL(file)});}
+ document.addEventListener('DOMContentLoaded',()=>{paint();document.getElementById('phuc-setting-avatar-file')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{pendingAvatar=await compress(f);const img=document.getElementById(previewId);if(img)img.src=pendingAvatar;const m=document.getElementById('phuc-settings-msg');if(m)m.textContent='Đã chuẩn bị ảnh. Bấm Lưu cài đặt để đồng bộ.'}catch(err){const m=document.getElementById('phuc-settings-msg');if(m)m.textContent=err.message}});document.getElementById('phuc-avatar-remove')?.addEventListener('click',()=>{pendingAvatar='';const img=document.getElementById(previewId);if(img)img.src='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="#e0e7ff"/><text x="32" y="39" text-anchor="middle" font-size="24" fill="#4338ca">P9</text></svg>')});});
+ const oldSave=window.savePhucAccountSettings; window.savePhucAccountSettings=async function(){if(typeof oldSave!=='function')return; if(pendingAvatar!==null){try{const s=account(),u=user();const h={'Content-Type':'application/json','Accept':'application/json'};if(s.csrf)h['X-CSRF-Token']=s.csrf;const body={display_name:document.getElementById('phuc-setting-display')?.value?.trim()||u?.display_name||'',preferred_grade:document.getElementById('phuc-setting-grade')?.value||'2K9',avatar_data:pendingAvatar};const r=await fetch('/api/auth?action=save-profile&_='+Date.now(),{method:'POST',credentials:'include',cache:'no-store',headers:h,body:JSON.stringify(body)});const x=await r.json(),d=x?.data||x;if(!r.ok||!d?.ok)throw new Error(d?.message||'Không thể lưu ảnh đại diện.');if(window.state){window.state.user=d.user;window.state.csrf=d.csrf||window.state.csrf;}pendingAvatar=null;paint();const m=document.getElementById('phuc-settings-msg');if(m)m.textContent='✓ Đã lưu cài đặt + ảnh đại diện.';return}catch(e){const m=document.getElementById('phuc-settings-msg');if(m)m.textContent=e.message||'Lưu thất bại.';return}} return oldSave.apply(this,arguments)};
+})();
+</script>
 <style id="phuck9-dashboard-v1">
 .phuc-dashboard-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px;border-radius:28px;background:radial-gradient(circle at 85% 10%,rgba(129,140,248,.22),transparent 28%),linear-gradient(135deg,#111827,#312e81 58%,#0f172a);color:#fff;box-shadow:0 20px 50px rgba(15,23,42,.14)}
 .phuc-dash-kicker{font-size:9px;font-weight:1000;letter-spacing:.18em;text-transform:uppercase;color:#6366f1}.phuc-dashboard-hero .phuc-dash-kicker{color:#c7d2fe}.phuc-dash-title{font-size:clamp(1.7rem,3vw,2.5rem);font-weight:1000;line-height:1.02;margin-top:5px}.phuc-dash-sub{font-size:11px;color:#cbd5e1;max-width:650px;margin-top:8px}.phuc-dash-avatar{width:62px;height:62px;border-radius:20px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:24px;border:1px solid rgba(255,255,255,.15);flex:none}.phuc-dash-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px}.phuc-dash-card,.phuc-settings-panel,.phuc-admin-panel{border:1px solid #e2e8f0;background:#fff;border-radius:22px;padding:18px;box-shadow:0 8px 28px rgba(15,23,42,.05)}.phuc-dash-card-head,.phuc-settings-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.phuc-dash-card-head span{font-size:11px;font-weight:1000;color:#0f172a}.phuc-dash-card-head i{color:#6366f1}.phuc-dash-progress-ring{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;margin:16px auto 0;background:conic-gradient(#4f46e5 var(--p,0%),#e2e8f0 0);position:relative}.phuc-dash-progress-ring::after{content:'';position:absolute;inset:9px;border-radius:50%;background:#fff}.phuc-dash-progress-ring span{position:relative;z-index:1;font-size:20px;font-weight:1000;color:#111827}.phuc-dash-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.phuc-dash-stat-grid>div{padding:11px;border-radius:15px;background:#f8fafc;border:1px solid #eef2f7}.phuc-dash-stat-grid strong{display:block;font-size:18px;font-weight:1000;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.phuc-dash-stat-grid small{display:block;margin-top:2px;font-size:9px;font-weight:800;color:#64748b}.phuc-account-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed #e2e8f0;font-size:10px}.phuc-account-row span{color:#64748b}.phuc-account-row b{color:#0f172a}.phuc-dash-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 11px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;color:#334155;font-size:10px;font-weight:1000;transition:.18s ease}.phuc-dash-btn:hover{transform:translateY(-1px);background:#f8fafc}.phuc-dash-btn.primary{background:#4f46e5;border-color:#4f46e5;color:#fff}.phuc-settings-panel,.phuc-admin-panel{display:none}.phuc-settings-panel.open,.phuc-admin-panel.open{display:block}.phuc-settings-head h3{font-size:18px;font-weight:1000;color:#0f172a;margin-top:3px}.phuc-settings-head button{font-size:24px;line-height:1;color:#94a3b8}.phuc-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.phuc-settings-grid label,.phuc-google-box{border:1px solid #e2e8f0;border-radius:16px;padding:12px;background:#f8fafc}.phuc-settings-grid label span{display:block;font-size:9px;font-weight:1000;color:#64748b;margin-bottom:6px}.phuc-settings-grid input,.phuc-settings-grid select{width:100%;border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:9px 10px;font-size:11px;outline:none}.phuc-google-box{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px}.phuc-google-box b{font-size:11px;color:#0f172a}.phuc-google-box p{font-size:9px;color:#64748b;margin-top:3px}.phuc-tailieu-source-grid{display:grid;grid-template-columns:1fr .72fr;gap:12px;margin:12px 0}.phuc-tailieu-source-card{display:flex;gap:12px;align-items:center;padding:14px;border-radius:18px;border:1px solid #c7d2fe;background:linear-gradient(135deg,#eef2ff,#fff)}.phuc-tailieu-source-logo{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;font-weight:1000;letter-spacing:-.05em;flex:none;box-shadow:0 8px 18px rgba(79,70,229,.22)}.phuc-tailieu-source-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.phuc-tailieu-source-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;font-size:10px;font-weight:1000;color:#334155;background:#fff}.phuc-tailieu-source-btn.primary{background:#4f46e5;color:#fff;border-color:#4f46e5}.phuc-tailieu-source-note{display:flex;align-items:flex-start;gap:8px;padding:14px;border-radius:18px;border:1px dashed #cbd5e1;background:#f8fafc;font-size:10px;line-height:1.5;color:#64748b}.phuc-tailieu-source-note i{color:#6366f1;margin-top:2px}.dark-mode .phuc-dash-card,.dark-mode .phuc-settings-panel,.dark-mode .phuc-admin-panel{background:#0f172a;border-color:#334155}.dark-mode .phuc-dash-card-head span,.dark-mode .phuc-account-row b,.dark-mode .phuc-settings-head h3,.dark-mode .phuc-google-box b,.dark-mode .phuc-dash-stat-grid strong{color:#f8fafc}.dark-mode .phuc-account-row{border-color:#334155}.dark-mode .phuc-dash-stat-grid>div,.dark-mode .phuc-settings-grid label,.dark-mode .phuc-google-box,.dark-mode .phuc-tailieu-source-note{background:#111827;border-color:#334155}.dark-mode .phuc-settings-grid input,.dark-mode .phuc-settings-grid select{background:#0f172a;color:#f8fafc;border-color:#334155}.dark-mode .phuc-tailieu-source-card{background:linear-gradient(135deg,#111827,#172554);border-color:#3730a3}.dark-mode .phuc-dash-progress-ring::after{background:#0f172a}.dark-mode .phuc-dash-progress-ring span{color:#fff}
@@ -7287,7 +7378,7 @@ img{content-visibility:auto;}
 
 <script id="phuck9-dashboard-v2-js">
 (function(){
-  'use strict';
+  "use strict";
   const KEY={done:'phuc_done_2026',notes:'phuc_notes_2026',resume:'phuc_resume_2026',grade:'phuc_pref_grade_2026'};
   const read=(k,f)=>{try{const x=localStorage.getItem(k);return x==null?f:JSON.parse(x)}catch{return f}};
   const countDone=()=>Object.values(read(KEY.done,{})).filter(Boolean).length;
@@ -7358,7 +7449,7 @@ img{content-visibility:auto;}
   }
   function requestGoogleLink(){
     const m=document.getElementById('phuc-settings-msg');
-    if(m)m.textContent='Google OAuth chưa được cấu hình ở Vercel. Khi cấu hình GOOGLE_CLIENT_ID/SECRET + callback, nút này sẽ chuyển sang liên kết thật.';
+    try{ window.location.href='/api/auth?action=google-link&return_to='+encodeURIComponent(location.href); }catch(e){ if(m)m.textContent='Không thể mở liên kết Google.'; }
   }
   window.openPhucAccountSettings=openSettings;window.closePhucAccountSettings=closeSettings;window.savePhucAccountSettings=saveSettings;window.requestPhucGoogleLink=requestGoogleLink;
   window.phucRenderDashboard=renderDashboard;window.phucLoadAdminDashboard=loadAdmin;
@@ -7414,7 +7505,7 @@ img{content-visibility:auto;}
 </style>
 <script id="phuck9-final-header-dashboard-fix-js">
 (function(){
-  'use strict';
+  "use strict";
   const account=()=>window.phucAccount||window.state||window.phucState||{};
   const isAdmin=()=>!!(account().isAdmin || account().is_admin || window.__phucIsAdmin);
   function ensureAdminHeader(){
@@ -7558,7 +7649,7 @@ setInterval(()=>{hook()},1200);
 
 <script id="phuck9-exam-analytics-v2">
 (function(){
-  'use strict';
+  "use strict";
   const api='/api/dashboard';
   let rankLoaded=false;
   function account(){return window.phucAccount||{};}
@@ -7602,7 +7693,7 @@ setInterval(()=>{hook()},1200);
 </style>
 <script id="phuc-v32-science12-final-repair">
 (function(){
-  'use strict';
+  "use strict";
 
   // The science renderer referenced phucPdfLink(), but the function is not present
   // in the current page. That exception stopped the renderer before it could build
@@ -7734,7 +7825,7 @@ setInterval(()=>{hook()},1200);
 </style>
 <script id="phuc-v38-micro-script">
 (function(){
-  'use strict';
+  "use strict";
   if(window.__phucV38MicroInstalled)return;
   window.__phucV38MicroInstalled=true;
 
@@ -7824,7 +7915,7 @@ html.phuck9-lite .phuc-v38-ripple{display:none!important}
 </style>
 <script id="phuck9-mobile-performance-v4">
 (function(){
-  'use strict';
+  "use strict";
   const lite=()=>{const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;let on=false;on=on||!!c?.saveData;on=on||['slow-2g','2g'].includes(c?.effectiveType);on=on||((navigator.deviceMemory||8)<=2);on=on||((navigator.hardwareConcurrency||8)<=2);if(on)document.documentElement.classList.add('phuck9-lite')};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',lite,{once:true});else lite();
 })();
@@ -7952,7 +8043,7 @@ header #user-info .phuck9-direct-settings{display:none!important}
 
 <script id="phuck9-serious-ui-final-js">
 (function(){
-  'use strict';
+  "use strict";
   const AUTH='/api/auth';
   const $=id=>document.getElementById(id);
   let live=null;
@@ -8044,3 +8135,172 @@ header #user-info .phuck9-direct-settings{display:none!important}
 })();
 </script>
 
+
+<style id="phuck9-v4-final-mobile">
+@media(max-width:640px){
+ #main-content{padding-left:10px!important;padding-right:10px!important;padding-top:14px!important;}
+ header .max-w-7xl{padding-left:10px!important;padding-right:10px!important;}
+ header #phuc-donate-trigger{min-width:38px!important;width:38px!important;height:38px!important;padding:0!important;justify-content:center!important;}
+ header #phuc-donate-trigger span{display:none!important;}
+ header #phuc-theme-toggle{width:38px!important;height:38px!important;}
+ .phuc-vnext-hero,.phuc-dashboard-hero{border-radius:18px!important;}
+}
+</style>
+
+
+<!-- PHÚC K9 MOBILE-FIRST PERFORMANCE / UI FINAL PATCH -->
+<style id="phuck9-mobile-first-final-2026">
+/* Global containment */
+html,body{overflow-x:hidden!important;max-width:100%;}
+img,svg,video,canvas{max-width:100%;}
+button,a,input,select,textarea{touch-action:manipulation;}
+
+/* Desktop sidebar: narrower by default, independently scrollable */
+@media(min-width:1024px){
+  #phuck9-sidebar{width:228px!important;}
+  body{padding-left:228px!important;}
+  header{left:228px!important;}
+  #phuck9-sidebar .side-scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  #phuck9-sidebar .side-btn{min-height:42px;}
+  #phuck9-sidebar.phuck9-mini{width:58px!important;}
+  body.phuck9-sidebar-mini{padding-left:58px!important;}
+  header:has(+ #mobile-nav-panel){box-shadow:0 1px 0 rgba(148,163,184,.14)!important;}
+  header .max-w-7xl{height:64px!important;padding-left:14px!important;padding-right:14px!important;}
+  header .compact-desktop-nav, header .legacy-desktop-nav{display:none!important;}
+  header #phuc-donate-trigger, header #phuc-theme-toggle{width:38px!important;height:38px!important;padding:0!important;justify-content:center!important;}
+  header #phuc-donate-trigger span{display:none!important;}
+  header #user-display-name{max-width:110px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
+}
+
+/* Header on tablet/mobile: one clean row */
+@media(max-width:1023px){
+  header{height:60px!important;}
+  header .max-w-7xl{height:60px!important;min-width:0!important;width:100%!important;padding-left:10px!important;padding-right:10px!important;gap:8px!important;}
+  header .max-w-7xl > .flex.items-center.space-x-3:first-child{min-width:0!important;flex:1 1 auto!important;}
+  header .max-w-7xl > .flex.items-center.space-x-3:first-child > *{min-width:0!important;}
+  header .compact-desktop-nav, header .legacy-desktop-nav{display:none!important;}
+  header #phuc-theme-toggle, header #mobile-menu-toggle{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;}
+  header #phuc-donate-trigger{display:none!important;}
+  header #user-info{gap:4px!important;min-width:0!important;}
+  header #user-info > div:first-child{width:34px!important;height:34px!important;min-width:34px!important;}
+  header #user-display-name, header #user-streak-badge, header #user-info > button[title="Dashboard học viên"], header .phuc-admin-header-btn, header #phuck9-settings-header-btn, header .phuck9-direct-settings{display:none!important;}
+  header #user-info > button[title="Đăng xuất"]{width:34px!important;height:34px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;}
+  header #btn-login-modal{min-width:40px!important;width:40px!important;height:40px!important;padding:0!important;justify-content:center!important;}
+  header #btn-login-modal span{display:none!important;}
+  header #btn-login-modal i{margin:0!important;}
+}
+
+/* Very small screens: compact logo and no unnecessary chrome */
+@media(max-width:430px){
+  header .max-w-7xl{gap:6px!important;}
+  header .max-w-7xl > .flex.items-center.space-x-3:first-child > a,
+  header .max-w-7xl > .flex.items-center.space-x-3:first-child .text-xl,
+  header .max-w-7xl > .flex.items-center.space-x-3:first-child .text-lg{font-size:15px!important;line-height:1!important;}
+  header #phuc-theme-toggle, header #mobile-menu-toggle, header #btn-login-modal{width:38px!important;height:38px!important;min-width:38px!important;}
+  #mobile-nav-panel{top:60px!important;max-height:calc(100dvh - 60px - env(safe-area-inset-bottom))!important;}
+}
+
+/* Mobile navigation: one clean sheet, not a giant grid */
+@media(max-width:768px){
+  main{padding-bottom:82px!important;}
+  #mobile-nav-panel{position:fixed!important;left:8px!important;right:8px!important;top:60px!important;max-height:calc(100dvh - 68px - env(safe-area-inset-bottom))!important;overflow-y:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;border-radius:18px!important;border:1px solid rgba(148,163,184,.22)!important;box-shadow:0 18px 46px rgba(15,23,42,.18)!important;padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;}
+  #mobile-nav-panel .max-w-7xl{display:block!important;padding:10px!important;}
+  #mobile-nav-panel .mobile-nav-item{display:flex!important;width:100%!important;min-height:48px!important;margin:4px 0!important;padding:11px 12px!important;border-radius:12px!important;font-size:12px!important;}
+  #mobile-nav-panel .mobile-nav-item i{width:22px!important;min-width:22px!important;font-size:15px!important;}
+  #mobile-nav-panel .mobile-nav-item span{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  #mobile-nav-panel .mobile-nav-highlight{font-weight:1000!important;}
+
+  /* Bottom quickbar: only the essentials */
+  #phuc-mobile-quickbar{left:7px!important;right:7px!important;bottom:max(7px,env(safe-area-inset-bottom))!important;padding:5px!important;gap:4px!important;border-radius:16px!important;background:rgba(255,255,255,.97)!important;}
+  #phuc-mobile-quickbar button{min-height:48px!important;font-size:8px!important;border-radius:11px!important;}
+  #phuc-mobile-quickbar button i{font-size:15px!important;}
+
+  /* Reduce oversized home sections */
+  .phuc-vnext-hero,.phuc-dashboard-hero{border-radius:16px!important;}
+  .phuc-vnext-hero{padding:16px!important;}
+  .phuc-vnext-title{font-size:18px!important;line-height:1.25!important;}
+  .phuc-vnext-text{font-size:11px!important;line-height:1.55!important;}
+  .phuc-vnext-brand-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}
+  .phuc-vnext-brand-card{min-width:0!important;min-height:58px!important;padding:9px!important;}
+  .phuc-vnext-brand-card strong{font-size:10px!important;}
+  .phuc-vnext-brand-card span{font-size:8px!important;}
+  .phuc-vnext-logo{width:38px!important;height:38px!important;min-width:38px!important;}
+  .phuc-vnext-cta-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}
+  .phuc-vnext-cta{min-height:44px!important;padding:10px!important;font-size:11px!important;justify-content:center!important;}
+  .phuc-vnext-cta.primary{grid-column:1/-1!important;}
+  .phuc-vnext-side{padding:12px!important;}
+
+  /* Cards and form controls: thumb-friendly */
+  .home-v2-card, .home-v2-section, .phuc-vnext-side, .phuc-vnext-brand-card{max-width:100%!important;}
+  button,.phuc-btn,.phuc-donate-copy,.phuck9-btn,.phuc-vnext-mini{min-height:44px;}
+  input,select,textarea{font-size:16px!important;}
+  table{min-width:640px;}
+  .overflow-x-auto{-webkit-overflow-scrolling:touch!important;}
+}
+
+@media(max-width:380px){
+  #phuc-mobile-quickbar button span{font-size:7px!important;}
+  #mobile-nav-panel .mobile-nav-item{font-size:11px!important;}
+  .phuc-vnext-brand-row{grid-template-columns:1fr!important;}
+  .phuc-vnext-cta-row{grid-template-columns:1fr!important;}
+}
+
+/* Performance: avoid costly effects when the device/network is constrained */
+html.phuc-lite-mode, body.phuc-lite-mode{scroll-behavior:auto!important;}
+.phuc-lite-mode .phuc-vnext-hero,
+.phuc-lite-mode .phuc-dashboard-hero,
+.phuc-lite-mode #phuc-mobile-quickbar,
+.phuc-lite-mode #mobile-nav-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+@media(max-width:768px){
+  .phuc-motion-reveal{opacity:1!important;transform:none!important;transition:none!important;}
+  body:not(.phuc-force-motion) .phuc-vnext-brand-card::after{animation:none!important;}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.phuc-motion-reveal{opacity:1!important;transform:none!important;}}
+</style>
+
+<script id="phuck9-mobile-first-final-js">
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const qsa=s=>Array.from(document.querySelectorAll(s));
+  function liteSuggested(){
+    try{
+      if(localStorage.getItem('phuc_mobile_lite')==='1') return true;
+      const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+      const save=!!c?.saveData;
+      const slow=['slow-2g','2g'].includes(c?.effectiveType);
+      const mem=Number(navigator.deviceMemory||0)&&Number(navigator.deviceMemory)<4;
+      const cores=Number(navigator.hardwareConcurrency||0)&&Number(navigator.hardwareConcurrency)<=4;
+      return save||slow||mem||cores;
+    }catch{return false}
+  }
+  function applyLite(){document.documentElement.classList.toggle('phuc-lite-mode',liteSuggested());document.body?.classList.toggle('phuc-lite-mode',liteSuggested());}
+  function syncSide(){
+    const side=$('#phuck9-sidebar'); if(!side) return;
+    const mini=side.classList.contains('phuck9-mini');
+    document.body.classList.toggle('phuck9-sidebar-mini',mini);
+    document.body.style.setProperty('--phuc-sidebar-width',mini?'58px':'228px');
+  }
+  function improveSidebar(){
+    const side=$('#phuck9-sidebar'); if(!side||side.dataset.mobileFirstReady)return;
+    side.dataset.mobileFirstReady='1';
+    syncSide();
+    const toggle=side.querySelector('.phuc-side-toggle,.phuck9-side-toggle');
+    toggle?.addEventListener('click',()=>setTimeout(syncSide,30));
+    const obs=new MutationObserver(syncSide);obs.observe(side,{attributes:true,attributeFilter:['class']});
+  }
+  function cleanDesktopHeader(){
+    qsa('header .compact-desktop-nav, header .legacy-desktop-nav').forEach(e=>e.setAttribute('aria-hidden','true'));
+  }
+  function keepMobileNavClosedOnLoad(){
+    const p=$('#mobile-nav-panel'); if(p && !p.dataset.mobileFirstReady){p.dataset.mobileFirstReady='1';p.classList.add('hidden');}
+  }
+  function avoidNestedHorizontalScroll(){
+    qsa('header,main,section,article,.home-v2-card,.phuc-vnext-hero').forEach(el=>{if(!el.closest('#mobile-nav-panel')){el.style.maxWidth='100%';}});
+  }
+  function init(){applyLite();improveSidebar();cleanDesktopHeader();keepMobileNavClosedOnLoad();avoidNestedHorizontalScroll();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  window.addEventListener('load',init,{once:true});
+  window.addEventListener('resize',()=>{if(window.innerWidth<=1023)keepMobileNavClosedOnLoad();},{passive:true});
+})();
+</script>
