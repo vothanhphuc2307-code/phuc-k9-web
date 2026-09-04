@@ -60,7 +60,7 @@ async function handler(req,res){
     const body=await parseBody(req); if(!csrfOk(req,session))return sendJson(res,403,{ok:false,message:'CSRF không hợp lệ.'});
     if(action==='admin-import'){
       if(!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được nhập đề.'});
-      const e=body.exam; if(!e||!e.id||!Array.isArray(e.questions)||!e.title)return sendJson(res,400,{ok:false,message:'Thiếu cấu trúc đề.'});
+      let e=body.exam; if(!e||!e.id||!Array.isArray(e.questions)||!e.title)return sendJson(res,400,{ok:false,message:'Thiếu cấu trúc đề.'});
       if((e.questions||[]).some(q=>!q.id||!q.section||!q.type))return sendJson(res,400,{ok:false,message:'Có câu hỏi thiếu id/section/type.'});
       e=normalizeExamMeta(e); e.id=clean(e.id,200); e.title=clean(e.title,300); e.source=clean(e.source,300); e.sourceFile=clean(e.sourceFile,300); e.program=clean(e.program,40); e.subject=clean(e.subject,40); e.grade=clean(e.grade,20); e.year=clean(e.year,20); e.examType=clean(e.examType,60); e.examPeriod=clean(e.examPeriod,80); e.semester=clean(e.semester,40); e.examSession=clean(e.examSession,80); e.periodLabel=clean(e.periodLabel,120); e.published=false;
       await r.set(key('def',e.id),JSON.stringify(e)); try{await r.sadd('phuc:exam:index',e.id)}catch{}
