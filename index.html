@@ -1597,8 +1597,18 @@ function renderScience(subject){
   document.getElementById(subject+'-teacher').innerHTML='<i class="fa-solid fa-chalkboard-user mr-1"></i>'+escScience(t.teacher||'Nguồn tham khảo YouTube');
   document.getElementById(subject+'-title').textContent=t.title;
   document.getElementById(subject+'-desc').textContent=t.desc;
-  {let b=document.getElementById('chemistry-pdf-context');if(!b){b=document.createElement('div');b.id='chemistry-pdf-context';b.className='pdfpro-context';document.getElementById('chemistry-desc').parentElement.appendChild(b);}b.innerHTML=phucPdfLink('chemistry-'+t.id,'Tải PDF bài tập chủ đề');}
-  {let b=document.getElementById('physics-pdf-context');if(!b){b=document.createElement('div');b.id='physics-pdf-context';b.className='pdfpro-context';document.getElementById('physics-desc').parentElement.appendChild(b);}b.innerHTML=phucPdfLink('physics-'+t.id,'Tải PDF bài tập chủ đề');}
+  function ensureSciencePdfSlot(subject,key,label){
+    const desc=document.getElementById(subject+'-desc');
+    if(!desc) return;
+    let b=document.getElementById(subject+'-pdf-context');
+    if(!b){b=document.createElement('div');b.id=subject+'-pdf-context';b.className='pdfpro-context phuc-science-pdf-slot';desc.parentElement.appendChild(b);}
+    b.dataset.phucSciencePdfKey=key;
+    b.dataset.phucSciencePdfLabel=label||'PDF bài giảng';
+    // Leave a tiny fallback only until the universal PDF manager replaces it.
+    if(!b.querySelector('.phuc-lesson-pdf-card')) b.innerHTML=phucPdfLink(key,label);
+  }
+  ensureSciencePdfSlot('chemistry','chemistry-'+t.id,'PDF bài tập chủ đề');
+  ensureSciencePdfSlot('physics','physics-'+t.id,'PDF bài tập chủ đề');
   const vw=document.getElementById(subject+'-video-wrap');
   if(t.videoId) vw.innerHTML=`<div class="aspect-video"><iframe class="w-full h-full" src="https://www.youtube.com/embed/${encodeURIComponent(t.videoId)}?rel=0" title="${escScience(t.title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><div class="px-4 py-2.5 bg-slate-900 text-white text-[10px] font-bold"><i class="fa-brands fa-youtube text-red-400 mr-1.5"></i>Video riêng cho chủ đề này • ${escScience(t.teacher)}</div>`;
   else vw.innerHTML=`<div class="science-video-fallback p-6 text-center"><div><div class="w-14 h-14 mx-auto rounded-2xl bg-${accent}-100 text-${accent}-700 flex items-center justify-center text-2xl mb-3"><i class="fa-brands fa-youtube"></i></div><h4 class="font-black text-white text-sm">Video đang được bổ sung</h4><p class="text-slate-400 text-xs mt-2 max-w-md mx-auto">Chưa có video ID trực tiếp đã được xác minh cho bài này. Hệ thống không tự gán video khác để tránh học sai nội dung.</p></div></div>`;
@@ -6126,6 +6136,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,120));
 .phuc-lesson-pdf-meta{margin-top:8px;font-size:8px;color:#94a3b8}.phuc-lesson-pdf-empty{margin-top:9px;padding:8px 9px;border-radius:10px;background:#f8fafc;color:#64748b;font-size:9px;font-weight:700}
 .phuc-lesson-pdf-error{margin-top:9px;padding:8px 9px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:9px;font-weight:800}
 html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}html.dark-mode .phuc-lesson-pdf-title{color:#f8fafc}html.dark-mode .phuc-lesson-pdf-sub{color:#94a3b8}html.dark-mode .phuc-lesson-pdf-badge.no{background:#0f172a;border-color:#273449;color:#94a3b8}html.dark-mode .phuc-lesson-pdf-empty{background:#0f172a;color:#94a3b8}
+.phuc-science-pdf-slot{margin-top:12px}.phuc-science-pdf-slot:empty{display:none}@media(max-width:640px){.phuc-science-pdf-slot{margin-top:10px}.phuc-lesson-pdf-actions{display:grid;grid-template-columns:1fr}.phuc-lesson-pdf-btn{width:100%;justify-content:center;min-height:42px}}
 </style>
 <script id="phuc-lesson-pdf-admin-v17">
 (function(){
@@ -6138,9 +6149,12 @@ html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}htm
   function getState(){try{return window.phucAccount||state}catch{return state}}
   function mount(id){
     const anchor=document.getElementById(id); if(!anchor) return null;
-    const parent=anchor.parentElement || anchor;
-    let card=parent.querySelector(':scope > .phuc-lesson-pdf-card');
-    if(!card){card=document.createElement('div');card.className='phuc-lesson-pdf-card';parent.appendChild(card)}
+    // Science 12 has a dedicated PDF slot; mount inside that slot instead of
+    // appending beside the whole lesson panel. Other subjects keep the legacy host.
+    const isDedicatedSlot=anchor.classList.contains('pdfpro-context') || /-pdf-context$/.test(String(id||''));
+    const host=isDedicatedSlot?anchor:(anchor.parentElement || anchor);
+    let card=host.querySelector(':scope > .phuc-lesson-pdf-card');
+    if(!card){card=document.createElement('div');card.className='phuc-lesson-pdf-card';host.appendChild(card)}
     return card;
   }
   function contextCard(card,key,title){
@@ -6215,7 +6229,11 @@ html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}htm
   }
   function syncScience(subject){
     const title=document.getElementById(subject+'-title');if(!title)return;
-    const st=window.scienceState?.[subject];if(!st)return;const key=`2k9-${subject}-c${st.c+1}-t${st.t+1}`;const card=mount(subject+'-desc');if(card){contextCard(card,key,title.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
+    const st=window.scienceState?.[subject];if(!st)return;
+    const key=`2k9-${subject}-c${st.c+1}-t${st.t+1}`;
+    const slot=document.getElementById(subject+'-pdf-context');
+    const card=mount(subject+'-pdf-context');
+    if(card){contextCard(card,key,title.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
   }
   function sync211(){
     const t=document.getElementById('phuc211-current-title'); if(!t||document.getElementById('tab-courses-2k11')?.classList.contains('hidden'))return;
@@ -8584,8 +8602,7 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
     window.phucPdfLink = function(key,label){
       const safeLabel = String(label || 'PDF bài tập');
       return `<div class="mt-3 flex items-center gap-2 flex-wrap" data-v32-pdf="${String(key||'')}">
-        <span class="v32-status"><i class="fa-regular fa-file-pdf mr-1"></i>PDF bài giảng: đang cập nhật</span>
-        <span class="text-[9px] text-slate-400">Admin có thể gắn PDF đúng bài sau.</span>
+        <span class="v32-status"><i class="fa-regular fa-file-pdf mr-1"></i>Đang kiểm tra PDF bài giảng…</span>
       </div>`;
     };
   }
