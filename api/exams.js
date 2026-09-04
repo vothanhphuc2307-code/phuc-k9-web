@@ -25,47 +25,16 @@ function eqShort(user,q){
   const un=Number(u); if(Number.isFinite(un)) return vals.some(v=>{const n=Number(v);return Number.isFinite(n)&&Math.abs(un-n)<=1e-9});
   return false;
 }
-function sanitizeAnswers(exam,answers){
-  const src=answers&&typeof answers==='object'&&!Array.isArray(answers)?answers:{}; const out={};
-  for(const q of exam.questions||[]){
-    if(!Object.prototype.hasOwnProperty.call(src,q.id)) continue;
-    const a=src[q.id];
-    if(q.type==='mcq'){
-      const v=String(a??'').trim().toUpperCase();
-      if(/^[A-Z]$/.test(v)) out[q.id]=v;
-    }else if(q.type==='truefalse'){
-      const arr=Array.isArray(a)?a:[];
-      out[q.id]=arr.slice(0,Array.isArray(q.statements)?q.statements.length:0).map(v=>v===true||v==='true'||v===1||v==='1'?true:(v===false||v==='false'||v===0||v==='0'?false:null));
-    }else if(q.type==='short'){
-      const v=String(a??'').trim();
-      if(v.length<=200) out[q.id]=v;
-    }
-  }
-  return out;
-}
-function maxRawScore(exam){
-  const sc=exam.scoring||{mcq:.25,tf:[0,.1,.25,.5,1],short:.25}; let max=0;
-  for(const q of exam.questions||[]){
-    if(q.type==='mcq') max+=Number(sc.mcq??.25);
-    else if(q.type==='truefalse'){const arr=Array.isArray(sc.tf)?sc.tf:[0,.1,.25,.5,1];max+=Number(arr[arr.length-1]||0);}
-    else if(q.type==='short') max+=Number(sc.short??.25);
-  }
-  return Number(max.toFixed(4));
-}
 function grade(exam,answers){
-  answers=sanitizeAnswers(exam,answers);
-  let score=0,correct=0,total=0; const review=[]; const sc=exam.scoring||{mcq:.25,tf:[0,.1,.25,.5,1],short:.25};
+  let score=0,correct=0,total=0; const review=[]; const sc=exam.scoring||{mcq:.25,tf:[0,.1,.25,.5,1],short:0.25};
   for(const q of exam.questions||[]){ total++; const a=answers?.[q.id]; let pts=0,ok=false,detail=null;
     if(q.type==='mcq'){ok=String(a??'')===String(q.answer); if(ok)pts=Number(sc.mcq??.25);}
     else if(q.type==='truefalse'){const arr=Array.isArray(a)?a:[]; let c=0; detail=[]; for(let i=0;i<q.statements.length;i++){const got=arr[i]; const yes=(got===true||got==='true'||got===1||got==='1'); const no=(got===false||got==='false'||got===0||got==='0'); const v=yes?true:no?false:null; const item=q.statements[i]; const one=v!==null&&v===!!item.answer; if(one)c++; detail.push({index:i,correct:one});} pts=Number((sc.tf||[])[Math.min(c,(sc.tf||[]).length-1)]||0); ok=c===q.statements.length;}
     else if(q.type==='short'){ok=eqShort(a,q); if(ok)pts=Number(sc.short??.25);}
     score+=pts; if(ok)correct++; review.push({id:q.id,number:q.number,section:q.section,type:q.type,userAnswer:a??null,points:pts,correct:ok,correctAnswer:q.type==='mcq'?q.answer:q.type==='short'?(q.acceptedAnswers||[q.answer]):q.statements.map(s=>!!s.answer),statements:detail,explanation:q.explanation||'',sourcePage:q.sourcePage,reviewRequired:!!q.reviewRequired});
   }
-  const rawScore=Number(score.toFixed(2)); const maxScore=maxRawScore(exam);
-  const score10=maxScore>0?Number((rawScore/maxScore*10).toFixed(2)):0;
-  return {score:score10,rawScore,maxScore,correct,total,unanswered:Math.max(0,total-countAnswered(exam,answers)),review};
+  return {score:Number(score.toFixed(2)),correct,total,review};
 }
-function countAnswered(exam,answers){let n=0;for(const q of exam.questions||[]){const a=answers?.[q.id];if(q.type==='truefalse'){if(Array.isArray(a)&&a.some(v=>v===true||v===false))n++;}else if(q.type==='short'){if(String(a??'').trim())n++;}else if(String(a??'').trim())n++;}return n;}
 function normalizeExamMeta(e){e=JSON.parse(JSON.stringify(e||{}));e.program=e.program||((String(e.grade||'')==='12')?'2k9':'');e.subject=e.subject||'other';e.year=e.year||'';e.examType=e.examType||'other';e.examPeriod=e.examPeriod||'';e.semester=e.semester||'';e.examSession=e.examSession||'';e.periodLabel=e.periodLabel||([e.examType,e.semester,e.year].filter(Boolean).join(' • ')||'Kỳ thi khác');return e}
 async function getExam(r,id){let e=await redisJsonGet(r,key('def',id)); if(e)return normalizeExamMeta(e); const seed=SEED.find(x=>x.id===id)||null; return seed?normalizeExamMeta(seed):null}
 async function handler(req,res){
@@ -80,27 +49,6 @@ async function handler(req,res){
       }
       const session=await getSession(req); const id=clean(u.searchParams.get('id'),200);
       if(action==='get'){const e=await getExam(r,id); if(!e||e.published===false)return sendJson(res,404,{ok:false,message:'Không tìm thấy đề.'}); return sendJson(res,200,{ok:true,exam:publicExam(e)})}
-      if(action==='admin-list'){
-        if(!session||!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin.'});
-        const ids=new Set(SEED.map(x=>x.id));
-        try{ for(const id of (await r.smembers('phuc:exam:index')||[])) ids.add(String(id)); }catch{}
-        const out=[]; for(const id of ids){const x=await getExam(r,id); if(x)out.push({id:x.id,title:x.title,program:x.program,subject:x.subject,grade:x.grade,year:x.year,examType:x.examType,periodLabel:x.periodLabel,source:x.source,sourceFile:x.sourceFile,sourceId:x.sourceId,duration:x.duration,questionCount:(x.questions||[]).length,published:x.published!==false,reviewCount:(x.questions||[]).filter(q=>q.answer==null||q.reviewRequired).length,updatedAt:x.updatedAt||x.createdAt||null});}
-        out.sort((a,b)=>Number(b.updatedAt||0)-Number(a.updatedAt||0));
-        return sendJson(res,200,{ok:true,exams:out});
-      }
-      if(action==='source-download'){
-        if(!session)return sendJson(res,401,{ok:false,message:'Đăng nhập để xem nguồn đề.'});
-        const sourceId=clean(u.searchParams.get('sourceId'),120);
-        if(!/^[a-zA-Z0-9._:-]{1,120}$/.test(sourceId))return sendJson(res,400,{ok:false,message:'Nguồn đề không hợp lệ.'});
-        const src=await redisJsonGet(r,`phuc:exam-source:${sourceId}`);
-        if(!src?.pathname)return sendJson(res,404,{ok:false,message:'Không tìm thấy nguồn đề.'});
-        const result=await getBlob(src.pathname,{access:'private'});
-        if(!result||result.statusCode!==200)return sendJson(res,404,{ok:false,message:'File nguồn không còn tồn tại.'});
-        res.statusCode=200; res.setHeader('Content-Type',result.blob?.contentType||src.mime||'application/octet-stream');
-        res.setHeader('Content-Disposition',`inline; filename*=UTF-8''${encodeURIComponent(src.original_name||'nguon-de')}`); res.setHeader('X-Content-Type-Options','nosniff'); res.setHeader('Cache-Control','private, no-store');
-        if(result.blob?.etag)res.setHeader('ETag',result.blob.etag);
-        for await(const chunk of result.stream)res.write(Buffer.from(chunk)); return res.end();
-      }
       if(action==='admin-get'){if(!session||!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin.'}); const e=await getExam(r,id); if(!e)return sendJson(res,404,{ok:false,message:'Không tìm thấy đề.'}); return sendJson(res,200,{ok:true,exam:adminExam(e)})}
       if(action==='history'){if(!session)return sendJson(res,401,{ok:false,message:'Đăng nhập để xem lịch sử.'}); const idx=await redisJsonGet(r,key('history',session.username)); return sendJson(res,200,{ok:true,history:Array.isArray(idx)?idx:[]})}
       if(action==='result'){if(!session)return sendJson(res,401,{ok:false,message:'Đăng nhập để xem kết quả.'}); const attemptId=clean(u.searchParams.get('attempt'),200); const a=await redisJsonGet(r,key('attempt',attemptId)); if(!a||a.username!==session.username||!a.submitted)return sendJson(res,404,{ok:false,message:'Không tìm thấy kết quả.'}); return sendJson(res,200,{ok:true,result:a.result,exam:publicExam(a.exam),submittedAt:a.submittedAt})}
@@ -114,11 +62,9 @@ async function handler(req,res){
       if(!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được nhập đề.'});
       let e=body.exam; if(!e||!e.id||!Array.isArray(e.questions)||!e.title)return sendJson(res,400,{ok:false,message:'Thiếu cấu trúc đề.'});
       if((e.questions||[]).some(q=>!q.id||!q.section||!q.type))return sendJson(res,400,{ok:false,message:'Có câu hỏi thiếu id/section/type.'});
-      const existing=await getExam(r,clean(e.id,200));
-      e={...(existing||{}),...e};
-      e=normalizeExamMeta(e); e.id=clean(e.id,200); e.title=clean(e.title,300); e.source=clean(e.source,300); e.sourceFile=clean(e.sourceFile||existing?.sourceFile,300); e.sourceId=clean(e.sourceId||existing?.sourceId,120); e.program=clean(e.program,40); e.subject=clean(e.subject,40); e.grade=clean(e.grade,20); e.year=clean(e.year,20); e.examType=clean(e.examType,60); e.examPeriod=clean(e.examPeriod,80); e.semester=clean(e.semester,40); e.examSession=clean(e.examSession,80); e.periodLabel=clean(e.periodLabel,120); e.published=false; e.updatedAt=Date.now(); e.updatedBy=session.username;
+      e=normalizeExamMeta(e); e.id=clean(e.id,200); e.title=clean(e.title,300); e.source=clean(e.source,300); e.sourceFile=clean(e.sourceFile,300); e.program=clean(e.program,40); e.subject=clean(e.subject,40); e.grade=clean(e.grade,20); e.year=clean(e.year,20); e.examType=clean(e.examType,60); e.examPeriod=clean(e.examPeriod,80); e.semester=clean(e.semester,40); e.examSession=clean(e.examSession,80); e.periodLabel=clean(e.periodLabel,120); e.published=false;
       await r.set(key('def',e.id),JSON.stringify(e)); try{await r.sadd('phuc:exam:index',e.id)}catch{}
-      return sendJson(res,200,{ok:true,message:'Đã lưu đề ở trạng thái nháp. Mặc định chưa publish.',exam:adminExam(e)});
+      return sendJson(res,200,{ok:true,message:'Đã nhập đề. Mặc định chưa publish.',exam:adminExam(e)});
     }
     if(action==='publish'){
       if(!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin.'}); const e=await getExam(r,body.id); if(!e)return sendJson(res,404,{ok:false,message:'Không tìm thấy đề.'});
@@ -130,16 +76,13 @@ async function handler(req,res){
       const attemptId=crypto.randomUUID(); const now=Date.now(); const a={id:attemptId,username:session.username,exam:e,startedAt:now,expiresAt:now+Number(e.duration||60)*60000,savedAnswers:{},submitted:false}; await r.set(key('attempt',attemptId),JSON.stringify(a)); return sendJson(res,200,{ok:true,attemptId,exam:publicExam(e),startedAt:now,expiresAt:a.expiresAt});
     }
     if(action==='save'){
-      const a=await redisJsonGet(r,key('attempt',clean(body.attemptId,200))); if(!a||a.username!==session.username||a.submitted)return sendJson(res,404,{ok:false,message:'Phòng thi không còn hợp lệ.'});
-      if(Date.now()>Number(a.expiresAt||0)) return sendJson(res,409,{ok:false,message:'Đã hết giờ làm bài. Hãy nộp bài để chấm phần đã lưu.'});
-      a.savedAnswers=sanitizeAnswers(a.exam,body.answers); a.lastSavedAt=Date.now(); await r.set(key('attempt',a.id),JSON.stringify(a)); return sendJson(res,200,{ok:true,savedAt:a.lastSavedAt});
+      const a=await redisJsonGet(r,key('attempt',clean(body.attemptId,200))); if(!a||a.username!==session.username||a.submitted)return sendJson(res,404,{ok:false,message:'Phòng thi không còn hợp lệ.'}); a.savedAnswers=body.answers||{}; a.lastSavedAt=Date.now(); await r.set(key('attempt',a.id),JSON.stringify(a)); return sendJson(res,200,{ok:true});
     }
     if(action==='submit'){
       const a=await redisJsonGet(r,key('attempt',clean(body.attemptId,200))); if(!a||a.username!==session.username||a.submitted)return sendJson(res,404,{ok:false,message:'Phòng thi không còn hợp lệ.'});
-      const expired=Date.now()>Number(a.expiresAt||0);
-      const answers=sanitizeAnswers(a.exam,body.answers&&typeof body.answers==='object'?body.answers:(a.savedAnswers||{})); const result=grade(a.exam,answers); a.savedAnswers=answers; a.submitted=true; a.expired=expired; a.submittedAt=Date.now(); a.result=result;
+      const answers=body.answers&&typeof body.answers==='object'?body.answers:(a.savedAnswers||{}); const result=grade(a.exam,answers); a.savedAnswers=answers; a.submitted=true; a.submittedAt=Date.now(); a.result=result;
       await r.set(key('attempt',a.id),JSON.stringify(a));
-      const histKey=key('history',session.username); const hist=await redisJsonGet(r,histKey)||[]; hist.unshift({attemptId:a.id,examId:a.exam.id,title:a.exam.title,subject:a.exam.subject,score:result.score,rawScore:result.rawScore,maxScore:result.maxScore,correct:result.correct,total:result.total,submittedAt:a.submittedAt,expired:!!a.expired}); await r.set(histKey,JSON.stringify(hist.slice(0,100)));
+      const histKey=key('history',session.username); const hist=await redisJsonGet(r,histKey)||[]; hist.unshift({attemptId:a.id,examId:a.exam.id,title:a.exam.title,subject:a.exam.subject,score:result.score,correct:result.correct,total:result.total,submittedAt:a.submittedAt}); await r.set(histKey,JSON.stringify(hist.slice(0,100)));
       return sendJson(res,200,{ok:true,result});
     }
     return sendJson(res,400,{ok:false,message:'Action không hợp lệ.'});
