@@ -71,6 +71,19 @@ async function studentLibraryDownload(req, res) {
   return res.end();
 }
 
+async function getPrivateBlobWithRetry(pathname, attempts=5){
+  let lastErr=null;
+  for(let i=0;i<attempts;i++){
+    try{
+      const result=await getBlob(pathname,{access:'private'});
+      if(result && result.statusCode===200) return result;
+    }catch(err){lastErr=err;}
+    if(i<attempts-1) await new Promise(r=>setTimeout(r,250*(i+1)));
+  }
+  if(lastErr) console.warn('blob verify failed',lastErr?.message);
+  return null;
+}
+
 async function lessonStatus(req,res){
   const u=new URL(req.url,'http://localhost'); const key=clean(u.searchParams.get('lessonKey'),180); const download=u.searchParams.get('download')==='1';
   if(!validLessonKey(key)) return sendJson(res,400,{ok:false,message:'lessonKey không hợp lệ.'});
