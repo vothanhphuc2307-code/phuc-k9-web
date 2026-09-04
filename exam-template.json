@@ -1,0 +1,36 @@
+{
+  "id": "my-exam-2026-01",
+  "title": "Tên đề thật",
+  "subject": "math",
+  "grade": "12",
+  "source": "Nguồn đề",
+  "sourceFile": "/exam-sources/ten-file.pdf",
+  "duration": 90,
+  "questions": [
+    {
+      "id": "q1",
+      "section": "I",
+      "type": "mcq",
+      "number": 1,
+      "text": "Nội dung câu hỏi thật",
+      "options": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "sourcePage": 1
+    }
+  ],
+  "scoring": {
+    "mcq": 0.25,
+    "tf": [
+      0,
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "short": 0.5
+  }
+}
