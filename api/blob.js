@@ -3,12 +3,12 @@ const { get: getBlob, del: delBlob } = require('@vercel/blob');
 const { getRedis } = require('../lib/redis');
 const { getSession, getUserByUsername, sendJson } = require('../lib/auth');
 
-const ALLOWED_EXT = new Set(['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','jpg','jpeg','png','webp','zip','json']);
+const ALLOWED_EXT = new Set(['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','jpg','jpeg','png','webp']);
 const ALLOWED_MIME = new Set([
   'application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','text/plain',
-  'image/jpeg','image/png','image/webp','application/octet-stream','application/zip','application/x-zip-compressed','text/json','application/json'
+  'image/jpeg','image/png','image/webp','application/octet-stream'
 ]);
 const ADMIN_ENV = 'ADMIN_USERNAME';
 function clean(v, max) { return String(v == null ? '' : v).trim().slice(0, max); }
@@ -96,28 +96,6 @@ module.exports = async function handler(req,res){
     // Vercel Blob confirms the upload, so Redis does not depend on onUploadCompleted.
     if(req.method==='POST'){
       const u = new URL(req.url,'http://localhost');
-      if(u.searchParams.get('action')==='finalize-exam-source'){
-        const session=await getSession(req);
-        if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi lưu nguồn đề.'});
-        if(!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được lưu nguồn đề.'});
-        const body=parseJsonBody(req);
-        if(String(body?.kind||'')!=='exam-source')return sendJson(res,400,{ok:false,message:'Yêu cầu nguồn đề không hợp lệ.'});
-        if(String(body?.csrf||'')!==String(session.csrf||''))return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.'});
-        const sourceId=clean(body?.sourceId,120);
-        if(!/^[a-zA-Z0-9._:-]{1,120}$/.test(sourceId))return sendJson(res,400,{ok:false,message:'Mã nguồn đề không hợp lệ.'});
-        const pathname=clean(body?.pathname,500);
-        if(!pathname.startsWith('exam-sources/') || pathname.includes('..') || pathname.includes('\\') || /[\r\n]/.test(pathname))
-          return sendJson(res,400,{ok:false,message:'Đường dẫn nguồn đề không hợp lệ.'});
-        const filename=clean(body?.original_name,220)||'nguon-de';
-        const ext=extOf(filename);
-        if(!new Set(['pdf','doc','docx','zip','json']).has(ext))return sendJson(res,400,{ok:false,message:'Nguồn đề chỉ hỗ trợ PDF, Word, ZIP hoặc JSON.'});
-        const result=await getBlob(pathname,{access:'private'});
-        if(!result||result.statusCode!==200)return sendJson(res,404,{ok:false,message:'File nguồn chưa tồn tại trên Vercel Blob.'});
-        const user=await getUserByUsername(session.username); if(!user)return sendJson(res,400,{ok:false,message:'Không tìm thấy tài khoản admin.'});
-        const item={id:sourceId,original_name:filename,mime:clean(body?.mime,160)||result.blob?.contentType||'application/octet-stream',size:Number(result.blob?.size||body?.size||0),pathname:result.blob?.pathname||pathname,url:result.blob?.url||clean(body?.url,1200)||'',uploaded_at:new Date().toISOString(),uploaded_by:user.display_name||session.username,program:clean(body?.program,40),subject:clean(body?.subject,40),examType:clean(body?.examType,60),year:clean(body?.year,20),period:clean(body?.period,100),title:clean(body?.title,300),source:clean(body?.source,300)};
-        const redis=getRedis(); await redis.set(`phuc:exam-source:${sourceId}`,JSON.stringify(item));
-        return sendJson(res,200,{ok:true,source:item});
-      }
       if(u.searchParams.get('action')==='finalize-lesson-pdf'){
         const session=await getSession(req);
         if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi gắn PDF bài giảng.'});
@@ -173,19 +151,6 @@ module.exports = async function handler(req,res){
         const user=await getUserByUsername(session.username); if(!user)throw new Error('Không tìm thấy tài khoản.');
         if(String(payload.csrf||'')!==String(session.csrf||''))throw new Error('CSRF token không hợp lệ.');
         const filename=clean(payload.original_name,180); const ext=extOf(filename); const mime=clean(payload.mime,120)||'application/octet-stream';
-        if(requestedKind==='exam-source' || payload.kind==='exam-source'){
-          if(!isAdmin(session.username))throw new Error('Chỉ admin mới được upload nguồn đề.');
-          const filename=clean(payload.original_name,220); const ext=extOf(filename); const mime=clean(payload.mime,160)||'application/octet-stream';
-          if(!new Set(['pdf','doc','docx','zip','json']).has(ext))throw new Error('Nguồn đề chỉ hỗ trợ PDF, Word, ZIP hoặc JSON.');
-          if(['pdf'].includes(ext) && mime!=='application/pdf')throw new Error('PDF có MIME không hợp lệ.');
-          if(['doc'].includes(ext) && !['application/msword','application/octet-stream'].includes(mime))throw new Error('DOC có MIME không hợp lệ.');
-          if(['docx'].includes(ext) && !['application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/octet-stream'].includes(mime))throw new Error('DOCX có MIME không hợp lệ.');
-          if(['zip'].includes(ext) && !['application/zip','application/x-zip-compressed','application/octet-stream'].includes(mime))throw new Error('ZIP có MIME không hợp lệ.');
-          if(['json'].includes(ext) && !['application/json','text/json','application/octet-stream'].includes(mime))throw new Error('JSON có MIME không hợp lệ.');
-          const sourceId=clean(payload.sourceId,120);
-          if(!/^[a-zA-Z0-9._:-]{1,120}$/.test(sourceId))throw new Error('Mã nguồn đề không hợp lệ.');
-          return {allowedContentTypes:['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/zip','application/x-zip-compressed','application/json','text/json','application/octet-stream'],maximumSizeInBytes:25*1024*1024,addRandomSuffix:true,tokenPayload:JSON.stringify({kind:'exam-source',username:session.username,sourceId,original_name:filename,mime,csrf:session.csrf})};
-        }
         if(requestedKind==='lesson-pdf' || payload.kind==='lesson-pdf'){
           if(!isAdmin(session.username))throw new Error('Chỉ admin mới được upload PDF bài giảng.');
           if(!validLessonKey(payload.lessonKey))throw new Error('Mã bài giảng không hợp lệ.');
@@ -198,15 +163,6 @@ module.exports = async function handler(req,res){
       },
       onUploadCompleted:async({blob,tokenPayload})=>{
         const meta=JSON.parse(tokenPayload||'{}'); const redis=getRedis();
-        if(meta.kind==='exam-source'){
-          const user=await getUserByUsername(meta.username); if(!user||!isAdmin(meta.username))throw new Error('Không xác minh được quyền admin.');
-          const bytes=Number(blob.size||0); const redis=getRedis(); const oldRaw=await redis.get(`phuc:exam-source:${meta.sourceId}`);
-          let old=null; if(oldRaw){try{old=typeof oldRaw==='string'?JSON.parse(oldRaw):oldRaw}catch{}}
-          const item={...(old||{}),id:meta.sourceId,original_name:meta.original_name,mime:meta.mime,size:bytes,pathname:blob.pathname,url:blob.url,uploaded_at:new Date().toISOString(),uploaded_by:user.display_name||user.username};
-          await redis.set(`phuc:exam-source:${meta.sourceId}`,JSON.stringify(item));
-          if(old?.pathname && old.pathname!==blob.pathname){try{await delBlob(old.pathname,{access:'private'})}catch(e){console.warn('old exam source delete failed',e?.message)}}
-          return;
-        }
         if(meta.kind==='lesson-pdf'){
           const user=await getUserByUsername(meta.username); if(!user||!isAdmin(meta.username))throw new Error('Không xác minh được quyền admin.');
           const key=meta.lessonKey; const oldRaw=await redis.get(`phuc:lesson-pdf:${key}`); let old=null; if(oldRaw){try{old=typeof oldRaw==='string'?JSON.parse(oldRaw):oldRaw}catch{}}
