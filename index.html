@@ -3948,7 +3948,7 @@ html.dark-mode .phuc211-source-note{background:#0f172a;border-color:#273449;colo
 <script id="real-exam-v2-script">
 (function(){
 'use strict';
-const API='/api/exams'; let exams=[],current=null,attempt=null,timer=null,answers={}; const examFilters={program:'all',subject:'all',examType:'all',year:'all'};
+const API='/api/exams'; let exams=[],current=null,attempt=null,timer=null,answers={}; let autosaveTimer=null,autosaveBusy=false; const examFilters={program:'all',subject:'all',examType:'all',year:'all'};
 const acc=()=>window.phucAccount||window.state||{};
 const headers=()=>{const h={'Content-Type':'application/json','Accept':'application/json'}; if(acc().csrf)h['X-CSRF-Token']=acc().csrf; return h};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -3971,15 +3971,37 @@ function renderQuestion(q){
  const source=q.sourcePage?`<button type="button" onclick="realExamOpenSource('${esc(current.id)}',${Number(q.sourcePage)},'Câu ${q.number}')" class="mt-3 text-[9px] font-black text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg"><i class="fa-solid fa-image mr-1"></i> Xem hình/bảng nguồn • trang ${q.sourcePage}</button>`:'';
  return `<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5"><div class="flex items-start justify-between gap-3"><div class="text-xs font-black text-slate-900 leading-relaxed">Câu ${q.number}. ${esc(q.text)}</div><span class="shrink-0 px-2 py-1 rounded-full text-[8px] font-black ${q.section==='I'?'bg-indigo-50 text-indigo-700':q.section==='II'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">PHẦN ${q.section}</span></div>${q.table?`<div class="overflow-auto mt-3"><table class="min-w-full text-[10px] border-collapse">${q.table.map((r,i)=>'<tr>'+r.map(c=>`<td class="border border-slate-200 px-2 py-1.5 ${i===0?'font-black bg-slate-50':''}">${esc(c)}</td>`).join('')+'</tr>').join('')}</table></div>`:''}<div class="space-y-2 mt-3">${inner}</div>${source}</div>`;
 }
-window.realExamSetAns=function(id,val){answers[id]=val;}
-window.realExamSetTF=function(id,i,val){answers[id]=Array.isArray(answers[id])?[...answers[id]]:[];answers[id][i]=val;realExamRenderQuestions();}
+function scheduleExamAutosave(){if(!attempt)return;clearTimeout(autosaveTimer);autosaveTimer=setTimeout(async()=>{if(autosaveBusy||!attempt)return;autosaveBusy=true;try{await getJSON(API+'?action=save',{method:'POST',headers:headers(),body:JSON.stringify({attemptId:attempt,answers})});}catch{}finally{autosaveBusy=false;}},1200);}
+window.realExamSetAns=function(id,val){answers[id]=val;scheduleExamAutosave();}
+window.realExamSetTF=function(id,i,val){answers[id]=Array.isArray(answers[id])?[...answers[id]]:[];answers[id][i]=val;realExamRenderQuestions();scheduleExamAutosave();}
 function realExamRenderQuestions(){const box=document.getElementById('real-exam-questions'); if(box&&current)box.innerHTML=(current.questions||[]).map(renderQuestion).join('');}
 function fmt(ms){let s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60),h=Math.floor(m/60);s%=60;m%=60;return h?String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'):String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
-window.realExamStart=async function(id){try{const x=await getJSON(API+'?action=start',{method:'POST',headers:headers(),body:JSON.stringify({id})}); current=x.exam;attempt=x.attemptId;answers={};document.getElementById('real-exam-player')?.classList.remove('hidden');document.getElementById('real-exam-result')?.classList.add('hidden');document.getElementById('real-exam-live-title').textContent=current.title;document.getElementById('real-exam-live-meta').textContent=current.source+' • '+countQ(current)+' câu • '+current.duration+' phút';document.getElementById('real-exam-questions').scrollIntoView({behavior:'smooth',block:'start'});realExamRenderQuestions(); if(timer)clearInterval(timer);timer=setInterval(()=>{const left=x.expiresAt-Date.now();const el=document.getElementById('real-exam-live-timer');if(el)el.textContent=fmt(left);if(left<=0){clearInterval(timer);realExamSubmit(true)}},500); }catch(e){window.phucToast?.('⚠️ '+e.message);}}
-window.realExamSave=async function(){if(!attempt)return;try{await getJSON(API+'?action=save',{method:'POST',headers:headers(),body:JSON.stringify({attemptId:attempt,answers})});window.phucToast?.('✓ Đã lưu tạm bài làm trên máy chủ.')}catch(e){window.phucToast?.('⚠️ '+e.message)}}
-window.realExamSubmit=async function(auto){if(!attempt)return; if(!auto&&!confirm('Nộp bài và chấm ngay?'))return; try{await realExamSave();const x=await getJSON(API+'?action=submit',{method:'POST',headers:headers(),body:JSON.stringify({attemptId:attempt,answers})}); if(timer)clearInterval(timer);renderResult(x.result);renderHistory();}catch(e){window.phucToast?.('⚠️ '+e.message)}}
-function renderResult(r){const box=document.getElementById('real-exam-result');document.getElementById('real-exam-player')?.classList.add('hidden');box.classList.remove('hidden');const wrong=r.total-r.correct;box.innerHTML=`<div class="rounded-3xl bg-slate-950 text-white p-5 sm:p-7"><div class="text-[9px] uppercase font-black tracking-[.15em] text-emerald-300">ĐÃ CHẤM XONG • SERVER-SIDE</div><div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4"><div><h3 class="text-2xl sm:text-3xl font-black mt-2">${esc(current.title)}</h3><p class="text-[10px] text-slate-400 mt-2">Đúng ${r.correct}/${r.total} câu • Sai/không trọn điểm ${wrong}</p></div><div class="text-center rounded-2xl bg-white/10 px-5 py-3"><div class="text-[8px] uppercase text-slate-300 font-black">ĐIỂM</div><div class="text-4xl font-black text-amber-300">${Number(r.score).toFixed(2)}<span class="text-lg">/10</span></div></div></div></div><div class="flex flex-wrap gap-2"><button onclick="realExamExit()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-black">← Về kho</button></div><div class="space-y-3">${r.review.map(v=>`<div class="bg-white border rounded-2xl p-4 ${v.correct?'border-emerald-200':'border-rose-200'}"><div class="flex justify-between gap-3"><div class="font-black text-xs">Câu ${v.number}</div><span class="text-[9px] font-black ${v.correct?'text-emerald-600':'text-rose-600'}">${v.points?Number(v.points).toFixed(2)+'đ':'0đ'}</span></div><div class="text-[10px] text-slate-500 mt-1">${v.correct?'✓ Đúng':'✗ Sai / chưa trọn điểm'}</div>${v.explanation?`<div class="mt-2 text-[11px] text-slate-700 leading-relaxed"><b>Giải thích:</b> ${esc(v.explanation)}</div>`:''}<button onclick="realExamOpenSource('${esc(current.id)}',${Number(v.sourcePage||0)},'Câu ${v.number}')" class="mt-3 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-[9px] font-black">Xem nguồn gốc trong Phúc K9</button></div>`).join('')}</div>`;box.scrollIntoView({behavior:'smooth',block:'start'})}
-window.realExamExit=function(){if(timer)clearInterval(timer);document.getElementById('real-exam-player')?.classList.add('hidden');document.getElementById('real-exam-result')?.classList.add('hidden');document.getElementById('real-exam-list')?.scrollIntoView({behavior:'smooth',block:'start'});attempt=null;current=null;answers={};}
+window.realExamStart=async function(id){try{const x=await getJSON(API+'?action=start',{method:'POST',headers:headers(),body:JSON.stringify({id})}); current=x.exam;attempt=x.attemptId;answers={};document.getElementById('real-exam-player')?.classList.remove('hidden');document.getElementById('real-exam-result')?.classList.add('hidden');document.getElementById('real-exam-live-title').textContent=current.title;document.getElementById('real-exam-live-meta').textContent=current.source+' • '+countQ(current)+' câu • '+current.duration+' phút';document.getElementById('real-exam-questions').scrollIntoView({behavior:'smooth',block:'start'});realExamRenderQuestions(); if(timer)clearInterval(timer); if(window.__realExamAutosaveInterval)clearInterval(window.__realExamAutosaveInterval); window.__realExamAutosaveInterval=setInterval(()=>{if(attempt)window.realExamSave?.(false)},10000); timer=setInterval(()=>{const left=x.expiresAt-Date.now();const el=document.getElementById('real-exam-live-timer');if(el)el.textContent=fmt(left);if(left<=0){clearInterval(timer);realExamSubmit(true)}},500); }catch(e){window.phucToast?.('⚠️ '+e.message);}}
+window.realExamSave=async function(showToast=false){if(!attempt)return;try{clearTimeout(autosaveTimer);await getJSON(API+'?action=save',{method:'POST',headers:headers(),body:JSON.stringify({attemptId:attempt,answers})});if(showToast)window.phucToast?.('✓ Đã lưu tạm bài làm trên máy chủ.')}catch(e){if(showToast)window.phucToast?.('⚠️ '+e.message);}}
+window.realExamSubmit=async function(auto){if(!attempt)return; if(!auto&&!confirm('Nộp bài và chấm ngay?'))return; try{clearTimeout(autosaveTimer);await realExamSave(false);const x=await getJSON(API+'?action=submit',{method:'POST',headers:headers(),body:JSON.stringify({attemptId:attempt,answers,auto:!!auto})}); if(timer)clearInterval(timer);renderResult(x.result);renderHistory();}catch(e){window.phucToast?.('⚠️ '+e.message)}}
+function renderResult(r){
+ const box=document.getElementById('real-exam-result');
+ document.getElementById('real-exam-player')?.classList.add('hidden');
+ box.classList.remove('hidden');
+ const safeCurrent=current;
+ const score=Number(r.score||0).toFixed(2);
+ const raw=Number(r.rawScore||0).toFixed(2);
+ const max=Number(r.maxScore||0).toFixed(2);
+ const unanswered=Number(r.unanswered||0);
+ const answerText=(v)=>Array.isArray(v)?v.map(x=>x===true?'Đúng':x===false?'Sai':'—').join(' • '):String(v??'—');
+ const optionText=(q,v)=>{if(!q)return String(v??'—');if(q.type==='mcq'&&v){const idx=String(v).charCodeAt(0)-65;return idx>=0&&idx<(q.options||[]).length?`${v} • ${q.options[idx]}`:String(v)}if(q.type==='truefalse')return answerText(v);return String(v??'—')};
+ const findQ=id=>(safeCurrent?.questions||[]).find(q=>q.id===id);
+ const reviewCards=(r.review||[]).map(v=>{
+   const q=findQ(v.id);
+   const correctLabel=q?.type==='mcq'?optionText(q,v.correctAnswer):q?.type==='truefalse'?answerText(v.correctAnswer):answerText(v.correctAnswer);
+   const userLabel=optionText(q,v.userAnswer);
+   const tfDetail=q?.type==='truefalse'&&Array.isArray(v.statements)?`<div class="mt-3 space-y-2">${v.statements.map((st,i)=>{const got=Array.isArray(v.userAnswer)?v.userAnswer[i]:null;const expected=Array.isArray(v.correctAnswer)?v.correctAnswer[i]:null;return `<div class="rounded-xl border ${st.correct?'border-emerald-200 bg-emerald-50/70':'border-rose-200 bg-rose-50/70'} p-3"><div class="text-[10px] font-black text-slate-700">${String.fromCharCode(97+i)}. ${st.correct?'✓ Đúng':'✗ Sai'}</div><div class="grid sm:grid-cols-2 gap-2 mt-2 text-[10px]"><div><span class="font-black text-slate-400">Bạn chọn:</span> ${got===null||got===undefined?'Chưa chọn':got?'Đúng':'Sai'}</div><div><span class="font-black text-slate-400">Đáp án:</span> ${expected===true?'Đúng':expected===false?'Sai':'—'}</div></div></div>`}).join('')}</div>`:'';
+   return `<article class="exam-review-card ${v.correct?'is-correct':'is-wrong'}"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="text-[9px] uppercase tracking-[.12em] font-black ${v.correct?'text-emerald-600':'text-rose-600'}">${v.correct?'✓ CÂU ĐÚNG':'✗ CÂU SAI / CHƯA TRỌN ĐIỂM'}</div><div class="mt-1 text-sm font-black text-slate-900">Câu ${v.number}</div>${q?.text?`<div class="mt-2 text-[11px] leading-relaxed text-slate-700">${esc(q.text)}</div>`:''}</div><div class="shrink-0 rounded-xl ${v.correct?'bg-emerald-50 text-emerald-700':'bg-rose-50 text-rose-700'} px-3 py-2 text-[10px] font-black">${Number(v.points||0).toFixed(2)}đ</div></div><div class="grid sm:grid-cols-2 gap-2 mt-3"><div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><div class="text-[8px] uppercase tracking-[.1em] font-black text-slate-400">Bài làm của bạn</div><div class="mt-1 text-[11px] font-black text-slate-800">${esc(userLabel)}</div></div><div class="rounded-xl border border-indigo-200 bg-indigo-50 p-3"><div class="text-[8px] uppercase tracking-[.1em] font-black text-indigo-500">Đáp án đúng</div><div class="mt-1 text-[11px] font-black text-indigo-900">${esc(correctLabel)}</div></div></div>${tfDetail}${v.explanation?`<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3"><div class="text-[8px] uppercase tracking-[.1em] font-black text-amber-700">Giải thích</div><div class="mt-1 text-[11px] leading-relaxed text-amber-950">${esc(v.explanation)}</div></div>`:''}${v.sourcePage?`<button type="button" onclick="realExamOpenSource('${esc(safeCurrent.id)}',${Number(v.sourcePage)},'Câu ${v.number}')" class="mt-3 exam-review-source-btn">Xem hình/bảng nguồn • trang ${Number(v.sourcePage)}</button>`:''}</article>`;
+ }).join('');
+ box.innerHTML=`<div class="rounded-3xl bg-slate-950 text-white p-5 sm:p-7"><div class="text-[9px] uppercase font-black tracking-[.15em] text-emerald-300">ĐÃ CHẤM NGAY • SERVER-SIDE</div><div class="flex flex-col md:flex-row md:items-end justify-between gap-5"><div><h3 class="text-2xl sm:text-3xl font-black mt-2">${esc(safeCurrent?.title||'Kết quả bài thi')}</h3><p class="text-[10px] text-slate-400 mt-2">${r.correct||0}/${r.total||0} câu hoàn toàn đúng • ${unanswered} câu chưa trả lời${r.expired?' • Hết giờ':''}</p></div><div class="grid grid-cols-2 gap-2 min-w-[220px]"><div class="rounded-2xl bg-white/10 px-4 py-3 text-center"><div class="text-[8px] uppercase text-slate-300 font-black">ĐIỂM / 10</div><div class="text-3xl font-black text-amber-300">${score}</div></div><div class="rounded-2xl bg-white/10 px-4 py-3 text-center"><div class="text-[8px] uppercase text-slate-300 font-black">ĐIỂM GỐC</div><div class="text-xl font-black text-white">${raw}<span class="text-xs text-slate-400">/${max}</span></div></div></div></div>${r.expired?'<div class="mt-4 rounded-xl bg-amber-400/10 border border-amber-300/20 px-3 py-2 text-[10px] text-amber-200">⏱ Hệ thống đã tự chấm phần bài làm được lưu khi hết giờ.</div>':''}</div><div class="flex flex-wrap gap-2"><button type="button" onclick="realExamExit()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-black">← Về kho</button><button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black">↑ Xem tổng quan</button></div><div class="exam-review-wrap">${reviewCards}</div>`;
+ box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+window.realExamExit=function(){if(timer)clearInterval(timer);if(window.__realExamAutosaveInterval)clearInterval(window.__realExamAutosaveInterval);clearTimeout(autosaveTimer);document.getElementById('real-exam-player')?.classList.add('hidden');document.getElementById('real-exam-result')?.classList.add('hidden');document.getElementById('real-exam-list')?.scrollIntoView({behavior:'smooth',block:'start'});attempt=null;current=null;answers={};}
 window.realExamOpenSource=async function(id,page,title){try{const x=await getJSON(API+'?action=get&id='+encodeURIComponent(id));const e=x.exam;const modal=document.getElementById('real-exam-source-modal');document.getElementById('real-exam-source-title').textContent=title+' • nguồn PDF gốc';document.getElementById('real-exam-source-frame').src=(e.sourceFile||'')+(page?'#page='+page:'');modal.classList.remove('hidden');}catch(e){window.phucToast?.('⚠️ '+e.message)}}
 window.realExamCloseSource=function(){document.getElementById('real-exam-source-modal')?.classList.add('hidden');document.getElementById('real-exam-source-frame').src='';}
 window.realExamAdminImport=async function(){const out=document.getElementById('real-exam-admin-msg');try{const obj=JSON.parse(document.getElementById('real-exam-admin-json').value);obj.program=document.getElementById('real-exam-admin-program')?.value||obj.program;obj.subject=document.getElementById('real-exam-admin-subject')?.value||obj.subject;obj.examType=document.getElementById('real-exam-admin-type')?.value||obj.examType;obj.year=document.getElementById('real-exam-admin-year')?.value.trim()||obj.year;obj.examPeriod=document.getElementById('real-exam-admin-period')?.value.trim()||obj.examPeriod;obj.periodLabel=[typeLabel(obj.examType),obj.examPeriod,obj.year].filter(Boolean).join(' • ');const x=await getJSON(API+'?action=admin-import',{method:'POST',headers:headers(),body:JSON.stringify({exam:obj})});out.textContent='✓ '+x.message;await realExamLoad();}catch(e){out.textContent='✗ '+e.message}}
@@ -8331,6 +8353,210 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
   const mo=new MutationObserver(()=>mount());mo.observe(document.body,{childList:true,subtree:true});setTimeout(()=>mo.disconnect(),12000);
 })();
 </script>
+
+
+<style id="phuc-exam-admin-v5-style">
+  #real-exam-admin{position:relative}
+  .exam-admin-v5-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .exam-admin-v5-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .exam-admin-filebox{border:1.5px dashed #475569;border-radius:16px;padding:16px;background:rgba(15,23,42,.75);text-align:center;cursor:pointer;transition:.18s}
+  .exam-admin-filebox:hover,.exam-admin-filebox.drag{border-color:#34d399;background:rgba(16,185,129,.08)}
+  .exam-admin-filebox input{display:none}
+  .exam-admin-filebox .big{font-size:24px}
+  .exam-admin-filelist{display:grid;gap:6px;margin-top:8px}
+  .exam-admin-fileitem{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #334155;background:#0f172a;border-radius:10px;font-size:10px}
+  .exam-admin-fileitem span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .exam-admin-source-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .exam-admin-status{font-size:10px;line-height:1.5}
+  .exam-admin-drafts{display:grid;gap:7px;margin-top:12px}
+  .exam-admin-draft{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid #334155;background:#0b1220;border-radius:12px}
+  .exam-admin-draft small{display:block;color:#94a3b8;margin-top:3px}
+  .exam-admin-btn{min-height:42px;padding:9px 12px;border-radius:12px;font-size:10px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation}
+  @media(max-width:720px){
+    .exam-admin-v5-grid,.exam-admin-v5-grid.three{grid-template-columns:1fr}
+    .exam-admin-btn{width:100%}
+    .exam-admin-draft{grid-template-columns:1fr}
+    #real-exam-admin{padding:13px!important}
+  }
+  @media(max-width:420px){
+    .exam-admin-filebox{padding:14px 10px}
+  }
+</style>
+<script id="phuc-exam-admin-v5-script">
+(function(){
+  'use strict';
+  const A='/api/exams', B='/api/blob';
+  const root=()=>document.getElementById('real-exam-admin');
+  const acc=()=>window.phucAccount||window.state||{};
+  const hdr=()=>{const h={'Content-Type':'application/json','Accept':'application/json'};if(acc().csrf)h['X-CSRF-Token']=acc().csrf;return h};
+  const j=async(url,opt)=>{const r=await fetch(url,{credentials:'same-origin',cache:'no-store',...(opt||{})});const x=await r.json().catch(()=>({}));if(!r.ok||x.ok===false)throw new Error(x.message||('HTTP '+r.status));return x};
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const isAdmin=()=>!!(acc().isAdmin||acc().is_admin||String(acc().user?.username||'').toLowerCase()==='phucadmin');
+  const typeLabel=k=>({'thi-thu':'Thi thử','hoc-ky-i':'Học kỳ I','hoc-ky-ii':'Học kỳ II','khao-sat':'Khảo sát chất lượng','tot-nghiep':'Tốt nghiệp THPT','vao-10':'Thi vào 10','other':'Kỳ thi khác'}[k]||k||'Kỳ thi khác');
+  const subjectLabel=k=>({math:'Toán',physics:'Vật lí',chemistry:'Hóa học',biology:'Sinh học',english:'Tiếng Anh'}[k]||k);
+  const programLabel=k=>({'2k9':'2K9 • Lớp 12','2k11':'2K11 • Lớp 10','2k12':'2K12 • Ôn vào 10'}[k]||k);
+  function renderAdminV5(){
+    const r=root(); if(!r)return;
+    r.innerHTML=`
+      <div class="text-[9px] uppercase font-black tracking-[.15em] text-amber-300">ADMIN • PHUCADMIN</div>
+      <h3 class="font-black mt-1 text-base">Quản trị Kho Luyện Đề</h3>
+      <p class="text-[10px] text-slate-400 mt-1">Upload đề nguồn trực tiếp từ điện thoại hoặc máy tính. PDF/Word/ZIP/JSON lưu trên Blob; đề chỉ xuất bản sau khi có dữ liệu câu hỏi + đáp án hợp lệ.</p>
+
+      <div class="exam-admin-v5-grid three mt-3">
+        <select id="real-exam-admin-program" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]"><option value="2k9">2K9 • Lớp 12</option><option value="2k11">2K11 • Lớp 10</option><option value="2k12">2K12 • Ôn vào 10</option></select>
+        <select id="real-exam-admin-subject" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]"><option value="math">Toán</option><option value="physics">Vật lí</option><option value="chemistry">Hóa học</option><option value="biology">Sinh học</option><option value="english">Tiếng Anh</option></select>
+        <select id="real-exam-admin-type" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]"><option value="thi-thu">Thi thử</option><option value="hoc-ky-i">Học kỳ I</option><option value="hoc-ky-ii">Học kỳ II</option><option value="khao-sat">Khảo sát chất lượng</option><option value="tot-nghiep">Tốt nghiệp THPT</option><option value="vao-10">Thi vào 10</option><option value="other">Kỳ thi khác</option></select>
+      </div>
+      <div class="exam-admin-v5-grid mt-2">
+        <input id="real-exam-admin-year" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]" placeholder="Năm, ví dụ 2026" inputmode="numeric">
+        <input id="real-exam-admin-period" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]" placeholder="HKI • Lần 1 • Mã 0401">
+      </div>
+      <div class="exam-admin-v5-grid mt-2">
+        <input id="real-exam-admin-title" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]" placeholder="Tên đề (để trống sẽ lấy tên file)">
+        <input id="real-exam-admin-source" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px]" placeholder="Nguồn đề, ví dụ Sở GD&ĐT ...">
+      </div>
+
+      <label class="exam-admin-filebox mt-3" id="exam-source-drop">
+        <input id="real-exam-admin-files" type="file" accept=".pdf,.doc,.docx,.zip,.json,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/json" multiple>
+        <div class="big">📄</div>
+        <div class="font-black text-xs mt-1">Chọn file đề / kéo thả vào đây</div>
+        <div class="text-[9px] text-slate-400 mt-1">Có thể chọn nhiều file • PDF / Word / ZIP / JSON • tối đa 25MB/file</div>
+      </label>
+      <div id="exam-source-filelist" class="exam-admin-filelist"></div>
+
+      <div class="exam-admin-source-actions mt-3">
+        <button type="button" class="exam-admin-btn bg-emerald-600 text-white" id="exam-source-upload-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Lưu nguồn đề</button>
+        <button type="button" class="exam-admin-btn bg-slate-800 text-white" id="exam-source-json-btn"><i class="fa-solid fa-file-code"></i> Nhập JSON câu hỏi</button>
+      </div>
+
+      <details class="mt-3 border border-slate-800 rounded-xl">
+        <summary class="cursor-pointer p-3 text-[10px] font-black text-slate-300">⚙️ Nâng cao: dán JSON dữ liệu đề</summary>
+        <div class="p-3 pt-0">
+          <textarea id="real-exam-admin-json" class="mt-3 w-full min-h-[220px] rounded-xl bg-slate-900 border border-slate-700 p-3 text-[10px] font-mono text-slate-200" placeholder='{"id":"de-ly-01","title":"...","questions":[...]}'></textarea>
+          <button type="button" class="exam-admin-btn mt-2 bg-indigo-600 text-white" id="exam-json-import-btn"><i class="fa-solid fa-database"></i> Lưu dữ liệu đề</button>
+        </div>
+      </details>
+
+      <div id="real-exam-admin-msg" class="exam-admin-status mt-3"></div>
+      <div class="border-t border-slate-800 mt-4 pt-4">
+        <div class="text-[9px] uppercase tracking-[.14em] font-black text-slate-400">Đề nháp / chờ duyệt</div>
+        <div id="exam-admin-drafts" class="exam-admin-drafts"><div class="text-[10px] text-slate-500">Đang tải…</div></div>
+      </div>
+    `;
+    const inp=r.querySelector('#real-exam-admin-files'),drop=r.querySelector('#exam-source-drop'),list=r.querySelector('#exam-source-filelist');
+    const paint=()=>{const fs=[...(inp?.files||[])];list.innerHTML=fs.map(f=>`<div class="exam-admin-fileitem"><span>${esc(f.name)}</span><span class="ml-auto text-slate-500">${Math.round(f.size/1024)}KB</span></div>`).join('')};
+    inp?.addEventListener('change',paint);
+    ['dragenter','dragover'].forEach(ev=>drop?.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
+    ['dragleave','drop'].forEach(ev=>drop?.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
+    drop?.addEventListener('drop',e=>{if(inp&&e.dataTransfer?.files?.length){inp.files=e.dataTransfer.files;paint()}});
+    r.querySelector('#exam-source-upload-btn')?.addEventListener('click',uploadSources);
+    r.querySelector('#exam-json-import-btn')?.addEventListener('click',importJson);
+    r.querySelector('#exam-source-json-btn')?.addEventListener('click',()=>r.querySelector('#real-exam-admin-json')?.closest('details')?.setAttribute('open','open'));
+    loadDrafts();
+  }
+  async function uploadSources(){
+    const r=root(),out=r?.querySelector('#real-exam-admin-msg'),inp=r?.querySelector('#real-exam-admin-files');
+    const files=[...(inp?.files||[])];
+    if(!files.length){out.textContent='⚠️ Chọn ít nhất 1 file nguồn trước.';return}
+    out.textContent=`Đang upload ${files.length} file…`;
+    try{
+      for(let idx=0;idx<files.length;idx++){
+        const f=files[idx];
+        if(f.size>25*1024*1024)throw new Error(`${f.name}: vượt quá 25MB.`);
+        const sourceId='src-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+        const payload={kind:'exam-source',sourceId,original_name:f.name,mime:f.type||'application/octet-stream',csrf:acc().csrf,program:r.querySelector('#real-exam-admin-program')?.value,subject:r.querySelector('#real-exam-admin-subject')?.value,examType:r.querySelector('#real-exam-admin-type')?.value,year:r.querySelector('#real-exam-admin-year')?.value.trim(),period:r.querySelector('#real-exam-admin-period')?.value.trim(),title:r.querySelector('#real-exam-admin-title')?.value.trim(),source:r.querySelector('#real-exam-admin-source')?.value.trim()};
+        const safe=f.name.replace(/[^a-zA-Z0-9._-]+/g,'-').slice(-100)||'source';
+        const pathname='exam-sources/'+sourceId+'-'+safe;
+        const mod=await import('https://esm.sh/@vercel/blob@2.8.0/client');
+        const blob=await mod.upload(pathname,f,{access:'private',handleUploadUrl:B,clientPayload:JSON.stringify(payload),contentType:f.type||'application/octet-stream',multipart:true});
+        const fin=await j(B+'?action=finalize-exam-source',{method:'POST',headers:hdr(),body:JSON.stringify({...payload,pathname:blob.pathname,url:blob.url,size:blob.size})});
+        const title=payload.title || f.name.replace(/\.[^.]+$/,'');
+        const examId='draft-'+sourceId;
+        const exam={id:examId,title,program:payload.program,subject:payload.subject,grade:payload.program==='2k9'?'12':payload.program==='2k11'?'10':'9',year:payload.year,examType:payload.examType,examPeriod:payload.period,periodLabel:[typeLabel(payload.examType),payload.period,payload.year].filter(Boolean).join(' • '),source:payload.source||'Nguồn do admin tải lên',sourceFile:'/api/exams?action=source-download&sourceId='+encodeURIComponent(fin.source.id),sourceId:fin.source.id,duration:60,questions:[]};
+        await j(A+'?action=admin-import',{method:'POST',headers:hdr(),body:JSON.stringify({exam})});
+      }
+      out.textContent=`✓ Đã lưu ${files.length} nguồn đề. Các đề đang ở trạng thái NHÁP; cần nhập dữ liệu câu hỏi + đáp án rồi mới publish.`;
+      loadDrafts();
+    }catch(e){out.textContent='✗ '+(e.message||'Upload thất bại')}
+  }
+  async function importJson(){
+    const txt=root()?.querySelector('#real-exam-admin-json')?.value.trim();
+    if(!txt){root().querySelector('#real-exam-admin-msg').textContent='⚠️ Dán JSON dữ liệu đề trước.';return}
+    await doImport(txt);
+  }
+  async function doImport(txt){
+    const r=root(),out=r.querySelector('#real-exam-admin-msg');
+    try{
+      const obj=JSON.parse(txt);
+      obj.program=r.querySelector('#real-exam-admin-program')?.value||obj.program;
+      obj.subject=r.querySelector('#real-exam-admin-subject')?.value||obj.subject;
+      obj.examType=r.querySelector('#real-exam-admin-type')?.value||obj.examType;
+      obj.year=r.querySelector('#real-exam-admin-year')?.value.trim()||obj.year;
+      obj.examPeriod=r.querySelector('#real-exam-admin-period')?.value.trim()||obj.examPeriod;
+      obj.title=r.querySelector('#real-exam-admin-title')?.value.trim()||obj.title||'Đề chưa đặt tên';
+      obj.source=r.querySelector('#real-exam-admin-source')?.value.trim()||obj.source||'Nguồn chưa khai báo';
+      obj.periodLabel=[typeLabel(obj.examType),obj.examPeriod,obj.year].filter(Boolean).join(' • ');
+      const x=await j(A+'?action=admin-import',{method:'POST',headers:hdr(),body:JSON.stringify({exam:obj})});
+      out.textContent='✓ '+x.message+' • '+(obj.questions||[]).length+' câu.';
+      loadDrafts();
+      if(window.realExamInit)window.realExamInit();
+    }catch(e){out.textContent='✗ '+(e.message||'JSON không hợp lệ')}
+  }
+  async function loadDrafts(){
+    if(!isAdmin())return;
+    const box=root()?.querySelector('#exam-admin-drafts');if(!box)return;
+    try{
+      const x=await j(A+'?action=admin-list');
+      const rows=x.exams||[];
+      box.innerHTML=rows.map(e=>`<div class="exam-admin-draft"><div><b class="text-[10px]">${esc(e.title)}</b><small>${esc(programLabel(e.program))} • ${esc(subjectLabel(e.subject))} • ${esc(typeLabel(e.examType))} • ${esc(e.year||'')} • ${Number(e.questionCount||0)} câu</small>${e.reviewCount?`<small class="text-amber-300">⚠ ${e.reviewCount} câu cần rà soát</small>`:`<small class="text-emerald-300">✓ Có thể publish</small>`}</div><div class="flex gap-1"><button class="exam-admin-btn ${e.published?'bg-slate-700':'bg-indigo-600'} text-white" data-pub="${esc(e.id)}" ${e.published?'disabled':''}>${e.published?'Đã xuất bản':'Xuất bản'}</button></div></div>`).join('')||'<div class="text-[10px] text-slate-500">Chưa có đề nháp.</div>';
+      box.querySelectorAll('[data-pub]').forEach(b=>b.addEventListener('click',async()=>{try{b.disabled=true;const x=await j(A+'?action=publish',{method:'POST',headers:hdr(),body:JSON.stringify({id:b.dataset.pub})});root().querySelector('#real-exam-admin-msg').textContent='✓ Đã xuất bản: '+x.exam.title;loadDrafts();window.realExamInit?.()}catch(e){root().querySelector('#real-exam-admin-msg').textContent='✗ '+e.message;b.disabled=false}}));
+    }catch(e){box.innerHTML='<div class="text-[10px] text-rose-300">Không tải được danh sách quản trị: '+esc(e.message)+'</div>'}
+  }
+  // Keep existing auth/tab behavior, but replace only the admin panel UI.
+  const boot=()=>{if(!isAdmin())return; const r=root(); if(r&&!r.dataset.v5){r.dataset.v5='1';renderAdminV5()}};
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,250));
+  const oldInit=window.realExamInit;
+  window.realExamInit=async function(){if(typeof oldInit==='function'){try{await oldInit()}catch(e){}} boot(); if(isAdmin())loadDrafts();};
+  // Login state can arrive after DOM ready.
+  setInterval(()=>{if(!root())return;if(isAdmin()&&!root().dataset.v5){root().dataset.v5='1';renderAdminV5()}},1200);
+})();
+</script>
+
+<style id="phuc-exam-review-v6-style">
+  .exam-review-wrap{display:grid;gap:12px;margin-top:12px}
+  .exam-review-card{border:1px solid #dbe4f0;border-radius:18px;background:#fff;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+  .exam-review-card.is-correct{border-color:#a7f3d0}
+  .exam-review-card.is-wrong{border-color:#fecaca}
+  .exam-review-source-btn{min-height:42px;padding:9px 12px;border-radius:10px;background:#f1f5f9;color:#334155;font-size:9px;font-weight:900;touch-action:manipulation}
+  @media(max-width:640px){
+    .exam-review-card{padding:13px;border-radius:16px}
+    .exam-review-card button,.exam-review-source-btn{width:100%;min-height:44px}
+    #real-exam-result .grid.sm\:grid-cols-2{grid-template-columns:1fr}
+  }
+</style>
+<style id="phuc-exam-mobile-v5-extra">
+@media(max-width:640px){
+  #tab-exam-bank{gap:12px!important}
+  #tab-exam-bank .rounded-3xl{border-radius:18px!important}
+  #tab-exam-bank input,#tab-exam-bank select{min-height:42px}
+  #real-exam-filters{grid-template-columns:1fr!important}
+  #real-exam-list{grid-template-columns:1fr!important}
+  #real-exam-history{font-size:11px}
+  #real-exam-player .sticky{top:0.35rem;padding:11px!important}
+  #real-exam-live-title{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+  #real-exam-questions>div{border-radius:16px!important;padding:13px!important}
+  #real-exam-questions label{min-height:44px}
+  #real-exam-questions button{min-height:42px}
+  #real-exam-player>div:last-child{position:sticky;bottom:8px;z-index:40;box-shadow:0 12px 30px rgba(15,23,42,.12)}
+  #real-exam-source-modal{padding:6px!important}
+  #real-exam-source-modal>div{border-radius:14px!important}
+  #real-exam-source-frame{min-height:78vh}
+}
+@media(max-width:380px){
+  #tab-exam-bank .text-2xl{font-size:1.35rem!important}
+  #tab-exam-bank .text-4xl{font-size:1.65rem!important}
+}
+</style>
 
 </body>
 </html>
