@@ -92,6 +92,48 @@ async function lessonStatus(req,res){
 
 module.exports = async function handler(req,res){
   try{
+    // Explicit finalization for lesson PDFs. The browser calls this immediately after
+    // Vercel Blob confirms the upload, so Redis does not depend on onUploadCompleted.
+    if(req.method==='POST'){
+      const u = new URL(req.url,'http://localhost');
+      if(u.searchParams.get('action')==='finalize-lesson-pdf'){
+        const session=await getSession(req);
+        if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi gắn PDF bài giảng.'});
+        if(!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được gắn PDF bài giảng.'});
+        const body=parseJsonBody(req);
+        if(String(body?.kind||'')!=='lesson-pdf')return sendJson(res,400,{ok:false,message:'Yêu cầu finalization không hợp lệ.'});
+        if(String(body?.csrf||'')!==String(session.csrf||''))return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.'});
+        const key=clean(body?.lessonKey,180);
+        if(!validLessonKey(key))return sendJson(res,400,{ok:false,message:'Mã bài giảng không hợp lệ.'});
+        const pathname=clean(body?.pathname,500);
+        if(!pathname.startsWith('lesson-pdfs/') || pathname.includes('..') || pathname.includes('\\') || /[\r\n]/.test(pathname))
+          return sendJson(res,400,{ok:false,message:'Đường dẫn Blob không hợp lệ.'});
+        const filename=clean(body?.original_name,180)||'bai-giang.pdf';
+        if(extOf(filename)!=='pdf')return sendJson(res,400,{ok:false,message:'Chỉ cho phép PDF.'});
+        const mime=clean(body?.mime,120)||'application/pdf';
+        if(mime!=='application/pdf')return sendJson(res,400,{ok:false,message:'MIME PDF không hợp lệ.'});
+
+        // Verify the private blob really exists before saving its mapping.
+        const result=await getBlob(pathname,{access:'private'});
+        if(!result || result.statusCode!==200)
+          return sendJson(res,404,{ok:false,message:'File PDF vừa tải lên chưa tồn tại trên Vercel Blob.'});
+
+        const redis=getRedis();
+        const oldRaw=await redis.get(`phuc:lesson-pdf:${key}`);
+        let old=null;
+        if(oldRaw){try{old=typeof oldRaw==='string'?JSON.parse(oldRaw):oldRaw}catch{old=null}}
+        const user=await getUserByUsername(session.username);
+        if(!user)return sendJson(res,400,{ok:false,message:'Không tìm thấy tài khoản admin.'});
+        const bytes=Number(result.blob?.size||body?.size||0);
+        const sizeLabel=bytes<1024*1024?`${Math.max(1,Math.round(bytes/1024))} KB`:`${(bytes/(1024*1024)).toFixed(1)} MB`;
+        const now=new Date().toISOString();
+        const item={lessonKey:key,lessonTitle:clean(body?.lessonTitle,240),original_name:filename,mime:'application/pdf',size:bytes,size_label:sizeLabel,pathname,url:clean(body?.url,1200)||result.blob?.url||'',updated_at:now,updated_by:user.display_name||session.username};
+        await redis.set(`phuc:lesson-pdf:${key}`,JSON.stringify(item));
+        if(old?.pathname && old.pathname!==pathname){try{await delBlob(old.pathname,{access:'private'})}catch(e){console.warn('lesson old blob delete failed',e?.message)}}
+        return sendJson(res,200,{ok:true,available:true,lessonKey:key,pdf:{original_name:item.original_name,size:item.size,size_label:item.size_label,updated_at:item.updated_at}});
+      }
+    }
+
     if(req.method==='GET'){
       const u = new URL(req.url,'http://localhost');
       const kind = String(u.searchParams.get('kind') || '');
