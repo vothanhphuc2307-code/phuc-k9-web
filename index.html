@@ -6203,24 +6203,24 @@ html.dark-mode .phuc-lesson-pdf-card{background:#111827;border-color:#273449}htm
   function syncMath(){
     const t=document.getElementById('current-lesson-title'); if(!t||document.getElementById('tab-courses')?.classList.contains('hidden'))return;
     let ci=0,ti=0; try{ci=typeof currentChapterIndex==='number'?currentChapterIndex:0;ti=typeof currentTopicIndex==='number'?currentTopicIndex:0}catch{}
-    const key=`2k9-math-c${ci+1}-t${ti+1}`;const card=mount('current-lesson-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
+    const key=`2k9-math-c${ci+1}-t${ti+1}`;const card=mount('current-lesson-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key || card.dataset.adminState!==String(!!getState().isAdmin)){card.dataset.lastLoaded=key;card.dataset.adminState=String(!!getState().isAdmin);load(card)}}
   }
   function syncEnglish(){
     const t=document.getElementById('english-title'); if(!t||document.getElementById('tab-english')?.classList.contains('hidden'))return;
-    const ci=typeof englishChapter==='number'?englishChapter:0,ti=typeof englishTopic==='number'?englishTopic:0;const key=`2k9-english-c${ci+1}-t${ti+1}`;const card=mount('english-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
+    const ci=typeof englishChapter==='number'?englishChapter:0,ti=typeof englishTopic==='number'?englishTopic:0;const key=`2k9-english-c${ci+1}-t${ti+1}`;const card=mount('english-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key || card.dataset.adminState!==String(!!getState().isAdmin)){card.dataset.lastLoaded=key;card.dataset.adminState=String(!!getState().isAdmin);load(card)}}
   }
   function syncG10(){
     const t=document.getElementById('g10-current-title'); if(!t||document.getElementById('tab-grade10')?.classList.contains('hidden'))return;
-    const si=typeof g10SubjectIndex==='number'?g10SubjectIndex:0,ci=typeof g10ChapterIndex==='number'?g10ChapterIndex:0,ti=typeof g10TopicIndex==='number'?g10TopicIndex:0;const key=`2k12-g${si+1}-c${ci+1}-t${ti+1}`;const card=mount('g10-current-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
+    const si=typeof g10SubjectIndex==='number'?g10SubjectIndex:0,ci=typeof g10ChapterIndex==='number'?g10ChapterIndex:0,ti=typeof g10TopicIndex==='number'?g10TopicIndex:0;const key=`2k12-g${si+1}-c${ci+1}-t${ti+1}`;const card=mount('g10-current-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key || card.dataset.adminState!==String(!!getState().isAdmin)){card.dataset.lastLoaded=key;card.dataset.adminState=String(!!getState().isAdmin);load(card)}}
   }
   function syncScience(subject){
     const title=document.getElementById(subject+'-title');if(!title)return;
-    const st=window.scienceState?.[subject];if(!st)return;const key=`2k9-${subject}-c${st.c+1}-t${st.t+1}`;const card=mount(subject+'-desc');if(card){contextCard(card,key,title.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
+    const st=window.scienceState?.[subject];if(!st)return;const key=`2k9-${subject}-c${st.c+1}-t${st.t+1}`;const card=mount(subject+'-desc');if(card){contextCard(card,key,title.textContent.trim());if(card.dataset.lastLoaded!==key || card.dataset.adminState!==String(!!getState().isAdmin)){card.dataset.lastLoaded=key;card.dataset.adminState=String(!!getState().isAdmin);load(card)}}
   }
   function sync211(){
     const t=document.getElementById('phuc211-current-title'); if(!t||document.getElementById('tab-courses-2k11')?.classList.contains('hidden'))return;
     let si=0,ti=0;try{const sub=window.phuc211ActiveSubject;si=0;ti=0}catch{}
-    const tag=document.getElementById('phuc211-current-tag')?.textContent||'';const match=tag.match(/Bài\s+(\d+)/i);const n=match?Number(match[1]):1;const key=`2k11-lesson-${n}-${safeKey(t.textContent)}`;const card=mount('phuc211-current-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key){card.dataset.lastLoaded=key;load(card)}}
+    const tag=document.getElementById('phuc211-current-tag')?.textContent||'';const match=tag.match(/Bài\s+(\d+)/i);const n=match?Number(match[1]):1;const key=`2k11-lesson-${n}-${safeKey(t.textContent)}`;const card=mount('phuc211-current-desc');if(card){contextCard(card,key,t.textContent.trim());if(card.dataset.lastLoaded!==key || card.dataset.adminState!==String(!!getState().isAdmin)){card.dataset.lastLoaded=key;card.dataset.adminState=String(!!getState().isAdmin);load(card)}}
   }
   function syncAll(){try{syncMath()}catch{};try{syncEnglish()}catch{};try{syncG10()}catch{};try{syncScience('physics')}catch{};try{syncScience('chemistry')}catch{};try{sync211()}catch{} }
   // Re-check only when the active lesson changes; low-frequency observer avoids interfering with the page.
@@ -9548,5 +9548,46 @@ document.addEventListener('DOMContentLoaded',()=>{setTimeout(realExamLoad,500);}
     if(tab==='exam-bank') setTimeout(()=>window.realExamInit?.(),60);
   };
   document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>window.realExamInit?.(),120));
+})();
+</script>
+
+<script id="phuc-science-pdf-admin-state-fix-v7">
+(function(){
+  'use strict';
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  function scienceCardKey(subject){
+    const st=window.scienceState?.[subject];
+    if(!st) return null;
+    return `2k9-${subject}-c${Number(st.c)+1}-t${Number(st.t)+1}`;
+  }
+  async function refresh(subject){
+    try{
+      const key=scienceCardKey(subject);
+      const desc=document.getElementById(subject+'-desc');
+      if(!key||!desc) return;
+      const parent=desc.parentElement||desc;
+      let card=parent.querySelector(':scope > .phuc-lesson-pdf-card');
+      if(!card){
+        card=document.createElement('div');
+        card.className='phuc-lesson-pdf-card';
+        parent.appendChild(card);
+      }
+      const title=document.getElementById(subject+'-title')?.textContent?.trim()||'Bài học';
+      card.dataset.lessonKey=key;
+      card.dataset.lessonTitle=title;
+      const admin=String(!!(window.phucAccount?.isAdmin));
+      if(card.dataset.adminState!==admin){
+        card.dataset.adminState=admin;
+        card.dataset.lastLoaded='';
+      }
+      if(typeof window.phucLessonPdfSync==='function') window.phucLessonPdfSync();
+    }catch(e){console.debug('[science pdf admin sync]',subject,e);}
+  }
+  async function boot(){
+    await wait(300);
+    refresh('physics'); refresh('chemistry');
+    setInterval(()=>{refresh('physics');refresh('chemistry');},1500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
 })();
 </script>
