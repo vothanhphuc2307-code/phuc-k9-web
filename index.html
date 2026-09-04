@@ -8733,6 +8733,117 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
 })();
 </script>
 
+
+<!-- PHUC K9 V9: HARD SCIENCE PDF CARD ENFORCER
+     Reconciles the Lý 12 / Hóa 12 PDF slot after every science render.
+     Independent of the legacy phucPdfLink placeholder so later renderer passes cannot hide admin upload. -->
+<style id="phuc-v9-science-pdf-enforcer-style">
+  #physics-pdf-context,#chemistry-pdf-context{width:100%;box-sizing:border-box}
+  #physics-pdf-context > .phuc-v9-pdf-card,#chemistry-pdf-context > .phuc-v9-pdf-card{margin-top:10px}
+  .phuc-v9-pdf-card{border:1px solid #e2e8f0;border-radius:16px;background:#fff;padding:12px;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+  .phuc-v9-pdf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .phuc-v9-pdf-title{font-size:11px;font-weight:900;color:#0f172a}.phuc-v9-pdf-sub{margin-top:3px;font-size:9px;color:#64748b;line-height:1.45}
+  .phuc-v9-pdf-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:900;white-space:nowrap}
+  .phuc-v9-pdf-badge.yes{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}.phuc-v9-pdf-badge.no{background:#f8fafc;border:1px solid #e2e8f0;color:#64748b}
+  .phuc-v9-pdf-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .phuc-v9-pdf-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #e2e8f0;border-radius:9px;padding:8px 10px;font-size:9px;font-weight:900;text-decoration:none;cursor:pointer;transition:.15s}
+  .phuc-v9-pdf-btn.view{background:#ecfdf5;border-color:#a7f3d0;color:#047857}.phuc-v9-pdf-btn.admin{background:#eef2ff;border-color:#c7d2fe;color:#4338ca}
+  .phuc-v9-pdf-meta{margin-top:8px;font-size:8px;color:#94a3b8}.phuc-v9-pdf-empty{margin-top:9px;padding:8px 9px;border-radius:10px;background:#f8fafc;color:#64748b;font-size:9px;font-weight:700}
+  .phuc-v9-pdf-error{margin-top:9px;padding:8px 9px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:9px;font-weight:800}
+  @media(max-width:640px){.phuc-v9-pdf-actions{display:grid;grid-template-columns:1fr}.phuc-v9-pdf-btn{width:100%;justify-content:center;min-height:42px}}
+  html.dark-mode .phuc-v9-pdf-card{background:#111827;border-color:#273449}html.dark-mode .phuc-v9-pdf-title{color:#f8fafc}html.dark-mode .phuc-v9-pdf-sub{color:#94a3b8}html.dark-mode .phuc-v9-pdf-empty{background:#0f172a;color:#94a3b8}html.dark-mode .phuc-v9-pdf-badge.no{background:#0f172a;border-color:#273449;color:#94a3b8}
+</style>
+<script id="phuc-v9-science-pdf-enforcer">
+(function(){
+  'use strict';
+  if(window.__phucSciencePdfEnforcerV9)return; window.__phucSciencePdfEnforcerV9=true;
+  const API='/api/blob', MAX=25*1024*1024;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  const keyFor=subject=>{const st=window.scienceState?.[subject];return st?`2k9-${subject}-c${Number(st.c||0)+1}-t${Number(st.t||0)+1}`:''};
+  const titleFor=subject=>document.getElementById(subject+'-title')?.textContent?.trim()||'Bài học';
+  const isAdmin=()=>{const a=window.phucAccount||window.state||window.phucState||{},u=a.user||{};return !!(a.isAdmin||a.is_admin||window.__phucIsAdmin||String(u.username||'').trim().toLowerCase()==='phucadmin')};
+  const csrf=()=>{const a=window.phucAccount||{};return String(a.csrf||'')};
+  async function readStatus(key){
+    const r=await fetch(API+'?kind=lesson-pdf&lessonKey='+encodeURIComponent(key)+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store'});
+    const d=await r.json(); if(!r.ok||!d?.ok)throw new Error(d?.message||'Không kiểm tra được PDF.'); return d;
+  }
+  function host(subject){return document.getElementById(subject+'-pdf-context')};
+  function paint(subject,data){
+    const h=host(subject); if(!h)return null;
+    let card=h.querySelector(':scope > .phuc-v9-pdf-card');
+    if(!card){h.innerHTML='';card=document.createElement('div');card.className='phuc-v9-pdf-card';h.appendChild(card)}
+    const key=data.key,title=data.title,admin=isAdmin(),badge=data.available?'<span class="phuc-v9-pdf-badge yes"><i class="fa-solid fa-circle-check"></i> ĐÃ CÓ PDF</span>':'<span class="phuc-v9-pdf-badge no"><i class="fa-regular fa-circle-xmark"></i> CHƯA CÓ PDF</span>';
+    let body=`<div class="phuc-v9-pdf-head"><div><div class="phuc-v9-pdf-title"><i class="fa-solid fa-file-pdf text-red-500 mr-1"></i> PDF bài giảng</div><div class="phuc-v9-pdf-sub">Tài liệu được gắn riêng cho: <b>${esc(title)}</b></div></div>${badge}</div>`;
+    if(data.error)body+=`<div class="phuc-v9-pdf-error">${esc(data.error)}</div>`;
+    if(data.available){
+      body+=`<div class="phuc-v9-pdf-actions"><a class="phuc-v9-pdf-btn view" target="_blank" rel="noopener noreferrer" href="${API}?kind=lesson-pdf&lessonKey=${encodeURIComponent(key)}&download=1"><i class="fa-solid fa-file-arrow-down"></i> Mở / tải PDF bài này</a>`;
+      if(admin)body+=`<button type="button" class="phuc-v9-pdf-btn admin" data-v9-upload><i class="fa-solid fa-file-circle-plus"></i> Thay PDF</button>`;
+      body+='</div>';
+      if(data.pdf?.original_name)body+=`<div class="phuc-v9-pdf-meta">${esc(data.pdf.original_name)}${data.pdf.size_label?' • '+esc(data.pdf.size_label):''}</div>`;
+    }else{
+      body+='<div class="phuc-v9-pdf-empty">Học viên chưa có PDF cho bài này.</div>';
+      if(admin)body+=`<div class="phuc-v9-pdf-actions"><button type="button" class="phuc-v9-pdf-btn admin" data-v9-upload><i class="fa-solid fa-cloud-arrow-up"></i> Thêm PDF cho bài này</button></div>`;
+    }
+    if(admin)body+=`<input type="file" accept="application/pdf,.pdf" data-v9-file hidden><div class="phuc-v9-pdf-meta">🔐 Chỉ tài khoản admin mới thấy quyền upload.</div>`;
+    card.innerHTML=body;
+    const btn=card.querySelector('[data-v9-upload]'),input=card.querySelector('[data-v9-file]');
+    if(btn&&input)btn.addEventListener('click',()=>input.click());
+    if(input)input.addEventListener('change',()=>upload(subject,card,input.files?.[0]));
+    return card;
+  }
+  async function reconcile(subject){
+    const h=host(subject),key=keyFor(subject); if(!h||!key||!document.getElementById('tab-'+subject)||document.getElementById('tab-'+subject)?.classList.contains('hidden'))return;
+    if(h.__v9Busy)return;
+    const title=titleFor(subject),admin=isAdmin();
+    let card=h.querySelector(':scope > .phuc-v9-pdf-card');
+    const needs=!card || card.dataset.v9Key!==key || (admin && card.dataset.v9Admin!=='1') || (!admin && card.dataset.v9Admin==='1');
+    if(!needs)return;
+    h.__v9Busy=true;
+    try{
+      h.innerHTML='<div class="phuc-v9-pdf-card"><div class="text-[9px] text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang kiểm tra PDF bài giảng…</div></div>';
+      card=h.querySelector(':scope > .phuc-v9-pdf-card');
+      if(card){card.dataset.v9Key=key;card.dataset.v9Admin=admin?'1':'0';}
+      const d=await readStatus(key);
+      card=paint(subject,{...d,key,title});
+      if(card){card.dataset.v9Key=key;card.dataset.v9Admin=admin?'1':'0';}
+    }catch(e){
+      card=paint(subject,{ok:true,available:false,key,title,error:e.message||'Lỗi kiểm tra PDF.'});
+      if(card){card.dataset.v9Key=key;card.dataset.v9Admin=admin?'1':'0';}
+    }finally{h.__v9Busy=false;}
+  }
+  async function upload(subject,card,file){
+    if(!file)return; if(!isAdmin()){alert('Bạn không có quyền quản trị.');return;}
+    if(!file.type.includes('pdf')&&!/\.pdf$/i.test(file.name)){alert('Chỉ cho phép file PDF.');return;}
+    if(file.size>MAX){alert('PDF vượt quá 25 MB.');return;}
+    const key=keyFor(subject),title=titleFor(subject); if(!key)return;
+    card.innerHTML='<div class="text-[9px] text-indigo-600 font-black"><i class="fa-solid fa-spinner fa-spin mr-1"></i> ĐANG TẢI PDF BÀI GIẢNG LÊN…</div>';
+    try{
+      let token=csrf();
+      if(!token){try{const m=await (await fetch('/api/auth?action=me',{credentials:'same-origin',cache:'no-store'})).json();token=m?.csrf||'';if(window.phucAccount)window.phucAccount.csrf=token}catch{}}
+      const {upload}=await import('https://esm.sh/@vercel/blob@2.8.0/client');
+      const safe=String(file.name||'lesson.pdf').replace(/[^a-zA-Z0-9._-]+/g,'-').slice(-120);
+      const pathname='lesson-pdfs/'+key+'-'+Date.now()+'-'+safe;
+      const blob=await upload(pathname,file,{access:'private',handleUploadUrl:API,clientPayload:JSON.stringify({kind:'lesson-pdf',lessonKey:key,lessonTitle:title,original_name:file.name,mime:'application/pdf',csrf:token}),contentType:'application/pdf',multipart:true});
+      if(!blob?.url)throw new Error('Vercel Blob không trả về file.');
+      await new Promise(r=>setTimeout(r,250));
+      const d=await readStatus(key); const newCard=paint(subject,{...d,key,title}); if(newCard){newCard.dataset.v9Key=key;newCard.dataset.v9Admin='1';}
+    }catch(e){card.innerHTML=`<div class="phuc-v9-pdf-error">❌ ${esc(e?.message||'Upload PDF thất bại.')}</div><div class="phuc-v9-pdf-actions"><button type="button" class="phuc-v9-pdf-btn admin" data-v9-retry>Thử lại</button></div>`;card.querySelector('[data-v9-retry]')?.addEventListener('click',()=>reconcile(subject));}
+  }
+  function enforce(subject){
+    reconcile(subject); setTimeout(()=>reconcile(subject),80); setTimeout(()=>reconcile(subject),350);
+  }
+  ['physics','chemistry'].forEach(subject=>{
+    const slotId=subject+'-pdf-context';
+    const start=()=>{const slot=document.getElementById(slotId);if(!slot)return;const mo=new MutationObserver(()=>{clearTimeout(slot.__v9t);slot.__v9t=setTimeout(()=>reconcile(subject),0)});mo.observe(slot,{childList:true,subtree:true});slot.__v9mo=mo;enforce(subject)};
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  });
+  function wrapScience(){const fn=window.renderScience;if(typeof fn!=='function'||fn.__v9ScienceWrapped)return;const wrapped=function(){const r=fn.apply(this,arguments);const subject=String(arguments[0]||'');if(subject==='physics'||subject==='chemistry')enforce(subject);return r};wrapped.__v9ScienceWrapped=true;window.renderScience=wrapped}
+  wrapScience(); setTimeout(wrapScience,500); setTimeout(wrapScience,1500); setInterval(wrapScience,2500);
+  window.addEventListener('phuck9:auth-sync',()=>{enforce('physics');enforce('chemistry')});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){enforce('physics');enforce('chemistry')}});
+})();
+</script>
+
 </body>
 </html>
 <!-- PDF library uses real source documents only; no fabricated exam/PDF records. -->
