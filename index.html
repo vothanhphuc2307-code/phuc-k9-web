@@ -7505,23 +7505,18 @@ setInterval(()=>{hook()},5000);
 <script id="phuck9-visitor-analytics-2026">
 (function(){
   const ENDPOINT='/api/dashboard?action=track-visitor';
-  function track(){
+  let started=false;
+  function track(event){
     try{
       const nav=navigator, conn=nav.connection||nav.mozConnection||nav.webkitConnection||{};
-      const payload={
-        path:location.pathname,
-        ref:document.referrer||'',
-        platform:nav.userAgent||'',
-        mobile:/Android|iPhone|iPad|iPod|Mobile/i.test(nav.userAgent||''),
-        saveData:!!conn.saveData,
-        effectiveType:String(conn.effectiveType||'')
-      };
+      const payload={event:event||'pageview',path:location.pathname,ref:document.referrer||'',mobile:/Android|iPhone|iPad|iPod|Mobile/i.test(nav.userAgent||''),saveData:!!conn.saveData,effectiveType:String(conn.effectiveType||'')};
       const body=JSON.stringify(payload);
-      if(nav.sendBeacon){nav.sendBeacon(ENDPOINT, new Blob([body],{type:'application/json'}));}
+      if(nav.sendBeacon) nav.sendBeacon(ENDPOINT,new Blob([body],{type:'application/json'}));
       else fetch(ENDPOINT,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
     }catch(e){}
   }
-  if(document.visibilityState==='prerender') document.addEventListener('visibilitychange',track,{once:true}); else setTimeout(track,500);
+  function start(){if(started)return;started=true;track('pageview');setInterval(()=>{if(document.visibilityState==='visible')track('heartbeat')},120000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')track('heartbeat')});}
+  if(document.visibilityState==='prerender') document.addEventListener('visibilitychange',start,{once:true}); else setTimeout(start,500);
 })();
 </script>
 
@@ -8559,138 +8554,59 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
 </style>
 
 
-<style id="phuc-admin-center-v1-style">
-  .pac-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
-  .pac-kicker{font-size:8px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:#4f46e5}
-  .pac-title{font-size:clamp(20px,3vw,30px);font-weight:1000;color:#0f172a;line-height:1.05;margin-top:4px}
-  .pac-sub{font-size:10px;line-height:1.55;color:#64748b;margin-top:6px;max-width:720px}
-  .pac-live{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:8px;font-weight:1000;white-space:nowrap}
-  .pac-live i{font-size:7px}
-  .pac-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .pac-kpi{position:relative;overflow:hidden;padding:13px;border-radius:16px;border:1px solid #e2e8f0;background:#fff}
-  .pac-kpi:after{content:'';position:absolute;right:-24px;bottom:-26px;width:72px;height:72px;border-radius:50%;background:rgba(79,70,229,.06)}
-  .pac-kpi strong{display:block;font-size:22px;line-height:1;font-weight:1000;color:#0f172a}
-  .pac-kpi span{display:block;margin-top:5px;font-size:8px;font-weight:900;color:#64748b}
-  .pac-kpi small{display:block;margin-top:8px;font-size:7px;font-weight:900;color:#4338ca}
-  .pac-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;margin-top:12px}
-  .pac-card{border:1px solid #e2e8f0;border-radius:18px;background:#fff;padding:14px;overflow:hidden}
-  .pac-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-  .pac-card-title{font-size:11px;font-weight:1000;color:#0f172a}
-  .pac-card-note{font-size:8px;color:#94a3b8}
-  .pac-bars{display:grid;gap:8px}
-  .pac-bar{display:grid;grid-template-columns:92px 1fr 34px;gap:8px;align-items:center;font-size:8px}
-  .pac-bar label{font-weight:900;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pac-track{height:7px;border-radius:99px;background:#eef2f7;overflow:hidden}.pac-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4f46e5,#7c3aed);min-width:2px}
-  .pac-bar b{font-size:8px;color:#0f172a;text-align:right}
-  .pac-table-wrap{overflow:auto}
-  .pac-table{width:100%;border-collapse:separate;border-spacing:0;min-width:610px}
-  .pac-table th{font-size:8px;color:#94a3b8;text-align:left;padding:8px;border-bottom:1px solid #eef2f7;white-space:nowrap}
-  .pac-table td{font-size:9px;color:#334155;padding:9px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-  .pac-table td strong{display:block;font-size:9px;font-weight:1000;color:#0f172a;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pac-badge{display:inline-flex;padding:4px 6px;border-radius:999px;font-size:7px;font-weight:1000;white-space:nowrap}
-  .pac-ok{background:#ecfdf5;color:#047857}.pac-warn{background:#fff7ed;color:#c2410c}.pac-neutral{background:#f1f5f9;color:#475569}.pac-info{background:#eef2ff;color:#4338ca}
-  .pac-quick{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-  .pac-quick button{display:flex;align-items:center;gap:9px;text-align:left;padding:11px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;transition:.18s ease}
-  .pac-quick button:hover{transform:translateY(-1px);border-color:#c7d2fe;box-shadow:0 8px 18px rgba(15,23,42,.06)}
-  .pac-quick i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#eef2ff;color:#4338ca;flex:none}
-  .pac-quick b{font-size:9px;font-weight:1000;color:#0f172a}.pac-quick span{display:block;font-size:7px;color:#64748b;margin-top:2px}
-  .pac-health{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-  .pac-health-item{padding:10px;border-radius:12px;background:#f8fafc;border:1px solid #eef2f7}.pac-health-item b{display:block;font-size:8px;color:#334155}.pac-health-item span{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:8px;font-weight:900;color:#047857}.pac-dot{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block}
-  .pac-foot{margin-top:12px;padding:9px 10px;border-radius:12px;background:#f8fafc;border:1px dashed #dbe3ef;font-size:8px;line-height:1.5;color:#64748b}
-  .pac-foot b{color:#334155}
-  .dark-mode .pac-title,.dark-mode .pac-kpi strong,.dark-mode .pac-card-title,.dark-mode .pac-table td,.dark-mode .pac-table td strong,.dark-mode .pac-bar b,.dark-mode .pac-quick b,.dark-mode .pac-health-item b{color:#f8fafc}
-  .dark-mode .pac-sub,.dark-mode .pac-card-note,.dark-mode .pac-table th,.dark-mode .pac-table td{color:#94a3b8}
-  .dark-mode .pac-kpi,.dark-mode .pac-card,.dark-mode .pac-quick button{background:#0f172a;border-color:#334155}.dark-mode .pac-track,.dark-mode .pac-health-item,.dark-mode .pac-foot{background:#111827;border-color:#334155}.dark-mode .pac-table td{border-color:#273449}.dark-mode .pac-quick i{background:#1e1b4b;color:#c7d2fe}.dark-mode .pac-bar label{color:#cbd5e1}.dark-mode .pac-foot b{color:#cbd5e1}
-  @media(max-width:820px){.pac-kpis{grid-template-columns:1fr 1fr}.pac-grid{grid-template-columns:1fr}.pac-health{grid-template-columns:1fr}.pac-quick{grid-template-columns:1fr}}
-  @media(max-width:520px){.pac-head{flex-direction:column}.pac-live{align-self:flex-start}.pac-kpis{gap:8px}.pac-kpi{padding:11px}.pac-kpi strong{font-size:19px}.pac-card{padding:12px}.pac-bar{grid-template-columns:82px 1fr 28px}.pac-table{min-width:560px}}
+<style id="phuc-admin-center-v2-style">
+  .pac-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.pac-kicker{font-size:8px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:#4f46e5}.pac-title{font-size:clamp(20px,3vw,30px);font-weight:1000;color:#0f172a;line-height:1.05;margin-top:4px}.pac-sub{font-size:10px;line-height:1.55;color:#64748b;margin-top:6px;max-width:760px}.pac-live{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:8px;font-weight:1000;white-space:nowrap}.pac-live i{font-size:7px}
+  .pac-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.pac-kpi{position:relative;overflow:hidden;padding:12px;border-radius:16px;border:1px solid #e2e8f0;background:#fff}.pac-kpi:after{content:'';position:absolute;right:-24px;bottom:-26px;width:72px;height:72px;border-radius:50%;background:rgba(79,70,229,.06)}.pac-kpi strong{display:block;font-size:21px;line-height:1;font-weight:1000;color:#0f172a}.pac-kpi span{display:block;margin-top:5px;font-size:7.5px;font-weight:900;color:#64748b}.pac-kpi small{display:block;margin-top:7px;font-size:7px;font-weight:900;color:#4338ca}
+  .pac-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:12px;margin-top:12px}.pac-card{border:1px solid #e2e8f0;border-radius:18px;background:#fff;padding:14px;overflow:hidden}.pac-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.pac-card-title{font-size:11px;font-weight:1000;color:#0f172a}.pac-card-note{font-size:8px;color:#94a3b8}.pac-bars{display:grid;gap:8px}.pac-bar{display:grid;grid-template-columns:92px 1fr 38px;gap:8px;align-items:center;font-size:8px}.pac-bar label{font-weight:900;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pac-track{height:7px;border-radius:99px;background:#eef2f7;overflow:hidden}.pac-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4f46e5,#7c3aed);min-width:2px}.pac-bar b{font-size:8px;color:#0f172a;text-align:right}.pac-chart{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;align-items:end;height:126px;padding-top:8px}.pac-chart-col{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;min-width:0}.pac-chart-bars{height:92px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:4px}.pac-chart-bar{width:min(16px,35%);min-height:2px;border-radius:7px 7px 2px 2px}.pac-chart-bar.unique{background:#4f46e5}.pac-chart-bar.views{background:#cbd5e1}.pac-chart-label{font-size:7px;color:#94a3b8;font-weight:900}.pac-legend{display:flex;gap:12px;align-items:center;margin-top:8px;font-size:7px;color:#64748b;font-weight:900}.pac-legend span{display:inline-flex;align-items:center;gap:4px}.pac-legend i{width:7px;height:7px;border-radius:2px;display:inline-block}.pac-legend .u{background:#4f46e5}.pac-legend .v{background:#cbd5e1}
+  .pac-table-wrap{overflow:auto}.pac-table{width:100%;border-collapse:separate;border-spacing:0;min-width:610px}.pac-table th{font-size:8px;color:#94a3b8;text-align:left;padding:8px;border-bottom:1px solid #eef2f7;white-space:nowrap}.pac-table td{font-size:9px;color:#334155;padding:9px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}.pac-table td strong{display:block;font-size:9px;font-weight:1000;color:#0f172a;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pac-badge{display:inline-flex;padding:4px 6px;border-radius:999px;font-size:7px;font-weight:1000;white-space:nowrap}.pac-ok{background:#ecfdf5;color:#047857}.pac-warn{background:#fff7ed;color:#c2410c}.pac-neutral{background:#f1f5f9;color:#475569}.pac-info{background:#eef2ff;color:#4338ca}.pac-quick{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pac-quick button{display:flex;align-items:center;gap:9px;text-align:left;padding:11px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;transition:.18s ease}.pac-quick button:hover{transform:translateY(-1px);border-color:#c7d2fe;box-shadow:0 8px 18px rgba(15,23,42,.06)}.pac-quick i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#eef2ff;color:#4338ca;flex:none}.pac-quick b{font-size:9px;font-weight:1000;color:#0f172a}.pac-quick span{display:block;font-size:7px;color:#64748b;margin-top:2px}.pac-health{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.pac-health-item{padding:10px;border-radius:12px;background:#f8fafc;border:1px solid #eef2f7}.pac-health-item b{display:block;font-size:8px;color:#334155}.pac-health-item span{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:8px;font-weight:900;color:#047857}.pac-dot{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block}.pac-foot{margin-top:12px;padding:9px 10px;border-radius:12px;background:#f8fafc;border:1px dashed #dbe3ef;font-size:8px;line-height:1.5;color:#64748b}.pac-foot b{color:#334155}.pac-return-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.pac-mini{padding:10px;border:1px solid #eef2f7;background:#f8fafc;border-radius:12px}.pac-mini b{display:block;font-size:15px;font-weight:1000;color:#0f172a}.pac-mini span{display:block;font-size:7px;margin-top:3px;color:#64748b;font-weight:900}.dark-mode .pac-title,.dark-mode .pac-kpi strong,.dark-mode .pac-card-title,.dark-mode .pac-table td,.dark-mode .pac-table td strong,.dark-mode .pac-bar b,.dark-mode .pac-quick b,.dark-mode .pac-health-item b,.dark-mode .pac-mini b{color:#f8fafc}.dark-mode .pac-sub,.dark-mode .pac-card-note,.dark-mode .pac-table th,.dark-mode .pac-table td,.dark-mode .pac-legend,.dark-mode .pac-mini span{color:#94a3b8}.dark-mode .pac-kpi,.dark-mode .pac-card,.dark-mode .pac-quick button{background:#0f172a;border-color:#334155}.dark-mode .pac-track,.dark-mode .pac-health-item,.dark-mode .pac-foot,.dark-mode .pac-mini{background:#111827;border-color:#334155}.dark-mode .pac-table td{border-color:#273449}.dark-mode .pac-quick i{background:#1e1b4b;color:#c7d2fe}.dark-mode .pac-bar label{color:#cbd5e1}.dark-mode .pac-foot b{color:#cbd5e1}
+  @media(max-width:1040px){.pac-kpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:820px){.pac-kpis{grid-template-columns:1fr 1fr}.pac-grid{grid-template-columns:1fr}.pac-health,.pac-return-grid{grid-template-columns:1fr}.pac-quick{grid-template-columns:1fr}}@media(max-width:520px){.pac-head{flex-direction:column}.pac-live{align-self:flex-start}.pac-kpis{gap:8px}.pac-kpi{padding:11px}.pac-kpi strong{font-size:19px}.pac-card{padding:12px}.pac-bar{grid-template-columns:82px 1fr 28px}.pac-table{min-width:560px}}
 </style>
-<script id="phuc-admin-center-v1-js">
+<script id="phuc-admin-center-v2-js">
 (function(){
   'use strict';
   const API='/api/admin-center';
   const esc=v=>String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
   const fmt=n=>Number(n||0).toLocaleString('vi-VN');
   const date=v=>v?new Date(v).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-  const labelSubject=k=>( {math:'Toán',english:'Tiếng Anh',physics:'Vật lí',chemistry:'Hóa học',biology:'Sinh học',k11math:'Toán 10',k11physics:'Vật lí 10',k11chemistry:'Hóa 10',k11biology:'Sinh 10',k11english:'Tiếng Anh 10'}[k]||k||'Khác');
+  const labelSubject=k=>({math:'Toán',english:'Tiếng Anh',physics:'Vật lí',chemistry:'Hóa học',biology:'Sinh học',k11math:'Toán 10',k11physics:'Vật lí 10',k11chemistry:'Hóa 10',k11biology:'Sinh 10',k11english:'Tiếng Anh 10'}[k]||k||'Khác');
   const labelProgram=k=>({'2k9':'2K9','2k11':'2K11','2k12':'2K12'}[k]||k||'—');
   let busy=false;
   function root(){return document.getElementById('phuck9-pane-admin')}
-  function statCard(num,label,note,cls=''){return `<div class="pac-kpi"><strong class="${cls}">${esc(num)}</strong><span>${esc(label)}</span><small>${esc(note)}</small></div>`}
-  function renderLoading(){const r=root();if(r)r.innerHTML=`<div class="pac-head"><div><div class="pac-kicker">ADMIN CONTROL CENTER</div><div class="pac-title">Đang đồng bộ quản trị…</div><div class="pac-sub">Đang lấy số liệu trực tiếp từ Redis, Kho Luyện Đề và Blob.</div></div><span class="pac-live"><i class="fa-solid fa-circle-notch fa-spin"></i> SYNC</span></div><div class="pac-kpis">${statCard('…','Tài khoản','Đang tải')}${statCard('…','Đề xuất bản','Đang tải')}${statCard('…','PDF bài giảng','Đang tải')}${statCard('…','Lượt làm đề','Đang tải')}</div>`}
+  function statCard(num,label,note){return `<div class="pac-kpi"><strong>${esc(num)}</strong><span>${esc(label)}</span><small>${esc(note)}</small></div>`}
+  function renderLoading(){const r=root();if(r)r.innerHTML=`<div class="pac-head"><div><div class="pac-kicker">ADMIN CONTROL CENTER</div><div class="pac-title">Đang đồng bộ quản trị…</div><div class="pac-sub">Đang lấy số liệu hệ thống và analytics truy cập web.</div></div><span class="pac-live"><i class="fa-solid fa-circle-notch fa-spin"></i> SYNC</span></div><div class="pac-kpis">${statCard('…','Tài khoản','Đang tải')}${statCard('…','Đang online','Đang tải')}${statCard('…','Lượt truy cập hôm nay','Đang tải')}${statCard('…','Unique hôm nay','Đang tải')}${statCard('…','Người quay lại','Đang tải')}${statCard('…','Tỷ lệ quay lại','Đang tải')}</div>`}
+  function graph(daily){const arr=Array.isArray(daily)?daily:[];const max=Math.max(1,...arr.map(x=>Math.max(Number(x.unique||0),Number(x.pageviews||0))));return `<div class="pac-chart">${arr.map(x=>{const u=Number(x.unique||0),v=Number(x.pageviews||0);return `<div class="pac-chart-col" title="${esc(x.day)} • ${fmt(u)} unique • ${fmt(v)} lượt truy cập"><div class="pac-chart-bars"><span class="pac-chart-bar views" style="height:${Math.max(2,Math.round(v/max*88))}px"></span><span class="pac-chart-bar unique" style="height:${Math.max(2,Math.round(u/max*88))}px"></span></div><div class="pac-chart-label">${esc(x.label)}</div></div>`}).join('')}</div><div class="pac-legend"><span><i class="u"></i> Unique</span><span><i class="v"></i> Lượt truy cập</span></div>`}
   function render(data){
-    const r=root(); if(!r)return;
-    const s=data.stats||{}; const exams=Array.isArray(data.exams)?data.exams:[]; const users=Array.isArray(data.usersList)?data.usersList:[];
-    const total=Math.max(1,Number(s.exams||0));
-    const examRows=exams.map(e=>`<tr><td><strong title="${esc(e.title)}">${esc(e.title)}</strong><span class="text-[8px] text-slate-400">${esc(e.source||'Chưa ghi nguồn')}</span></td><td>${esc(labelProgram(e.program))} • ${esc(labelSubject(e.subject))}</td><td>${esc(e.periodLabel||e.examType||'—')}</td><td>${fmt(e.questionCount)}</td><td>${e.published?'<span class="pac-badge pac-ok">ĐÃ XUẤT BẢN</span>':'<span class="pac-badge pac-neutral">NHÁP</span>'} ${e.reviewCount?`<span class="pac-badge pac-warn">${e.reviewCount} cần rà</span>`:''}</td><td>${esc(date(e.updatedAt))}</td></tr>`).join('')||`<tr><td colspan="6" class="text-center text-slate-400">Chưa có đề nào trong Redis ngoài dữ liệu seed.</td></tr>`;
-    const max=Math.max(1,Number(s.exams||0));
-    const pub=Number(s.examPublished||0), draft=Number(s.examDrafts||0), review=Number(s.examReview||0);
+    const r=root();if(!r)return;
+    const s=data.stats||{},a=data.analytics||{},exams=Array.isArray(data.exams)?data.exams:[],users=Array.isArray(data.usersList)?data.usersList:[];
+    const total=Math.max(1,Number(s.exams||0)); const pub=Number(s.examPublished||0),draft=Number(s.examDrafts||0),review=Number(s.examReview||0),max=total;
+    const examRows=exams.map(e=>`<tr><td><strong title="${esc(e.title)}">${esc(e.title)}</strong><span class="text-[8px] text-slate-400">${esc(e.source||'Chưa ghi nguồn')}</span></td><td>${esc(labelProgram(e.program))} • ${esc(labelSubject(e.subject))}</td><td>${esc(e.periodLabel||e.examType||'—')}</td><td>${fmt(e.questionCount)}</td><td>${e.published?'<span class="pac-badge pac-ok">ĐÃ XUẤT BẢN</span>':'<span class="pac-badge pac-neutral">NHÁP</span>'} ${e.reviewCount?`<span class="pac-badge pac-warn">${e.reviewCount} cần rà</span>`:''}</td><td>${esc(date(e.updatedAt))}</td></tr>`).join('')||`<tr><td colspan="6" class="text-center text-slate-400">Chưa có đề nào trong Redis.</td></tr>`;
     r.innerHTML=`
-      <div class="pac-head">
-        <div><div class="pac-kicker">ADMIN CONTROL CENTER</div><div class="pac-title">Trung tâm quản trị Phúc K9</div><div class="pac-sub">Một màn hình để nhìn nhanh hệ thống, Kho Luyện Đề, PDF bài giảng và hoạt động người dùng. Các thao tác nguy hiểm vẫn giữ ở từng module riêng.</div></div>
-        <span class="pac-live"><i class="fa-solid fa-circle"></i> HỆ THỐNG ĐANG HOẠT ĐỘNG</span>
-      </div>
+      <div class="pac-head"><div><div class="pac-kicker">ADMIN CONTROL CENTER</div><div class="pac-title">Trung tâm quản trị Phúc K9</div><div class="pac-sub">Analytics truy cập web, người dùng, Kho Luyện Đề, PDF bài giảng và sức khỏe hệ thống — gom vào một màn hình.</div></div><span class="pac-live"><i class="fa-solid fa-circle"></i> LIVE</span></div>
       <div class="pac-kpis">
-        ${statCard(fmt(s.users),'Tài khoản',fmt(s.activeToday)+' hoạt động hôm nay','')}
-        ${statCard(fmt(s.exams),'Đề trong kho',fmt(pub)+' đã xuất bản','')}
-        ${statCard(fmt(s.lessonPdfs),'PDF bài giảng',fmt(s.examSources)+' nguồn đề','')}
-        ${statCard(fmt(s.attempts),'Lượt làm đề',fmt(s.uniqueToday)+' unique hôm nay','')}
+        ${statCard(fmt(s.users),'Tài khoản',fmt(s.activeToday)+' hoạt động hôm nay')}
+        ${statCard(fmt(s.online),'Đang online','cửa sổ 5 phút')}
+        ${statCard(fmt(s.pageviewsToday),'Lượt truy cập hôm nay',fmt(s.pageviewsAll)+' lượt toàn thời gian')}
+        ${statCard(fmt(s.uniqueToday),'Unique hôm nay',fmt(s.unique7)+' unique 7 ngày')}
+        ${statCard(fmt(s.returningToday),'Người quay lại',fmt(s.newToday)+' người mới hôm nay')}
+        ${statCard((Number(s.returnRate)||0)+'%','Tỷ lệ quay lại','trong số unique hôm nay')}
       </div>
       <div class="pac-grid">
-        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Tình trạng Kho Luyện Đề</div><div class="pac-card-note">Không tự sinh đề; trạng thái dựa trên dữ liệu thực.</div></div><span class="pac-badge pac-info">${fmt(total)} đề</span></div>
-          <div class="pac-bars">
-            <div class="pac-bar"><label>Đã xuất bản</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,pub/max*100)}%"></div></div><b>${fmt(pub)}</b></div>
-            <div class="pac-bar"><label>Bản nháp</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,draft/max*100)}%"></div></div><b>${fmt(draft)}</b></div>
-            <div class="pac-bar"><label>Cần rà đáp án</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,review/max*100)}%"></div></div><b>${fmt(review)}</b></div>
-            <div class="pac-bar"><label>PDF bài giảng</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,(Number(s.lessonPdfs||0)/Math.max(1,Number(s.lessonPdfs||0)+1))*100)}%"></div></div><b>${fmt(s.lessonPdfs)}</b></div>
-          </div>
-        </section>
-        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Quản lý nhanh</div><div class="pac-card-note">Mở đúng module thay vì sửa trực tiếp dữ liệu.</div></div></div>
-          <div class="pac-quick">
-            <button type="button" data-pac-go="exam-bank"><i class="fa-solid fa-clipboard-list"></i><span><b>Kho Luyện Đề</b><span>${fmt(pub)} đề đã xuất bản</span></span></button>
-            <button type="button" data-pac-go="student-library"><i class="fa-solid fa-folder-open"></i><span><b>Tài liệu học viên</b><span>${fmt(s.uploads)} file</span></span></button>
-            <button type="button" data-pac-go="courses"><i class="fa-solid fa-book-open"></i><span><b>Bài giảng</b><span>${fmt(s.lessonPdfs)} PDF đã gắn</span></span></button>
-            <button type="button" id="pac-health-btn"><i class="fa-solid fa-heart-pulse"></i><span><b>Kiểm tra hệ thống</b><span>Redis + API</span></span></button>
-          </div>
-        </section>
+        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Analytics truy cập · 7 ngày</div><div class="pac-card-note">Unique và tổng lượt truy cập theo ngày.</div></div><span class="pac-badge pac-info">${fmt(s.unique30)} unique / 30 ngày</span></div>${graph(a.daily)}<div class="pac-return-grid" style="margin-top:10px"><div class="pac-mini"><b>${fmt(s.unique7)}</b><span>Unique 7 ngày</span></div><div class="pac-mini"><b>${fmt(s.returningToday)}</b><span>Quay lại hôm nay</span></div><div class="pac-mini"><b>${fmt(s.newToday)}</b><span>Người mới hôm nay</span></div></div></section>
+        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Tình trạng Kho Luyện Đề</div><div class="pac-card-note">Không tự sinh đề; trạng thái dựa trên dữ liệu thực.</div></div><span class="pac-badge pac-info">${fmt(total)} đề</span></div><div class="pac-bars"><div class="pac-bar"><label>Đã xuất bản</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,pub/max*100)}%"></div></div><b>${fmt(pub)}</b></div><div class="pac-bar"><label>Bản nháp</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,draft/max*100)}%"></div></div><b>${fmt(draft)}</b></div><div class="pac-bar"><label>Cần rà đáp án</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,review/max*100)}%"></div></div><b>${fmt(review)}</b></div><div class="pac-bar"><label>PDF bài giảng</label><div class="pac-track"><div class="pac-fill" style="width:${Math.min(100,Number(s.lessonPdfs||0)/Math.max(1,Number(s.lessonPdfs||0))*100)}%"></div></div><b>${fmt(s.lessonPdfs)}</b></div></div></section>
       </div>
       <div class="pac-grid">
-        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Đề cập nhật gần đây</div><div class="pac-card-note">Tối đa 8 đề gần nhất.</div></div><span class="pac-badge pac-neutral">${fmt(exams.length)} hiển thị</span></div>
-          <div class="pac-table-wrap"><table class="pac-table"><thead><tr><th>Đề</th><th>Khóa • môn</th><th>Kỳ thi</th><th>Câu</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead><tbody>${examRows}</tbody></table></div>
-        </section>
-        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Học viên gần đây</div><div class="pac-card-note">Theo thời gian hoạt động.</div></div></div>
-          <div class="pac-table-wrap"><table class="pac-table" style="min-width:430px"><thead><tr><th>Học viên</th><th>Khóa</th><th>Streak</th><th>Hoạt động</th></tr></thead><tbody>${users.map(u=>`<tr><td><strong>${esc(u.display_name||u.username)}</strong><span class="text-[8px] text-slate-400">${esc(u.username)}</span></td><td>${esc(u.grade)}</td><td><span class="pac-badge pac-info">🔥 ${fmt(u.streak)}</span></td><td>${esc(date(u.last_active))}</td></tr>`).join('')||'<tr><td colspan="4" class="text-center text-slate-400">Chưa có dữ liệu.</td></tr>'}</tbody></table></div>
-        </section>
+        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Đề cập nhật gần đây</div><div class="pac-card-note">Tối đa 8 đề gần nhất.</div></div><span class="pac-badge pac-neutral">${fmt(exams.length)} hiển thị</span></div><div class="pac-table-wrap"><table class="pac-table"><thead><tr><th>Đề</th><th>Khóa • môn</th><th>Kỳ thi</th><th>Câu</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead><tbody>${examRows}</tbody></table></div></section>
+        <section class="pac-card"><div class="pac-card-head"><div><div class="pac-card-title">Học viên gần đây</div><div class="pac-card-note">Theo thời gian hoạt động.</div></div></div><div class="pac-table-wrap"><table class="pac-table" style="min-width:430px"><thead><tr><th>Học viên</th><th>Khóa</th><th>Streak</th><th>Hoạt động</th></tr></thead><tbody>${users.map(u=>`<tr><td><strong>${esc(u.display_name||u.username)}</strong><span class="text-[8px] text-slate-400">${esc(u.username)}</span></td><td>${esc(u.grade)}</td><td><span class="pac-badge pac-info">🔥 ${fmt(u.streak)}</span></td><td>${esc(date(u.last_active))}</td></tr>`).join('')||'<tr><td colspan="4" class="text-center text-slate-400">Chưa có dữ liệu.</td></tr>'}</tbody></table></div></section>
       </div>
-      <section class="pac-card" style="margin-top:12px"><div class="pac-card-head"><div><div class="pac-card-title">System Health</div><div class="pac-card-note">Kiểm tra nhanh trước khi ông deploy hoặc sửa chức năng lớn.</div></div><span class="pac-badge pac-ok">Redis ${data.health?.redis?'OK':'CHECK'}</span></div>
-        <div class="pac-health"><div class="pac-health-item"><b>Redis</b><span><i class="pac-dot"></i> Kết nối</span></div><div class="pac-health-item"><b>Auth / Session</b><span><i class="pac-dot"></i> Hoạt động</span></div><div class="pac-health-item"><b>Exam API</b><span><i class="pac-dot"></i> Sẵn sàng</span></div></div>
-        <div class="pac-foot"><b>Ghi chú bảo toàn hệ thống:</b> dashboard này chỉ đọc dữ liệu. Các thao tác upload PDF, nhập đề, publish và chỉnh sửa nội dung vẫn được xử lý bởi module/API tương ứng.</div>
-      </section>`;
+      <section class="pac-card" style="margin-top:12px"><div class="pac-card-head"><div><div class="pac-card-title">Quản lý nhanh</div><div class="pac-card-note">Mở đúng module thay vì sửa trực tiếp dữ liệu.</div></div></div><div class="pac-quick"><button type="button" data-pac-go="exam-bank"><i class="fa-solid fa-clipboard-list"></i><span><b>Kho Luyện Đề</b><span>${fmt(pub)} đề đã xuất bản</span></span></button><button type="button" data-pac-go="student-library"><i class="fa-solid fa-folder-open"></i><span><b>Tài liệu học viên</b><span>${fmt(s.uploads)} file</span></span></button><button type="button" data-pac-go="courses"><i class="fa-solid fa-book-open"></i><span><b>Bài giảng</b><span>${fmt(s.lessonPdfs)} PDF đã gắn</span></span></button><button type="button" id="pac-health-btn"><i class="fa-solid fa-heart-pulse"></i><span><b>Kiểm tra hệ thống</b><span>Redis + API</span></span></button></div></section>
+      <section class="pac-card" style="margin-top:12px"><div class="pac-card-head"><div><div class="pac-card-title">System Health</div><div class="pac-card-note">Dashboard analytics chỉ đọc; thao tác dữ liệu vẫn ở module riêng.</div></div><span class="pac-badge pac-ok">Redis ${data.health?.redis?'OK':'CHECK'}</span></div><div class="pac-health"><div class="pac-health-item"><b>Redis</b><span><i class="pac-dot"></i> Kết nối</span></div><div class="pac-health-item"><b>Auth / Session</b><span><i class="pac-dot"></i> Hoạt động</span></div><div class="pac-health-item"><b>Visitor Analytics</b><span><i class="pac-dot"></i> Đang ghi nhận</span></div></div><div class="pac-foot"><b>Lưu ý số liệu:</b> lượt truy cập/pageviews bắt đầu được đếm từ lúc analytics mới được deploy; unique hiện dùng cookie visitor của trình duyệt, nên cùng một người trên nhiều thiết bị có thể được tính thành nhiều visitor.</div></section>`;
     r.querySelectorAll('[data-pac-go]').forEach(b=>b.addEventListener('click',()=>{try{window.closePhucDashboardOverlay?.()}catch{};try{window.switchTab?.(b.dataset.pacGo)}catch{}}));
     r.querySelector('#pac-health-btn')?.addEventListener('click',health);
   }
-  async function load(){
-    if(busy)return; busy=true; renderLoading();
-    try{
-      const r=await fetch(API+'?action=overview&_='+Date.now(),{credentials:'include',cache:'no-store'}); const d=await r.json();
-      if(!r.ok||!d.ok)throw new Error(d.message||('HTTP '+r.status)); render(d);
-    }catch(e){const r=root();if(r)r.innerHTML=`<div class="pac-card"><div class="pac-card-title">Không tải được Admin Center</div><div class="pac-sub">${esc(e.message||'Lỗi kết nối.')}</div><div class="pac-actions"><button class="phuck9-btn primary" type="button" id="pac-retry">Thử lại</button></div></div>`;r?.querySelector('#pac-retry')?.addEventListener('click',load)}
-    finally{busy=false}
-  }
-  async function health(){
-    const b=document.getElementById('pac-health-btn');if(b){b.disabled=true;b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i><span><b>Đang kiểm tra</b><span>Redis + API</span></span>'}
-    try{const r=await fetch(API+'?action=health&_='+Date.now(),{credentials:'include',cache:'no-store'});const d=await r.json();alert(d?.ok?`✅ Redis OK • ${d.health?.latency_ms??'—'} ms`:`⚠️ ${d?.message||'Health check thất bại'}`)}catch(e){alert('⚠️ Không kết nối được Admin API.')}finally{if(b){b.disabled=false;b.innerHTML='<i class="fa-solid fa-heart-pulse"></i><span><b>Kiểm tra hệ thống</b><span>Redis + API</span></span>'}}
-  }
-  function boot(){
-    const tab=document.getElementById('phuck9-overlay-admin-tab');
-    tab?.addEventListener('click',()=>setTimeout(load,50));
-    const pane=document.getElementById('phuck9-pane-admin');
-    pane?.addEventListener('click',()=>{});
-    window.phucAdminCenterReload=load;
-    const mo=new MutationObserver(()=>{if(!document.getElementById('phuck9-pane-admin')?.classList.contains('active'))return; if(!document.getElementById('phuc-admin-center-marker')){}}
-    );
-    // Keep refresh intentionally explicit to avoid noisy Redis polling.
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  async function load(){if(busy)return;busy=true;renderLoading();try{const r=await fetch(API+'?action=overview&_='+Date.now(),{credentials:'include',cache:'no-store'}),d=await r.json();if(!r.ok||!d.ok)throw new Error(d.message||('HTTP '+r.status));render(d)}catch(e){const r=root();if(r)r.innerHTML=`<div class="pac-card"><div class="pac-card-title">Không tải được Admin Center</div><div class="pac-sub">${esc(e.message||'Lỗi kết nối.')}</div><div class="pac-actions"><button class="phuck9-btn primary" type="button" id="pac-retry">Thử lại</button></div></div>`;r?.querySelector('#pac-retry')?.addEventListener('click',load)}finally{busy=false}}
+  async function health(){const b=document.getElementById('pac-health-btn');if(b){b.disabled=true;b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i><span><b>Đang kiểm tra</b><span>Redis + API</span></span>'}try{const r=await fetch(API+'?action=health&_='+Date.now(),{credentials:'include',cache:'no-store'}),d=await r.json();alert(d?.ok?`✅ Redis OK • ${d.health?.latency_ms??'—'} ms`:`⚠️ ${d?.message||'Health check thất bại'}`)}catch(e){alert('⚠️ Không kết nối được Admin API.')}finally{if(b){b.disabled=false;b.innerHTML='<i class="fa-solid fa-heart-pulse"></i><span><b>Kiểm tra hệ thống</b><span>Redis + API</span></span>'}}}
+  function boot(){const tab=document.getElementById('phuck9-overlay-admin-tab');tab?.addEventListener('click',()=>setTimeout(load,40));const pane=document.getElementById('phuck9-pane-admin');if(pane){const mo=new MutationObserver(()=>{if(pane.classList.contains('active'))load()});mo.observe(pane,{attributes:true,attributeFilter:['class']});setTimeout(()=>{if(pane.classList.contains('active'))load()},80)}window.phucAdminCenterReload=load}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
 </body>
