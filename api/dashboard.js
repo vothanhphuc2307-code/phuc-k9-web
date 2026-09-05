@@ -21,12 +21,30 @@ async function trackVisitor(req,res,redis){
   const cookies=parseCookies(req); let vid=String(cookies.phuc_visitor||'');
   if(!validVisitorId(vid)){vid=crypto.randomUUID();setCookie(res,'phuc_visitor',vid,visitorCookieOptions());}
   const day=vnDayKey(); const month=day.slice(0,7);
+  let body=req.body||{};
+  if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}}
+  const event=String(body?.event||'pageview').toLowerCase()==='heartbeat'?'heartbeat':'pageview';
   try{
     await redis.sadd('phuc:visitors:all',vid);
     await redis.sadd(`phuc:visitors:day:${day}`,vid);
-    await redis.expire?.(`phuc:visitors:day:${day}`,60*60*24*45);
+    await redis.expire?.(`phuc:visitors:day:${day}`,60*60*24*90);
     await redis.sadd(`phuc:visitors:month:${month}`,vid);
     await redis.expire?.(`phuc:visitors:month:${month}`,60*60*24*400);
+    if(event==='pageview'){
+      try{await redis.incr('phuc:pageviews:all')}catch{}
+      try{await redis.incr(`phuc:pageviews:day:${day}`)}catch{}
+      try{await redis.expire?.(`phuc:pageviews:day:${day}`,60*60*24*90)}catch{}
+      const path=clean(body?.path||'/',220)||'/';
+      const source=clean(body?.ref||'',220)||'direct';
+      const device=body?.mobile?'mobile':'desktop';
+      try{await redis.zincrby(`phuc:analytics:path:${day}`,1,path)}catch{}
+      try{await redis.zincrby(`phuc:analytics:ref:${day}`,1,source)}catch{}
+      try{await redis.zincrby(`phuc:analytics:device:${day}`,1,device)}catch{}
+      try{await redis.expire?.(`phuc:analytics:path:${day}`,60*60*24*90)}catch{}
+      try{await redis.expire?.(`phuc:analytics:ref:${day}`,60*60*24*90)}catch{}
+      try{await redis.expire?.(`phuc:analytics:device:${day}`,60*60*24*90)}catch{}
+    }
+    try{await redis.set(`phuc:visitors:online:${vid}`,String(Date.now()),{ex:60*5})}catch{}
   }catch(e){console.error('visitor-track',e);}
   return vid;
 }
