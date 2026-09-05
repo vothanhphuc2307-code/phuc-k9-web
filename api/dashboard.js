@@ -10,6 +10,10 @@ function isAdmin(username) {
 function clean(s, max=140){ return String(s||'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,max); }
 function gradeLabel(subject){ if(String(subject).startsWith('k11')) return '2K11'; if(String(subject).startsWith('g10')) return '2K12'; return '2K9'; }
 function normScore(n){ const x=Number(n); return Number.isFinite(x)?Math.max(0,Math.min(10,x)):0; }
+
+function levelInfo(xp){const total=Math.max(0,Number(xp||0));const level=Math.floor(total/100)+1;return {level,into:total%100,next:100,percent:Math.min(100,total%100)};}
+function examXp(score){const s=normScore(score);let bonus=0;if(s>=9.5)bonus=50;else if(s>=9)bonus=40;else if(s>=8)bonus=30;else if(s>=7)bonus=20;else if(s>=5)bonus=10;return 50+bonus;}
+async function getUser(redis,username){try{return await redis.get(`${USER_PREFIX}${username}`)}catch{return null}}
 function todayStart(){const d=new Date();d.setHours(0,0,0,0);return d.getTime();}
 function vnDayKey(d=new Date()){
   const x=new Date(d.getTime()+7*60*60*1000);
@@ -77,14 +81,18 @@ module.exports = async function handler(req,res){
 
     if(action==='leaderboard' && req.method==='GET'){
       const attempts=await listAttempts(redis);
-      const map=new Map();
+      const stats=new Map();
       for(const a of attempts){
         const u=a.username; if(!u) continue;
-        const cur=map.get(u)||{username:u,display_name:clean(a.display_name,50)||u,attempts:0,totalScore:0,bestScore:0,totalCorrect:0,totalQuestions:0,updatedAt:a.created_at||''};
-        cur.attempts += 1; cur.totalScore += normScore(a.score); cur.bestScore=Math.max(cur.bestScore,normScore(a.score)); cur.totalCorrect += Number(a.correct||0); cur.totalQuestions += Number(a.total_questions||0); if((a.created_at||'')>cur.updatedAt)cur.updatedAt=a.created_at;
-        map.set(u,cur);
+        const cur=stats.get(u)||{username:u,display_name:clean(a.display_name,50)||u,attempts:0,totalScore:0,bestScore:0,totalCorrect:0,totalQuestions:0,updatedAt:a.created_at||''};
+        cur.attempts+=1;cur.totalScore+=normScore(a.score);cur.bestScore=Math.max(cur.bestScore,normScore(a.score));cur.totalCorrect+=Number(a.correct||0);cur.totalQuestions+=Number(a.total_questions||0);if((a.created_at||'')>cur.updatedAt)cur.updatedAt=a.created_at;stats.set(u,cur);
       }
-      const rows=[...map.values()].map(x=>({...x,avgScore:x.attempts?Math.round(x.totalScore/x.attempts*10)/10:0,accuracy:x.totalQuestions?Math.round(x.totalCorrect/x.totalQuestions*100):0,xp:Math.round(x.totalScore*10)+x.attempts*5})).sort((a,b)=>b.xp-a.xp||b.bestScore-a.bestScore||b.accuracy-a.accuracy).slice(0,50);
+      let cursor=0,rows=[];
+      do{
+        const scan=await redis.scan(cursor,{match:`${USER_PREFIX}*`,count:100});cursor=Number(scan?.[0]??0);const keys=Array.isArray(scan?.[1])?scan[1]:[];
+        if(keys.length){const vals=await Promise.all(keys.map(k=>redis.get(k).catch(()=>null)));for(const u of vals){if(!u||!u.username)continue;const x=stats.get(u.username)||{username:u.username,display_name:u.display_name||u.username,attempts:0,totalScore:0,bestScore:0,totalCorrect:0,totalQuestions:0,updatedAt:u.last_active||''};const li=levelInfo(u.xp||0);rows.push({...x,display_name:u.display_name||x.display_name||u.username,xp:Math.max(0,Number(u.xp||0)),level:li.level,streak:Math.max(1,Number(u.streak||1)),xpToNext:li.next-li.into,accuracy:x.totalQuestions?Math.round(x.totalCorrect/x.totalQuestions*100):0,avgScore:x.attempts?Math.round(x.totalScore/x.attempts*10)/10:0});}}
+      }while(cursor!==0);
+      rows.sort((a,b)=>b.xp-a.xp||b.level-a.level||b.bestScore-a.bestScore||b.streak-a.streak).splice(50);
       return sendJson(res,200,{ok:true,leaderboard:rows});
     }
 
@@ -95,10 +103,19 @@ module.exports = async function handler(req,res){
       let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}}
       const review=Array.isArray(body.review)?body.review.slice(0,60):[];
       const score=normScore(body.score); const subject=clean(body.subject,40); const examId=clean(body.exam_id,100); const title=clean(body.title,180);
+      const attemptId=clean(body.attempt_id,160);
       const attempt={username:session.username,display_name:clean(body.display_name,80),exam_id:examId,title,subject,grade:gradeLabel(subject),score,correct:Number(body.correct||0)||0,total_questions:Number(body.total_questions||0)||0,created_at:new Date().toISOString(),sections:body.sections&&typeof body.sections==='object'?body.sections:{},review};
       await redis.lpush(ATTEMPTS_KEY,JSON.stringify(attempt));
       try{await redis.ltrim(ATTEMPTS_KEY,0,MAX_ATTEMPTS-1)}catch{}
-      return sendJson(res,200,{ok:true,saved:true});
+      let xpEarned=0,duplicate=false;const baseKey=attemptId?`phuc:xp:exam:${session.username}:${attemptId}`:`phuc:xp:exam:${session.username}:${crypto.createHash('sha1').update(JSON.stringify({examId,score,correct:attempt.correct,total:attempt.total_questions,review:review.slice(0,20)})).digest('hex')}`;
+      try{
+        const granted=!!(await redis.set(baseKey,'1',{nx:true,ex:60*60*24*365}));
+        if(granted){
+          xpEarned=examXp(score);const u=await getUser(redis,session.username);if(u){u.xp=Math.max(0,Number(u.xp||0))+xpEarned;u.exam_xp=Math.max(0,Number(u.exam_xp||0))+xpEarned;u.streak=Math.max(1,Number(u.streak||1));await redis.set(`${USER_PREFIX}${session.username}`,u);}}
+        else duplicate=true;
+      }catch(e){console.warn('exam-xp',e?.message)}
+      const u=await getUser(redis,session.username);const xpTotal=Math.max(0,Number(u?.xp||0));const li=levelInfo(xpTotal);
+      return sendJson(res,200,{ok:true,saved:true,xp_earned:xpEarned,xp_total:xpTotal,level:li.level,duplicate});
     }
 
     if(action==='my-results' && req.method==='GET'){
@@ -113,12 +130,24 @@ module.exports = async function handler(req,res){
       do{const scan=await redis.scan(cursor,{match:`${USER_PREFIX}*`,count:100});cursor=Number(scan?.[0]??0);const keys=Array.isArray(scan?.[1])?scan[1]:[];if(keys.length){const vals=await Promise.all(keys.map(k=>redis.get(k).catch(()=>null)));vals.forEach(u=>{if(!u)return;users++;if(u.last_active&&new Date(u.last_active).getTime()>=start)activeToday++;});}}while(cursor!==0);
       let uploads=0;try{uploads=Number(await redis.llen('phuc:student-library'))||0}catch{}
       const attempts=await listAttempts(redis);
-      let visitorsAll=0,visitorsToday=0,visitors7d=0,visitors30d=0;
+      let visitorsAll=0,visitorsToday=0,visitors7d=0,visitors30d=0,pageviewsAll=0,pageviewsToday=0,online=0;
       try{visitorsAll=Number(await redis.scard('phuc:visitors:all'))||0}catch{}
       try{visitorsToday=Number(await redis.scard(`phuc:visitors:day:${vnDayKey()}`))||0}catch{}
       try{visitors7d=await uniqueWindow(redis,7)}catch{}
       try{visitors30d=await uniqueWindow(redis,30)}catch{}
-      return sendJson(res,200,{ok:true,stats:{users,uploads,exam_attempts:attempts.length,today:activeToday,unique_visitors:visitorsAll,unique_today:visitorsToday,unique_7d:visitors7d,unique_30d:visitors30d}});
+      try{pageviewsAll=Number(await redis.get('phuc:pageviews:all'))||0}catch{}
+      try{pageviewsToday=Number(await redis.get(`phuc:pageviews:day:${vnDayKey()}`))||0}catch{}
+      try{const scan=await redis.scan(0,{match:'phuc:visitors:online:*',count:200});online=Array.isArray(scan?.[1])?scan[1].length:0}catch{}
+      const nowDay=vnDayKey();
+      let returningToday=0,newToday=0;
+      try{
+        const todayIds=new Set((await redis.smembers(`phuc:visitors:day:${nowDay}`)||[]).map(String));
+        const older=new Set();
+        for(let i=1;i<90;i++){const d=new Date(Date.now()-i*86400000);const vals=await redis.smembers(`phuc:visitors:day:${vnDayKey(d)}`);if(Array.isArray(vals))for(const v of vals)older.add(String(v));}
+        for(const id of todayIds){if(older.has(id))returningToday++;else newToday++;}
+      }catch{}
+      const returnRate=visitorsToday?Math.round(returningToday/visitorsToday*100):0;
+      return sendJson(res,200,{ok:true,stats:{users,uploads,exam_attempts:attempts.length,today:activeToday,unique_visitors:visitorsAll,unique_today:visitorsToday,unique_7d:visitors7d,unique_30d:visitors30d,pageviews_all:pageviewsAll,pageviews_today:pageviewsToday,online,returning_today:returningToday,new_today:newToday,return_rate:returnRate}});
     }
 
     return sendJson(res,400,{ok:false,message:'Hành động không hợp lệ.'});
