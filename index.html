@@ -1034,24 +1034,24 @@ html.dark-mode body{background:linear-gradient(180deg,#0b1220,#111827)!important
 </div>
 </div>
 
-<div class="pk12-in-course">
+<div class="pk12-in-course pk12-tong-on-block">
   <div class="pk12-in-course-head">
-    <div><div class="pk12-in-course-kicker">TỔNG ÔN / VIDEO THAM KHẢO</div><div class="pk12-in-course-title">Toán 12 • video của Nguyễn Phan Tiến &amp; Anh Giáo Kid</div><div class="pk12-in-course-sub">Đặt ngay trong khóa Toán 12 để học viên xem/chuyển sang YouTube đúng nguồn. Ưu tiên video tổng ôn, chữa đề và nội dung 2K9.</div></div>
-    <i class="fa-solid fa-play text-red-500 mt-1"></i>
+    <div><div class="pk12-in-course-kicker">TỔNG ÔN • XEM NGAY TRONG KHÓA</div><div class="pk12-in-course-title">Toán 12 • Tổng ôn chọn lọc</div><div class="pk12-in-course-sub">Tập hợp video của Thầy Nguyễn Phan Tiến và Anh Giáo Kid. Học sinh chỉ cần bấm vào video để xem ngay trong trang, không bị chuyển sang trang khác.</div></div>
+    <i class="fa-solid fa-circle-play text-red-500 mt-1"></i>
   </div>
   <div class="pk12-in-course-grid">
-    <a class="pk12-in-course-card" href="https://www.youtube.com/watch?v=p3i4S7IwkCA" target="_blank" rel="noopener noreferrer">
+    <button type="button" class="pk12-in-course-card" onclick="phucOpenCourseVideo('zsxktJWNxVI','Bài 1.1 Tính đơn điệu của hàm số • Thầy Nguyễn Phan Tiến')">
       <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-calculator"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
-      <b>Tổng ôn Đơn điệu • Cực trị • MaxMin • Tiệm cận</b><span>Thầy Nguyễn Phan Tiến • Toán 12</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem video</span>
-    </a>
-    <a class="pk12-in-course-card" href="https://www.youtube.com/watch?v=po_6Jh5lL3Y" target="_blank" rel="noopener noreferrer">
-      <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-chalkboard-user"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
-      <b>Khóa chuyên đề Toán 12 • 2K9 xuất phát sớm</b><span>Anh Giáo Kid • nội dung lộ trình Toán 12 cho 2K9</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem video</span>
-    </a>
-    <a class="pk12-in-course-card" href="https://www.youtube.com/results?search_query=Th%E1%BA%A7y+Nguy%E1%BB%85n+Phan+Ti%E1%BA%BFn+To%C3%A1n+12+2K9+t%E1%BB%95ng+%C3%B4n+livestream" target="_blank" rel="noopener noreferrer">
-      <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-video"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
-      <b>Tìm thêm tổng ôn / livestream 2K9</b><span>Nguyễn Phan Tiến • kết quả YouTube theo 2K9</span><span class="pk12-in-course-watch"><i class="fa-solid fa-magnifying-glass"></i> Mở YouTube</span>
-    </a>
+      <b>Tính đơn điệu của hàm số • Full bài</b><span>Thầy Nguyễn Phan Tiến • Toán 12</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem ngay</span>
+    </button>
+    <button type="button" class="pk12-in-course-card" onclick="phucOpenCourseVideo('hM7M6ThQ7xA','500 CÂU CHỐNG SAI NGU KINH ĐIỂN • ĐỀ SỐ 01 • Toán 12')">
+      <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-brain"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
+      <b>500 câu chống sai ngu • Đề số 01</b><span>Anh Giáo Kid • Toán 12</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem ngay</span>
+    </button>
+    <button type="button" class="pk12-in-course-card" onclick="phucOpenCourseVideo('po_6Jh5lL3Y','Khóa Chuyên đề Toán 12 • 2K9 xuất phát sớm • Anh Giáo Kid')">
+      <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-graduation-cap"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
+      <b>Chuyên đề Toán 12 • 2K9</b><span>Anh Giáo Kid • lộ trình xuất phát sớm</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem ngay</span>
+    </button>
   </div>
 </div>
 </div>
@@ -1557,24 +1557,20 @@ html.dark-mode .phuc-ref-course-note{color:#94a3b8}
 <h3 class="text-xl font-black text-slate-900" id="physics-title"></h3>
 <p class="text-xs text-slate-600 leading-relaxed" id="physics-desc"></p>
 <div class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 shadow-inner" id="physics-video-wrap"></div>
-<div class="pk12-in-course">
+<div class="pk12-in-course pk12-tong-on-block physics">
   <div class="pk12-in-course-head">
-    <div><div class="pk12-in-course-kicker" style="color:#0369a1">TỔNG ÔN / VIDEO THAM KHẢO</div><div class="pk12-in-course-title">Vật lí 12 • Khôi Cao Minh</div><div class="pk12-in-course-sub">Đặt ngay trong khóa Vật lí 12. Ưu tiên nội dung 2K9; hiện có video 2K8 đã xác minh làm phương án dự phòng.</div></div>
+    <div><div class="pk12-in-course-kicker" style="color:#0369a1">TỔNG ÔN • XEM NGAY TRONG KHÓA</div><div class="pk12-in-course-title">Vật lí 12 • Tổng ôn cùng Khôi Cao Minh</div><div class="pk12-in-course-sub">Ưu tiên nội dung 2K9; hiện chưa tìm được video Tổng ôn 2K9 trực tiếp đủ chắc chắn nên dùng video Vật lí 12 của Khôi Cao Minh cho 2K8 làm phương án dự phòng. Bấm là xem ngay trong trang.</div></div>
     <i class="fa-solid fa-atom text-sky-600 mt-1"></i>
   </div>
   <div class="pk12-in-course-grid">
-    <a class="pk12-in-course-card physics" href="https://www.youtube.com/results?search_query=Kh%C3%B4i+Cao+Minh+V%E1%BA%ADt+l%C3%BD+12+2K9+t%E1%BB%95ng+%C3%B4n+livestream" target="_blank" rel="noopener noreferrer">
+    <button type="button" class="pk12-in-course-card physics" onclick="phucOpenCourseVideo('jNfxc1unTU8','Vật Lí 12 • 2K8 • Chữa full Đề thi thử 2026 hay chuẩn cấu trúc')">
       <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-atom"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
-      <b>Khôi Cao Minh • Vật lí 12 • 2K9</b><span>Ưu tiên tổng ôn, chữa đề, livestream 2K9</span><span class="pk12-in-course-watch"><i class="fa-solid fa-magnifying-glass"></i> Tìm video 2K9</span>
-    </a>
-    <a class="pk12-in-course-card physics" href="https://www.youtube.com/watch?v=jNfxc1unTU8" target="_blank" rel="noopener noreferrer">
-      <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-file-circle-check"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
-      <b>Chữa full đề thi thử 2026 hay chuẩn cấu trúc</b><span>Khôi Cao Minh • Vật lí 12 • 2K8</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem video</span>
-    </a>
-    <a class="pk12-in-course-card physics" href="https://www.youtube.com/watch?v=6DnDW7UbRFY" target="_blank" rel="noopener noreferrer">
+      <b>Chữa full đề thi thử 2026 • chuẩn cấu trúc</b><span>Khôi Cao Minh • Vật lí 12 • 2K8</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem ngay</span>
+    </button>
+    <button type="button" class="pk12-in-course-card physics" onclick="phucOpenCourseVideo('6DnDW7UbRFY','Vật Lí 12 • 2K8 • Chữa full Đề thi thử Sở Nam Định 2025 hay')">
       <div class="pk12-in-course-top"><div class="pk12-in-course-icon"><i class="fa-solid fa-list-check"></i></div><i class="fa-brands fa-youtube text-red-500"></i></div>
-      <b>Chữa full đề thi thử Sở Nam Định 2025</b><span>Khôi Cao Minh • Vật lí 12 • 2K8</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem video</span>
-    </a>
+      <b>Chữa full đề thi thử Sở Nam Định</b><span>Khôi Cao Minh • Vật lí 12 • 2K8</span><span class="pk12-in-course-watch"><i class="fa-solid fa-play"></i> Xem ngay</span>
+    </button>
   </div>
 </div>
 <div class="border-b border-slate-200 flex flex-wrap gap-4 text-xs font-bold">
@@ -8765,6 +8761,14 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
 })();
 </script>
 
+<!-- PHÚC K9: IN-COURSE YOUTUBE PLAYER (no navigation) -->
+<style id="phuc-in-course-youtube-style">
+.pk12-tong-on-block{margin-top:14px}.pk12-in-course-card{width:100%;text-align:left;cursor:pointer}.pk12-in-course-card:focus-visible{outline:3px solid rgba(14,165,233,.32);outline-offset:2px}.phuc-course-video-modal{position:fixed;inset:0;z-index:130000;display:none;align-items:center;justify-content:center;padding:12px;background:rgba(2,6,23,.78);backdrop-filter:blur(7px)}.phuc-course-video-modal.open{display:flex}.phuc-course-video-box{width:min(1000px,100%);background:#020617;border:1px solid rgba(255,255,255,.12);border-radius:20px;overflow:hidden;box-shadow:0 30px 100px rgba(2,6,23,.4)}.phuc-course-video-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:rgba(15,23,42,.98);color:#fff}.phuc-course-video-title{font-size:11px;font-weight:900;line-height:1.4;min-width:0}.phuc-course-video-close{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}.phuc-course-video-stage{background:#000;aspect-ratio:16/9}.phuc-course-video-stage iframe{display:block;width:100%;height:100%;border:0}@media(max-width:720px){.phuc-course-video-modal{padding:7px}.phuc-course-video-box{border-radius:16px}.phuc-course-video-head{padding:8px 9px}}
+</style>
+<div class="phuc-course-video-modal" id="phuc-course-video-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Video tổng ôn"><div class="phuc-course-video-box"><div class="phuc-course-video-head"><div class="phuc-course-video-title" id="phuc-course-video-title">Video</div><button type="button" class="phuc-course-video-close" id="phuc-course-video-close" aria-label="Đóng video"><i class="fa-solid fa-xmark"></i></button></div><div class="phuc-course-video-stage"><iframe id="phuc-course-video-frame" title="Video tổng ôn" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></div></div>
+<script id="phuc-in-course-youtube-js">
+(function(){'use strict';function openVideo(id,title){const m=document.getElementById('phuc-course-video-modal'),f=document.getElementById('phuc-course-video-frame'),t=document.getElementById('phuc-course-video-title');if(!m||!f)return;if(t)t.textContent=title||'Video tổng ôn';f.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&playsinline=1';m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}function closeVideo(){const m=document.getElementById('phuc-course-video-modal'),f=document.getElementById('phuc-course-video-frame');if(!m)return;m.classList.remove('open');m.setAttribute('aria-hidden','true');if(f)f.src='about:blank';document.body.style.overflow=''}window.phucOpenCourseVideo=openVideo;document.addEventListener('click',function(e){if(e.target.closest?.('#phuc-course-video-close')||e.target===document.getElementById('phuc-course-video-modal'))closeVideo()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeVideo()})})();
+</script>
 </body>
 </html>
 <!-- PDF library uses real source documents only; no fabricated exam/PDF records. -->
