@@ -7,6 +7,7 @@ function adminUser(username){
 }
 function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
 function nowIso(){return new Date().toISOString()}
+const PREMIUM_PRICE=20000;
 
 module.exports = async function handler(req,res){
   try{
@@ -35,12 +36,14 @@ module.exports = async function handler(req,res){
       if(user?.premium?.active) return sendJson(res,409,{ok:false,message:'Tài khoản đã là Premium+.',csrf});
       const student_name=cleanName(body.student_name||user.display_name);
       const payment_content=cleanName(body.payment_content);
+      const payment_amount=Number(body.payment_amount||0);
       if(student_name.length<2) return sendJson(res,422,{ok:false,message:'Tên học viên không hợp lệ.',csrf});
       const expected=`${student_name} + premium`;
       if(payment_content!==expected) return sendJson(res,422,{ok:false,message:'Nội dung chuyển khoản phải đúng dạng: Tên học viên + premium.',csrf});
+      if(payment_amount!==PREMIUM_PRICE) return sendJson(res,422,{ok:false,message:'Số tiền Premium+ là 20.000đ.',csrf});
       const old=await redis.get(`phuc:premium:req:${username}`);
       if(old?.status==='pending') return sendJson(res,409,{ok:false,message:'Yêu cầu Premium đang chờ xét duyệt.',csrf});
-      const rec={username,display_name:cleanName(user.display_name||username),student_name,payment_content,status:'pending',created_at:nowIso()};
+      const rec={username,display_name:cleanName(user.display_name||username),student_name,payment_content,payment_amount:PREMIUM_PRICE,status:'pending',created_at:nowIso()};
       await redis.set(`phuc:premium:req:${username}`,rec,{ex:60*60*24*90});
       return sendJson(res,200,{ok:true,request:rec,csrf});
     }
@@ -72,6 +75,21 @@ module.exports = async function handler(req,res){
       const reqRec=await redis.get(`phuc:premium:req:${target}`);
       if(reqRec){reqRec.status='approved';reqRec.approved_at=nowIso();reqRec.approved_by=username;await redis.set(`phuc:premium:req:${target}`,reqRec,{ex:60*60*24*90});}
       return sendJson(res,200,{ok:true,premium:user.premium,username:target,csrf});
+    }
+
+    if(action==='admin-gift' && req.method==='POST'){
+      if(!adminUser(username)) return sendJson(res,403,{ok:false,message:'Không có quyền admin.',csrf});
+      const target=cleanName(body.username).toLowerCase();
+      if(!target) return sendJson(res,422,{ok:false,message:'Thiếu username học viên.',csrf});
+      const user=await redis.get(`${USER_PREFIX}${target}`);
+      if(!user) return sendJson(res,404,{ok:false,message:'Không tìm thấy tài khoản cần tặng Premium+.',csrf});
+      const activatedAt=nowIso();
+      user.premium={plan:'premium_plus',active:true,activated_at:activatedAt,approved_by:username,source:'giveaway'};
+      await redis.set(`${USER_PREFIX}${target}`,user);
+      const reqRec=await redis.get(`phuc:premium:req:${target}`);
+      if(reqRec){reqRec.status='approved';reqRec.approved_at=activatedAt;reqRec.approved_by=username;reqRec.gifted=true;await redis.set(`phuc:premium:req:${target}`,reqRec,{ex:60*60*24*90});}
+      await redis.set(`phuc:premium:gift:${target}`,{username:target,granted_at:activatedAt,granted_by:username,source:'giveaway'},{ex:60*60*24*365});
+      return sendJson(res,200,{ok:true,premium:user.premium,username:target,source:'giveaway',csrf});
     }
 
     return sendJson(res,400,{ok:false,message:'Hành động không hợp lệ.',csrf});
