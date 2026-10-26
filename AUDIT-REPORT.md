@@ -108,3 +108,10 @@ Các bài test dùng mock Redis/Blob/auth; chưa kiểm tra với dịch vụ th
 ## 8. Trạng thái kết luận
 
 Đây là bản nâng cấp source có kiểm thử logic mô phỏng, không phải xác nhận triển khai production. Các thay đổi tập trung vào ngân hàng đề/phòng thi, xác thực đầu vào, chấm điểm server-side, XP/BXH đã xác minh và hạn chế lạm dụng API; giao diện lớn cũ được giữ lại và mở rộng bằng asset tách riêng.
+
+
+## UI refresh correction (2026-10-27)
+
+The first delivered package contained two duplicated scripts that forcibly added an exam-bank maintenance panel and hid the exam list. This was an implementation mistake in the package, not a user setup error. The updated package removes both installers and their hiding rules, changes the homepage footer text, adds the `assets/phuck9-academic-ui.css` and `assets/phuck9-academic-ui.js` interface layer, makes the mobile layout touch-first, softens motion according to `prefers-reduced-motion`, and bumps the service-worker cache version.
+
+The updated package is source-only; no live deploy or external Redis/Blob browser test is claimed.

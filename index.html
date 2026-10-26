@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script>(function(){try{var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection||{};var low=(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory&&navigator.deviceMemory<=4)||c.saveData||/2g|slow-2g/.test(c.effectiveType||'');if(low)document.documentElement.classList.add('phuc-lite-mode');}catch(e){}})();</script>
+<script>(function(){try{var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection||{};var low=(navigator.deviceMemory&&navigator.deviceMemory<=2)||c.saveData||/2g|slow-2g/.test(c.effectiveType||'');if(low)document.documentElement.classList.add('phuc-lite-mode');}catch(e){}})();</script>
 <meta content="HỌC CÙNG PHÚC K9 – hệ thống học tập 2K9/THPT với bài giảng, phân dạng, kho đề, tài liệu PDF, ôn tập và hỗ trợ học viên." name="description"/>
 <meta content="#312e81" name="theme-color"/>
 <meta content="website" property="og:type"/>
@@ -555,7 +555,9 @@ body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%)!important;color:
 @media(prefers-reduced-motion:reduce){.rev-btn,.rev-action,.rev-course-card img,.rev-chapter,.rev-chapter-cover img,.rev-teacher-photo img{transition:none!important}.rev-action:hover,.rev-chapter:hover,.rev-btn:hover{transform:none!important}}
 html.dark-mode body{background:linear-gradient(180deg,#0b1220,#111827)!important}.dark-mode .rev-section-head h2,.dark-mode .rev-big-progress,.dark-mode .rev-chapter b,.dark-mode .rev-action b{color:#f8fafc}.dark-mode .rev-section-head p,.dark-mode .rev-progress-desc,.dark-mode .rev-chapter p,.dark-mode .rev-action span{color:#94a3b8}.dark-mode .rev-action,.dark-mode .rev-course-showcase,.dark-mode .rev-progress-card,.dark-mode .rev-chapter{background:#111827;border-color:#273449}.dark-mode .rev-mini-row{background:#0f172a;border-color:#273449}.dark-mode .rev-mini-row b{color:#f8fafc}.dark-mode .rev-ring:before{background:#111827}.dark-mode .rev-chapter-pill{background:#1e1b4b}.dark-mode .rev-action small{background:#1b2433;color:#cbd5e1}
 </style>
-  <link rel="stylesheet" href="/assets/exam-center.css?v=20261026-1">
+  <link rel="stylesheet" href="/assets/exam-center.css?v=20261027-ui1">
+<link rel="stylesheet" href="/assets/phuck9-academic-ui.css?v=20261027-1">
+<script src="/assets/phuck9-academic-ui.js?v=20261027-1" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen custom-scrollbar">
 <!-- HEADER / NAVIGATION -->
@@ -7541,8 +7543,8 @@ html.dark-mode .phuc-vnext-challenge.__unused{background:linear-gradient(135deg,
   #phuc-scroll-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4f46e5,#06b6d4,#10b981);box-shadow:0 0 9px rgba(79,70,229,.45);transition:width .08s linear}
   .phuc-motion-reveal{opacity:0;transform:translateY(10px);transition:opacity .42s ease,transform .42s ease}
   .phuc-motion-reveal.phuc-motion-visible{opacity:1;transform:none}
-  .phuc-lite-mode *, .phuc-lite-mode *::before, .phuc-lite-mode *::after{animation:none!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
-  .phuc-lite-mode *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;}
+  .phuc-lite-mode *, .phuc-lite-mode *::before, .phuc-lite-mode *::after{scroll-behavior:auto!important;}
+  .phuc-lite-mode *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
   .phuc-lite-mode #phuc-scroll-progress{display:none!important;}
   .phuc-lite-mode .phuc-vnext-hero::before,.phuc-lite-mode .phuc-vnext-hero::after,.phuc-lite-mode .phuc-vnext-brand-card::after{display:none!important;}
 
@@ -8767,7 +8769,7 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
         <div class="rev-chapters" id="rev-chapters"></div>
       </section>
 
-      <section class="rev-section"><div class="rev-bottom-banner"><div><h3>Học tới đâu, biết tới đó.</h3><p>Kho luyện đề đang bảo trì để rà soát nguồn đề và nâng cấp phòng thi. Trong thời gian này, khóa học, bài giảng và tài liệu vẫn hoạt động bình thường.</p></div><div class="rev-bottom-actions"><button class="a" type="button" onclick="switchTab('courses')">Học bài</button><button class="b" type="button" onclick="switchTab('phuc-pdf-pro')">Kho PDF</button></div></div></section>
+      <section class="rev-section"><div class="rev-bottom-banner"><div><h3>Học tới đâu, biết tới đó.</h3><p>Giữ nhịp học đều, luyện từng phần và xem lại lỗi sai để tiến bộ mỗi ngày.</p></div><div class="rev-bottom-actions"><button class="a" type="button" onclick="switchTab('exam-bank')">Vào kho đề</button><button class="b" type="button" onclick="switchTab('courses')">Tiếp tục học</button></div></div></section>
     `;
     home.prepend(app);
     renderChapters(); updatePersonal();
@@ -8847,7 +8849,7 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
 })();
 </script>
 
-  <script src="/assets/exam-center.js?v=20261026-1"></script>
+  <script src="/assets/exam-center.js?v=20261027-ui1"></script>
 </body>
 </html>
 <!-- PDF library uses real source documents only; no fabricated exam/PDF records. -->
@@ -9481,8 +9483,7 @@ html.phuc-lite-mode, body.phuc-lite-mode{scroll-behavior:auto!important;}
       const save=!!c?.saveData;
       const slow=['slow-2g','2g'].includes(c?.effectiveType);
       const mem=Number(navigator.deviceMemory||0)&&Number(navigator.deviceMemory)<4;
-      const cores=Number(navigator.hardwareConcurrency||0)&&Number(navigator.hardwareConcurrency)<=4;
-      return save||slow||mem||cores;
+      return save||slow||mem;
     }catch{return false}
   }
   function applyLite(){document.documentElement.classList.toggle('phuc-lite-mode',liteSuggested());document.body?.classList.toggle('phuc-lite-mode',liteSuggested());}
@@ -9513,168 +9514,6 @@ html.phuc-lite-mode, body.phuc-lite-mode{scroll-behavior:auto!important;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   window.addEventListener('load',init,{once:true});
   window.addEventListener('resize',()=>{if(window.innerWidth<=1023)keepMobileNavClosedOnLoad();},{passive:true});
-})();
-</script>
-
-
-<style id="phuck9-ui-v6-cinematic">
-:root{
-  --v6-ink:#172033;--v6-muted:#687386;--v6-paper:#f8fafc;--v6-card:#ffffff;--v6-line:#e6eaf0;
-  --v6-blue:#315efb;--v6-teal:#0c8d7c;--v6-orange:#f07a2a;--v6-shadow:0 14px 40px rgba(18,34,70,.08);--v6-shadow2:0 24px 70px rgba(18,34,70,.12)
-}
-body{background:radial-gradient(circle at 8% 2%,rgba(49,94,251,.10),transparent 22%),radial-gradient(circle at 94% 8%,rgba(12,141,124,.08),transparent 20%),linear-gradient(180deg,#fbfcff 0%,#f4f7fb 100%)!important;color:var(--v6-ink)!important}
-header{backdrop-filter:saturate(140%) blur(16px)!important;box-shadow:0 10px 30px rgba(18,34,70,.05)!important}
-#main-content{padding-top:26px!important}
-/* A more visual learning-home language */
-.home-v2-hero{min-height:330px!important;border-radius:30px!important;background:linear-gradient(125deg,#f8fbff 0%,#eef4ff 54%,#effaf8 100%)!important;border:1px solid #dfe6f1!important;box-shadow:var(--v6-shadow2)!important}
-.home-v2-hero:before{width:420px!important;height:420px!important;right:-120px!important;bottom:-170px!important;background:radial-gradient(circle,rgba(49,94,251,.18),rgba(49,94,251,0) 69%)!important}
-.home-v2-hero:after{left:54%!important;top:-145px!important;width:300px!important;height:300px!important;background:radial-gradient(circle,rgba(12,141,124,.13),rgba(12,141,124,0) 70%)!important}
-.home-v2-profile-card{border-radius:24px!important;box-shadow:0 20px 55px rgba(18,34,70,.12)!important}
-.home-v2-profile-card img{width:104px!important;height:138px!important;border-radius:24px!important}
-/* image-first subject/chapter surfaces */
-.phuc-grade-card{min-height:138px!important;border-radius:22px!important;position:relative!important;overflow:hidden!important}
-.phuc-grade-card:after{content:"";position:absolute;right:-38px;bottom:-48px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.10);pointer-events:none}
-.phuc-grade-icon{width:52px!important;height:52px!important;border-radius:17px!important;background:rgba(255,255,255,.15)!important;font-size:18px!important}
-.home-v2-panel{border-radius:26px!important;padding:22px!important;box-shadow:var(--v6-shadow)!important}
-/* visual rail: full-bleed photo cards */
-#pk5-visual-rail{margin-top:28px!important}
-.pk5-rail-head{margin-bottom:14px!important}
-.pk5-kicker{letter-spacing:.18em!important;color:var(--v6-blue)!important}
-.pk5-course-rail{grid-auto-columns:minmax(276px,1fr)!important;gap:16px!important;padding-bottom:12px!important}
-.pk5-course-card{min-height:232px!important;border-radius:24px!important;border:1px solid #e3e8f0!important;box-shadow:0 12px 32px rgba(18,34,70,.07)!important}
-.pk5-course-card:hover{transform:translateY(-6px)!important;box-shadow:0 24px 46px rgba(18,34,70,.12)!important}
-.pk5-course-thumb{height:138px!important;background:linear-gradient(135deg,#dce7ff,#e8f7f4)!important}
-.pk5-course-thumb img{transition:transform .55s cubic-bezier(.22,1,.36,1),filter .25s ease!important}
-.pk5-course-card:hover .pk5-course-thumb img{transform:scale(1.08)!important;filter:saturate(1.02)!important}
-.pk5-course-thumb:after{background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(14,23,42,.62) 100%)!important}
-.pk5-course-badge{bottom:11px!important;left:11px!important;background:rgba(255,255,255,.92)!important;border:1px solid rgba(255,255,255,.72)!important}
-.pk5-course-body{padding:14px 15px 15px!important}
-.pk5-course-title{font-size:12px!important;letter-spacing:-.01em!important}
-.pk5-course-meta{font-size:9px!important;line-height:1.5!important}
-/* chapter visual cards already injected by V5 */
-.home-v3-chapter{border-radius:24px!important;box-shadow:0 12px 30px rgba(18,34,70,.06)!important}
-.home-v3-cover{height:150px!important}
-/* add visual section separators */
-#tab-home>section,#tab-courses>section{scroll-margin-top:84px}
-/* mobile app feel */
-@media(max-width:1023px){
-  #main-content{padding-top:14px!important}
-  .home-v2-hero{min-height:auto!important;border-radius:22px!important}
-  .home-v2-profile-card img{width:86px!important;height:114px!important}
-  .home-v2-panel{border-radius:22px!important;padding:16px!important}
-  .pk5-course-rail{grid-auto-columns:minmax(240px,78vw)!important;gap:12px!important}
-  .pk5-course-card{min-height:220px!important}
-  .pk5-course-thumb{height:126px!important}
-}
-@media(max-width:640px){
-  .home-v2-hero .text-3xl,.home-v2-hero .sm\:text-5xl,.home-v2-hero h1{font-size:1.85rem!important}
-  .pk5-rail-title{font-size:1.22rem!important}
-  .phuc-grade-card{min-height:110px!important}
-}
-/* dark mode */
-html.dark-mode body{background:radial-gradient(circle at 8% 2%,rgba(49,94,251,.16),transparent 22%),linear-gradient(180deg,#09111f 0%,#0f172a 100%)!important}
-html.dark-mode .home-v2-hero{background:linear-gradient(135deg,#0f172a,#13234b,#12352f)!important;border-color:#2b3850!important}
-html.dark-mode .home-v2-panel,html.dark-mode .pk5-course-card,html.dark-mode .home-v3-chapter{background:#111827!important;border-color:#273449!important}
-html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!important}
-
-/* EXAM BANK: temporary maintenance state, no fabricated/unfinished test surface */
-#tab-exam-bank{position:relative}
-#tab-exam-bank > .phuck9-exam-maintenance{display:flex}
-#tab-exam-bank.is-maintenance .exam-bank-hero,
-#tab-exam-bank.is-maintenance #exam-bank-list,
-#tab-exam-bank.is-maintenance #exam-player,
-#tab-exam-bank.is-maintenance #exam-result-panel,
-#tab-exam-bank.is-maintenance > .exam-v4-filters,
-#tab-exam-bank.is-maintenance > .exam-v4-filterbar,
-#tab-exam-bank.is-maintenance > .exam-v4-kpis{display:none!important}
-.phuck9-exam-maintenance{display:none;min-height:min(70vh,720px);align-items:center;justify-content:center;padding:28px 12px}
-.phuck9-maintenance-shell{width:min(860px,100%);position:relative;overflow:hidden;border:1px solid #dce4ef;border-radius:32px;background:linear-gradient(145deg,#ffffff 0%,#f7f9ff 60%,#effaf7 100%);box-shadow:0 30px 80px rgba(18,34,70,.12);padding:clamp(22px,4vw,42px)}
-.phuck9-maintenance-glow{position:absolute;width:260px;height:260px;border-radius:50%;right:-90px;top:-100px;background:radial-gradient(circle,rgba(49,94,251,.20),rgba(49,94,251,0) 70%);pointer-events:none}
-.phuck9-maintenance-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:28px;align-items:center;position:relative;z-index:1}
-.phuck9-maintenance-art{width:150px;height:150px;border-radius:34px;background:linear-gradient(145deg,#315efb,#17378f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:58px;box-shadow:0 25px 50px rgba(49,94,251,.25);position:relative;overflow:hidden}
-.phuck9-maintenance-art:before,.phuck9-maintenance-art:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.17);border-radius:50%}
-.phuck9-maintenance-art:before{width:190px;height:190px}.phuck9-maintenance-art:after{width:120px;height:120px}
-.phuck9-maintenance-eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#fff2df;border:1px solid #fed7aa;color:#b45309;font-size:9px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase}
-.phuck9-maintenance-title{margin-top:12px;font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.05;font-weight:1000;color:#101828}
-.phuck9-maintenance-copy{margin-top:10px;max-width:620px;font-size:11px;line-height:1.65;color:#667085}
-.phuck9-maintenance-points{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}
-.phuck9-maintenance-point{padding:11px;border-radius:15px;border:1px solid #e3e8f0;background:rgba(255,255,255,.80)}
-.phuck9-maintenance-point i{color:#315efb}.phuck9-maintenance-point b{display:block;margin-top:6px;font-size:9px;color:#243047}.phuck9-maintenance-point span{display:block;margin-top:3px;font-size:8px;line-height:1.4;color:#7b8494}
-.phuck9-maintenance-note{margin-top:14px;padding:11px 12px;border-radius:14px;background:#effaf7;border:1px solid #b7eee3;color:#176c60;font-size:9px;line-height:1.5;font-weight:800}
-.phuck9-maintenance-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.phuck9-maintenance-actions button,.phuck9-maintenance-actions a{display:inline-flex;align-items:center;gap:7px;border-radius:12px;padding:10px 13px;font-size:9px;font-weight:1000;text-decoration:none}
-.phuck9-maintenance-primary{background:#111827;color:#fff;border:1px solid #111827}.phuck9-maintenance-secondary{background:#fff;color:#344054;border:1px solid #d9e0ea}
-html.dark-mode .phuck9-maintenance-shell{background:linear-gradient(145deg,#0f172a,#111c35,#102b27)!important;border-color:#2b3850}
-html.dark-mode .phuck9-maintenance-title{color:#f8fafc}.dark-mode .phuck9-maintenance-copy{color:#94a3b8}.dark-mode .phuck9-maintenance-point{background:#111827;border-color:#273449}.dark-mode .phuck9-maintenance-point b{color:#e5e7eb}.dark-mode .phuck9-maintenance-point span{color:#94a3b8}.dark-mode .phuck9-maintenance-actions button,.dark-mode .phuck9-maintenance-actions a{background:#111827;border-color:#334155;color:#e5e7eb}
-@media(max-width:720px){
-  .phuck9-maintenance-grid{grid-template-columns:1fr;gap:18px}.phuck9-maintenance-art{width:112px;height:112px;border-radius:28px;font-size:42px}.phuck9-maintenance-points{grid-template-columns:1fr}.phuck9-maintenance-shell{border-radius:24px}.phuck9-exam-maintenance{min-height:58vh;padding:12px 0}
-}
-</style>
-<script id="phuck9-ui-v6-cinematic-js">
-(function(){
-  'use strict';
-  function installMaintenance(){
-    const root=document.getElementById('tab-exam-bank'); if(!root||root.dataset.v6Maint==='1') return;
-    root.dataset.v6Maint='1'; root.classList.add('is-maintenance');
-    const box=document.createElement('section'); box.className='phuck9-exam-maintenance';
-    box.innerHTML=`<div class="phuck9-maintenance-shell"><div class="phuck9-maintenance-glow"></div><div class="phuck9-maintenance-grid"><div class="phuck9-maintenance-art" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></div><div><span class="phuck9-maintenance-eyebrow"><i class="fa-solid fa-person-digging"></i> Kho luyện đề đang được bảo trì</span><h2 class="phuck9-maintenance-title">Chúng tôi đang nâng cấp phòng luyện đề.</h2><p class="phuck9-maintenance-copy">Kho luyện đề tạm đóng để cập nhật lại nguồn đề, đáp án và trải nghiệm làm bài. Mục tiêu là khi mở lại, học viên có thể chọn đề rõ ràng, làm bài mượt, xem kết quả và chữa lỗi dễ hiểu hơn.</p><div class="phuck9-maintenance-points"><div class="phuck9-maintenance-point"><i class="fa-solid fa-file-circle-check"></i><b>Rà soát nguồn đề</b><span>Ưu tiên tài liệu có nguồn gốc rõ ràng.</span></div><div class="phuck9-maintenance-point"><i class="fa-solid fa-list-check"></i><b>Kiểm tra đáp án</b><span>Không dùng đáp án chưa được xác minh để chấm.</span></div><div class="phuck9-maintenance-point"><i class="fa-solid fa-mobile-screen-button"></i><b>Tối ưu phòng thi</b><span>PC và mobile đều thao tác thoải mái.</span></div></div><div class="phuck9-maintenance-note"><i class="fa-solid fa-circle-info mr-1"></i> Trong thời gian bảo trì, các khóa học, bài giảng, PDF và tài liệu học tập khác vẫn hoạt động bình thường.</div><div class="phuck9-maintenance-actions"><button type="button" class="phuck9-maintenance-primary" onclick="switchTab('courses')"><i class="fa-solid fa-book-open"></i> Tiếp tục học bài</button><button type="button" class="phuck9-maintenance-secondary" onclick="switchTab('phuc-pdf-pro')"><i class="fa-solid fa-file-pdf"></i> Xem kho PDF</button></div></div></div></div>`;
-    root.prepend(box);
-  }
-  function injectVisualAccents(){
-    const home=document.getElementById('tab-home'); if(!home||home.dataset.v6acc==='1')return; home.dataset.v6acc='1';
-    const hero=home.querySelector('.home-v2-hero'); if(hero){hero.setAttribute('data-ui','cinematic');}
-  }
-  function run(){installMaintenance();injectVisualAccents();}
-  document.addEventListener('DOMContentLoaded',run,{once:true});
-  setTimeout(run,400); setTimeout(run,1200);
-})();
-</script>
-
-<style id="phuck9-ui-v6-cinematic">
-:root{--v6-ink:#172033;--v6-muted:#687386;--v6-blue:#315efb;--v6-teal:#0c8d7c;--v6-orange:#f07a2a;--v6-shadow:0 14px 40px rgba(18,34,70,.08);--v6-shadow2:0 24px 70px rgba(18,34,70,.12)}
-body{background:radial-gradient(circle at 8% 2%,rgba(49,94,251,.10),transparent 22%),radial-gradient(circle at 94% 8%,rgba(12,141,124,.08),transparent 20%),linear-gradient(180deg,#fbfcff 0%,#f4f7fb 100%)!important;color:var(--v6-ink)!important}
-header{backdrop-filter:saturate(140%) blur(16px)!important;box-shadow:0 10px 30px rgba(18,34,70,.05)!important}
-#main-content{padding-top:26px!important}
-.home-v2-hero{min-height:330px!important;border-radius:30px!important;background:linear-gradient(125deg,#f8fbff 0%,#eef4ff 54%,#effaf8 100%)!important;border:1px solid #dfe6f1!important;box-shadow:var(--v6-shadow2)!important}
-.home-v2-hero:before{width:420px!important;height:420px!important;right:-120px!important;bottom:-170px!important;background:radial-gradient(circle,rgba(49,94,251,.18),rgba(49,94,251,0) 69%)!important}
-.home-v2-hero:after{left:54%!important;top:-145px!important;width:300px!important;height:300px!important;background:radial-gradient(circle,rgba(12,141,124,.13),rgba(12,141,124,0) 70%)!important}
-.home-v2-profile-card{border-radius:24px!important;box-shadow:0 20px 55px rgba(18,34,70,.12)!important}
-.home-v2-profile-card img{width:104px!important;height:138px!important;border-radius:24px!important}
-.phuc-grade-card{min-height:138px!important;border-radius:22px!important;position:relative!important;overflow:hidden!important}
-.phuc-grade-card:after{content:"";position:absolute;right:-38px;bottom:-48px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.10);pointer-events:none}
-.phuc-grade-icon{width:52px!important;height:52px!important;border-radius:17px!important;background:rgba(255,255,255,.15)!important;font-size:18px!important}
-.home-v2-panel{border-radius:26px!important;padding:22px!important;box-shadow:var(--v6-shadow)!important}
-#pk5-visual-rail{margin-top:28px!important}.pk5-rail-head{margin-bottom:14px!important}.pk5-kicker{letter-spacing:.18em!important;color:var(--v6-blue)!important}
-.pk5-course-rail{grid-auto-columns:minmax(276px,1fr)!important;gap:16px!important;padding-bottom:12px!important}
-.pk5-course-card{min-height:232px!important;border-radius:24px!important;border:1px solid #e3e8f0!important;box-shadow:0 12px 32px rgba(18,34,70,.07)!important}
-.pk5-course-card:hover{transform:translateY(-6px)!important;box-shadow:0 24px 46px rgba(18,34,70,.12)!important}
-.pk5-course-thumb{height:138px!important;background:linear-gradient(135deg,#dce7ff,#e8f7f4)!important}.pk5-course-thumb img{transition:transform .55s cubic-bezier(.22,1,.36,1),filter .25s ease!important}.pk5-course-card:hover .pk5-course-thumb img{transform:scale(1.08)!important;filter:saturate(1.02)!important}.pk5-course-thumb:after{background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(14,23,42,.62) 100%)!important}.pk5-course-badge{bottom:11px!important;left:11px!important;background:rgba(255,255,255,.92)!important;border:1px solid rgba(255,255,255,.72)!important}.pk5-course-body{padding:14px 15px 15px!important}.pk5-course-title{font-size:12px!important}.pk5-course-meta{font-size:9px!important;line-height:1.5!important}
-.home-v3-chapter{border-radius:24px!important;box-shadow:0 12px 30px rgba(18,34,70,.06)!important}.home-v3-cover{height:150px!important}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(49,94,251,.18)!important;outline-offset:2px!important}
-@media(max-width:1023px){#main-content{padding-top:14px!important}.home-v2-hero{min-height:auto!important;border-radius:22px!important}.home-v2-profile-card img{width:86px!important;height:114px!important}.home-v2-panel{border-radius:22px!important;padding:16px!important}.pk5-course-rail{grid-auto-columns:minmax(240px,78vw)!important;gap:12px!important}.pk5-course-card{min-height:220px!important}.pk5-course-thumb{height:126px!important}}
-@media(max-width:640px){.home-v2-hero h1{font-size:1.85rem!important}.pk5-rail-title{font-size:1.22rem!important}.phuc-grade-card{min-height:110px!important}}
-html.dark-mode body{background:radial-gradient(circle at 8% 2%,rgba(49,94,251,.16),transparent 22%),linear-gradient(180deg,#09111f 0%,#0f172a 100%)!important}
-html.dark-mode .home-v2-hero{background:linear-gradient(135deg,#0f172a,#13234b,#12352f)!important;border-color:#2b3850!important}html.dark-mode .home-v2-panel,html.dark-mode .pk5-course-card,html.dark-mode .home-v3-chapter{background:#111827!important;border-color:#273449!important}html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!important}
-
-/* Exam bank is intentionally unavailable while it is being rebuilt. */
-#tab-exam-bank.is-maintenance .exam-bank-hero,#tab-exam-bank.is-maintenance #exam-bank-list,#tab-exam-bank.is-maintenance #exam-player,#tab-exam-bank.is-maintenance #exam-result-panel,#tab-exam-bank.is-maintenance .exam-v4-filters,#tab-exam-bank.is-maintenance .exam-v4-filterbar,#tab-exam-bank.is-maintenance .exam-v4-kpis{display:none!important}
-.phuck9-exam-maintenance{display:none;min-height:min(70vh,720px);align-items:center;justify-content:center;padding:28px 12px}.phuck9-maintenance-shell{width:min(860px,100%);position:relative;overflow:hidden;border:1px solid #dce4ef;border-radius:32px;background:linear-gradient(145deg,#fff 0%,#f7f9ff 60%,#effaf7 100%);box-shadow:0 30px 80px rgba(18,34,70,.12);padding:clamp(22px,4vw,42px)}.phuck9-maintenance-glow{position:absolute;width:260px;height:260px;border-radius:50%;right:-90px;top:-100px;background:radial-gradient(circle,rgba(49,94,251,.20),rgba(49,94,251,0) 70%);pointer-events:none}.phuck9-maintenance-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:28px;align-items:center;position:relative;z-index:1}.phuck9-maintenance-art{width:150px;height:150px;border-radius:34px;background:linear-gradient(145deg,#315efb,#17378f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:58px;box-shadow:0 25px 50px rgba(49,94,251,.25);position:relative;overflow:hidden}.phuck9-maintenance-art:before,.phuck9-maintenance-art:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.17);border-radius:50%}.phuck9-maintenance-art:before{width:190px;height:190px}.phuck9-maintenance-art:after{width:120px;height:120px}.phuck9-maintenance-eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#fff2df;border:1px solid #fed7aa;color:#b45309;font-size:9px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase}.phuck9-maintenance-title{margin-top:12px;font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.05;font-weight:1000;color:#101828}.phuck9-maintenance-copy{margin-top:10px;max-width:620px;font-size:11px;line-height:1.65;color:#667085}.phuck9-maintenance-points{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.phuck9-maintenance-point{padding:11px;border-radius:15px;border:1px solid #e3e8f0;background:rgba(255,255,255,.80)}.phuck9-maintenance-point i{color:#315efb}.phuck9-maintenance-point b{display:block;margin-top:6px;font-size:9px;color:#243047}.phuck9-maintenance-point span{display:block;margin-top:3px;font-size:8px;line-height:1.4;color:#7b8494}.phuck9-maintenance-note{margin-top:14px;padding:11px 12px;border-radius:14px;background:#effaf7;border:1px solid #b7eee3;color:#176c60;font-size:9px;line-height:1.5;font-weight:800}.phuck9-maintenance-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.phuck9-maintenance-actions button{display:inline-flex;align-items:center;gap:7px;border-radius:12px;padding:10px 13px;font-size:9px;font-weight:1000}.phuck9-maintenance-primary{background:#111827;color:#fff;border:1px solid #111827}.phuck9-maintenance-secondary{background:#fff;color:#344054;border:1px solid #d9e0ea}
-html.dark-mode .phuck9-maintenance-shell{background:linear-gradient(145deg,#0f172a,#111c35,#102b27)!important;border-color:#2b3850}.dark-mode .phuck9-maintenance-title{color:#f8fafc}.dark-mode .phuck9-maintenance-copy{color:#94a3b8}.dark-mode .phuck9-maintenance-point{background:#111827;border-color:#273449}.dark-mode .phuck9-maintenance-point b{color:#e5e7eb}.dark-mode .phuck9-maintenance-point span{color:#94a3b8}.dark-mode .phuck9-maintenance-secondary{background:#111827;border-color:#334155;color:#e5e7eb}
-@media(max-width:720px){.phuck9-maintenance-grid{grid-template-columns:1fr;gap:18px}.phuck9-maintenance-art{width:112px;height:112px;border-radius:28px;font-size:42px}.phuck9-maintenance-points{grid-template-columns:1fr}.phuck9-maintenance-shell{border-radius:24px}.phuck9-exam-maintenance{min-height:58vh;padding:12px 0}}
-</style>
-<script id="phuck9-ui-v6-cinematic-js">
-(function(){
-  'use strict';
-  function installMaintenance(){
-    const root=document.getElementById('tab-exam-bank');
-    if(!root||root.dataset.v6Maint==='1') return;
-    root.dataset.v6Maint='1';root.classList.add('is-maintenance');
-    const box=document.createElement('section');box.className='phuck9-exam-maintenance';
-    box.innerHTML='<div class="phuck9-maintenance-shell"><div class="phuck9-maintenance-glow"></div><div class="phuck9-maintenance-grid"><div class="phuck9-maintenance-art" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></div><div><span class="phuck9-maintenance-eyebrow"><i class="fa-solid fa-person-digging"></i> Kho luyện đề đang được bảo trì</span><h2 class="phuck9-maintenance-title">Chúng tôi đang nâng cấp phòng luyện đề.</h2><p class="phuck9-maintenance-copy">Kho luyện đề tạm đóng để cập nhật lại nguồn đề, đáp án và trải nghiệm làm bài. Mục tiêu là khi mở lại, học viên có thể chọn đề rõ ràng, làm bài mượt, xem kết quả và chữa lỗi dễ hiểu hơn.</p><div class="phuck9-maintenance-points"><div class="phuck9-maintenance-point"><i class="fa-solid fa-file-circle-check"></i><b>Rà soát nguồn đề</b><span>Ưu tiên tài liệu có nguồn gốc rõ ràng.</span></div><div class="phuck9-maintenance-point"><i class="fa-solid fa-list-check"></i><b>Kiểm tra đáp án</b><span>Không dùng đáp án chưa được xác minh để chấm.</span></div><div class="phuck9-maintenance-point"><i class="fa-solid fa-mobile-screen-button"></i><b>Tối ưu phòng thi</b><span>PC và mobile đều thao tác thoải mái.</span></div></div><div class="phuck9-maintenance-note"><i class="fa-solid fa-circle-info mr-1"></i> Trong thời gian bảo trì, các khóa học, bài giảng, PDF và tài liệu học tập khác vẫn hoạt động bình thường.</div><div class="phuck9-maintenance-actions"><button type="button" class="phuck9-maintenance-primary" onclick="switchTab(\'courses\')"><i class="fa-solid fa-book-open"></i> Tiếp tục học bài</button><button type="button" class="phuck9-maintenance-secondary" onclick="switchTab(\'phuc-pdf-pro\')"><i class="fa-solid fa-file-pdf"></i> Xem kho PDF</button></div></div></div></div>';
-    root.prepend(box);
-  }
-  function run(){installMaintenance();}
-  document.addEventListener('DOMContentLoaded',run,{once:true});setTimeout(run,500);setTimeout(run,1500);
 })();
 </script>
 
@@ -9851,3 +9690,4 @@ html.dark-mode .phuc-v8-ref-source{background:rgba(15,23,42,.72);border-color:#3
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+
