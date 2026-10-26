@@ -13,7 +13,7 @@ const ALLOWED_MIME = new Set([
 const ADMIN_ENV = 'ADMIN_USERNAME';
 function clean(v, max) { return String(v == null ? '' : v).trim().slice(0, max); }
 function extOf(name) { const p = String(name || '').toLowerCase().split('.'); return p.length > 1 ? p.pop() : ''; }
-function isAdmin(username) { const allowed = String(process.env[ADMIN_ENV] || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean); return !!allowed.length && allowed.includes(String(username||'').trim().toLowerCase()); }
+function isAdmin(username) { const allowed = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean); return !!allowed.length && allowed.includes(String(username||'').trim().toLowerCase()); }
 function validLessonKey(v) { return /^[a-zA-Z0-9._:-]{1,180}$/.test(String(v||'')); }
 function parseJsonBody(req){ let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}} return body; }
 

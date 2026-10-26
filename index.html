@@ -555,6 +555,7 @@ body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%)!important;color:
 @media(prefers-reduced-motion:reduce){.rev-btn,.rev-action,.rev-course-card img,.rev-chapter,.rev-chapter-cover img,.rev-teacher-photo img{transition:none!important}.rev-action:hover,.rev-chapter:hover,.rev-btn:hover{transform:none!important}}
 html.dark-mode body{background:linear-gradient(180deg,#0b1220,#111827)!important}.dark-mode .rev-section-head h2,.dark-mode .rev-big-progress,.dark-mode .rev-chapter b,.dark-mode .rev-action b{color:#f8fafc}.dark-mode .rev-section-head p,.dark-mode .rev-progress-desc,.dark-mode .rev-chapter p,.dark-mode .rev-action span{color:#94a3b8}.dark-mode .rev-action,.dark-mode .rev-course-showcase,.dark-mode .rev-progress-card,.dark-mode .rev-chapter{background:#111827;border-color:#273449}.dark-mode .rev-mini-row{background:#0f172a;border-color:#273449}.dark-mode .rev-mini-row b{color:#f8fafc}.dark-mode .rev-ring:before{background:#111827}.dark-mode .rev-chapter-pill{background:#1e1b4b}.dark-mode .rev-action small{background:#1b2433;color:#cbd5e1}
 </style>
+  <link rel="stylesheet" href="/assets/exam-center.css?v=20261026-1">
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen custom-scrollbar">
 <!-- HEADER / NAVIGATION -->
@@ -7974,7 +7975,7 @@ setInterval(()=>{hook()},5000);
     const r=window.__phucExamLast;if(!r)return;
     if(!account().authenticated){window.phucToast?.('Đăng nhập để lưu kết quả và vào bảng xếp hạng.');return;}
     const b=document.getElementById('exam-save-result-btn');if(b){b.disabled=true;b.textContent='Đang lưu…';}
-    try{const res=await fetch(api+'?action=record-exam&_='+Date.now(),{method:'POST',credentials:'same-origin',headers:csrfHeaders(),body:JSON.stringify({exam_id:r.id,title:r.title,subject:r.subject,score:r.score,correct:r.correct,total_questions:r.totalQuestions,sections:r.sections,review:r.review,display_name:account().user?.display_name||account().user?.username||''})});const x=await res.json();if(!res.ok||!x.ok)throw new Error(x.message||'Không lưu được');if(b){b.textContent='✓ Đã lưu kết quả';b.classList.remove('bg-emerald-600');b.classList.add('bg-slate-700');}loadLeaderboard();}catch(e){if(b)b.textContent='Lưu thất bại';window.phucToast?.('⚠️ '+(e.message||'Không lưu được kết quả'));}finally{setTimeout(()=>{if(b&&!b.textContent.includes('Đã lưu')){b.disabled=false;b.textContent='Lưu kết quả & BXH';}},1200);}
+    try{const res=await fetch(api+'?action=record-exam&_='+Date.now(),{method:'POST',credentials:'same-origin',headers:csrfHeaders(),body:JSON.stringify({exam_id:r.id,title:r.title,subject:r.subject,score:r.score,correct:r.correct,total_questions:r.totalQuestions,sections:r.sections,review:r.review,display_name:account().user?.display_name||account().user?.username||''})});const x=await res.json();if(!res.ok||!x.ok)throw new Error(x.message||'Không lưu được');if(b){b.textContent=x.verified?'✓ Đã lưu kết quả':'✓ Đã lưu (chưa xác minh)';b.classList.remove('bg-emerald-600');b.classList.add('bg-slate-700');}if(x.verified)loadLeaderboard();else window.phucToast?.(x.message||'Kết quả tự luyện đã lưu nhưng chưa được xác minh để tính bảng xếp hạng.');}catch(e){if(b)b.textContent='Lưu thất bại';window.phucToast?.('⚠️ '+(e.message||'Không lưu được kết quả'));}finally{setTimeout(()=>{if(b&&!b.textContent.includes('Đã lưu')){b.disabled=false;b.textContent='Lưu kết quả & BXH';}},1200);}
   }
   async function loadLeaderboard(){
     const box=document.getElementById('exam-leaderboard-box');if(!box)return;box.classList.remove('hidden');box.innerHTML='<div class="text-xs text-slate-400">Đang tải bảng xếp hạng…</div>';
@@ -8846,6 +8847,7 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
 })();
 </script>
 
+  <script src="/assets/exam-center.js?v=20261026-1"></script>
 </body>
 </html>
 <!-- PDF library uses real source documents only; no fabricated exam/PDF records. -->

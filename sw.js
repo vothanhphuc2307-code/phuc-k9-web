@@ -1,4 +1,4 @@
-const VERSION='phuc-k9-app-v1';
+const VERSION='phuc-k9-app-v2';
 const SHELL=['/','/offline.html','/manifest.webmanifest','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

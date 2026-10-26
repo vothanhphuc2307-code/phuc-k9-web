@@ -1,4 +1,6 @@
 const { getRedis } = require('../lib/redis');
+const { questionNeedsReview } = require('../lib/exam-utils');
+const seedExamDefinitions = require('./exams').getSeedExams();
 const { USER_PREFIX, getSession, sendJson } = require('../lib/auth');
 
 function isAdmin(username){
@@ -91,20 +93,17 @@ async function analytics(redis){
 }
 
 async function examStats(redis){
-  const ids=new Set();
-  try{(await redis.smembers('phuc:exam:index')||[]).forEach(id=>ids.add(String(id)))}catch{}
-  const exams=[];
-  for(const id of ids){
-    const e=parseJson(await redis.get(`phuc:exam:def:${id}`).catch(()=>null));
-    if(e)exams.push(e);
-  }
-  const published=exams.filter(e=>e.published!==false).length;
+  // Include built-in seed exams as well as exams imported into Redis; stored versions take precedence.
+  const byId=new Map(seedExamDefinitions.map(e=>[String(e.id),e]));
+  try{for(const id of (await redis.smembers('phuc:exam:index')||[])){const sid=String(id);const e=parseJson(await redis.get(`phuc:exam:def:${sid}`).catch(()=>null));if(e)byId.set(sid,e)}}catch{}
+  const exams=[...byId.values()];
+  const published=exams.filter(e=>e.published!==false && !(e.questions||[]).some(questionNeedsReview)).length;
   const drafts=exams.filter(e=>e.published===false).length;
-  const review=exams.filter(e=>(e.questions||[]).some(q=>q.answer==null||q.reviewRequired)).length;
+  const review=exams.filter(e=>(e.questions||[]).some(questionNeedsReview)).length;
   const recent=exams.sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0)).slice(0,8).map(e=>({
     id:e.id,title:e.title,program:e.program,subject:e.subject,grade:e.grade,year:e.year,
     examType:e.examType,periodLabel:e.periodLabel,source:e.source,questionCount:(e.questions||[]).length,
-    published:e.published!==false,reviewCount:(e.questions||[]).filter(q=>q.answer==null||q.reviewRequired).length,
+    published:e.published!==false && !(e.questions||[]).some(questionNeedsReview),reviewCount:(e.questions||[]).filter(questionNeedsReview).length,
     updatedAt:e.updatedAt||e.createdAt||null
   }));
   return {total:exams.length,published,drafts,review,recent};

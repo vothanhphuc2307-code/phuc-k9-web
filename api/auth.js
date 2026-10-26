@@ -6,6 +6,24 @@ const {
 } = require('../lib/auth');
 const crypto = require('crypto');
 
+function rateLimitKey(req, action) {
+  const ip = String(req.headers?.['x-real-ip'] || req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const hashed = crypto.createHash('sha256').update(ip).digest('hex').slice(0, 32);
+  return `phuc:auth:limit:${action}:${hashed}`;
+}
+async function allowAuthRequest(redis, req, action) {
+  // Use broad IP buckets to slow scripted abuse without permanently locking individual accounts.
+  const rules = action === 'register' ? [{max:10,seconds:60},{max:40,seconds:3600}] : [{max:30,seconds:60},{max:250,seconds:3600}];
+  for (const rule of rules) {
+    const bucket = Math.floor(Date.now() / (rule.seconds * 1000));
+    const key = `${rateLimitKey(req, action)}:${rule.seconds}:${bucket}`;
+    const count = Number(await redis.incr(key));
+    if (count === 1) await redis.expire(key, rule.seconds + 5);
+    if (count > rule.max) return false;
+  }
+  return true;
+}
+
 function adminUser(username) {
   const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
   return raw.includes(String(username || '').trim().toLowerCase());
@@ -79,6 +97,10 @@ module.exports = async function handler(req,res){
     }
     if(!['register','login','save-state','save-profile','logout'].includes(action))return sendJson(res,400,{ok:false,message:'Hành động không hợp lệ.'});
     if(req.method!=='POST')return sendJson(res,405,{ok:false,message:'API này chỉ nhận POST cho action này.'});
+    if(['register','login'].includes(action)) {
+      try { if(!await allowAuthRequest(redis,req,action))return sendJson(res,429,{ok:false,message:action==='register'?'Bạn đã gửi quá nhiều yêu cầu tạo tài khoản. Hãy thử lại sau.':'Bạn đã thử đăng nhập quá nhiều lần. Hãy thử lại sau.'},{'Retry-After':'60'}); }
+      catch (rateErr) { console.error('auth-rate-limit',rateErr); return sendJson(res,503,{ok:false,message:'Hệ thống bảo vệ đăng nhập đang tạm thời không sẵn sàng. Vui lòng thử lại.'}); }
+    }
     if(!['register','login'].includes(action)&&!requireCsrf(req,session,csrf))return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.',csrf});
     let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}}
     if(action==='register'){
