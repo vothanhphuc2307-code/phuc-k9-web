@@ -1,3 +1,10 @@
+/* Critical local fallback: preserve navigation/modal states when Tailwind CDN is unavailable. */
+html body .hidden { display: none !important; }
+[hidden] { display: none !important; }
+/* The app must never render every SPA section as one long page when a remote stylesheet fails. */
+#main-content > .tab-content.hidden { display: none !important; }
+#main-content > .tab-content:not(.hidden) { display: block; }
+
 /* HỌC CÙNG PHÚC K9 — Motion & loading layer
    Purposefully lightweight: transforms/opacity only, no animated background or continuous particle loops. */
 :root {
@@ -195,3 +202,11 @@
 
 /* Ensure source-hub filters hide cards consistently across browsers. */
 .pk9-source-exam-card[hidden], .pk9-sourcebank-empty.hidden { display: none !important; }
+
+/* Safe in-page explanation for the 2K8 source link; never embed raw htmlview output. */
+.pk9-2k8-embed-fallback{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:start;gap:15px;padding:18px 20px 22px;background:#fffdf7;border-top:1px solid #e5e1d4}
+.pk9-2k8-embed-icon{display:grid;place-items:center;width:58px;height:58px;border:1px solid #e4decf;border-radius:16px;background:#f1eee3;font-size:26px}
+.pk9-2k8-embed-fallback strong{display:block;color:#293c2e;font:700 14px/1.4 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.pk9-2k8-embed-fallback p{max-width:680px;margin:6px 0 12px;color:#74796c;font:400 12px/1.7 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.pk9-2k8-frame-toolbar button{padding:6px 10px;border:1px solid #deded1;border-radius:9px;background:#fffdf7;color:#596e5a;font-size:11px;font-weight:700;cursor:pointer}
+@media(max-width:520px){.pk9-2k8-embed-fallback{grid-template-columns:1fr;padding:15px}.pk9-2k8-embed-icon{width:46px;height:46px}}

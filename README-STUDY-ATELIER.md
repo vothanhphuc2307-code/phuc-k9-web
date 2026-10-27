@@ -42,3 +42,10 @@ The supplied Google Sheet is linked exactly as provided, but its rows could not 
 4. Deploy the branch as a Vercel Preview first.
 5. Test login, course/video pages, the 2K8 source button, the two PDFs, documents, profile/dashboard, Admin upload and browser console before promoting to Production.
 6. The source was not deployed from this environment. Live Redis/Blob/API and production rendering still require Preview testing.
+
+
+## Hotfix V3.1 — route/UI repair
+- Added a local `.hidden` fallback so menus, modals and tab panels remain hidden if the Tailwind CDN is unavailable.
+- Added `reference-courses` and `dashboard` to the route allow-list.
+- Removed raw Google Sheets `htmlview` iframe rendering; the in-page button now opens a styled explanation and a reliable external link to the source.
+- Google Sheets data itself is not copied into the app until the correct 2K8 sheet export can be verified.

@@ -36,18 +36,13 @@
 
   function toggle2k8Preview() {
     const wrap = $('pk9-2k8-frame-wrap');
-    const frame = $('pk9-2k8-frame');
     const button = $('pk9-2k8-toggle');
-    if (!wrap || !frame || !button) return;
+    if (!wrap || !button) return;
     const opening = wrap.classList.contains('hidden');
     wrap.classList.toggle('hidden', !opening);
     button.setAttribute('aria-expanded', String(opening));
-    button.textContent = opening ? 'Ẩn khung xem' : 'Xem trong website';
+    button.textContent = opening ? 'Ẩn hướng dẫn' : 'Xem cách mở bảng';
     if (opening) {
-      if (!frame.dataset.loaded) {
-        frame.src = SHEET_URL;
-        frame.dataset.loaded = '1';
-      }
       wrap.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     }
   }
@@ -81,6 +76,7 @@
       button.addEventListener('click', () => { activeSubject = button.dataset.sourceFilter || 'all'; renderSourceBank(); });
     });
     $('pk9-2k8-toggle')?.addEventListener('click', toggle2k8Preview);
+    $('pk9-2k8-close')?.addEventListener('click', toggle2k8Preview);
     renderSourceBank();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
