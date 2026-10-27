@@ -1,0 +1,108 @@
+/* HỌC CÙNG PHÚC K9 — Motion & loading layer
+   Purposefully lightweight: transforms/opacity only, no animated background or continuous particle loops. */
+:root {
+  --pk9-paper: #f7f4eb;
+  --pk9-ink: #263a30;
+  --pk9-forest: #315b45;
+  --pk9-lavender: #eee7f7;
+  --pk9-mint: #e6f0e5;
+  --pk9-peach: #f9e6db;
+  --pk9-line: rgba(49, 91, 69, .14);
+}
+
+/* Initial loading: calming, readable and time-limited by site-effects.js. */
+#pk9-site-loader {
+  position: fixed; inset: 0; z-index: 2147483000;
+  display: grid; place-items: center; padding: 20px;
+  background: var(--pk9-paper); color: var(--pk9-ink);
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transition: opacity .28s ease, visibility .28s ease;
+}
+#pk9-site-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.pk9-loader-card {
+  position: relative; display: flex; align-items: center; gap: 15px;
+  width: min(350px, 100%); padding: 20px 22px;
+  border: 1px solid var(--pk9-line); border-radius: 23px;
+  background: rgba(255,255,255,.84); box-shadow: 0 14px 34px rgba(49,91,69,.07);
+}
+.pk9-loader-book {
+  width: 52px; height: 56px; flex: 0 0 52px; position: relative;
+  display: grid; place-items: center; border-radius: 13px 16px 14px 10px;
+  color: #fff; background: var(--pk9-forest);
+  box-shadow: inset 4px 0 0 rgba(255,255,255,.15);
+  animation: pk9-book-breathe 1.5s ease-in-out infinite;
+}
+.pk9-loader-book b { font: 700 13px Georgia, serif; }
+.pk9-loader-book span { position: absolute; right: 4px; top: 2px; font-size: 12px; color: #f4d6a6; }
+.pk9-loader-copy { min-width: 0; flex: 1; }
+.pk9-loader-copy strong { display: block; font: 800 11px/1.35 "Segoe UI", Arial, sans-serif; letter-spacing: .08em; }
+.pk9-loader-copy > span { display: block; margin-top: 5px; color: #748075; font: 12px/1.5 "Segoe UI", Arial, sans-serif; }
+.pk9-loader-track { height: 4px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: #e7e4da; }
+.pk9-loader-track i { display: block; width: 36%; height: 100%; border-radius: inherit; background: #8cae8c; animation: pk9-load-progress 1.1s ease-in-out infinite; }
+.pk9-loader-spark { position: absolute; top: 8px; right: 13px; color: #d7a866; font-size: 14px; }
+
+/* Route changes: short fade/raise. No filter or large-area blur. */
+.pk9-route-enter { animation: pk9-route-in .26s cubic-bezier(.2,.7,.25,1) both; }
+@keyframes pk9-route-in { from { opacity: .55; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pk9-book-breathe { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-2px) rotate(1deg); } }
+@keyframes pk9-load-progress { 0% { transform: translateX(-120%); } 100% { transform: translateX(310%); } }
+
+/* Tiny workbook/sticker details on the new Study Atelier home. These are static, not floating particles. */
+.sa-subject { position: relative; isolation: isolate; transition: transform .17s ease, border-color .17s ease, box-shadow .17s ease; }
+.sa-subject::after { position: absolute; right: 12px; top: 9px; z-index: -1; opacity: .14; font: 700 23px/1 Georgia, serif; transform: rotate(-9deg); pointer-events: none; }
+.sa-subject:nth-child(1)::after { content: "∑"; }
+.sa-subject:nth-child(2)::after { content: "Aa"; font-size: 18px; }
+.sa-subject:nth-child(3)::after { content: "⚛"; font-size: 19px; }
+.sa-subject:nth-child(4)::after { content: "⚗"; font-size: 19px; }
+.sa-card, .pk9-tool-card, .sa-mission { transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+.sa-btn, .sa-resume-action, .pk9-tool-primary, .pk9-tool-quiet, .pk9-note-clear,
+.pk9-video-actions a, .pk9-video-search-cta { transition: background-color .16s ease, color .16s ease, border-color .16s ease, transform .12s ease, box-shadow .16s ease; }
+.sa-btn:active, .sa-resume-action:active, .pk9-tool-primary:active, .pk9-tool-quiet:active,
+.pk9-note-clear:active, .pk9-video-actions a:active, .pk9-video-search-cta:active { transform: translateY(1px) scale(.985); }
+@media (hover:hover) and (pointer:fine) {
+  .sa-subject:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(49,91,69,.07); }
+  .sa-card:hover, .pk9-tool-card:hover { border-color: rgba(49,91,69,.22); }
+  .sa-mission:hover { transform: translateX(2px); }
+}
+
+/* Reliable, visible fallback links for every lesson video. */
+.pk9-video-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pk9-video-actions a, .pk9-video-search-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 34px; padding: 8px 11px; border: 1px solid #d8e1d6; border-radius: 11px;
+  color: #315b45; background: #fbfcf8; text-decoration: none;
+  font: 700 11px/1.35 "Segoe UI", Arial, sans-serif;
+}
+.pk9-video-actions a:hover, .pk9-video-search-cta:hover { border-color: #91b29a; background: #edf5ec; }
+.pk9-science-video-meta { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 11px 13px; color: #fff; background: #304b3b; font: 700 10px/1.45 "Segoe UI", Arial, sans-serif; }
+.pk9-science-video-meta > span { min-width: 0; overflow-wrap: anywhere; }
+.pk9-science-video-meta .pk9-video-actions a { min-height: 29px; padding: 6px 9px; color: #f7f4eb; background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); font-size: 10px; }
+.pk9-science-video-meta .pk9-video-actions a:hover { background: rgba(255,255,255,.16); }
+.pk9-video-search-cta { margin-top: 13px; }
+#tab-courses #video-player, #tab-english #english-video-player, #tab-physics iframe, #tab-chemistry iframe,
+#tab-courses-2k11 iframe, #tab-grade10 iframe { display: block; width: 100%; max-width: 100%; aspect-ratio: 16/9; border: 0; }
+#tab-courses .aspect-video, #tab-english .aspect-video, #tab-physics .aspect-video, #tab-chemistry .aspect-video { width: 100%; overflow: hidden; }
+
+/* Don't let decorative motion become a performance cost on small screens. */
+@media (max-width: 640px) {
+  .pk9-loader-card { padding: 17px; border-radius: 19px; }
+  .pk9-science-video-meta { grid-template-columns: minmax(0,1fr); align-items: start; }
+  .pk9-video-actions { gap: 6px; }
+  .pk9-video-actions a { min-height: 36px; }
+  .sa-subject::after { right: 9px; top: 7px; font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #pk9-site-loader, .pk9-loader-book, .pk9-loader-track i, .pk9-route-enter,
+  .sa-subject, .sa-card, .pk9-tool-card, .sa-mission, .sa-btn, .sa-resume-action,
+  .pk9-tool-primary, .pk9-tool-quiet, .pk9-note-clear, .pk9-video-actions a, .pk9-video-search-cta {
+    animation: none !important; transition: none !important; scroll-behavior: auto !important;
+  }
+  .pk9-route-enter { opacity: 1; transform: none; }
+}
+
+.pk9-english-video-fallback{display:grid;justify-items:center;gap:9px;padding:28px 20px;background:#f3f6ee;border:1px solid #dce7d9;text-align:center;color:#2d4f3a;min-height:180px}
+.pk9-english-video-fallback[hidden]{display:none!important}
+.pk9-english-video-fallback strong{font:800 14px/1.4 "Segoe UI",Arial,sans-serif}
+.pk9-english-video-fallback p{max-width:420px;margin:0;color:#68786b;font:12px/1.6 "Segoe UI",Arial,sans-serif}
+.pk9-english-fallback-mark{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#e6f0e5;color:#315b45;font:700 18px Georgia,serif}
+.pk9-english-video-fallback a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 13px;border-radius:11px;background:#315b45;color:#fff;text-decoration:none;font:700 11px/1.4 "Segoe UI",Arial,sans-serif}

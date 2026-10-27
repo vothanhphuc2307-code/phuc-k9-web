@@ -31,3 +31,10 @@ The API functions, authentication workflows, Redis/Blob integration, course/exam
 - Ran JavaScript syntax checks on inline and external scripts, JSON parsing and CSS parsing.
 
 These checks are not a production deployment. Redis, Vercel Blob, live authentication, actual uploaded files and full production routes still need a Preview deployment test.
+
+
+## V2 repair note (2026-10-27)
+- Restored the original markup for the Toán 12, Tiếng Anh 12, Ôn tập, Thi trực tuyến and Tài liệu pages that was missing from the Study Atelier V1 HTML while keeping its new home page and navigation shell.
+- Added `/style.css` for lightweight transitions, responsive video controls, a short non-blocking loader, and reduced-motion support. `/assets/site-effects.js` manages loader fallback and route transitions.
+- Physics/Chemistry lessons that only have a YouTube search URL now show a correct per-topic search action instead of the misleading “video being supplemented” dead end. Direct video embeds have visible YouTube fallback links.
+- Two additional direct video matches were added for the Chemistry electrochemical-potential lesson and polymer review. All other unverified gaps remain explicit search actions, not falsely labeled direct embeds.
