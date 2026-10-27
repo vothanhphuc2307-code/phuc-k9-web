@@ -8436,7 +8436,7 @@ html.dark-mode .home-v3-title,html.dark-mode .course-v3-visual-title{color:#f8fa
 <script id="phuc-k9-theme-final-v4-js">
 (function(){
   'use strict';
-  const KEY='phuc_theme_studio_v3';
+  const KEY='phuc_theme_studio_v5';
   function setTheme(mode){
     const dark=mode==='dark';
     const html=document.documentElement, body=document.body;
@@ -8711,6 +8711,38 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
       <button class="pk9-subject-card" type="button" onclick="switchTab('english')"><span class="pk9-subject-sticker pk9-sticker-english"><i class="fa-solid fa-language"></i></span><span class="pk9-subject-meta">KHỐI 12 · LANGUAGE</span><b>Tiếng Anh</b><span>Từ vựng, ngữ pháp, đọc hiểu</span><span class="pk9-subject-arrow">↗</span></button>
       <button class="pk9-subject-card" type="button" onclick="switchTab('physics')"><span class="pk9-subject-sticker pk9-sticker-physics"><i class="fa-solid fa-atom"></i></span><span class="pk9-subject-meta">KHỐI 12 · VẬT LÝ</span><b>Vật lí</b><span>Lý thuyết và bài tập vận dụng</span><span class="pk9-subject-arrow">↗</span></button>
       <button class="pk9-subject-card" type="button" onclick="switchTab('chemistry')"><span class="pk9-subject-sticker pk9-sticker-chem"><i class="fa-solid fa-flask"></i></span><span class="pk9-subject-meta">KHỐI 12 · HÓA HỌC</span><b>Hóa học</b><span>Phản ứng, tính toán, bản chất</span><span class="pk9-subject-arrow">↗</span></button>
+    </div>
+  </section>
+
+  <section class="pk9-study-desk" aria-labelledby="pk9-study-desk-title" data-reveal>
+    <div class="pk9-study-desk-heading">
+      <div><span class="pk9-section-kicker">GÓC TỰ HỌC · STUDY DESK</span><h2 id="pk9-study-desk-title">Bàn học nhỏ của hôm nay <span aria-hidden="true">✿</span></h2><p>Chia việc ra từng chút, tập trung vừa đủ và ghi lại điều cần nhớ.</p></div>
+      <span class="pk9-study-date" id="pk9-study-date">HÔM NAY · STUDY LOG</span>
+    </div>
+    <div class="pk9-study-desk-grid">
+      <article class="pk9-tool-card pk9-focus-tool" aria-labelledby="pk9-timer-title">
+        <div class="pk9-tool-card-head"><span class="pk9-tool-icon pk9-tool-icon-lav">◷</span><div><span class="pk9-tool-eyebrow">FOCUS TIMER</span><h3 id="pk9-timer-title">Một phiên tập trung</h3></div><span class="pk9-tape">TẬP TRUNG ✦</span></div>
+        <div class="pk9-timer-tabs" role="group" aria-label="Chọn thời lượng tập trung">
+          <button type="button" data-pk9-timer-mode="focus25" aria-pressed="true">25 phút</button><button type="button" data-pk9-timer-mode="focus50" aria-pressed="false">50 phút</button><button type="button" data-pk9-timer-mode="break5" aria-pressed="false">Nghỉ 5′</button>
+        </div>
+        <div class="pk9-timer-clock" id="pk9-timer-clock" role="timer" aria-live="off" aria-label="Thời gian còn lại">25:00</div>
+        <p class="pk9-timer-caption" id="pk9-timer-caption">Đặt điện thoại xuống, chọn một việc thôi nhé.</p>
+        <div class="pk9-timer-actions"><button type="button" id="pk9-timer-start" class="pk9-tool-primary">▶ Bắt đầu</button><button type="button" id="pk9-timer-reset" class="pk9-tool-quiet">Đặt lại</button></div>
+        <div class="pk9-session-count"><span>✦ Phiên tập trung hoàn thành</span><b id="pk9-session-count">0</b></div>
+      </article>
+      <article class="pk9-tool-card pk9-plan-tool" aria-labelledby="pk9-plan-title">
+        <div class="pk9-tool-card-head"><span class="pk9-tool-icon pk9-tool-icon-mint">✓</span><div><span class="pk9-tool-eyebrow">DAILY CHECKLIST</span><h3 id="pk9-plan-title">Ba việc vừa sức</h3></div><span class="pk9-task-counter" id="pk9-task-counter">0/3</span></div>
+        <div class="pk9-task-progress"><span id="pk9-task-progress-fill"></span></div>
+        <div id="pk9-task-list" class="pk9-task-list" aria-live="polite"></div>
+        <form id="pk9-task-form" class="pk9-task-form"><label class="sr-only" for="pk9-task-input">Thêm việc cần làm</label><input id="pk9-task-input" type="text" maxlength="80" autocomplete="off" placeholder="Thêm một việc nhỏ…"><button type="submit" aria-label="Thêm việc cần làm">+</button></form>
+        <p class="pk9-tool-footnote">Danh sách tự lưu trên thiết bị này, tự làm mới theo ngày.</p>
+      </article>
+      <article class="pk9-tool-card pk9-note-tool" aria-labelledby="pk9-note-title">
+        <div class="pk9-tool-card-head"><span class="pk9-tool-icon pk9-tool-icon-peach">✎</span><div><span class="pk9-tool-eyebrow">SCRAP PAPER</span><h3 id="pk9-note-title">Giấy nháp nhanh</h3></div><span class="pk9-note-sticker" aria-hidden="true">📝</span></div>
+        <label class="sr-only" for="pk9-quick-note">Ghi chú học tập riêng</label><textarea id="pk9-quick-note" rows="5" maxlength="2000" placeholder="Công thức cần nhớ, câu hỏi còn vướng, việc muốn hỏi thầy cô…"></textarea>
+        <div class="pk9-note-bottom"><span id="pk9-note-status" role="status">Tự lưu trên thiết bị này</span><span id="pk9-note-count">0/2000</span></div>
+        <button type="button" id="pk9-note-clear" class="pk9-note-clear">Xóa ghi chú</button>
+      </article>
     </div>
   </section>
 
@@ -9895,6 +9927,154 @@ html.dark-mode .pk9-sticker-doodle{background:#3d3342;border-color:#5d4b63;color
 html.dark-mode .pk9-progress-paper{background:#342d39!important;border-color:#4b3e50!important}html.dark-mode .pk9-agenda-paper{background:#39313b!important;border-color:#514553!important}html.dark-mode .pk9-kind-note{background:#35423a!important;border-color:#4b6250!important}
 </style>
 
+
+
+<!-- PHUC K9 STUDIO V5: Student studybook design system + focused study tools. -->
+<style id="phuck9-studio-v5">
+:root{--pk9-v5-paper:#fffdf8;--pk9-v5-canvas:#faf5ed;--pk9-v5-ink:#383044;--pk9-v5-muted:#827989;--pk9-v5-line:#e7dcd0;--pk9-v5-lav:#eee5f6;--pk9-v5-lav-ink:#725b87;--pk9-v5-mint:#e7f1e4;--pk9-v5-mint-ink:#4d7155;--pk9-v5-peach:#fae7dc;--pk9-v5-peach-ink:#9c624a;--pk9-v5-yellow:#f8efcf;--pk9-v5-shadow:0 5px 18px rgba(70,53,53,.05)}
+html,body{background:var(--pk9-v5-canvas)!important;color:var(--pk9-v5-ink)!important}
+#main-content{background:transparent!important}
+#main-content:before{content:"✎     ✿     ∑";position:absolute;top:8px;right:clamp(18px,2.6vw,40px);z-index:0;pointer-events:none;color:#b2a2bb;font-family:Georgia,serif;font-size:12px;letter-spacing:.8em;opacity:.6}
+#main-content>.tab-content{position:relative;z-index:1}
+/* Bring legacy areas into the same paper-like system without changing their data logic. */
+#main-content .tab-content h1,#main-content .tab-content h2{letter-spacing:-.04em}
+#main-content .tab-content input:not([type=checkbox]):not([type=radio]),#main-content .tab-content select,#main-content .tab-content textarea{border-color:#e3d7e4!important;border-radius:12px}
+#main-content .tab-content :is(.exam-card,.exam-v4-card,.student-lib-card,.pdfpro-card,.pdfref-card,.special-card,.home-v2-panel,.home-v2-resume-card,.home-v2-streak-card,.phuc-grade-card,.phuc-grade-panel,.g10-panel,.g10-subject){border-color:#e7dcd2!important;box-shadow:0 4px 14px rgba(65,47,50,.04)!important}
+#tab-exam-bank .exam-v4-card .exam-v4-thumb{background:#eee5f6!important;color:#725b87!important}
+#tab-exam-bank .exam-v4-quality{background:#e7f1e4!important;color:#4d7155!important;border-color:#d5e4d1!important}
+#phuck9-sidebar .side-btn.active{background:#e9def3!important;color:#604a78!important;border-color:#ded0e9!important}
+#phuck9-sidebar .side-btn:hover{background:#f4edf6!important;color:#604a78!important}
+.pk9-study-desk{position:relative;margin:clamp(26px,3.5vw,46px) 0;padding:clamp(17px,2.3vw,30px);border:1px solid #e5d9cc;border-radius:28px;background:rgba(255,253,248,.92);box-shadow:var(--pk9-v5-shadow);overflow:hidden}
+.pk9-study-desk:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.26;background:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(151,127,162,.09) 31px 32px)}
+.pk9-study-desk>*{position:relative;z-index:1}
+.pk9-study-desk-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
+.pk9-study-desk-heading h2{margin:6px 0 7px;font-size:clamp(23px,2.6vw,34px);line-height:1.12;font-weight:800;color:#3d3447;letter-spacing:-.055em}
+.pk9-study-desk-heading h2 span{color:#b48fba;font-size:.8em}
+.pk9-study-desk-heading p{margin:0;color:#827989;font-size:13px;line-height:1.65;max-width:620px}
+.pk9-study-date,.pk9-tape,.pk9-task-counter{white-space:nowrap;display:inline-flex;align-items:center;padding:7px 10px;border:1px dashed #d6c5dd;border-radius:10px;background:#f2eaf7;color:#79648a;font-size:9px;letter-spacing:.06em;font-weight:850}
+.pk9-study-desk-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.92fr);gap:14px;align-items:stretch}
+.pk9-tool-card{min-width:0;position:relative;display:flex;flex-direction:column;padding:17px;border:1px solid #e7ddd3;border-radius:21px;background:#fffdf9;box-shadow:0 3px 12px rgba(65,47,50,.035);overflow:hidden}
+.pk9-tool-card:after{position:absolute;right:11px;top:48px;font-size:18px;opacity:.32;pointer-events:none}
+.pk9-tool-card-head{display:flex;align-items:center;gap:10px;min-width:0;margin-bottom:14px}
+.pk9-tool-card-head>div{min-width:0;flex:1}
+.pk9-tool-icon{flex:0 0 37px;width:37px;height:37px;display:grid;place-items:center;border-radius:13px;font-size:22px;font-weight:800}
+.pk9-tool-icon-lav{background:#eee5f6;color:#725b87}.pk9-tool-icon-mint{background:#e7f1e4;color:#4d7155}.pk9-tool-icon-peach{background:#fae7dc;color:#9c624a}
+.pk9-tool-eyebrow{display:block;margin-bottom:3px;font-size:8px;letter-spacing:.13em;font-weight:900;color:#a094a5}
+.pk9-tool-card-head h3{margin:0;font-size:15px;line-height:1.3;font-weight:850;letter-spacing:-.035em;color:#403748}
+.pk9-tape{margin-left:auto;padding:5px 7px;font-size:7px;background:#fff5d8;border-color:#ead9a7;color:#927b39}
+.pk9-timer-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:4px;background:#f5f0f6;border-radius:12px}
+.pk9-timer-tabs button{min-width:0;border:1px solid transparent;border-radius:9px;padding:8px 4px;background:transparent;color:#82758a;font-size:10px;font-weight:800;cursor:pointer;transition:background .14s ease,color .14s ease,border-color .14s ease}
+.pk9-timer-tabs button[aria-pressed=true]{background:#fffdf8;border-color:#e7d9ed;color:#6d557f;box-shadow:0 2px 5px rgba(70,53,70,.055)}
+.pk9-timer-clock{margin:15px 0 0;text-align:center;font-variant-numeric:tabular-nums;font-weight:850;font-size:clamp(39px,4.4vw,53px);line-height:1.15;letter-spacing:-.07em;color:#51435e}
+.pk9-timer-caption{min-height:34px;margin:6px 0 13px;text-align:center;color:#8a808f;font-size:10px;line-height:1.55}
+.pk9-timer-actions{display:grid;grid-template-columns:1.4fr 1fr;gap:7px}
+.pk9-tool-primary,.pk9-tool-quiet{min-height:39px;padding:9px 12px;border:1px solid transparent;border-radius:12px;font-size:11px;font-weight:850;cursor:pointer;transition:background .14s ease,transform .14s ease,border-color .14s ease}
+.pk9-tool-primary{background:#77618d;color:white;border-color:#6b557e}.pk9-tool-primary:hover{background:#68527d}.pk9-tool-quiet{background:#f6f1e9;color:#766c7a;border-color:#e9dfd4}
+.pk9-session-count{margin-top:auto;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:9px;color:#918593}
+.pk9-session-count b{display:grid;place-items:center;min-width:26px;height:25px;border-radius:9px;background:#f8efcf;color:#887236;font-size:11px}
+.pk9-task-counter{background:#eaf3e6;border-color:#d2e2cf;color:#527558;padding:5px 8px;font-size:9px;letter-spacing:0}
+.pk9-task-progress{height:5px;border-radius:99px;background:#eef0e7;overflow:hidden;margin:-2px 0 12px}
+.pk9-task-progress span{display:block;width:0;height:100%;border-radius:99px;background:#86aa83;transition:width .18s ease}
+.pk9-task-list{display:flex;flex-direction:column;gap:7px;min-height:112px}
+.pk9-task-row{display:flex;align-items:flex-start;gap:9px;padding:9px 9px;border:1px solid #ece4db;border-radius:12px;background:#fffdfa}
+.pk9-task-row input{flex:0 0 15px;width:15px;height:15px;margin:2px 0 0;accent-color:#6f966f;cursor:pointer}
+.pk9-task-row span{flex:1;min-width:0;color:#5d5364;font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+.pk9-task-row.is-done span{text-decoration:line-through;color:#a59ba8}
+.pk9-task-delete{display:grid;place-items:center;width:22px;height:22px;flex:0 0 22px;margin-top:-4px;border:0;border-radius:7px;background:transparent;color:#b6a8b4;font-size:15px;cursor:pointer}
+.pk9-task-delete:hover{background:#fae7dc;color:#9c624a}
+.pk9-task-form{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:6px;margin-top:11px}
+.pk9-task-form input{width:100%;min-width:0;min-height:38px;padding:8px 10px;border:1px solid #e6dce8!important;border-radius:11px!important;background:#fffdf9!important;color:#443a4d!important;font-size:11px;outline:none}
+.pk9-task-form input:focus,.pk9-note-tool textarea:focus{border-color:#bda8cd!important;box-shadow:0 0 0 3px rgba(178,151,197,.15)!important}
+.pk9-task-form button{border:1px solid #d4e3d1;border-radius:11px;background:#e8f2e5;color:#557a59;font-size:22px;font-weight:700;cursor:pointer}
+.pk9-tool-footnote{margin:9px 0 0;color:#a095a4;font-size:9px;line-height:1.45}
+.pk9-note-tool{background:#fff9f2;border-color:#ecdacb}
+.pk9-note-sticker{margin-left:auto;font-size:21px;transform:rotate(7deg)}
+.pk9-note-tool textarea{flex:1;width:100%;min-height:155px;resize:vertical;padding:12px 13px;border:1px solid #ecdcc9!important;border-radius:12px!important;background:repeating-linear-gradient(to bottom,#fffdf8 0 26px,#f1e8dc 26px 27px)!important;color:#5b4a51!important;font-family:'Lexend',ui-sans-serif,sans-serif;font-size:11px;line-height:27px;outline:none}
+.pk9-note-bottom{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:8px;color:#9a8b8e;font-size:9px}
+.pk9-note-clear{align-self:flex-start;margin-top:11px;padding:6px 9px;border:1px dashed #e6cfc3;border-radius:9px;background:#fff4ed;color:#986b5c;font-size:9px;font-weight:800;cursor:pointer}
+.pk9-note-clear:hover{background:#fae7dc}
+.pk9-tool-primary:focus-visible,.pk9-tool-quiet:focus-visible,.pk9-timer-tabs button:focus-visible,.pk9-task-delete:focus-visible,.pk9-task-form button:focus-visible,.pk9-note-clear:focus-visible{outline:3px solid rgba(139,111,163,.35);outline-offset:2px}
+@media(max-width:1190px){.pk9-study-desk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk9-note-tool{grid-column:1/-1}.pk9-note-tool textarea{min-height:100px}}
+@media(max-width:760px){#main-content:before{display:none}.pk9-study-desk{margin:22px 0;padding:13px;border-radius:21px}.pk9-study-desk-heading{display:block;margin-bottom:14px}.pk9-study-desk-heading h2{font-size:25px}.pk9-study-desk-heading p{font-size:12px}.pk9-study-date{margin-top:10px}.pk9-study-desk-grid{grid-template-columns:minmax(0,1fr);gap:11px}.pk9-note-tool{grid-column:auto}.pk9-tool-card{padding:14px;border-radius:18px}.pk9-timer-clock{font-size:48px}.pk9-tool-card-head h3{font-size:14px}.pk9-task-list{min-height:0}.pk9-note-tool textarea{min-height:125px}.pk9-study-desk:before{opacity:.2}}
+@media(hover:hover) and (pointer:fine){.pk9-tool-card{transition:border-color .14s ease,box-shadow .14s ease}.pk9-tool-card:hover{border-color:#dacee1;box-shadow:0 7px 20px rgba(65,47,50,.055)}}
+@media(prefers-reduced-motion:reduce){.pk9-task-progress span,.pk9-timer-tabs button,.pk9-tool-primary,.pk9-tool-quiet,.pk9-tool-card{transition:none!important}}
+html.dark-mode .pk9-study-desk{background:#342d39;border-color:#4e4152}html.dark-mode .pk9-study-desk-heading h2,html.dark-mode .pk9-tool-card-head h3{color:#f4eaf6}html.dark-mode .pk9-study-desk-heading p,html.dark-mode .pk9-timer-caption,html.dark-mode .pk9-session-count{color:#b8aabd}html.dark-mode .pk9-tool-card{background:#3a323e;border-color:#514454}html.dark-mode .pk9-note-tool{background:#40353b;border-color:#5b4647}html.dark-mode .pk9-timer-clock{color:#f3e7fb}html.dark-mode .pk9-timer-tabs{background:#302832}html.dark-mode .pk9-timer-tabs button[aria-pressed=true]{background:#4d4054;border-color:#62536b;color:#f6eafa}html.dark-mode .pk9-task-row,html.dark-mode .pk9-task-form input{background:#362e3a!important;border-color:#56485b!important;color:#eee4f1!important}html.dark-mode .pk9-task-row span{color:#e1d4e6}html.dark-mode .pk9-note-tool textarea{background:repeating-linear-gradient(to bottom,#3a303a 0 26px,#514251 26px 27px)!important;border-color:#5b4a5b!important;color:#f4e9ed!important}html.dark-mode .pk9-tool-quiet{background:#4a404d;border-color:#5a4b60;color:#efe4f2}html.dark-mode .pk9-tool-footnote,html.dark-mode .pk9-note-bottom{color:#b6a8bd}
+</style>
+<style id="phuck9-studio-v5-palette-unifier">
+/* Map common old blue/indigo utility colors to the new notebook palette. Scoped to the app content to avoid changing embedded media. */
+html:not(.dark-mode) #main-content .tab-content [class~="bg-white"]{background-color:#fffdf8!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-slate-50"],[class~="bg-gray-50"],[class~="bg-zinc-50"]){background-color:#fbf7ef!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-blue-50"],[class~="bg-indigo-50"],[class~="bg-violet-50"],[class~="bg-purple-50"],[class~="bg-blue-100"],[class~="bg-indigo-100"],[class~="bg-violet-100"],[class~="bg-purple-100"]){background-color:#eee5f6!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-sky-50"],[class~="bg-cyan-50"],[class~="bg-emerald-50"],[class~="bg-green-50"],[class~="bg-teal-50"]){background-color:#e8f2e5!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-amber-50"],[class~="bg-yellow-50"]){background-color:#fbf2d6!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-rose-50"],[class~="bg-red-50"],[class~="bg-orange-50"]){background-color:#fae7dc!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-blue-500"],[class~="bg-blue-600"],[class~="bg-blue-700"],[class~="bg-indigo-500"],[class~="bg-indigo-600"],[class~="bg-indigo-700"],[class~="bg-violet-600"],[class~="bg-purple-600"]){background:#e8def2!important;background-image:none!important;color:#5d4772!important;border-color:#d9c8e6!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-blue-500"],[class~="bg-blue-600"],[class~="bg-blue-700"],[class~="bg-indigo-500"],[class~="bg-indigo-600"],[class~="bg-indigo-700"],[class~="bg-violet-600"],[class~="bg-purple-600"]) :is(svg,i){color:inherit!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="border-blue-100"],[class~="border-blue-200"],[class~="border-blue-300"],[class~="border-indigo-100"],[class~="border-indigo-200"],[class~="border-indigo-300"],[class~="border-violet-200"],[class~="border-purple-200"]){border-color:#ded0e9!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="text-blue-500"],[class~="text-blue-600"],[class~="text-blue-700"],[class~="text-indigo-500"],[class~="text-indigo-600"],[class~="text-indigo-700"],[class~="text-violet-500"],[class~="text-violet-600"],[class~="text-violet-700"],[class~="text-purple-600"]){color:#725b87!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="text-slate-900"],[class~="text-gray-900"],[class~="text-slate-800"],[class~="text-gray-800"]){color:#3c3445!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="text-slate-500"],[class~="text-gray-500"],[class~="text-slate-600"],[class~="text-gray-600"]){color:#827989!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="border-slate-100"],[class~="border-slate-200"],[class~="border-gray-100"],[class~="border-gray-200"]){border-color:#e7dcd0!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="from-blue-50"],[class~="from-indigo-50"],[class~="from-indigo-500"],[class~="from-blue-500"],[class~="to-blue-50"],[class~="to-indigo-50"],[class~="to-indigo-600"],[class~="to-blue-600"]){background-image:none!important}
+html:not(.dark-mode) #main-content .tab-content :is([class~="bg-gradient-to-r"],[class~="bg-gradient-to-br"],[class~="bg-gradient-to-l"]):is([class*="blue-"],[class*="indigo-"],[class*="violet-"],[class*="purple-"]){background-color:#f0e8f5!important}
+html:not(.dark-mode) #mobile-nav-panel .mobile-nav-item{background:#fffdf8!important;color:#6f5a82!important;border-color:#e5d9eb!important}
+html:not(.dark-mode) #mobile-nav-panel .mobile-nav-item:active{background:#eee5f6!important}
+#main-content .tab-content :is(button,a,[role="button"]):focus-visible{outline:3px solid rgba(149,121,171,.38)!important;outline-offset:2px}
+#main-content .tab-content .animate-ping,#main-content .tab-content .animate-pulse,#main-content .tab-content .animate-bounce{animation:none!important}
+html.dark-mode #main-content .tab-content :is([class~="bg-blue-50"],[class~="bg-indigo-50"],[class~="bg-violet-50"],[class~="bg-purple-50"],[class~="bg-blue-100"],[class~="bg-indigo-100"],[class~="bg-violet-100"],[class~="bg-purple-100"]){background:#403548!important;color:#e9dff0!important;border-color:#5c4b63!important}
+html.dark-mode #main-content .tab-content :is([class~="bg-sky-50"],[class~="bg-cyan-50"],[class~="bg-emerald-50"],[class~="bg-green-50"],[class~="bg-teal-50"]){background:#354136!important;color:#dcecdc!important;border-color:#4c604d!important}
+html.dark-mode #main-content .tab-content :is([class~="bg-amber-50"],[class~="bg-yellow-50"]){background:#473f2b!important;color:#f7ecc8!important;border-color:#665b3d!important}
+html.dark-mode #main-content .tab-content :is([class~="bg-rose-50"],[class~="bg-red-50"],[class~="bg-orange-50"]){background:#4b3635!important;color:#f8dfd8!important;border-color:#684947!important}
+html.dark-mode #main-content .tab-content :is([class~="text-blue-500"],[class~="text-blue-600"],[class~="text-blue-700"],[class~="text-indigo-500"],[class~="text-indigo-600"],[class~="text-indigo-700"],[class~="text-violet-500"],[class~="text-violet-600"],[class~="text-violet-700"]){color:#d8c2e8!important}
+html.dark-mode #main-content .tab-content :is([class~="text-slate-900"],[class~="text-gray-900"],[class~="text-slate-800"],[class~="text-gray-800"]){color:#f1eaf3!important}
+html.dark-mode #main-content .tab-content :is([class~="text-slate-500"],[class~="text-gray-500"],[class~="text-slate-600"],[class~="text-gray-600"]){color:#b6a9bb!important}
+@media(max-width:640px){#main-content .tab-content .animate-ping,#main-content .tab-content .animate-pulse,#main-content .tab-content .animate-bounce{animation:none!important}}
+</style>
+<script id="phuck9-studio-v5-study-tools">
+(function(){
+  'use strict';
+  const $=(id)=>document.getElementById(id);
+  const KEYS={timer:'pk9_study_timer_v2',sessions:'pk9_study_sessions_v1',note:'pk9_study_quick_note_v1',tasks:'pk9_study_tasks_v2'};
+  const get=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch{return f}};
+  const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}};
+  const localDay=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const presets={focus25:{mode:'focus',seconds:1500,label:'25 phút',caption:'Đặt điện thoại xuống, chọn một việc thôi nhé.'},focus50:{mode:'focus',seconds:3000,label:'50 phút',caption:'Một khoảng sâu cho bài khó hoặc một đề luyện.'},break5:{mode:'break',seconds:300,label:'Nghỉ 5 phút',caption:'Đứng dậy, uống nước và cho mắt nghỉ một chút.'}};
+  let timer={mode:'focus',duration:1500,remaining:1500,endAt:null,running:false};
+  let tick=null, noteDebounce=null;
+  function loadTimer(){const saved=get(KEYS.timer,null);if(saved&&[300,1500,3000].includes(saved.duration)){timer={...timer,...saved};if(timer.running&&timer.endAt){timer.remaining=Math.max(0,Math.ceil((timer.endAt-Date.now())/1000));if(timer.remaining===0)finishTimer(false)}}renderTimer()}
+  function saveTimer(){put(KEYS.timer,timer)}
+  function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+  function stopTick(){if(tick){clearInterval(tick);tick=null}}
+  function renderTimer(){
+    const clock=$('pk9-timer-clock');if(!clock)return;
+    const shown=timer.running&&timer.endAt?Math.max(0,Math.ceil((timer.endAt-Date.now())/1000)):timer.remaining;
+    clock.textContent=fmt(shown);clock.setAttribute('aria-label','Còn '+clock.textContent);
+    const btn=$('pk9-timer-start');if(btn)btn.textContent=timer.running?'Ⅱ Tạm dừng':'▶ Bắt đầu';
+    document.querySelectorAll('[data-pk9-timer-mode]').forEach(b=>{
+      const key=b.dataset.pk9TimerMode;
+      const active=key==='break5'?timer.mode==='break':timer.mode==='focus'&&((key==='focus25'&&timer.duration===1500)||(key==='focus50'&&timer.duration===3000));
+      b.setAttribute('aria-pressed',String(active));
+    });
+    const cap=$('pk9-timer-caption');
+    if(cap&&!timer.running)cap.textContent=timer.mode==='break'?'Nghỉ ngắn để quay lại tỉnh táo hơn.':(timer.duration===3000?'Một khoảng sâu cho bài khó hoặc một đề luyện.':'Đặt điện thoại xuống, chọn một việc thôi nhé.');
+    const cnt=$('pk9-session-count');if(cnt)cnt.textContent=String(get(KEYS.sessions,0)||0);
+  }
+
+  function finishTimer(announce=true){stopTick();timer.running=false;timer.endAt=null;timer.remaining=0;const done=timer.mode==='focus';if(done)put(KEYS.sessions,(Number(get(KEYS.sessions,0))||0)+1);timer.mode=done?'break':'focus';timer.duration=done?300:1500;timer.remaining=timer.duration;saveTimer();renderTimer();const cap=$('pk9-timer-caption');if(cap)cap.textContent=done?'Hoàn thành một phiên rồi! Nghỉ 5 phút nhé.':'Hết giờ nghỉ — sẵn sàng cho một phiên mới chưa?';if(announce){const status=$('pk9-timer-caption');status?.setAttribute('role','status')}}
+  function tickTimer(){if(!timer.running||!timer.endAt)return;timer.remaining=Math.max(0,Math.ceil((timer.endAt-Date.now())/1000));if(timer.remaining<=0){finishTimer(true);return}renderTimer()}
+  function startTimer(){if(timer.running){timer.remaining=Math.max(0,Math.ceil((timer.endAt-Date.now())/1000));timer.running=false;timer.endAt=null;stopTick();saveTimer();renderTimer();return}if(timer.remaining<=0)timer.remaining=timer.duration;timer.endAt=Date.now()+timer.remaining*1000;timer.running=true;saveTimer();renderTimer();stopTick();tick=setInterval(tickTimer,1000)}
+  function selectPreset(key){const p=presets[key];if(!p)return;stopTick();timer={mode:p.mode,duration:p.seconds,remaining:p.seconds,endAt:null,running:false};saveTimer();renderTimer()}
+  function resetTimer(){stopTick();timer.running=false;timer.endAt=null;timer.remaining=timer.duration;saveTimer();renderTimer()}
+  function readTasks(){let t=get(KEYS.tasks,null);if(!t||t.day!==localDay()||!Array.isArray(t.items)){t={day:localDay(),items:[{id:'a',text:'Ôn lại một kiến thức',done:false},{id:'b',text:'Làm vài câu luyện tập',done:false},{id:'c',text:'Ghi lại điều chưa hiểu',done:false}]};put(KEYS.tasks,t)}return t}
+  function saveTasks(t){t.day=localDay();put(KEYS.tasks,t);renderTasks(t)}
+  function renderTasks(existing){const wrap=$('pk9-task-list');if(!wrap)return;const t=existing||readTasks();wrap.replaceChildren();t.items.forEach(item=>{const row=document.createElement('div');row.className='pk9-task-row'+(item.done?' is-done':'');const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!item.done;cb.setAttribute('aria-label','Hoàn thành: '+item.text);cb.addEventListener('change',()=>{const next=readTasks();const found=next.items.find(x=>x.id===item.id);if(found){found.done=cb.checked;saveTasks(next)}});const txt=document.createElement('span');txt.textContent=item.text;const del=document.createElement('button');del.type='button';del.className='pk9-task-delete';del.textContent='×';del.setAttribute('aria-label','Xóa việc: '+item.text);del.addEventListener('click',()=>{const next=readTasks();next.items=next.items.filter(x=>x.id!==item.id);saveTasks(next)});row.append(cb,txt,del);wrap.appendChild(row)});const done=t.items.filter(x=>x.done).length;const c=$('pk9-task-counter');if(c)c.textContent=done+'/'+t.items.length;const f=$('pk9-task-progress-fill');if(f)f.style.width=(t.items.length?Math.round(done/t.items.length*100):0)+'%';const input=$('pk9-task-input');const form=$('pk9-task-form');if(form)form.style.display=t.items.length>=8?'none':'grid';if(input&&t.items.length>=8)input.setAttribute('disabled','disabled');else input?.removeAttribute('disabled')}
+  function initTasks(){renderTasks();$('pk9-task-form')?.addEventListener('submit',e=>{e.preventDefault();const input=$('pk9-task-input');const text=(input?.value||'').trim();if(!text)return;const t=readTasks();if(t.items.length>=8)return;t.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text,done:false});saveTasks(t);input.value='';input.focus()})}
+  function initNotes(){const area=$('pk9-quick-note');if(!area)return;area.value=String(get(KEYS.note,'' )||'');const count=$('pk9-note-count'),status=$('pk9-note-status');function updateCount(){if(count)count.textContent=area.value.length+'/2000'}function save(){const ok=put(KEYS.note,area.value);if(status)status.textContent=ok?'Đã lưu trên thiết bị này':'Trình duyệt không cho lưu — hãy sao chép ghi chú để giữ lại';}area.addEventListener('input',()=>{updateCount();if(status)status.textContent='Đang lưu…';clearTimeout(noteDebounce);noteDebounce=setTimeout(save,260)});$('pk9-note-clear')?.addEventListener('click',()=>{if(!area.value)return;if(!confirm('Xóa toàn bộ ghi chú trên thiết bị này?'))return;area.value='';updateCount();save();area.focus()});updateCount()}
+  function init(){if(!$('pk9-study-desk'))return;const date=$('pk9-study-date');if(date)date.textContent=new Intl.DateTimeFormat('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit'}).format(new Date()).toLocaleUpperCase('vi-VN')+' · STUDY LOG';loadTimer();initTasks();initNotes();$('pk9-timer-start')?.addEventListener('click',startTimer);$('pk9-timer-reset')?.addEventListener('click',resetTimer);document.querySelectorAll('[data-pk9-timer-mode]').forEach(b=>b.addEventListener('click',()=>selectPreset(b.dataset.pk9TimerMode)));document.addEventListener('visibilitychange',()=>{if(document.hidden&&timer.running){timer.remaining=Math.max(0,Math.ceil((timer.endAt-Date.now())/1000));saveTimer()}else if(!document.hidden&&timer.running)tickTimer()});window.addEventListener('beforeunload',()=>{if(timer.running){timer.remaining=Math.max(0,Math.ceil((timer.endAt-Date.now())/1000));saveTimer()}})}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
 
 </body>
 </html>
