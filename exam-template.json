@@ -1,66 +1,24 @@
 {
-  "id": "doi-ma-de-cua-ban",
-  "title": "[MẪU] Thay bằng tên đề thật",
-  "program": "2k9",
+  "id": "my-exam-2026-01",
+  "title": "Tên đề thật",
   "subject": "math",
   "grade": "12",
-  "year": "2026",
-  "examType": "luyen-tap",
-  "examPeriod": "",
-  "examSession": "",
-  "periodLabel": "Đề mẫu - phải thay nội dung trước khi xuất bản",
-  "source": "Nguồn đề cần ghi rõ",
-  "sourceFile": "",
-  "duration": 45,
+  "source": "Nguồn đề",
+  "sourceFile": "/exam-sources/ten-file.pdf",
+  "duration": 90,
   "questions": [
     {
-      "id": "q1-mcq",
+      "id": "q1",
       "section": "I",
       "type": "mcq",
       "number": 1,
-      "text": "[MẪU] 2 + 2 bằng bao nhiêu?",
+      "text": "Nội dung câu hỏi thật",
       "options": [
-        "3",
-        "4",
-        "5",
-        "6"
+        "A",
+        "B",
+        "C",
+        "D"
       ],
-      "answer": "B",
-      "explanation": "2 + 2 = 4.",
-      "sourcePage": 1,
-      "imageUrl": "",
-      "imageAlt": ""
-    },
-    {
-      "id": "q2-tf",
-      "section": "II",
-      "type": "truefalse",
-      "number": 1,
-      "text": "[MẪU] Xét các mệnh đề sau.",
-      "statements": [
-        {
-          "text": "2 là số chẵn.",
-          "answer": true
-        },
-        {
-          "text": "3 là số chẵn.",
-          "answer": false
-        }
-      ],
-      "explanation": "2 chia hết cho 2; 3 không chia hết cho 2.",
-      "sourcePage": 1
-    },
-    {
-      "id": "q3-short",
-      "section": "III",
-      "type": "short",
-      "number": 1,
-      "text": "[MẪU] Tính 5 + 7.",
-      "answer": "12",
-      "acceptedAnswers": [
-        "12"
-      ],
-      "explanation": "5 + 7 = 12.",
       "sourcePage": 1
     }
   ],
@@ -73,6 +31,6 @@
       0.5,
       1.0
     ],
-    "short": 0.25
+    "short": 0.5
   }
 }

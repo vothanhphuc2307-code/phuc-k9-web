@@ -4,9 +4,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script>(function(){try{var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection||{};var low=(navigator.deviceMemory&&navigator.deviceMemory<=2)||c.saveData||/2g|slow-2g/.test(c.effectiveType||'');if(low)document.documentElement.classList.add('phuc-lite-mode');}catch(e){}})();</script>
+<script>(function(){try{var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection||{};var low=(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory&&navigator.deviceMemory<=4)||c.saveData||/2g|slow-2g/.test(c.effectiveType||'');if(low)document.documentElement.classList.add('phuc-lite-mode');}catch(e){}})();</script>
 <meta content="HỌC CÙNG PHÚC K9 – hệ thống học tập 2K9/THPT với bài giảng, phân dạng, kho đề, tài liệu PDF, ôn tập và hỗ trợ học viên." name="description"/>
-<meta content="#312e81" name="theme-color"/>
+<meta content="#f7f2e9" name="theme-color"/>
 <meta content="website" property="og:type"/>
 <meta content="https://thanhphuc.vercel.app/" property="og:url"/>
 <meta content="vi_VN" property="og:locale"/>
@@ -503,59 +503,6 @@ html.dark-mode header .text-slate-900,html.dark-mode header .text-slate-700{colo
 .dark-mode #phuck9-admin-visitor-stats .va-card{background:#111827;border-color:#334155}.dark-mode #phuck9-admin-visitor-stats .va-card b{color:#f8fafc}.dark-mode #phuck9-admin-visitor-stats .va-card span{color:#94a3b8}
 </style>
 
-<style id="phuck9-revolution-v7-css">
-:root{
-  --r-bg:#f5f7fb;--r-surface:#ffffff;--r-surface-2:#eef3fb;--r-ink:#101828;--r-muted:#667085;--r-line:#e6eaf0;
-  --r-blue:#315efb;--r-cyan:#11a6c9;--r-green:#0c8d7c;--r-orange:#f07a2a;--r-violet:#7656f8;
-  --r-shadow:0 12px 30px rgba(16,24,40,.07);--r-shadow-lg:0 28px 70px rgba(16,24,40,.10)
-}
-body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%)!important;color:var(--r-ink)}
-#main-content{max-width:1500px!important;margin:0 auto!important;padding-left:22px!important;padding-right:22px!important}
-/* app shell */
-#tab-home{position:relative}
-#tab-home>.phuck9-rev-app{display:block}
-.rev-app{position:relative;z-index:1}
-.rev-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);gap:20px;align-items:stretch;padding:26px;border:1px solid #dce4ef;border-radius:32px;background:linear-gradient(135deg,#0e1836 0%,#1f3aa7 54%,#0c8d7c 100%);box-shadow:var(--r-shadow-lg);overflow:hidden;position:relative}
-.rev-hero:before{content:"";position:absolute;width:540px;height:540px;right:-210px;top:-260px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),rgba(255,255,255,0) 68%);pointer-events:none}
-.rev-hero:after{content:"";position:absolute;left:28%;bottom:-210px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,196,87,.16),rgba(255,196,87,0) 70%);pointer-events:none}
-.rev-hero-main,.rev-hero-side{position:relative;z-index:2}
-.rev-kicker{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);color:#dbeafe;font-size:9px;font-weight:1000;letter-spacing:.11em;text-transform:uppercase}
-.rev-title{margin-top:13px;font-size:clamp(2rem,4vw,3.7rem);line-height:.98;letter-spacing:-.045em;font-weight:1000;color:#fff;max-width:760px}
-.rev-title span{color:#ffd36a}
-.rev-sub{margin-top:14px;max-width:700px;color:#d9e7ff;font-size:12px;line-height:1.72}
-.rev-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
-.rev-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 14px;border-radius:14px;border:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:1000;cursor:pointer;text-decoration:none;transition:transform .18s,background .18s,box-shadow .18s}
-.rev-btn:hover{transform:translateY(-2px)}
-.rev-btn.primary{background:#fff;color:#101828;box-shadow:0 12px 24px rgba(0,0,0,.14)}
-.rev-btn.accent{background:#ffd36a;color:#18212f;border-color:#ffd36a}
-.rev-btn.ghost{background:rgba(255,255,255,.08);color:#fff}
-.rev-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.rev-meta-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#d7e2f4;font-size:9px;font-weight:900}
-.rev-hero-side{display:flex;align-items:stretch;justify-content:center}
-.rev-teacher-card{width:100%;max-width:430px;min-height:320px;padding:16px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
-.rev-teacher-photo{position:relative;overflow:hidden;border-radius:22px;height:245px;background:linear-gradient(135deg,#e8eefc,#d5f4ee)}
-.rev-teacher-photo img{width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
-.rev-teacher-card:hover .rev-teacher-photo img{transform:scale(1.045)}
-.rev-teacher-overlay{position:absolute;inset:auto 0 0 0;padding:36px 16px 14px;background:linear-gradient(180deg,transparent,rgba(3,8,24,.74))}
-.rev-teacher-overlay b{display:block;color:#fff;font-size:16px;font-weight:1000}.rev-teacher-overlay span{display:block;margin-top:4px;color:#d6e1f4;font-size:9px;font-weight:800}
-.rev-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.rev-stat{padding:10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);text-align:center}.rev-stat strong{display:block;color:#fff;font-size:16px;font-weight:1000}.rev-stat span{display:block;margin-top:3px;color:#cbd5e1;font-size:8px;font-weight:800}
-.rev-section{margin-top:24px}.rev-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.rev-eyebrow{font-size:9px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:var(--r-blue)}.rev-section-head h2{margin-top:4px;font-size:22px;letter-spacing:-.02em;font-weight:1000;color:var(--r-ink)}.rev-section-head p{margin-top:5px;color:var(--r-muted);font-size:10px;line-height:1.5}.rev-link{font-size:10px;font-weight:1000;color:var(--r-blue);white-space:nowrap}
-.rev-action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.rev-action{position:relative;min-height:158px;padding:16px;border-radius:22px;border:1px solid var(--r-line);background:var(--r-surface);box-shadow:var(--r-shadow);overflow:hidden;text-align:left;transition:transform .2s,box-shadow .2s,border-color .2s;cursor:pointer}.rev-action:hover{transform:translateY(-5px);box-shadow:0 22px 48px rgba(16,24,40,.10);border-color:#cbd6ea}.rev-action:after{content:"";position:absolute;right:-30px;bottom:-48px;width:125px;height:125px;border-radius:50%;background:var(--raura,rgba(49,94,251,.10))}.rev-action-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--raura,rgba(49,94,251,.10));color:var(--rblue,var(--r-blue));font-size:16px}.rev-action b{display:block;margin-top:16px;font-size:12px;font-weight:1000;color:var(--r-ink)}.rev-action span{display:block;margin-top:5px;font-size:9px;line-height:1.5;color:var(--r-muted);max-width:200px}.rev-action small{position:absolute;right:14px;top:14px;padding:5px 7px;border-radius:999px;background:#f4f6fa;color:#667085;font-size:7px;font-weight:1000}
-.rev-visual-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}.rev-course-showcase,.rev-progress-card{border:1px solid var(--r-line);border-radius:24px;background:var(--r-surface);box-shadow:var(--r-shadow);overflow:hidden}.rev-course-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}.rev-course-card{position:relative;overflow:hidden;min-height:205px;border-radius:19px;background:#eaf0fa;cursor:pointer}.rev-course-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s cubic-bezier(.2,.8,.2,1)}.rev-course-card:hover img{transform:scale(1.06)}.rev-course-card:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(8,15,35,.82) 100%)}.rev-course-info{position:absolute;left:13px;right:13px;bottom:12px;z-index:2;color:#fff}.rev-course-tag{display:inline-flex;padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.15);font-size:7px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase}.rev-course-info b{display:block;margin-top:6px;font-size:14px;font-weight:1000;line-height:1.1}.rev-course-info span{display:block;margin-top:4px;font-size:8px;color:#d6deec}
-.rev-progress-card{padding:18px}.rev-progress-card .rev-progress-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.rev-big-progress{font-size:34px;line-height:1;font-weight:1000;color:var(--r-ink)}.rev-progress-desc{margin-top:6px;color:var(--r-muted);font-size:9px;line-height:1.5}.rev-ring{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--r-blue) 0 61%,#e9eef6 61% 100%);position:relative}.rev-ring:before{content:"";position:absolute;inset:8px;border-radius:50%;background:#fff}.rev-ring span{position:relative;font-size:14px;font-weight:1000}.rev-mini-list{display:grid;gap:8px;margin-top:18px}.rev-mini-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:9px;border-radius:13px;background:#f8fafc;border:1px solid #edf1f6}.rev-mini-icon{width:28px;height:28px;border-radius:9px;display:grid;place-items:center}.rev-mini-row b{display:block;font-size:9px;color:var(--r-ink)}.rev-mini-row span{display:block;margin-top:2px;color:var(--r-muted);font-size:8px}.rev-mini-row em{font-style:normal;font-size:8px;font-weight:1000;color:var(--r-blue)}
-.rev-chapters{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.rev-chapter{position:relative;min-height:190px;border:1px solid var(--r-line);border-radius:22px;overflow:hidden;background:#fff;box-shadow:var(--r-shadow);cursor:pointer;transition:transform .2s,box-shadow .2s}.rev-chapter:hover{transform:translateY(-5px);box-shadow:0 22px 46px rgba(16,24,40,.10)}.rev-chapter-cover{height:104px;position:relative;background:#dfe8f6;overflow:hidden}.rev-chapter-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .55s}.rev-chapter:hover .rev-chapter-cover img{transform:scale(1.06)}.rev-chapter-cover:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.5) 100%)}.rev-chapter-body{padding:12px}.rev-chapter-pill{display:inline-flex;padding:4px 6px;border-radius:999px;background:#eef3ff;color:#315efb;font-size:7px;font-weight:1000}.rev-chapter b{display:block;margin-top:7px;font-size:11px;line-height:1.25;color:var(--r-ink)}.rev-chapter p{margin-top:4px;font-size:8px;line-height:1.45;color:var(--r-muted)}.rev-chapter-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:8px;font-weight:1000;color:var(--r-blue)}
-.rev-bottom-banner{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:20px 22px;border-radius:24px;background:linear-gradient(135deg,#111827,#203a83 60%,#0c8d7c);box-shadow:var(--r-shadow-lg);overflow:hidden;position:relative}.rev-bottom-banner:after{content:"";position:absolute;right:-60px;top:-85px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%)}.rev-bottom-banner h3{color:#fff;font-size:18px;font-weight:1000}.rev-bottom-banner p{margin-top:5px;color:#cbd5e1;font-size:9px;line-height:1.55;max-width:700px}.rev-bottom-actions{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:7px}.rev-bottom-actions button,.rev-bottom-actions a{padding:9px 11px;border-radius:11px;font-size:9px;font-weight:1000;text-decoration:none}.rev-bottom-actions .a{background:#fff;color:#111827}.rev-bottom-actions .b{background:#ffd36a;color:#111827}
-/* legacy home cleanup under revolution: keep old modules, visually subordinate */
-#tab-home>.home-v2-hero,#tab-home>.home-v2-resume-card,#tab-home>.home-v2-streak-card{display:none!important}
-#tab-home>.home-v2-section-head{display:none!important}
-#tab-home>.home-v2-panel{border-radius:22px!important;box-shadow:0 8px 22px rgba(16,24,40,.04)!important}
-@media(max-width:1180px){.rev-hero{grid-template-columns:1fr 340px}.rev-action-grid{grid-template-columns:repeat(2,1fr)}.rev-visual-grid{grid-template-columns:1fr}.rev-course-strip{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:820px){#main-content{padding-left:12px!important;padding-right:12px!important}.rev-hero{grid-template-columns:1fr;padding:18px;border-radius:24px}.rev-title{font-size:2.35rem}.rev-hero-side{order:-1}.rev-teacher-card{max-width:none}.rev-teacher-photo{height:230px}.rev-course-strip{grid-template-columns:1fr;overflow:auto;grid-auto-flow:column;grid-auto-columns:78vw}.rev-chapters{grid-template-columns:1fr 1fr}.rev-bottom-banner{grid-template-columns:1fr}.rev-section-head{align-items:flex-start}.rev-action{min-height:146px}}
-@media(max-width:560px){body{background:#f7f8fb!important}#main-content{padding:8px 9px 88px!important}.rev-title{font-size:2rem}.rev-sub{font-size:11px}.rev-actions{display:grid;grid-template-columns:1fr 1fr}.rev-btn{width:100%}.rev-meta{gap:6px}.rev-meta-chip{font-size:8px}.rev-teacher-card{padding:10px;border-radius:20px}.rev-teacher-photo{height:205px;border-radius:17px}.rev-action-grid{grid-template-columns:1fr 1fr;gap:9px}.rev-action{padding:13px;min-height:148px;border-radius:19px}.rev-action b{font-size:11px}.rev-course-strip{padding:10px}.rev-course-card{min-height:194px}.rev-chapters{grid-template-columns:1fr}.rev-bottom-banner{padding:17px;border-radius:21px}.rev-bottom-banner h3{font-size:16px}.rev-section{margin-top:18px}.rev-section-head h2{font-size:19px}}
-@media(prefers-reduced-motion:reduce){.rev-btn,.rev-action,.rev-course-card img,.rev-chapter,.rev-chapter-cover img,.rev-teacher-photo img{transition:none!important}.rev-action:hover,.rev-chapter:hover,.rev-btn:hover{transform:none!important}}
-html.dark-mode body{background:linear-gradient(180deg,#0b1220,#111827)!important}.dark-mode .rev-section-head h2,.dark-mode .rev-big-progress,.dark-mode .rev-chapter b,.dark-mode .rev-action b{color:#f8fafc}.dark-mode .rev-section-head p,.dark-mode .rev-progress-desc,.dark-mode .rev-chapter p,.dark-mode .rev-action span{color:#94a3b8}.dark-mode .rev-action,.dark-mode .rev-course-showcase,.dark-mode .rev-progress-card,.dark-mode .rev-chapter{background:#111827;border-color:#273449}.dark-mode .rev-mini-row{background:#0f172a;border-color:#273449}.dark-mode .rev-mini-row b{color:#f8fafc}.dark-mode .rev-ring:before{background:#111827}.dark-mode .rev-chapter-pill{background:#1e1b4b}.dark-mode .rev-action small{background:#1b2433;color:#cbd5e1}
-</style>
-  <link rel="stylesheet" href="/assets/exam-center.css?v=20261027-ui1">
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen custom-scrollbar">
 <!-- HEADER / NAVIGATION -->
@@ -5175,7 +5122,7 @@ No Toán 12 core chapter/topic entry points to toanmath.com/toan-12 category pag
 -->
 <script id="phuc-k9-upgrade-2026-script">
 (function(){
-  const STORAGE={theme:'phuc_theme_2026',resume:'phuc_resume_2026',done:'phuc_done_2026',notes:'phuc_notes_2026'};
+  const STORAGE={theme:'phuc_theme_studio_v3',resume:'phuc_resume_2026',done:'phuc_done_2026',notes:'phuc_notes_2026'};
   const get=(k, fallback)=>{try{const v=localStorage.getItem(k);return v==null?fallback:JSON.parse(v)}catch(e){return fallback}};
   const set=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
   const toast=(msg)=>{const el=document.getElementById('phuc-toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(window.__phucToast);window.__phucToast=setTimeout(()=>el.classList.remove('show'),1800)};
@@ -7541,8 +7488,8 @@ html.dark-mode .phuc-vnext-challenge.__unused{background:linear-gradient(135deg,
   #phuc-scroll-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4f46e5,#06b6d4,#10b981);box-shadow:0 0 9px rgba(79,70,229,.45);transition:width .08s linear}
   .phuc-motion-reveal{opacity:0;transform:translateY(10px);transition:opacity .42s ease,transform .42s ease}
   .phuc-motion-reveal.phuc-motion-visible{opacity:1;transform:none}
-  .phuc-lite-mode *, .phuc-lite-mode *::before, .phuc-lite-mode *::after{scroll-behavior:auto!important;}
-  .phuc-lite-mode *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+  .phuc-lite-mode *, .phuc-lite-mode *::before, .phuc-lite-mode *::after{animation:none!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
+  .phuc-lite-mode *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;}
   .phuc-lite-mode #phuc-scroll-progress{display:none!important;}
   .phuc-lite-mode .phuc-vnext-hero::before,.phuc-lite-mode .phuc-vnext-hero::after,.phuc-lite-mode .phuc-vnext-brand-card::after{display:none!important;}
 
@@ -7975,7 +7922,7 @@ setInterval(()=>{hook()},5000);
     const r=window.__phucExamLast;if(!r)return;
     if(!account().authenticated){window.phucToast?.('Đăng nhập để lưu kết quả và vào bảng xếp hạng.');return;}
     const b=document.getElementById('exam-save-result-btn');if(b){b.disabled=true;b.textContent='Đang lưu…';}
-    try{const res=await fetch(api+'?action=record-exam&_='+Date.now(),{method:'POST',credentials:'same-origin',headers:csrfHeaders(),body:JSON.stringify({exam_id:r.id,title:r.title,subject:r.subject,score:r.score,correct:r.correct,total_questions:r.totalQuestions,sections:r.sections,review:r.review,display_name:account().user?.display_name||account().user?.username||''})});const x=await res.json();if(!res.ok||!x.ok)throw new Error(x.message||'Không lưu được');if(b){b.textContent=x.verified?'✓ Đã lưu kết quả':'✓ Đã lưu (chưa xác minh)';b.classList.remove('bg-emerald-600');b.classList.add('bg-slate-700');}if(x.verified)loadLeaderboard();else window.phucToast?.(x.message||'Kết quả tự luyện đã lưu nhưng chưa được xác minh để tính bảng xếp hạng.');}catch(e){if(b)b.textContent='Lưu thất bại';window.phucToast?.('⚠️ '+(e.message||'Không lưu được kết quả'));}finally{setTimeout(()=>{if(b&&!b.textContent.includes('Đã lưu')){b.disabled=false;b.textContent='Lưu kết quả & BXH';}},1200);}
+    try{const res=await fetch(api+'?action=record-exam&_='+Date.now(),{method:'POST',credentials:'same-origin',headers:csrfHeaders(),body:JSON.stringify({exam_id:r.id,title:r.title,subject:r.subject,score:r.score,correct:r.correct,total_questions:r.totalQuestions,sections:r.sections,review:r.review,display_name:account().user?.display_name||account().user?.username||''})});const x=await res.json();if(!res.ok||!x.ok)throw new Error(x.message||'Không lưu được');if(b){b.textContent='✓ Đã lưu kết quả';b.classList.remove('bg-emerald-600');b.classList.add('bg-slate-700');}loadLeaderboard();}catch(e){if(b)b.textContent='Lưu thất bại';window.phucToast?.('⚠️ '+(e.message||'Không lưu được kết quả'));}finally{setTimeout(()=>{if(b&&!b.textContent.includes('Đã lưu')){b.disabled=false;b.textContent='Lưu kết quả & BXH';}},1200);}
   }
   async function loadLeaderboard(){
     const box=document.getElementById('exam-leaderboard-box');if(!box)return;box.classList.remove('hidden');box.innerHTML='<div class="text-xs text-slate-400">Đang tải bảng xếp hạng…</div>';
@@ -8481,7 +8428,7 @@ html.dark-mode .home-v3-title,html.dark-mode .course-v3-visual-title{color:#f8fa
 <script id="phuc-k9-theme-final-v4-js">
 (function(){
   'use strict';
-  const KEY='phuc_theme_2026';
+  const KEY='phuc_theme_studio_v3';
   function setTheme(mode){
     const dark=mode==='dark';
     const html=document.documentElement, body=document.body;
@@ -8498,7 +8445,7 @@ html.dark-mode .home-v3-title,html.dark-mode .course-v3-visual-title{color:#f8fa
       btn.setAttribute('aria-pressed',dark?'true':'false');
     }
     const meta=document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute('content',dark?'#0b1020':'#312e81');
+    if(meta) meta.setAttribute('content',dark?'#29232e':'#f7f2e9');
     try{localStorage.setItem(KEY,dark?'dark':'light')}catch(e){}
   }
   function getSaved(){
@@ -8707,67 +8654,62 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
   function build(){
     const home=document.getElementById('tab-home'); if(!home||document.getElementById('phuck9-rev-app'))return;
     const app=document.createElement('div');app.id='phuck9-rev-app';app.className='phuck9-rev-app rev-app';
-    app.innerHTML=`
-      <section class="rev-hero" aria-label="Khu học tập chính">
-        <div class="rev-hero-main">
-          <span class="rev-kicker"><i class="fa-solid fa-sparkles"></i> Hệ sinh thái học tập 2K9</span>
-          <h1 class="rev-title">Học thông minh.<br><span>Tiến bộ thật.</span></h1>
-          <p class="rev-sub">Một không gian học tập gọn gàng cho bài giảng, chuyên đề, tài liệu và tiến độ cá nhân. Mở đúng thứ cần học — học xong biết mình đang ở đâu.</p>
-          <div class="rev-actions">
-            <button class="rev-btn accent" type="button" onclick="resumePhucLesson?.()"><i class="fa-solid fa-play"></i> Tiếp tục học</button>
-            <button class="rev-btn primary" type="button" onclick="switchTab('courses')"><i class="fa-solid fa-compass"></i> Khám phá khóa học</button>
-            <button class="rev-btn ghost" type="button" onclick="switchTab('student-library')"><i class="fa-solid fa-folder-open"></i> Thư viện</button>
-            <button class="rev-btn ghost" type="button" onclick="switchTab('review-hub')"><i class="fa-solid fa-layer-group"></i> Ôn tập</button>
-          </div>
-          <div class="rev-meta">
-            <span class="rev-meta-chip"><i class="fa-solid fa-circle-check"></i> Học theo lộ trình</span>
-            <span class="rev-meta-chip"><i class="fa-solid fa-chart-line"></i> Theo dõi tiến độ</span>
-            <span class="rev-meta-chip"><i class="fa-solid fa-mobile-screen-button"></i> PC + Mobile</span>
-          </div>
-        </div>
-        <div class="rev-hero-side">
-          <div class="rev-teacher-card">
-            <div class="rev-teacher-photo">${img(teacherSrc,'Thầy Phúc K9')}</div>
-            <div class="rev-stats"><div class="rev-stat"><strong id="rev-stat-lessons">—</strong><span>Bài học</span></div><div class="rev-stat"><strong id="rev-stat-streak">0</strong><span>Ngày streak</span></div><div class="rev-stat"><strong id="rev-stat-progress">0%</strong><span>Tiến độ</span></div></div>
-          </div>
-        </div>
-      </section>
+    app.innerHTML=`<div class="pk9-studio-home">
+  <section class="pk9-welcome-grid" data-reveal>
+    <div class="pk9-welcome-copy">
+      <div class="pk9-overline"><span class="pk9-overline-dot"></span> GÓC HỌC TẬP CỦA BẠN <span class="pk9-overline-divider"></span> THPT • 2K9</div>
+      <h1>Học từng chút,<br><em>vững từng bước.</em></h1>
+      <p class="pk9-welcome-lead">Một góc nhỏ để học bài, ghi lại tiến bộ và luyện tập có mục tiêu. Không cần học tất cả cùng lúc — bắt đầu từ việc gần nhất nhé.</p>
+      <div class="pk9-welcome-actions">
+        <button type="button" class="pk9-btn pk9-btn-ink" onclick="resumePhucLesson?.()"><i class="fa-solid fa-book-open"></i> Tiếp tục học <span aria-hidden="true">↗</span></button>
+        <button type="button" class="pk9-btn pk9-btn-paper" onclick="switchTab('courses')"><i class="fa-solid fa-compass"></i> Chọn bài học</button>
+      </div>
+      <div class="pk9-welcome-note"><span class="pk9-note-star">✳</span><span><b>Nhắc nhẹ:</b> 25 phút tập trung cũng là một bước tiến đáng kể.</span></div>
+    </div>
+    <aside class="pk9-focus-card" aria-label="Thẻ tập trung hôm nay">
+      <div class="pk9-focus-top"><span class="pk9-sticker">GHI CHÚ NHỎ</span><span class="pk9-focus-date"><i class="fa-regular fa-sun"></i> STUDY DAY</span></div>
+      <div class="pk9-focus-illustration" aria-hidden="true">
+        <div class="pk9-orbit pk9-orbit-a"></div><div class="pk9-orbit pk9-orbit-b"></div>
+        <div class="pk9-notebook-art"><span class="pk9-notebook-spiral"></span><span class="pk9-art-lines"></span><span class="pk9-art-check">✓</span><span class="pk9-art-pencil">✎</span></div>
+        <span class="pk9-art-spark pk9-spark-one">✳</span><span class="pk9-art-spark pk9-spark-two">✦</span><span class="pk9-art-dot"></span>
+      </div>
+      <div class="pk9-focus-caption"><span class="pk9-focus-caption-label">MỤC TIÊU CỦA NGÀY</span><h2>Hiểu bài trước,<br>làm nhanh sau.</h2><p>Chọn một mục tiêu nhỏ, hoàn thành rồi mới chuyển sang việc tiếp theo.</p></div>
+      <div class="pk9-focus-meter"><span><i class="fa-solid fa-seedling"></i> Nhịp học của bạn</span><b id="rev-stat-progress">0%</b><div class="pk9-meter-track"><span id="pk9-focus-meter-fill"></span></div></div>
+    </aside>
+  </section>
 
-      <section class="rev-section">
-        <div class="rev-section-head"><div><div class="rev-eyebrow">Một chạm là tới</div><h2>Truy cập nhanh</h2><p>Những nơi học viên dùng nhiều nhất được đưa lên trước mắt.</p></div></div>
-        <div class="rev-action-grid">
-          <button class="rev-action" style="--raura:rgba(49,94,251,.11);--rblue:#315efb" onclick="switchTab('courses')"><small>HỌC</small><span class="rev-action-icon"><i class="fa-solid fa-graduation-cap"></i></span><b>Khóa học & bài giảng</b><span>Học theo chương, chủ đề và từng bài.</span></button>
-          <button class="rev-action" style="--raura:rgba(12,141,124,.11);--rblue:#0c8d7c" onclick="switchTab('phuc-pdf-pro')"><small>PDF</small><span class="rev-action-icon"><i class="fa-solid fa-file-pdf"></i></span><b>Kho tài liệu</b><span>PDF, tài liệu tham khảo và nguồn học.</span></button>
-          <button class="rev-action" style="--raura:rgba(240,122,42,.12);--rblue:#d35b11" onclick="switchTab('review-hub')"><small>ÔN</small><span class="rev-action-icon"><i class="fa-solid fa-bolt"></i></span><b>Ôn tập thông minh</b><span>Ôn GKI, CKI và các khu kiểm tra.</span></button>
-          <button class="rev-action" style="--raura:rgba(118,86,248,.12);--rblue:#7656f8" onclick="switchTab('student-library')"><small>CHIA SẺ</small><span class="rev-action-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span><b>Thư viện học viên</b><span>Tìm, tải và chia sẻ tài liệu cộng đồng.</span></button>
-        </div>
-      </section>
+  <section class="pk9-section" data-reveal>
+    <div class="pk9-section-heading"><div><span class="pk9-section-kicker">BẮT ĐẦU TỪ ĐÂY</span><h2>Bàn học của bạn</h2><p>Những khu vực quan trọng được đặt ngay trong tầm tay.</p></div><span class="pk9-heading-doodle" aria-hidden="true">✎</span></div>
+    <div class="pk9-launch-grid">
+      <button class="pk9-launch-card pk9-lavender" type="button" onclick="switchTab('courses')"><span class="pk9-launch-top"><span class="pk9-launch-icon"><i class="fa-solid fa-book-open-reader"></i></span><span class="pk9-launch-number">01</span></span><span class="pk9-launch-title">Bài giảng &amp; dạng bài</span><span class="pk9-launch-copy">Học theo chương, xem ví dụ và luyện từng dạng.</span><span class="pk9-launch-link">Mở bàn học <span>↗</span></span></button>
+      <button class="pk9-launch-card pk9-peach" type="button" onclick="switchTab('exam-bank')"><span class="pk9-launch-top"><span class="pk9-launch-icon"><i class="fa-solid fa-file-circle-check"></i></span><span class="pk9-launch-number">02</span></span><span class="pk9-launch-title">Kho luyện đề</span><span class="pk9-launch-copy">Chọn đề, bấm giờ và xem phần cần cải thiện.</span><span class="pk9-launch-link">Vào phòng luyện <span>↗</span></span></button>
+      <button class="pk9-launch-card pk9-mint" type="button" onclick="switchTab('review-hub')"><span class="pk9-launch-top"><span class="pk9-launch-icon"><i class="fa-solid fa-layer-group"></i></span><span class="pk9-launch-number">03</span></span><span class="pk9-launch-title">Ôn tập &amp; kiểm tra</span><span class="pk9-launch-copy">Hệ thống lại kiến thức trước bài kiểm tra.</span><span class="pk9-launch-link">Ôn phần đã học <span>↗</span></span></button>
+      <button class="pk9-launch-card pk9-butter" type="button" onclick="switchTab('phuc-pdf-pro')"><span class="pk9-launch-top"><span class="pk9-launch-icon"><i class="fa-solid fa-folder-open"></i></span><span class="pk9-launch-number">04</span></span><span class="pk9-launch-title">Thư viện tài liệu</span><span class="pk9-launch-copy">Tìm PDF, đề tham khảo và học liệu cần dùng.</span><span class="pk9-launch-link">Mở thư viện <span>↗</span></span></button>
+    </div>
+  </section>
 
-      <section class="rev-section">
-        <div class="rev-section-head"><div><div class="rev-eyebrow">Visual learning</div><h2>Chọn môn để vào học</h2><p>Mỗi môn có một “không gian” riêng thay vì một danh sách chữ dài.</p></div></div>
-        <div class="rev-visual-grid">
-          <div class="rev-course-showcase"><div class="rev-course-strip">
-            <button class="rev-course-card" onclick="switchTab('courses')">${img(thumbs.math,'Toán 12')}<div class="rev-course-info"><span class="rev-course-tag">2K9 • Toán</span><b>Toán 12</b><span>Hàm số • nguyên hàm • hình học • luyện theo dạng</span></div></button>
-            <button class="rev-course-card" onclick="switchTab('english')">${img(thumbs.english,'Tiếng Anh 12')}<div class="rev-course-info"><span class="rev-course-tag">2K9 • English</span><b>Tiếng Anh</b><span>Ngữ pháp • từ vựng • đọc hiểu</span></div></button>
-            <button class="rev-course-card" onclick="switchTab('physics')">${img(thumbs.physics,'Vật lí 12')}<div class="rev-course-info"><span class="rev-course-tag">2K9 • Vật lí</span><b>Vật lí 12</b><span>Lý thuyết • bài tập • chuyên đề</span></div></button>
-          </div></div>
-          <aside class="rev-progress-card">
-            <div class="rev-progress-top"><div><div class="rev-eyebrow">Tiến độ của bạn</div><div id="rev-progress-big" class="rev-big-progress">0%</div><div class="rev-progress-desc">Tính theo các bài học đã hoàn thành trong lộ trình hiện tại.</div></div><div class="rev-ring"><span id="rev-ring-label">0%</span></div></div>
-            <div class="rev-mini-list">
-              <div class="rev-mini-row"><span class="rev-mini-icon" style="background:#eef3ff;color:#315efb"><i class="fa-solid fa-book-open"></i></span><span><b>Tiếp tục bài đang học</b><span id="rev-last-lesson">Chưa có bài gần nhất</span></span><em onclick="resumePhucLesson?.()">Mở →</em></div>
-              <div class="rev-mini-row"><span class="rev-mini-icon" style="background:#fff2df;color:#d35b11"><i class="fa-solid fa-fire"></i></span><span><b>Streak hôm nay</b><span>Giữ nhịp học đều mỗi ngày.</span></span><em id="rev-streak-mini">0 ngày</em></div>
-              <div class="rev-mini-row"><span class="rev-mini-icon" style="background:#eaf8f4;color:#0c8d7c"><i class="fa-solid fa-cloud-arrow-up"></i></span><span><b>Đồng bộ tài khoản</b><span>Tiến độ có thể được lưu trên máy chủ.</span></span><em>OK</em></div>
-            </div>
-          </aside>
-        </div>
-      </section>
+  <section class="pk9-section" data-reveal>
+    <div class="pk9-section-heading"><div><span class="pk9-section-kicker">CHỌN MÔN HỌC</span><h2>Mỗi môn, một cách tiếp cận</h2><p>Đi từ điều chưa rõ nhất — không cần mở quá nhiều thứ cùng lúc.</p></div><button class="pk9-text-link" type="button" onclick="switchTab('courses')">Tất cả môn học <span>↗</span></button></div>
+    <div class="pk9-subject-grid">
+      <button class="pk9-subject-card" type="button" onclick="switchTab('courses')"><span class="pk9-subject-sticker pk9-sticker-math"><i class="fa-solid fa-square-root-variable"></i></span><span class="pk9-subject-meta">KHỐI 12 · LOGIC</span><b>Toán học</b><span>Hàm số, tích phân, hình học</span><span class="pk9-subject-arrow">↗</span></button>
+      <button class="pk9-subject-card" type="button" onclick="switchTab('english')"><span class="pk9-subject-sticker pk9-sticker-english"><i class="fa-solid fa-language"></i></span><span class="pk9-subject-meta">KHỐI 12 · LANGUAGE</span><b>Tiếng Anh</b><span>Từ vựng, ngữ pháp, đọc hiểu</span><span class="pk9-subject-arrow">↗</span></button>
+      <button class="pk9-subject-card" type="button" onclick="switchTab('physics')"><span class="pk9-subject-sticker pk9-sticker-physics"><i class="fa-solid fa-atom"></i></span><span class="pk9-subject-meta">KHỐI 12 · VẬT LÝ</span><b>Vật lí</b><span>Lý thuyết và bài tập vận dụng</span><span class="pk9-subject-arrow">↗</span></button>
+      <button class="pk9-subject-card" type="button" onclick="switchTab('chemistry')"><span class="pk9-subject-sticker pk9-sticker-chem"><i class="fa-solid fa-flask"></i></span><span class="pk9-subject-meta">KHỐI 12 · HÓA HỌC</span><b>Hóa học</b><span>Phản ứng, tính toán, bản chất</span><span class="pk9-subject-arrow">↗</span></button>
+    </div>
+  </section>
 
-      <section class="rev-section">
-        <div class="rev-section-head"><div><div class="rev-eyebrow">Lộ trình trực quan</div><h2>Các chương Toán 12</h2><p>Bấm vào hình để vào thẳng chương — không cần tìm trong danh sách dài.</p></div><button class="rev-link" type="button" onclick="switchTab('courses')">Xem toàn bộ →</button></div>
-        <div class="rev-chapters" id="rev-chapters"></div>
-      </section>
+  <section class="pk9-lower-grid" data-reveal>
+    <div class="pk9-progress-paper"><div class="pk9-progress-paper-head"><div><span class="pk9-section-kicker">THEO DÕI NHẸ NHÀNG</span><h2>Tiến bộ của bạn</h2><p>Không cần hoàn hảo — chỉ cần đều đặn.</p></div><span class="pk9-paper-clip" aria-hidden="true">✳</span></div>
+      <div class="pk9-progress-row"><div class="pk9-progress-ring"><span id="rev-ring-label">0%</span></div><div class="pk9-progress-summary"><strong id="rev-progress-big">0%</strong><span>tiến độ học tập ghi nhận trên thiết bị</span><div class="pk9-progress-bar"><span id="pk9-progress-fill"></span></div></div></div>
+      <div class="pk9-progress-stats"><div><span class="pk9-mini-icon pk9-mini-lavender"><i class="fa-solid fa-book"></i></span><span><b id="rev-stat-lessons">—</b><small>Bài học trong lộ trình</small></span></div><div><span class="pk9-mini-icon pk9-mini-peach"><i class="fa-solid fa-fire-flame-curved"></i></span><span><b id="rev-stat-streak">0</b><small>Ngày giữ nhịp học</small></span></div></div>
+      <button class="pk9-progress-cta" type="button" onclick="switchTab('dashboard')">Xem chi tiết tiến độ <span>↗</span></button>
+    </div>
+    <div class="pk9-agenda-paper"><div class="pk9-agenda-header"><span class="pk9-section-kicker">NHỊP HỌC GỢI Ý</span><span class="pk9-agenda-stamp">JUST START ✿</span></div><h2>Đừng ôm đồm,<br>đi từng bước thôi.</h2><div class="pk9-agenda-list"><div class="pk9-agenda-item"><span class="pk9-agenda-check">1</span><span><b>Ôn lại một kiến thức</b><small>Đọc ghi chú hoặc xem lại ví dụ.</small></span><i class="fa-solid fa-book-open"></i></div><div class="pk9-agenda-item"><span class="pk9-agenda-check">2</span><span><b>Làm vài câu vận dụng</b><small>Thử sức rồi xem mình vướng ở đâu.</small></span><i class="fa-solid fa-pencil"></i></div><div class="pk9-agenda-item"><span class="pk9-agenda-check">3</span><span><b>Ghi lại điều chưa hiểu</b><small>Để buổi học tiếp theo bắt đầu dễ hơn.</small></span><i class="fa-solid fa-lightbulb"></i></div></div><div class="pk9-agenda-foot"><span>✦ Học sâu hơn, không chỉ học lâu hơn.</span></div></div>
+  </section>
 
-      <section class="rev-section"><div class="rev-bottom-banner"><div><h3>Học tới đâu, biết tới đó.</h3><p>Giữ nhịp học đều, luyện từng phần và xem lại lỗi sai để tiến bộ mỗi ngày.</p></div><div class="rev-bottom-actions"><button class="a" type="button" onclick="switchTab('exam-bank')">Vào kho đề</button><button class="b" type="button" onclick="switchTab('courses')">Tiếp tục học</button></div></div></section>
+  <section class="pk9-section pk9-chapter-section" data-reveal><div class="pk9-section-heading"><div><span class="pk9-section-kicker">LỘ TRÌNH TRỰC QUAN</span><h2>Các chương đang có</h2><p>Chọn chương để tiếp tục học ngay trong thư viện bài giảng.</p></div><button type="button" class="pk9-text-link" onclick="switchTab('courses')">Mở toàn bộ <span>↗</span></button></div><div class="rev-chapters" id="rev-chapters"></div></section>
+  <section class="pk9-kind-note" data-reveal><span class="pk9-kind-flower">✿</span><div><span class="pk9-section-kicker">MỘT LỜI NHẮC NHỎ</span><h3>Tiến bộ không cần ồn ào.</h3><p>Mỗi lần hiểu thêm một điều, bạn đã đi xa hơn hôm qua một chút.</p></div><button type="button" onclick="switchTab('courses')">Bắt đầu buổi học <span>↗</span></button></section>
+</div>
     `;
     home.prepend(app);
     renderChapters(); updatePersonal();
@@ -8789,7 +8731,7 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
       const u=(window.phucAccount||window.state||{})?.user||null; const done=safeJSON('phuc_done_2026',{}); const keys=Object.keys(done||{}); const data=Array.isArray(window.courseData)?window.courseData:[]; const total=data.reduce((s,c)=>s+(c.topics?.length||0),0); const p=total?Math.round(keys.length/total*100):0;
       const streak=Number(u?.streak||0); const lesson=(window.currentLesson?.()||null)?.title||u?.progress?.resume?.title||'Chưa có bài gần nhất';
       [['rev-stat-lessons',data.reduce((s,c)=>s+(c.topics?.length||0),0)||'—'],['rev-stat-streak',streak],['rev-stat-progress',p+'%'],['rev-progress-big',p+'%'],['rev-ring-label',p+'%'],['rev-streak-mini',streak+' ngày'],['rev-last-lesson',lesson]].forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=String(v)});
-      const ring=document.querySelector('.rev-ring');if(ring)ring.style.background=`conic-gradient(var(--r-blue) 0 ${Math.min(100,p)}%,#e9eef6 ${Math.min(100,p)}% 100%)`;
+      const ring=document.querySelector('.pk9-progress-ring');if(ring)ring.style.setProperty('--progress',Math.min(100,p)+'%');const f=document.getElementById('pk9-progress-fill');if(f)f.style.width=Math.min(100,p)+'%';const ff=document.getElementById('pk9-focus-meter-fill');if(ff)ff.style.width=Math.min(100,p)+'%';
     }catch(e){}
   }
   function safeJSON(k,f){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(f))}catch{return f}}
@@ -8847,11 +8789,6 @@ html.dark-mode .pk5-course-title,html.dark-mode .home-v3-title{color:#f8fafc!imp
 })();
 </script>
 
-  <script src="/assets/exam-center.js?v=20261027-ui1"></script>
-  <link rel="stylesheet" href="/assets/phuck9-studio-v2.css?v=20261027-studio2">
-  <script src="/assets/phuck9-studio-v2.js?v=20261027-studio2"></script>
-</body>
-</html>
 <!-- PDF library uses real source documents only; no fabricated exam/PDF records. -->
 <!-- PDF reference library keeps source metadata and direct document links. -->
 
@@ -9483,7 +9420,8 @@ html.phuc-lite-mode, body.phuc-lite-mode{scroll-behavior:auto!important;}
       const save=!!c?.saveData;
       const slow=['slow-2g','2g'].includes(c?.effectiveType);
       const mem=Number(navigator.deviceMemory||0)&&Number(navigator.deviceMemory)<4;
-      return save||slow||mem;
+      const cores=Number(navigator.hardwareConcurrency||0)&&Number(navigator.hardwareConcurrency)<=4;
+      return save||slow||mem||cores;
     }catch{return false}
   }
   function applyLite(){document.documentElement.classList.toggle('phuc-lite-mode',liteSuggested());document.body?.classList.toggle('phuc-lite-mode',liteSuggested());}
@@ -9691,3 +9629,199 @@ html.dark-mode .phuc-v8-ref-source{background:rgba(15,23,42,.72);border-color:#3
 })();
 </script>
 
+
+<!-- PHUC K9 STUDIO V3: true layout rebuild, warm academic palette, responsive motion. -->
+
+<style id="phuck9-studio-v3-rebuild">
+:root{--pk9-canvas:#f7f2e9;--pk9-paper:#fffdf8;--pk9-paper-2:#fdf8ef;--pk9-ink:#342e3d;--pk9-muted:#817889;--pk9-line:#e8dfd4;--pk9-lav:#ebe3f6;--pk9-lav-ink:#76618e;--pk9-mint:#e2f0e4;--pk9-mint-ink:#47745c;--pk9-peach:#f9e3d7;--pk9-peach-ink:#aa6b51;--pk9-butter:#f7edc8;--pk9-shadow:0 8px 24px rgba(67,48,48,.055);--pk9-shadow-hover:0 15px 32px rgba(67,48,48,.095);--pk9-radius:22px;color-scheme:light}
+html{background:var(--pk9-canvas)!important;scroll-behavior:smooth}
+body{background:var(--pk9-canvas)!important;color:var(--pk9-ink)!important;font-family:'Lexend',ui-sans-serif,system-ui,sans-serif!important;letter-spacing:-.012em}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(rgba(111,90,105,.09) .7px,transparent .7px);background-size:15px 15px;opacity:.18}
+header{background:rgba(255,253,248,.97)!important;border-bottom:1px solid var(--pk9-line)!important;box-shadow:0 3px 12px rgba(69,48,42,.035)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+header .max-w-7xl{height:76px!important;padding-inline:22px!important;max-width:none!important;gap:12px!important}
+header img[alt="HỌC CÙNG PHÚC K9"]{border:2px solid #d9cde9!important;box-shadow:0 3px 0 #eae1d2!important;border-radius:15px!important}
+header .text-brand-600,header .text-indigo-600{color:var(--pk9-lav-ink)!important}
+header .bg-brand-500,header .bg-indigo-600{background-color:var(--pk9-lav-ink)!important}
+header .border-brand-500{border-color:#d9cde9!important}
+#phuck9-header-tools{gap:8px!important}
+#phuck9-header-tools button,#phuck9-header-tools a,#phuc-theme-toggle,#mobile-menu-toggle{border-radius:14px!important;box-shadow:none!important}
+#phuc-theme-toggle{background:#f2ebf7!important;color:#7b668d!important;border:1px solid #e5d9ed!important}
+#phuc-donate-trigger{background:#f6edcf!important;color:#806a36!important;border:1px solid #e9dcae!important;box-shadow:none!important}
+#user-info{color:var(--pk9-ink)!important}
+@media(min-width:1024px){body{padding-left:264px!important}header{left:264px!important}#main-content{max-width:none!important;padding:28px clamp(22px,3vw,46px) 64px!important;width:100%!important}.phuck9-header-wordmark{display:block!important}}
+#phuck9-sidebar{width:264px!important;background:#fdf9f1!important;border-right:1px solid #e8ded0!important;box-shadow:5px 0 22px rgba(64,46,40,.035)!important}
+#phuck9-sidebar .side-head{height:88px!important;padding:17px 17px!important;background:#fdf9f1!important;border-bottom:1px solid #eee4d6!important;gap:12px!important}
+#phuck9-sidebar .side-head>div:first-child{background:#d9cbea!important;color:#5e4b75!important;border-radius:16px!important;box-shadow:none!important}
+#phuck9-sidebar .side-brand b{font-size:12px!important;letter-spacing:-.025em;color:#383044!important}
+#phuck9-sidebar .side-brand span{font-size:9px!important;color:#95889a!important;font-weight:650!important;letter-spacing:.02em}
+#phuck9-sidebar .side-scroll{padding:16px 12px 18px!important}
+#phuck9-sidebar .side-section{font-size:9px!important;letter-spacing:.13em!important;color:#a397a4!important;margin:18px 5px 8px!important;padding:0 10px!important}
+#phuck9-sidebar .side-btn{font-size:11px!important;font-weight:700!important;min-height:43px!important;padding:10px 12px!important;border:1px solid transparent!important;border-radius:13px!important;color:#756c7d!important;margin-bottom:4px!important;gap:11px!important;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease!important}
+#phuck9-sidebar .side-btn i{font-size:13px!important;filter:saturate(.62)}
+#phuck9-sidebar .side-btn:hover{background:#f3ecf6!important;color:#69547d!important;border-color:#e8dcef!important;transform:translateX(2px)!important;box-shadow:none!important}
+#phuck9-sidebar .side-btn.active{background:#e9dff3!important;color:#604c78!important;border-color:#dfd0eb!important;box-shadow:inset 3px 0 0 #a48ab8!important}
+#phuck9-sidebar .side-divider{background:#e8ded0!important;margin:12px 8px!important}
+#phuck9-sidebar .side-foot{border-color:#eee4d6!important;padding:12px!important}
+#phuck9-sidebar .side-foot .mini{font-size:9px!important;color:#aa9eaa!important;padding:4px 8px!important}
+#main-content{min-width:0;color:var(--pk9-ink)!important}
+.tab-content{min-width:0}
+/* Rebuild every home section as a paper-and-study-space system. */
+#tab-home>.phuck9-rev-app{display:block!important;position:relative;z-index:1}#tab-home>.phuck9-rev-app~*{display:none!important}
+.pk9-studio-home{max-width:1500px;margin:0 auto;color:var(--pk9-ink);--pk9-motion:cubic-bezier(.2,.75,.25,1)}
+.pk9-welcome-grid{display:grid;grid-template-columns:minmax(0,1.07fr) minmax(330px,.83fr);gap:clamp(18px,2.2vw,32px);align-items:stretch}
+.pk9-welcome-copy{min-height:410px;border:1px solid #eadfce;border-radius:30px;background:var(--pk9-paper);padding:clamp(26px,3.5vw,52px);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;position:relative;overflow:hidden;box-shadow:var(--pk9-shadow)}
+.pk9-welcome-copy:after{content:"";position:absolute;width:240px;height:240px;right:-145px;top:-135px;border:1px solid #eadff1;border-radius:50%;box-shadow:0 0 0 24px rgba(235,227,246,.26),0 0 0 52px rgba(235,227,246,.14);pointer-events:none}
+.pk9-overline,.pk9-section-kicker{font-size:10px;line-height:1.4;letter-spacing:.13em;font-weight:800;color:#92829d}
+.pk9-overline{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:20px}
+.pk9-overline-dot{width:8px;height:8px;border-radius:50%;background:#93b69c;box-shadow:0 0 0 4px #e5f0e4}
+.pk9-overline-divider{width:20px;height:1px;background:#d9cebf}
+.pk9-welcome-copy h1{font-size:clamp(2.9rem,4.2vw,4.7rem);font-weight:700;line-height:.98;letter-spacing:-.075em;color:#332d3a;margin:0;max-width:730px}
+.pk9-welcome-copy h1 em{font-style:normal;color:#8d75a7;position:relative;white-space:nowrap}
+.pk9-welcome-lead{font-size:14px;line-height:1.85;color:#817889;max-width:540px;margin:21px 0 0}
+.pk9-welcome-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.pk9-btn{min-height:46px;padding:0 17px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:1px solid transparent;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;transition:transform .2s var(--pk9-motion),box-shadow .2s,border-color .2s,background .2s!important}
+.pk9-btn-ink{background:#453a4f;color:#fff9f0;border-color:#453a4f;box-shadow:0 5px 0 #d8ccdc}
+.pk9-btn-paper{background:#fffdf8;color:#6d5c78;border-color:#e5d8e7}
+.pk9-btn:active{transform:translateY(2px)!important;box-shadow:none!important}
+.pk9-btn-ink:hover{background:#5c4c69;box-shadow:0 7px 16px rgba(69,58,79,.16)!important}
+.pk9-btn-paper:hover{background:#f6eff8;border-color:#d8c6e4}
+.pk9-welcome-note{margin-top:31px;padding-top:16px;border-top:1px dashed #e9dfd4;display:flex;align-items:center;gap:10px;color:#8b808e;font-size:11px;line-height:1.6}
+.pk9-welcome-note b{color:#66566e}
+.pk9-note-star{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;flex:none;background:#f8edc9;color:#a68a42;font-size:15px}
+.pk9-focus-card{border:1px solid #e4d9e9;border-radius:30px;background:#f0e8f5;position:relative;overflow:hidden;padding:24px 26px 21px;box-shadow:var(--pk9-shadow);display:flex;flex-direction:column;min-height:410px}
+.pk9-focus-card:before{content:"";position:absolute;left:-65px;bottom:75px;width:220px;height:220px;border:1px solid rgba(127,100,146,.18);border-radius:50%;box-shadow:0 0 0 20px rgba(255,255,255,.16),0 0 0 42px rgba(255,255,255,.12);pointer-events:none}
+.pk9-focus-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1}
+.pk9-sticker{background:#fffaf0;border:1px solid #e8dbb5;border-radius:7px;padding:7px 9px;color:#95804b;font-size:9px;font-weight:800;letter-spacing:.08em;transform:rotate(-2deg)}
+.pk9-focus-date{font-size:9px;font-weight:800;letter-spacing:.1em;color:#94849f}
+.pk9-focus-illustration{height:151px;position:relative;display:grid;place-items:center;margin:5px 0 1px}
+.pk9-orbit{position:absolute;border:1px dashed rgba(130,103,153,.3);border-radius:50%;transform:rotate(-18deg)}
+.pk9-orbit-a{width:210px;height:128px}.pk9-orbit-b{width:164px;height:90px;transform:rotate(26deg)}
+.pk9-notebook-art{width:108px;height:121px;position:relative;background:#fffaf1;border:1px solid #d9c8e2;border-radius:10px 15px 13px 9px;box-shadow:8px 9px 0 #d6c6df,12px 13px 0 rgba(111,81,126,.08);transform:rotate(-7deg)}
+.pk9-notebook-art:before{content:"";position:absolute;left:13px;top:0;bottom:0;border-left:1px solid #edc9c3}
+.pk9-notebook-spiral{position:absolute;left:8px;right:8px;top:11px;height:8px;border-top:2px dotted #b9a2c6}
+.pk9-art-lines{position:absolute;left:25px;right:12px;top:37px;height:43px;background:repeating-linear-gradient(to bottom,transparent 0 10px,#e6ddeb 10px 11px)}
+.pk9-art-check{position:absolute;left:28px;top:45px;color:#6e9a7c;font-size:26px;font-weight:800;transform:rotate(-7deg)}
+.pk9-art-pencil{position:absolute;right:-21px;bottom:11px;display:grid;place-items:center;width:17px;height:81px;border-radius:5px;background:#c9a9d7;color:#fff6e8;font-size:21px;transform:rotate(30deg);box-shadow:inset -4px 0 rgba(112,77,135,.15)}
+.pk9-art-spark{position:absolute;color:#a18bb2}.pk9-spark-one{top:27px;left:calc(50% - 100px);font-size:23px;transform:rotate(-8deg)}.pk9-spark-two{right:calc(50% - 109px);bottom:20px;font-size:17px;transform:rotate(12deg)}.pk9-art-dot{position:absolute;width:9px;height:9px;background:#e6ba9c;border-radius:50%;right:calc(50% - 93px);top:25px}
+.pk9-focus-caption{position:relative;z-index:1;border-top:1px dashed #d8c7e0;padding-top:15px}
+.pk9-focus-caption-label{font-size:9px;letter-spacing:.13em;font-weight:800;color:#9a86a8}
+.pk9-focus-caption h2{font-size:clamp(1.4rem,2vw,1.8rem);line-height:1.13;letter-spacing:-.045em;margin:7px 0 8px;color:#493852;font-weight:700}
+.pk9-focus-caption p{font-size:11px;line-height:1.65;color:#897993;margin:0;max-width:360px}
+.pk9-focus-meter{margin-top:auto;padding-top:15px;display:grid;grid-template-columns:1fr auto;gap:9px 12px;align-items:center;position:relative;z-index:1}
+.pk9-focus-meter>span{font-size:10px;color:#877592;font-weight:700}.pk9-focus-meter>span i{margin-right:5px;color:#759a7b}.pk9-focus-meter>b{font-size:12px;color:#5c4768}
+.pk9-meter-track{grid-column:1/-1;height:6px;border-radius:99px;background:#e0d4e7;overflow:hidden}.pk9-meter-track span{display:block;height:100%;width:0;background:#91b69a;border-radius:99px;transition:width .65s var(--pk9-motion)}
+.pk9-section{margin-top:46px}
+.pk9-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:17px}
+.pk9-section-heading h2,.pk9-progress-paper h2,.pk9-agenda-paper h2{font-size:clamp(1.55rem,2.3vw,2.15rem);line-height:1.1;letter-spacing:-.055em;font-weight:700;color:#38303f;margin:7px 0 0}
+.pk9-section-heading p,.pk9-progress-paper-head p{font-size:12px;line-height:1.6;color:#928797;margin:7px 0 0}
+.pk9-heading-doodle{font-size:32px;color:#c3a8cb;transform:rotate(-14deg);padding:0 8px 3px}
+.pk9-launch-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.pk9-launch-card{position:relative;text-align:left;min-height:221px;display:flex;flex-direction:column;align-items:flex-start;padding:19px;border:1px solid rgba(116,91,119,.08);border-radius:21px;overflow:hidden;cursor:pointer;transition:transform .24s var(--pk9-motion),box-shadow .24s var(--pk9-motion),border-color .24s!important}
+.pk9-launch-card:after{content:"";position:absolute;width:100px;height:100px;border-radius:50%;right:-54px;top:72px;border:1px solid rgba(96,75,100,.10);box-shadow:0 0 0 15px rgba(255,255,255,.10),0 0 0 30px rgba(255,255,255,.08);pointer-events:none}
+.pk9-launch-card:hover{transform:translateY(-5px) rotate(-.45deg)!important;box-shadow:var(--pk9-shadow-hover)!important;border-color:rgba(116,91,119,.18)!important}
+.pk9-lavender{background:#eee6f6!important}.pk9-peach{background:#f9e6d9!important}.pk9-mint{background:#e5efe3!important}.pk9-butter{background:#f6edcc!important}
+.pk9-launch-top{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:20px;position:relative;z-index:1}
+.pk9-launch-icon{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:rgba(255,253,248,.76);color:#7b638b;font-size:17px;border:1px solid rgba(255,255,255,.55)}
+.pk9-peach .pk9-launch-icon{color:#aa6b51}.pk9-mint .pk9-launch-icon{color:#5e8868}.pk9-butter .pk9-launch-icon{color:#9c8240}
+.pk9-launch-number{font-size:9px;font-weight:800;color:rgba(73,54,81,.42);letter-spacing:.08em}
+.pk9-launch-title{font-size:15px;font-weight:700;letter-spacing:-.035em;color:#403547;position:relative;z-index:1}
+.pk9-launch-copy{font-size:11px;line-height:1.65;color:#817687;margin-top:8px;position:relative;z-index:1}
+.pk9-launch-link{margin-top:auto;padding-top:17px;display:flex;gap:8px;align-items:center;color:#716078;font-size:10px;font-weight:800;position:relative;z-index:1}.pk9-launch-link span{font-size:15px;transition:transform .2s}.pk9-launch-card:hover .pk9-launch-link span{transform:translate(3px,-2px)}
+.pk9-text-link{border:1px solid #e6dce7;background:#fffcf7;color:#7b6688;border-radius:13px;min-height:38px;padding:0 13px;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer;transition:background .18s,border-color .18s}.pk9-text-link:hover{background:#f1e8f7;border-color:#ddcde6}
+.pk9-subject-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.pk9-subject-card{min-height:179px;border:1px solid #e9dfd5;background:#fffdf8!important;border-radius:20px;padding:17px;display:flex;flex-direction:column;align-items:flex-start;position:relative;text-align:left;cursor:pointer;box-shadow:0 4px 13px rgba(67,48,48,.025);transition:transform .22s var(--pk9-motion),box-shadow .22s,border-color .22s!important}
+.pk9-subject-card:hover{transform:translateY(-4px)!important;box-shadow:var(--pk9-shadow-hover)!important;border-color:#d7c8de!important}
+.pk9-subject-sticker{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;font-size:19px;margin-bottom:17px;transform:rotate(-4deg);transition:transform .22s var(--pk9-motion)}.pk9-subject-card:hover .pk9-subject-sticker{transform:rotate(0) scale(1.06)}
+.pk9-sticker-math{background:#eee5f5;color:#82689a}.pk9-sticker-english{background:#e1f0e4;color:#638c6b}.pk9-sticker-physics{background:#f8e4d6;color:#b67655}.pk9-sticker-chem{background:#f5edcb;color:#a18b4a}
+.pk9-subject-meta{font-size:8px;letter-spacing:.1em;color:#a095a3;font-weight:800}.pk9-subject-card>b{font-size:16px;color:#39313f;margin-top:5px;letter-spacing:-.04em}.pk9-subject-card>span:nth-of-type(3){font-size:10px;color:#918594;line-height:1.5;margin-top:5px;padding-right:12px}.pk9-subject-arrow{position:absolute;right:15px;bottom:15px;color:#ac9ab7;font-size:17px}
+.pk9-lower-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:15px;margin-top:42px}
+.pk9-progress-paper,.pk9-agenda-paper{border:1px solid #e7ddd4;border-radius:24px;background:#fffdf8;padding:24px;min-width:0;box-shadow:var(--pk9-shadow)}
+.pk9-progress-paper-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.pk9-paper-clip{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#f6edca;color:#ab9452;font-size:20px;transform:rotate(8deg)}
+.pk9-progress-row{display:flex;align-items:center;gap:20px;padding:23px 0;border-bottom:1px dashed #e8ded4;margin-bottom:17px}
+.pk9-progress-ring{--progress:0%;width:102px;height:102px;flex:none;display:grid;place-items:center;border-radius:50%;background:conic-gradient(#9bb9a0 0 var(--progress),#eee8df var(--progress) 100%);position:relative}
+.pk9-progress-ring:before{content:"";position:absolute;inset:8px;background:#fffdf8;border-radius:50%;border:1px solid #eee3d8}.pk9-progress-ring span{position:relative;font-size:20px;font-weight:700;color:#61506d;letter-spacing:-.06em}
+.pk9-progress-summary{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.pk9-progress-summary>strong{font-size:26px;line-height:1;color:#5f4c6a;letter-spacing:-.06em}.pk9-progress-summary>span{font-size:10px;line-height:1.55;color:#968a98}.pk9-progress-bar{height:7px;max-width:260px;background:#eee8df;border-radius:99px;overflow:hidden;margin-top:8px}.pk9-progress-bar span{display:block;width:0;height:100%;background:#9bb9a0;border-radius:99px;transition:width .7s var(--pk9-motion)}
+.pk9-progress-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pk9-progress-stats>div{display:flex;align-items:center;gap:10px;min-width:0}.pk9-mini-icon{width:38px;height:38px;flex:none;border-radius:13px;display:grid;place-items:center}.pk9-mini-lavender{background:#eee6f6;color:#876f9b}.pk9-mini-peach{background:#f9e6d9;color:#ae7659}.pk9-progress-stats b{display:block;font-size:15px;color:#4b4051}.pk9-progress-stats small{display:block;font-size:9px;line-height:1.5;color:#9a8e9b;margin-top:3px}
+.pk9-progress-cta{margin-top:20px;width:100%;min-height:43px;border:1px solid #e6d9e8;background:#f5eef8;color:#746080;border-radius:13px;display:flex;justify-content:space-between;align-items:center;padding:0 14px;font-size:10px;font-weight:800;cursor:pointer;transition:background .2s}.pk9-progress-cta:hover{background:#ece0f3}
+.pk9-agenda-paper{background:#f4efe5;border-color:#e9dfd0;position:relative;overflow:hidden}.pk9-agenda-paper:after{content:"";position:absolute;width:140px;height:140px;right:-80px;bottom:-70px;border-radius:50%;border:1px solid #e4d7ca;box-shadow:0 0 0 17px rgba(255,255,255,.2),0 0 0 36px rgba(255,255,255,.15);pointer-events:none}
+.pk9-agenda-header{display:flex;align-items:center;justify-content:space-between;gap:10px}.pk9-agenda-stamp{color:#a68b70;font-size:8px;font-weight:800;letter-spacing:.08em;border:1px dashed #d8c2aa;border-radius:7px;padding:6px 8px;transform:rotate(3deg)}
+.pk9-agenda-paper h2{font-size:clamp(1.6rem,2vw,2rem);margin-top:18px}.pk9-agenda-list{margin-top:20px;display:grid;gap:15px;position:relative;z-index:1}
+.pk9-agenda-item{display:grid;grid-template-columns:31px minmax(0,1fr) 24px;align-items:center;gap:10px}.pk9-agenda-check{width:29px;height:29px;border:1px solid #d8c9b8;background:#fffaf2;border-radius:10px;display:grid;place-items:center;color:#9e8869;font-weight:800;font-size:11px}.pk9-agenda-item b{display:block;font-size:11px;color:#514653}.pk9-agenda-item small{display:block;font-size:9px;line-height:1.5;color:#948891;margin-top:4px}.pk9-agenda-item>i{color:#b1a0ac;font-size:14px;text-align:center}
+.pk9-agenda-foot{border-top:1px dashed #e0d5c7;margin-top:21px;padding-top:14px;font-size:10px;color:#988772;position:relative;z-index:1}
+.pk9-chapter-section{margin-bottom:30px}.pk9-kind-note{display:flex;align-items:center;gap:17px;border:1px dashed #dccddf;border-radius:20px;background:#f1eaf5;padding:19px 22px;margin-top:32px}.pk9-kind-flower{width:42px;height:42px;border-radius:13px;background:#fffaf0;color:#ab8d5a;display:grid;place-items:center;font-size:24px;flex:none}.pk9-kind-note>div{flex:1;min-width:0}.pk9-kind-note h3{font-size:16px;font-weight:700;letter-spacing:-.04em;color:#4e4058;margin:5px 0}.pk9-kind-note p{font-size:10px;color:#8b7e91;margin:0;line-height:1.55}.pk9-kind-note>button{min-height:39px;background:#665372;border:0;border-radius:12px;padding:0 13px;color:#fffaf4;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}.pk9-kind-note>button span{margin-left:6px}
+/* Real chapter tiles generated from the existing course data, now styled in the new visual language. */
+#rev-chapters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+#rev-chapters .rev-chapter{background:#fffdf8!important;border:1px solid #e8dfd5!important;border-radius:18px!important;overflow:hidden!important;text-align:left!important;box-shadow:0 4px 13px rgba(67,48,48,.035)!important;display:flex!important;flex-direction:column!important;transition:transform .22s var(--pk9-motion),box-shadow .22s,border-color .22s!important}
+#rev-chapters .rev-chapter:hover{transform:translateY(-4px)!important;box-shadow:var(--pk9-shadow-hover)!important;border-color:#d7c7df!important}
+#rev-chapters .rev-chapter-cover{height:122px!important;border-radius:0!important;background:#e9e0ef!important;position:relative!important;overflow:hidden!important}
+#rev-chapters .rev-chapter-cover img,#rev-chapters .rev-chapter-cover-img{width:100%!important;height:100%!important;object-fit:cover!important;filter:saturate(.62) sepia(.12)!important;opacity:.88}
+#rev-chapters .rev-chapter-body{padding:14px!important;display:flex!important;flex-direction:column!important;gap:7px!important}
+#rev-chapters .rev-chapter-pill{align-self:flex-start;background:#f0e6f4!important;color:#806a8c!important;border-radius:7px!important;padding:5px 7px!important;font-size:8px!important;font-weight:800!important;letter-spacing:.08em}
+#rev-chapters .rev-chapter b{font-size:13px!important;line-height:1.4!important;color:#423647!important}
+#rev-chapters .rev-chapter p{font-size:10px!important;color:#968996!important;line-height:1.55!important;margin:0!important}
+/* Restyle legacy tabs and the exam room; no forced full-screen maintenance treatment. */
+.tab-content{color:var(--pk9-ink)!important}
+.tab-content h1,.tab-content h2,.tab-content h3,.tab-content h4{letter-spacing:-.035em}
+.home-v2-panel,.home-v2-resume-card,.home-v2-streak-card,.phuc-211-card,.special-card,.exam-card,.exam-v4-card,.flash-ref-wrap,.phuc-grade-panel,.student-lib-card,.pdfpro-card,.course-v3-visual-card,#tab-exam-bank .exam-bank-hero,#tab-exam-bank .exam-v4-filters,#tab-exam-bank .exam-v4-filterbar,#tab-exam-bank .exam-v4-kpis{background:#fffdf8!important;border:1px solid #e8dfd5!important;border-radius:19px!important;box-shadow:var(--pk9-shadow)!important;color:var(--pk9-ink)!important}
+.special-hero{background:#eee5f5!important;border:1px solid #e0d2e9!important;color:#48364f!important;box-shadow:none!important}
+.special-hero *{color:inherit}
+.exam-v4-card:hover,.exam-card:hover,.special-card:hover,.student-lib-card:hover,.pdfpro-card:hover{transform:translateY(-2px);box-shadow:var(--pk9-shadow-hover)!important}
+input,select,textarea{border-color:#e2d7df!important;border-radius:12px!important;background:#fffdf8!important;color:#39313f!important;box-shadow:none!important}
+input:focus,select:focus,textarea:focus{border-color:#b9a1c7!important;outline:3px solid rgba(180,151,197,.16)!important}
+#phuc-mobile-quickbar{background:rgba(255,251,243,.98)!important;border:1px solid #e5d9c9!important;box-shadow:0 7px 22px rgba(67,48,48,.13)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-radius:18px!important}
+#phuc-mobile-quickbar button{color:#918493!important;font-size:8px!important;border-radius:13px!important;min-height:47px!important}
+#phuc-mobile-quickbar button.is-active{background:#e9def2!important;color:#6d557e!important}
+#phuc-mobile-quickbar button:nth-child(3).is-active{background:#f8edc9!important;color:#8b733b!important}
+#phuc-mobile-quickbar button i{font-size:15px!important}
+#mobile-nav-panel{background:#fffaf2!important;border-color:#e8dfd4!important;box-shadow:0 15px 35px rgba(67,48,48,.12)!important}
+#mobile-nav-panel .mobile-nav-item{border-color:#e8dfd4!important;border-radius:13px!important;background:#fffdf8!important;color:#675d70!important}
+#phuc-ai-launcher{background:#8b75a1!important;box-shadow:0 7px 18px rgba(106,80,128,.2)!important}
+/* Re-map old utility accents to the new lilac/sage palette without changing semantic right/wrong feedback. */
+.tab-content .bg-indigo-600,.tab-content .bg-indigo-700,.tab-content .bg-brand-500,.tab-content .bg-brand-600,.tab-content .bg-blue-600,.tab-content .bg-blue-700{background-color:#85709a!important;color:#fffaf6!important}
+.tab-content .text-indigo-600,.tab-content .text-indigo-700,.tab-content .text-brand-600,.tab-content .text-blue-600,.tab-content .text-blue-700{color:#80688e!important}
+.tab-content .border-indigo-200,.tab-content .border-indigo-300,.tab-content .border-blue-200,.tab-content .border-blue-300{border-color:#e1d3e9!important}
+.tab-content .bg-indigo-50,.tab-content .bg-indigo-100,.tab-content .bg-blue-50,.tab-content .bg-blue-100{background-color:#f0e8f5!important}
+.tab-content .bg-emerald-50,.tab-content .bg-emerald-100{background-color:#e8f1e6!important}
+.tab-content .text-emerald-700{color:#587b5e!important}
+/* Entry motion: one entrance per section; no perpetual animation or blur. */
+.pk9-studio-home [data-reveal]{opacity:1;transform:none}
+.pk9-motion-ready .pk9-studio-home [data-reveal]:not(.pk9-is-visible){opacity:0;transform:translateY(11px)}
+.pk9-studio-home [data-reveal]{transition:opacity .48s var(--pk9-motion),transform .48s var(--pk9-motion)}
+.pk9-studio-home .pk9-launch-card{transition-delay:0ms!important}
+.pk9-studio-home .pk9-launch-card:nth-child(2){transition-delay:45ms!important}.pk9-studio-home .pk9-launch-card:nth-child(3){transition-delay:90ms!important}.pk9-studio-home .pk9-launch-card:nth-child(4){transition-delay:135ms!important}
+@media(max-width:1250px){.pk9-welcome-grid{grid-template-columns:minmax(0,1fr) minmax(300px,.82fr)}.pk9-welcome-copy{padding:30px}.pk9-welcome-copy h1{font-size:clamp(2.65rem,4vw,4rem)}.pk9-launch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk9-launch-card{min-height:188px}}
+@media(max-width:1023px){body{padding-left:0!important}header{left:0!important}header .max-w-7xl{height:65px!important;padding-inline:14px!important}#main-content{padding:20px 16px 90px!important}.pk9-welcome-grid{grid-template-columns:1fr;gap:14px}.pk9-welcome-copy{min-height:unset;padding:28px 25px;border-radius:24px}.pk9-welcome-copy h1{font-size:clamp(2.65rem,7vw,4.1rem)}.pk9-focus-card{min-height:unset;border-radius:24px}.pk9-focus-illustration{height:125px}.pk9-section{margin-top:34px}.pk9-subject-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk9-lower-grid{grid-template-columns:1fr;margin-top:32px}.pk9-progress-paper,.pk9-agenda-paper{padding:21px}.pk9-kind-note{margin-bottom:12px}}
+@media(max-width:640px){header .max-w-7xl{height:60px!important;padding-inline:10px!important}header img[alt="HỌC CÙNG PHÚC K9"]{width:37px!important;height:37px!important}.pk9-studio-home{width:100%}#main-content{padding:12px 11px 87px!important}.pk9-welcome-grid{gap:11px}.pk9-welcome-copy{padding:25px 20px 21px;border-radius:22px}.pk9-overline{font-size:8px;margin-bottom:18px;gap:7px}.pk9-welcome-copy h1{font-size:clamp(2.4rem,11vw,3.5rem);line-height:1.01;letter-spacing:-.07em}.pk9-welcome-lead{font-size:12px;line-height:1.75;margin-top:16px}.pk9-welcome-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px;margin-top:21px}.pk9-btn{font-size:10px;padding:0 10px;min-height:45px;gap:6px}.pk9-welcome-note{font-size:10px;margin-top:22px;padding-top:13px}.pk9-focus-card{padding:17px 18px 17px;border-radius:22px}.pk9-focus-top{gap:6px}.pk9-sticker{font-size:8px}.pk9-focus-date{font-size:8px}.pk9-focus-illustration{height:118px}.pk9-notebook-art{transform:scale(.88) rotate(-7deg)}.pk9-focus-caption h2{font-size:1.45rem}.pk9-focus-caption p{font-size:10px}.pk9-section{margin-top:30px}.pk9-section-heading{align-items:flex-start;margin-bottom:13px;gap:10px}.pk9-section-heading h2,.pk9-progress-paper h2,.pk9-agenda-paper h2{font-size:1.55rem}.pk9-section-heading p,.pk9-progress-paper-head p{font-size:10px;line-height:1.55}.pk9-section-kicker{font-size:8px}.pk9-heading-doodle{display:none}.pk9-launch-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pk9-launch-card{padding:13px;min-height:184px;border-radius:17px}.pk9-launch-top{margin-bottom:15px}.pk9-launch-icon{width:36px;height:36px;font-size:15px;border-radius:12px}.pk9-launch-number{font-size:8px}.pk9-launch-title{font-size:12px;line-height:1.35}.pk9-launch-copy{font-size:9px;line-height:1.55;margin-top:7px}.pk9-launch-link{font-size:9px;padding-top:12px}.pk9-subject-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pk9-subject-card{min-height:166px;padding:13px;border-radius:17px}.pk9-subject-sticker{width:41px;height:41px;font-size:17px;margin-bottom:13px}.pk9-subject-meta{font-size:7px}.pk9-subject-card>b{font-size:14px}.pk9-subject-card>span:nth-of-type(3){font-size:9px}.pk9-lower-grid{gap:11px;margin-top:27px}.pk9-progress-paper,.pk9-agenda-paper{padding:17px;border-radius:20px}.pk9-paper-clip{width:34px;height:34px}.pk9-progress-row{gap:13px;padding:18px 0 16px}.pk9-progress-ring{width:82px;height:82px}.pk9-progress-ring span{font-size:17px}.pk9-progress-summary>strong{font-size:23px}.pk9-progress-summary>span{font-size:9px}.pk9-progress-stats{gap:8px}.pk9-progress-stats>div{gap:7px}.pk9-mini-icon{width:31px;height:31px;border-radius:10px;font-size:11px}.pk9-progress-stats b{font-size:13px}.pk9-progress-stats small{font-size:8px}.pk9-progress-cta{margin-top:16px;min-height:41px;font-size:9px}.pk9-agenda-paper h2{font-size:1.7rem;margin-top:14px}.pk9-agenda-list{gap:13px;margin-top:17px}.pk9-agenda-item{grid-template-columns:28px minmax(0,1fr) 18px;gap:8px}.pk9-agenda-check{width:27px;height:27px}.pk9-agenda-item b{font-size:10px}.pk9-agenda-item small{font-size:8px}.pk9-agenda-foot{font-size:9px}.pk9-kind-note{gap:11px;padding:14px;border-radius:17px;align-items:flex-start}.pk9-kind-flower{width:35px;height:35px;font-size:20px}.pk9-kind-note h3{font-size:13px}.pk9-kind-note p{font-size:9px}.pk9-kind-note>button{font-size:9px;padding:0 10px;min-height:36px;align-self:center}#rev-chapters{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#rev-chapters .rev-chapter-cover{height:90px!important}#rev-chapters .rev-chapter-body{padding:10px!important;gap:5px!important}#rev-chapters .rev-chapter b{font-size:11px!important}#rev-chapters .rev-chapter p{font-size:8px!important}.pk9-text-link{font-size:9px;min-height:34px;padding:0 9px;gap:4px}}
+@media(max-width:380px){.pk9-welcome-copy h1{font-size:2.25rem}.pk9-welcome-actions{grid-template-columns:1fr}.pk9-launch-card{min-height:174px}.pk9-launch-title{font-size:11px}.pk9-kind-note{flex-wrap:wrap}.pk9-kind-note>div{flex:1 1 calc(100% - 55px)}.pk9-kind-note>button{margin-left:46px}}
+/* Warm dark mode: charcoal-plum + muted sage/lavender, never the old navy-blue skin. */
+html.dark-mode,html.dark-mode body{color-scheme:dark!important;--pk9-canvas:#29232e;--pk9-paper:#342d39;--pk9-paper-2:#3b3341;--pk9-ink:#f4ebf2;--pk9-muted:#b5a8b9;--pk9-line:#4b3e50;--pk9-shadow:0 8px 24px rgba(0,0,0,.14);--pk9-shadow-hover:0 15px 32px rgba(0,0,0,.22)}
+html.dark-mode body{background:#29232e!important;color:#f4ebf2!important}html.dark-mode body:before{opacity:.08}
+html.dark-mode header{background:#312a36!important;border-color:#4b3e50!important;box-shadow:0 3px 12px rgba(0,0,0,.12)!important}html.dark-mode header .text-slate-900,html.dark-mode header .text-slate-700,html.dark-mode #user-info{color:#f4ebf2!important}
+html.dark-mode #phuck9-sidebar{background:#302936!important;border-color:#4b3e50!important}html.dark-mode #phuck9-sidebar .side-head{background:#302936!important;border-color:#4b3e50!important}html.dark-mode #phuck9-sidebar .side-brand b{color:#f4ebf2!important}html.dark-mode #phuck9-sidebar .side-brand span,html.dark-mode #phuck9-sidebar .side-section,html.dark-mode #phuck9-sidebar .side-foot .mini{color:#ab9bb1!important}html.dark-mode #phuck9-sidebar .side-btn{color:#d0c4d4!important}html.dark-mode #phuck9-sidebar .side-btn:hover{background:#423748!important;color:#eadcf4!important;border-color:#594762!important}html.dark-mode #phuck9-sidebar .side-btn.active{background:#4b3c54!important;color:#f1e4fa!important;border-color:#685373!important;box-shadow:inset 3px 0 #c3a4d4!important}
+html.dark-mode .pk9-welcome-copy,html.dark-mode .pk9-progress-paper,html.dark-mode .pk9-subject-card,html.dark-mode #rev-chapters .rev-chapter{background:#342d39!important;border-color:#4b3e50!important}html.dark-mode .pk9-welcome-copy h1,html.dark-mode .pk9-section-heading h2,html.dark-mode .pk9-progress-paper h2,html.dark-mode .pk9-agenda-paper h2,html.dark-mode .pk9-subject-card>b,html.dark-mode #rev-chapters .rev-chapter b{color:#f4ebf2!important}html.dark-mode .pk9-welcome-copy h1 em{color:#c5abd6!important}html.dark-mode .pk9-welcome-lead,html.dark-mode .pk9-section-heading p,html.dark-mode .pk9-progress-paper-head p,html.dark-mode .pk9-subject-card>span:nth-of-type(3),html.dark-mode #rev-chapters .rev-chapter p{color:#b6a8bb!important}
+html.dark-mode .pk9-focus-card{background:#45364a!important;border-color:#5b4763!important}html.dark-mode .pk9-focus-caption h2,html.dark-mode .pk9-focus-meter>b{color:#f5e9f5!important}html.dark-mode .pk9-focus-caption p,html.dark-mode .pk9-focus-meter>span{color:#c0adc7!important}html.dark-mode .pk9-focus-caption{border-color:#64516c!important}html.dark-mode .pk9-notebook-art{background:#f8f0dc!important}html.dark-mode .pk9-meter-track{background:#5f4a65!important}
+html.dark-mode .pk9-lavender{background:#493952!important}html.dark-mode .pk9-peach{background:#4e3b38!important}html.dark-mode .pk9-mint{background:#35463c!important}html.dark-mode .pk9-butter{background:#494332!important}html.dark-mode .pk9-launch-title{color:#f5edf4!important}html.dark-mode .pk9-launch-copy,html.dark-mode .pk9-launch-link{color:#d0c0d1!important}
+html.dark-mode .pk9-agenda-paper{background:#39313b!important;border-color:#514553!important}html.dark-mode .pk9-agenda-paper h2,html.dark-mode .pk9-agenda-item b{color:#f5edf4!important}html.dark-mode .pk9-agenda-item small,html.dark-mode .pk9-agenda-foot{color:#c0b2c2!important}html.dark-mode .pk9-agenda-check{background:#493c4c;border-color:#66546b;color:#e3d5eb!important}html.dark-mode .pk9-kind-note{background:#3d3343;border-color:#5b4765!important}html.dark-mode .pk9-kind-note h3{color:#f4ebf2!important}html.dark-mode .pk9-kind-note p{color:#c0b1c7!important}html.dark-mode .pk9-progress-ring:before{background:#342d39;border-color:#4b3e50}html.dark-mode .pk9-progress-ring span,html.dark-mode .pk9-progress-summary>strong,html.dark-mode .pk9-progress-stats b{color:#f4ebf2!important}html.dark-mode .pk9-progress-summary>span,html.dark-mode .pk9-progress-stats small{color:#b5a8b9!important}html.dark-mode .pk9-progress-cta,html.dark-mode .pk9-text-link{background:#44364b!important;border-color:#5a4763!important;color:#eadcf1!important}html.dark-mode .pk9-mini-lavender{background:#493952;color:#ddc5ef}html.dark-mode .pk9-mini-peach{background:#4e3b38;color:#e7baa3}
+html.dark-mode .home-v2-panel,html.dark-mode .special-card,html.dark-mode .exam-card,html.dark-mode .exam-v4-card,html.dark-mode .flash-ref-wrap,html.dark-mode .phuc-grade-panel,html.dark-mode .student-lib-card,html.dark-mode .pdfpro-card,html.dark-mode .course-v3-visual-card,html.dark-mode #tab-exam-bank .exam-bank-hero,html.dark-mode #tab-exam-bank .exam-v4-filters,html.dark-mode #tab-exam-bank .exam-v4-filterbar,html.dark-mode #tab-exam-bank .exam-v4-kpis{background:#342d39!important;border-color:#4b3e50!important;color:#f4ebf2!important}
+html.dark-mode input,html.dark-mode select,html.dark-mode textarea{background:#342d39!important;border-color:#5b4a61!important;color:#f4ebf2!important}html.dark-mode #phuc-mobile-quickbar{background:rgba(49,41,55,.98)!important;border-color:#584760!important}html.dark-mode #phuc-mobile-quickbar button{color:#c1b3c8!important}html.dark-mode #phuc-mobile-quickbar button.is-active{background:#4e3c58!important;color:#f0e0fa!important}html.dark-mode #mobile-nav-panel{background:#302936!important;border-color:#4b3e50!important}html.dark-mode #mobile-nav-panel .mobile-nav-item{background:#3a3140!important;border-color:#57465f!important;color:#e2d5e6!important}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.pk9-studio-home [data-reveal],.pk9-launch-card,.pk9-btn,.pk9-subject-card,#rev-chapters .rev-chapter{transition:none!important;animation:none!important;transform:none!important}.pk9-motion-ready .pk9-studio-home [data-reveal]:not(.pk9-is-visible){opacity:1!important}}
+</style>
+<script id="phuck9-studio-v3-motion">
+(function(){
+  'use strict';
+  function init(){
+    document.documentElement.classList.add('pk9-motion-ready');
+    const nodes=[...document.querySelectorAll('.pk9-studio-home [data-reveal]')];
+    if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){nodes.forEach(n=>n.classList.add('pk9-is-visible'));return;}
+    const io=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('pk9-is-visible');io.unobserve(entry.target);}}),{threshold:.08,rootMargin:'0px 0px -24px 0px'});
+    nodes.forEach(n=>io.observe(n));
+    const updateMeter=()=>{const p=parseFloat(document.getElementById('rev-stat-progress')?.textContent)||0;const a=document.getElementById('pk9-focus-meter-fill');const b=document.getElementById('pk9-progress-fill');if(a)a.style.width=Math.min(100,p)+'%';if(b)b.style.width=Math.min(100,p)+'%';const ring=document.querySelector('.pk9-progress-ring');if(ring)ring.style.setProperty('--progress',Math.min(100,p)+'%');};
+    updateMeter();window.addEventListener('phuck9:auth-sync',updateMeter);setTimeout(updateMeter,500);setTimeout(updateMeter,1400);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-tab]'))setTimeout(()=>{document.querySelectorAll('.pk9-studio-home [data-reveal]').forEach(n=>n.classList.add('pk9-is-visible'));},160);});
+})();
+</script>
+
+</body>
+</html>

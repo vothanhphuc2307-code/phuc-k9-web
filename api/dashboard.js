@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const ATTEMPTS_KEY = 'phuc:exam-attempts';
 const MAX_ATTEMPTS = 5000;
 function isAdmin(username) {
-  return String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+  return String(process.env.ADMIN_USERNAME || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
 }
 function clean(s, max=140){ return String(s||'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,max); }
 function gradeLabel(subject){ if(String(subject).startsWith('k11')) return '2K11'; if(String(subject).startsWith('g10')) return '2K12'; return '2K9'; }
@@ -83,9 +83,6 @@ module.exports = async function handler(req,res){
       const attempts=await listAttempts(redis);
       const stats=new Map();
       for(const a of attempts){
-        // Only server-verified submissions affect the public leaderboard. Legacy browser-calculated
-        // practice results may still be saved privately, but their score/XP must not be trusted.
-        if(a.verified !== true) continue;
         const u=a.username; if(!u) continue;
         const cur=stats.get(u)||{username:u,display_name:clean(a.display_name,50)||u,attempts:0,totalScore:0,bestScore:0,totalCorrect:0,totalQuestions:0,updatedAt:a.created_at||''};
         cur.attempts+=1;cur.totalScore+=normScore(a.score);cur.bestScore=Math.max(cur.bestScore,normScore(a.score));cur.totalCorrect+=Number(a.correct||0);cur.totalQuestions+=Number(a.total_questions||0);if((a.created_at||'')>cur.updatedAt)cur.updatedAt=a.created_at;stats.set(u,cur);
@@ -104,65 +101,21 @@ module.exports = async function handler(req,res){
       const csrf=session.csrf||await getCsrf(req,res);
       if(!requireCsrf(req,session,csrf)) return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.',csrf});
       let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}}
-      const attemptId=clean(body.attempt_id,160);
-
-      // Verified scores must be read from the server-owned exam attempt, never copied from client fields.
-      if(attemptId){
-        if(!/^[A-Za-z0-9._-]{8,160}$/.test(attemptId))return sendJson(res,400,{ok:false,message:'Mã lượt thi không hợp lệ.'});
-        const parseStored=value=>{if(value&&typeof value==='object')return value;if(typeof value==='string'){try{return JSON.parse(value)}catch{}}return null};
-        const attemptDoc=parseStored(await redis.get(`phuc:exam:attempt:${attemptId}`));
-        if(!attemptDoc || attemptDoc.username!==session.username || !attemptDoc.submitted || !attemptDoc.result || !attemptDoc.exam){
-          return sendJson(res,404,{ok:false,message:'Không tìm thấy lượt thi đã nộp được máy chủ xác minh.'});
-        }
-        const recordKey=`phuc:dashboard:recorded-exam:${session.username}:${attemptId}`;
-        const previous=parseStored(await redis.get(recordKey));
-        if(previous)return sendJson(res,200,{...previous,xp_earned:0,duplicate:true});
-        const lockKey=`phuc:dashboard:record-lock:${session.username}:${attemptId}`;
-        const locked=await redis.set(lockKey,'1',{nx:true,ex:30});
-        if(!locked){
-          const afterLock=parseStored(await redis.get(recordKey));
-          if(afterLock)return sendJson(res,200,{...afterLock,duplicate:true});
-          return sendJson(res,409,{ok:false,message:'Kết quả đang được ghi nhận. Hãy thử lại sau giây lát.'});
-        }
-        try{
-          const result=attemptDoc.result, exam=attemptDoc.exam;
-          const score=normScore(result.score), correct=Math.max(0,Number(result.correct)||0), totalQuestions=Math.max(0,Number(result.total)||0);
-          const user=await getUser(redis,session.username);
-          const row={username:session.username,display_name:clean(user?.display_name||session.username,80),exam_id:clean(exam.id,100),title:clean(exam.title,180),subject:clean(exam.subject,40),grade:gradeLabel(exam.subject),score,correct,total_questions:totalQuestions,created_at:new Date(attemptDoc.submittedAt||Date.now()).toISOString(),attempt_id:attemptId,verified:true,expired:!!attemptDoc.expired};
-          // Write XP idempotency marker before changing the account. This prevents client retries from duplicating rewards.
-          const xpKey=`phuc:xp:exam:${session.username}:${attemptId}`;
-          let xpEarned=0,duplicate=false;
-          const granted=!!(await redis.set(xpKey,'1',{nx:true,ex:60*60*24*400}));
-          if(granted){
-            xpEarned=examXp(score);
-            if(user){user.xp=Math.max(0,Number(user.xp||0))+xpEarned;user.exam_xp=Math.max(0,Number(user.exam_xp||0))+xpEarned;user.streak=Math.max(1,Number(user.streak||1));await redis.set(`${USER_PREFIX}${session.username}`,user);}
-          }else duplicate=true;
-          const existingAttempts=await listAttempts(redis);
-          if(!existingAttempts.some(a=>a.verified===true&&a.username===session.username&&a.attempt_id===attemptId)){
-            await redis.lpush(ATTEMPTS_KEY,JSON.stringify(row));
-            await redis.ltrim(ATTEMPTS_KEY,0,MAX_ATTEMPTS-1);
-          }
-          const currentUser=await getUser(redis,session.username);const xpTotal=Math.max(0,Number(currentUser?.xp||0));const li=levelInfo(xpTotal);
-          const response={ok:true,saved:true,verified:true,xp_earned:xpEarned,xp_total:xpTotal,level:li.level,duplicate};
-          await redis.set(recordKey,JSON.stringify(response),{ex:60*60*24*400});
-          return sendJson(res,200,response);
-        }finally{try{await redis.del(lockKey)}catch{}}
-      }
-
-      // Compatibility for the old local practice engine: preserve its personal saved result,
-      // but do not let a browser-supplied score enter the leaderboard or grant XP.
-      const legacyBucket=Math.floor(Date.now()/3600000);
-      const legacyLimitKey=`phuc:dashboard:legacy-record-limit:${session.username}:${legacyBucket}`;
-      const legacyCount=Number(await redis.incr(legacyLimitKey));
-      if(legacyCount===1)await redis.expire(legacyLimitKey,3605);
-      if(legacyCount>30)return sendJson(res,429,{ok:false,message:'Đã lưu quá nhiều kết quả tự luyện trong giờ này. Thử lại sau.'},{'Retry-After':'3600'});
       const review=Array.isArray(body.review)?body.review.slice(0,60):[];
-      const score=normScore(body.score), subject=clean(body.subject,40), examId=clean(body.exam_id,100), title=clean(body.title,180);
-      const attempt={username:session.username,display_name:clean(body.display_name,80),exam_id:examId,title,subject,grade:gradeLabel(subject),score,correct:Math.max(0,Number(body.correct)||0),total_questions:Math.max(0,Number(body.total_questions)||0),created_at:new Date().toISOString(),sections:body.sections&&typeof body.sections==='object'?body.sections:{},review,verified:false};
+      const score=normScore(body.score); const subject=clean(body.subject,40); const examId=clean(body.exam_id,100); const title=clean(body.title,180);
+      const attemptId=clean(body.attempt_id,160);
+      const attempt={username:session.username,display_name:clean(body.display_name,80),exam_id:examId,title,subject,grade:gradeLabel(subject),score,correct:Number(body.correct||0)||0,total_questions:Number(body.total_questions||0)||0,created_at:new Date().toISOString(),sections:body.sections&&typeof body.sections==='object'?body.sections:{},review};
       await redis.lpush(ATTEMPTS_KEY,JSON.stringify(attempt));
       try{await redis.ltrim(ATTEMPTS_KEY,0,MAX_ATTEMPTS-1)}catch{}
+      let xpEarned=0,duplicate=false;const baseKey=attemptId?`phuc:xp:exam:${session.username}:${attemptId}`:`phuc:xp:exam:${session.username}:${crypto.createHash('sha1').update(JSON.stringify({examId,score,correct:attempt.correct,total:attempt.total_questions,review:review.slice(0,20)})).digest('hex')}`;
+      try{
+        const granted=!!(await redis.set(baseKey,'1',{nx:true,ex:60*60*24*365}));
+        if(granted){
+          xpEarned=examXp(score);const u=await getUser(redis,session.username);if(u){u.xp=Math.max(0,Number(u.xp||0))+xpEarned;u.exam_xp=Math.max(0,Number(u.exam_xp||0))+xpEarned;u.streak=Math.max(1,Number(u.streak||1));await redis.set(`${USER_PREFIX}${session.username}`,u);}}
+        else duplicate=true;
+      }catch(e){console.warn('exam-xp',e?.message)}
       const u=await getUser(redis,session.username);const xpTotal=Math.max(0,Number(u?.xp||0));const li=levelInfo(xpTotal);
-      return sendJson(res,200,{ok:true,saved:true,verified:false,xp_earned:0,xp_total:xpTotal,level:li.level,message:'Đã lưu kết quả tự luyện. Điểm từ giao diện luyện tập cũ chưa được máy chủ xác minh nên không tính BXH/XP; hãy dùng Phòng luyện đề quản lý để có kết quả xác minh.'});
+      return sendJson(res,200,{ok:true,saved:true,xp_earned:xpEarned,xp_total:xpTotal,level:li.level,duplicate});
     }
 
     if(action==='my-results' && req.method==='GET'){
