@@ -1,40 +1,44 @@
-# Học Cùng Phúc K9 — Study Atelier
+# Học Cùng Phúc K9 — Study Atelier Source Hub V3
 
-This source package introduces a new Study Atelier interface concept for the existing Vercel app.
+This is a source-backed cleanup of the Study Atelier project. It keeps the existing Vercel/API/authentication/data architecture, but removes unsupported online-exam UI and only exposes local PDFs that can be matched to a reference source.
 
-## What changed
+## Current user-facing areas
 
-- Replaced the visible app shell with a static Study Atelier top bar, desktop sidebar and mobile bottom navigation.
-- Replaced the home tab markup with a new study-oriented layout: warm paper canvas, editorial hero, subject cards, progress, continue-learning area, daily review prompt and study desk.
-- Added `assets/phuck9-study-atelier.css` for the design system and responsive layouts.
-- Added `assets/phuck9-study-atelier.js` for route wiring, navigation state, route search, daily review prompt and progress/chapter rendering.
-- Updated the Service Worker cache version to `phuc-k9-study-atelier-v1-20261027`.
-- Removed obsolete Studio V6 UI assets and temporary preview files from this package.
+- Study Atelier home shell, desktop sidebar and mobile bottom navigation.
+- Course/video pages retained from the source.
+- **Khóa học 2K8** page with a direct link to the Google Sheet the user supplied and an optional iframe that loads only after the user clicks the preview button.
+- **Đề PDF có nguồn** with two actual PDFs already present in `exam-sources/`:
+  - `lam-dong-toan-2026-lan-1.pdf`: the 2026 Lâm Đồng Grade-12 Math quality-assessment paper (not a midterm exam).
+  - `dien-bien-sinh-2026-ma-0401.pdf`: the 2026 Điện Biên Grade-12 Biology graduation-practice paper, code 0401 (not a midterm exam).
+- Unsupported “midterm/semester” and auto-scored exam sections remain hidden. These PDFs have open/download/source buttons only; the site does not pretend they are connected to an online test player.
+- The generic Drive section links to the existing folder without claiming its contents are an exact exam set until those files have been checked.
 
-## Compatibility approach
+## Google Sheet limitation
 
-The API functions, authentication workflows, Redis/Blob integration, course/exam data and specialized tab business logic were retained. The new shell/homepage and shared design system are rebuilt; specialized course, exam, admin, library and account views keep their existing functional markup and are styled through the new global system to reduce migration risk. They have not all been rewritten independently from scratch.
+The supplied Google Sheet is linked exactly as provided, but its rows could not be fetched from this environment. The URL has different `gid` values in its query and fragment; this source does not guess which one is the 2K8 tab. To render native course cards, export **only the correct 2K8 tab** to CSV or XLSX and add that file to the project. No course names, teachers, prices or URLs have been invented.
+
+## Important files
+
+- `index.html`: shell, course tabs and source-backed PDF list.
+- `style.css`: loading, motion and responsive styles for the course and PDF pages.
+- `assets/phuck9-study-atelier.css` / `assets/phuck9-study-atelier.js`: Study Atelier shared UI.
+- `assets/pk9-source-hub.js`: only source-backed PDF cards, filters, sheet button/embed, and guards against old generated exam routes.
+- `api/` and `lib/`: existing Vercel functions, auth, Redis/Blob code. They were not intentionally migrated or removed.
+- `sw.js`: cache version bumped to avoid reusing the previous app shell.
+
+## Local static validation
+
+- 54 inline JavaScript blocks passed `node --check` (JSON-LD skipped).
+- `assets/pk9-source-hub.js`, `assets/site-effects.js`, `assets/phuck9-study-atelier.js` and `sw.js` passed syntax checks.
+- `style.css` and `assets/phuck9-study-atelier.css` passed `tinycss2` parsing.
+- `package.json`, `vercel.json` and `exam-template.json` are valid JSON.
+- Verified that the two PDFs exist in the package, the three unsupported exam tabs are absent, and no visible HTML click handlers call the old start/submit exam functions.
 
 ## Before deploy
 
-1. Keep a backup/branch of the current repository.
-2. Do not delete or rename existing Vercel environment variables or Redis/Blob data.
-3. Replace files from this project at the repository root (the root must contain `index.html`, `api/`, `lib/`, `assets/`, and `vercel.json`; do not upload the ZIP itself).
-4. Commit to a separate branch and let Vercel create a Preview deployment.
-5. Verify login, Admin permissions, document uploads, course tabs, exam listing, timed attempts, grading, results, history, student library and AI tutor before promoting to Production.
-6. Hard-refresh the Preview (`Ctrl+Shift+R`) after deployment. If the old screen remains, check the deployment commit and root directory in Vercel before editing more CSS.
-
-## Local checks performed
-
-- Rendered the UI using a browser automation preview at desktop 1440×1100 and mobile 390×844.
-- Checked the desktop/mobile shell, no horizontal overflow in these viewports, navigation to the course tab via search, timer start/pause and adding a checklist item in the preview.
-- Ran JavaScript syntax checks on inline and external scripts, JSON parsing and CSS parsing.
-
-These checks are not a production deployment. Redis, Vercel Blob, live authentication, actual uploaded files and full production routes still need a Preview deployment test.
-
-
-## V2 repair note (2026-10-27)
-- Restored the original markup for the Toán 12, Tiếng Anh 12, Ôn tập, Thi trực tuyến and Tài liệu pages that was missing from the Study Atelier V1 HTML while keeping its new home page and navigation shell.
-- Added `/style.css` for lightweight transitions, responsive video controls, a short non-blocking loader, and reduced-motion support. `/assets/site-effects.js` manages loader fallback and route transitions.
-- Physics/Chemistry lessons that only have a YouTube search URL now show a correct per-topic search action instead of the misleading “video being supplemented” dead end. Direct video embeds have visible YouTube fallback links.
-- Two additional direct video matches were added for the Chemistry electrochemical-potential lesson and polymer review. All other unverified gaps remain explicit search actions, not falsely labeled direct embeds.
+1. Back up the repository and create a separate branch.
+2. Extract the ZIP; upload the **contents** of `phuc-k9-web-main/` into the repository root (not the ZIP itself, not a nested second project folder).
+3. Do not delete or rename Vercel environment variables, Redis data or Blob data.
+4. Deploy the branch as a Vercel Preview first.
+5. Test login, course/video pages, the 2K8 source button, the two PDFs, documents, profile/dashboard, Admin upload and browser console before promoting to Production.
+6. The source was not deployed from this environment. Live Redis/Blob/API and production rendering still require Preview testing.
