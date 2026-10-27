@@ -1,0 +1,210 @@
+/* PHÚC K9 STUDIO UI v2 — structural visual redesign, desktop + mobile */
+:root{
+ --pk9-bg:#f7f6f0;--pk9-paper:#fffdf8;--pk9-card:#fffefa;--pk9-ink:#29283d;--pk9-muted:#77768e;--pk9-line:#e7e4dc;
+ --pk9-lilac:#7567ce;--pk9-lilac-dark:#594ba9;--pk9-lilac-soft:#f0edff;--pk9-mint:#4b9487;--pk9-mint-soft:#eaf6f1;--pk9-peach:#d98e68;--pk9-peach-soft:#fff0e5;--pk9-yellow:#d4b556;
+ --pk9-shadow:0 7px 22px rgba(49,43,78,.055);--pk9-shadow-up:0 13px 30px rgba(49,43,78,.105);--pk9-ease:cubic-bezier(.2,.75,.25,1);
+}
+html.pk9-studio{color-scheme:light;scroll-behavior:smooth}
+html.pk9-studio.dark-mode{color-scheme:dark;--pk9-bg:#171a2b;--pk9-paper:#1d2134;--pk9-card:#20253a;--pk9-ink:#f5f2ff;--pk9-muted:#b2b2c8;--pk9-line:#363a52;--pk9-lilac:#b0a5ff;--pk9-lilac-dark:#d0c9ff;--pk9-lilac-soft:#302d4c;--pk9-mint:#8acbbd;--pk9-mint-soft:#243b3a;--pk9-peach:#f0b08b;--pk9-peach-soft:#3a2b2d;--pk9-shadow:0 8px 26px rgba(0,0,0,.18);--pk9-shadow-up:0 14px 32px rgba(0,0,0,.27)}
+html.pk9-studio body{background:var(--pk9-bg)!important;background-image:radial-gradient(rgba(117,103,206,.055) .7px,transparent .7px)!important;background-size:17px 17px!important;color:var(--pk9-ink)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important;-webkit-font-smoothing:antialiased}
+html.pk9-studio.dark-mode body{background:var(--pk9-bg)!important;background-image:radial-gradient(rgba(176,165,255,.05) .7px,transparent .7px)!important}
+
+/* Desktop: a clear app frame, calmer nav, more breathing room */
+@media(min-width:1024px){
+ html.pk9-studio body{padding-left:270px!important}
+ html.pk9-studio header{left:270px!important;width:calc(100% - 270px)!important;position:sticky!important;top:0!important;z-index:1000!important}
+ html.pk9-studio header .max-w-7xl{height:74px!important;max-width:none!important;margin:0!important;padding:0 28px!important;gap:18px}
+ html.pk9-studio #phuck9-sidebar{width:270px!important;background:linear-gradient(180deg,#fffdf9 0%,#f5f2ff 100%)!important;border-right:1px solid #e4e0f2!important;box-shadow:8px 0 24px rgba(53,46,89,.035)!important}
+ html.pk9-studio.dark-mode #phuck9-sidebar{background:linear-gradient(180deg,#1d2134 0%,#1b1b31 100%)!important;border-color:#363a52!important}
+ html.pk9-studio #phuck9-sidebar .side-head{height:88px!important;padding:17px 18px!important;gap:12px!important;border-color:var(--pk9-line)!important;background:transparent!important}
+ html.pk9-studio #phuck9-sidebar .side-head>div:first-child{width:42px!important;height:42px!important;border-radius:15px!important;background:var(--pk9-lilac)!important;color:#fff!important;box-shadow:0 6px 14px rgba(117,103,206,.18)!important}
+ html.pk9-studio #phuck9-sidebar .side-brand b{font-size:13px!important;font-weight:900!important;letter-spacing:-.025em;color:var(--pk9-ink)!important}
+ html.pk9-studio #phuck9-sidebar .side-brand span{font-size:10px!important;color:var(--pk9-muted)!important;line-height:1.4}
+ html.pk9-studio #phuck9-sidebar .side-scroll{padding:17px 13px 22px!important;scrollbar-color:#d4cfee transparent}
+ html.pk9-studio #phuck9-sidebar .side-section{font-size:9px!important;letter-spacing:.14em!important;color:#9a96b4!important;margin:17px 5px 8px!important;padding:0 8px!important}
+ html.pk9-studio #phuck9-sidebar .side-btn{min-height:44px!important;margin:3px 0!important;padding:10px 12px!important;gap:12px!important;border:1px solid transparent!important;border-radius:14px!important;font-size:12px!important;font-weight:750!important;color:#6e6b82!important;background:transparent!important;transition:background .18s var(--pk9-ease),color .18s var(--pk9-ease),transform .18s var(--pk9-ease),border-color .18s var(--pk9-ease)!important}
+ html.pk9-studio #phuck9-sidebar .side-btn i{width:18px!important;font-size:14px!important;color:var(--pk9-lilac)!important}
+ html.pk9-studio #phuck9-sidebar .side-btn:hover{background:#f0edff!important;border-color:#e6e0ff!important;color:#51479d!important;transform:translateX(3px)!important;box-shadow:none!important}
+ html.pk9-studio #phuck9-sidebar .side-btn.active{background:#ece8ff!important;border-color:#dfd8ff!important;color:#50449e!important;box-shadow:inset 3px 0 #887bdf!important}
+ html.pk9-studio.dark-mode #phuck9-sidebar .side-btn{color:#c2c1d8!important}
+ html.pk9-studio.dark-mode #phuck9-sidebar .side-btn:hover,html.pk9-studio.dark-mode #phuck9-sidebar .side-btn.active{background:#302d4d!important;color:#ded8ff!important;border-color:#454065!important}
+ html.pk9-studio #phuck9-sidebar .side-divider{background:var(--pk9-line)!important;margin:14px 8px!important}
+ html.pk9-studio #phuck9-sidebar .side-foot{padding:14px 15px!important;border-color:var(--pk9-line)!important}
+ html.pk9-studio #phuck9-sidebar .side-foot .mini{font-size:10px!important;color:var(--pk9-muted)!important}
+ html.pk9-studio body.phuck9-sidebar-mini{padding-left:76px!important}
+ html.pk9-studio body.phuck9-sidebar-mini header{left:76px!important;width:calc(100% - 76px)!important}
+ html.pk9-studio body.phuck9-sidebar-mini #phuck9-sidebar{width:76px!important}
+ html.pk9-studio #main-content{width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:30px clamp(24px,3vw,48px) 56px!important}
+}
+
+/* Header: quiet, clear, not a dark heavy toolbar */
+html.pk9-studio header{background:rgba(255,253,248,.95)!important;border-bottom:1px solid var(--pk9-line)!important;box-shadow:0 4px 15px rgba(49,43,78,.035)!important;backdrop-filter:blur(10px) saturate(110%)!important;-webkit-backdrop-filter:blur(10px) saturate(110%)!important}
+html.pk9-studio.dark-mode header{background:rgba(29,33,52,.96)!important;border-color:var(--pk9-line)!important}
+html.pk9-studio header .text-slate-900,html.pk9-studio header .text-slate-800,html.pk9-studio header .text-slate-700{color:var(--pk9-ink)!important}
+html.pk9-studio header button{border-radius:13px!important;transition:transform .16s var(--pk9-ease),background .16s ease!important}
+html.pk9-studio header button:hover{transform:translateY(-1px)}
+html.pk9-studio .phuck9-top-avatar{border-radius:14px!important;border-color:#ddd7fa!important}
+
+/* Actual homepage hero: warm academic cover rather than neon/cinematic banner */
+html.pk9-studio .rev-hero{background:linear-gradient(125deg,#fffdf7 0%,#f0edff 61%,#e8f6ef 100%)!important;border:1px solid #e2def0!important;border-radius:30px!important;padding:clamp(22px,3vw,36px)!important;gap:clamp(18px,2.3vw,30px)!important;box-shadow:0 12px 32px rgba(67,57,105,.08)!important}
+html.pk9-studio .rev-hero:before{width:400px!important;height:400px!important;right:-185px!important;top:-270px!important;background:radial-gradient(circle,rgba(163,148,239,.2),transparent 70%)!important}
+html.pk9-studio .rev-hero:after{width:300px!important;height:300px!important;left:15%!important;bottom:-235px!important;background:radial-gradient(circle,rgba(97,174,151,.15),transparent 70%)!important}
+html.pk9-studio .rev-kicker{background:#fffefa!important;border:1px solid #e2dcf8!important;color:#6557b4!important;letter-spacing:.095em!important}
+html.pk9-studio .rev-title{color:#292641!important;font-size:clamp(2.25rem,3.5vw,3.5rem)!important;line-height:1.02!important;letter-spacing:-.055em!important}
+html.pk9-studio .rev-title span{color:#7668cb!important}
+html.pk9-studio .rev-sub{color:#66657e!important;font-size:13px!important;line-height:1.8!important;max-width:680px!important}
+html.pk9-studio .rev-btn{min-height:46px!important;border-radius:14px!important;font-size:12px!important;font-weight:800!important}
+html.pk9-studio .rev-btn.primary{background:#7567ce!important;border-color:#7567ce!important;color:white!important;box-shadow:0 7px 16px rgba(117,103,206,.19)!important}
+html.pk9-studio .rev-btn.accent{background:#f7e6ad!important;border-color:#ead58d!important;color:#534625!important}
+html.pk9-studio .rev-btn.ghost{background:#fffefa!important;color:#5a5680!important;border-color:#ddd8ef!important}
+html.pk9-studio .rev-meta-chip{background:rgba(255,254,250,.75)!important;border-color:#e2def0!important;color:#76708e!important;font-size:10px!important}
+html.pk9-studio .rev-teacher-card{background:rgba(255,254,250,.68)!important;border:1px solid #e0dced!important;border-radius:25px!important;backdrop-filter:none!important;box-shadow:inset 0 1px #fff!important;padding:13px!important}
+html.pk9-studio .rev-teacher-photo{border-radius:19px!important;background:#ebe7fb!important}
+html.pk9-studio .rev-teacher-overlay{background:linear-gradient(180deg,transparent,rgba(44,39,73,.72))!important}
+html.pk9-studio .rev-stat{background:#fffefa!important;border-color:#e8e4f1!important}
+html.pk9-studio .rev-stat strong{color:#6658b4!important}
+html.pk9-studio .rev-stat span{color:#79758e!important}
+html.pk9-studio.dark-mode .rev-hero{background:linear-gradient(125deg,#27263f 0%,#302c4d 60%,#203c39 100%)!important;border-color:#45415f!important}
+html.pk9-studio.dark-mode .rev-title{color:#fbf8ff!important}
+html.pk9-studio.dark-mode .rev-title span{color:#c8bdff!important}
+html.pk9-studio.dark-mode .rev-sub{color:#cecade!important}
+html.pk9-studio.dark-mode .rev-kicker{background:#373151!important;color:#d9d1ff!important;border-color:#51496e!important}
+html.pk9-studio.dark-mode .rev-meta-chip{background:#302d49!important;border-color:#49435f!important;color:#d0cbe4!important}
+html.pk9-studio.dark-mode .rev-teacher-card{background:rgba(28,30,49,.58)!important;border-color:#4b4763!important}
+html.pk9-studio.dark-mode .rev-stat{background:#282b43!important;border-color:#41435c!important}
+html.pk9-studio.dark-mode .rev-stat strong{color:#c9c0ff!important}
+html.pk9-studio.dark-mode .rev-stat span{color:#b5b4cb!important}
+
+/* Home content grid, subject tiles and progress cards */
+html.pk9-studio .rev-section{margin-top:30px!important}
+html.pk9-studio .rev-section-head{margin-bottom:15px!important;align-items:end!important}
+html.pk9-studio .rev-eyebrow{font-size:10px!important;letter-spacing:.14em!important;color:var(--pk9-lilac-dark)!important}
+html.pk9-studio .rev-section-head h2{font-size:clamp(20px,2vw,25px)!important;letter-spacing:-.045em!important;color:var(--pk9-ink)!important}
+html.pk9-studio .rev-section-head p{font-size:12px!important;color:var(--pk9-muted)!important}
+html.pk9-studio .rev-action-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important}
+html.pk9-studio .rev-action{min-height:175px!important;padding:18px!important;border-radius:22px!important;background:var(--pk9-card)!important;border-color:var(--pk9-line)!important;box-shadow:var(--pk9-shadow)!important}
+html.pk9-studio .rev-action:hover{transform:translateY(-4px)!important;box-shadow:var(--pk9-shadow-up)!important;border-color:#d0c8f3!important}
+html.pk9-studio .rev-action-icon{width:46px!important;height:46px!important;border-radius:16px!important;font-size:18px!important}
+html.pk9-studio .rev-action b{margin-top:17px!important;font-size:13px!important;color:var(--pk9-ink)!important}
+html.pk9-studio .rev-action > span:not(.rev-action-icon){font-size:11px!important;line-height:1.6!important;color:var(--pk9-muted)!important}
+html.pk9-studio .rev-action small{background:var(--pk9-lilac-soft)!important;color:var(--pk9-lilac-dark)!important;font-size:8px!important}
+html.pk9-studio .rev-course-showcase,html.pk9-studio .rev-progress-card{background:var(--pk9-card)!important;border-color:var(--pk9-line)!important;border-radius:24px!important;box-shadow:var(--pk9-shadow)!important}
+html.pk9-studio .rev-course-strip{gap:12px!important;padding:15px!important}
+html.pk9-studio .rev-course-card{border-radius:18px!important;min-height:230px!important}
+html.pk9-studio .rev-course-info b{font-size:16px!important}
+html.pk9-studio .rev-course-info span{font-size:10px!important}
+html.pk9-studio .rev-progress-card{padding:21px!important}
+html.pk9-studio .rev-big-progress{color:var(--pk9-ink)!important;font-size:38px!important}
+html.pk9-studio .rev-progress-desc{color:var(--pk9-muted)!important;font-size:11px!important}
+html.pk9-studio .rev-mini-row{background:var(--pk9-bg)!important;border-color:var(--pk9-line)!important;padding:11px!important;border-radius:14px!important}
+html.pk9-studio .rev-mini-row b{font-size:11px!important;color:var(--pk9-ink)!important}
+html.pk9-studio .rev-mini-row span{font-size:10px!important;color:var(--pk9-muted)!important}
+html.pk9-studio .rev-mini-row em{font-size:10px!important;color:var(--pk9-lilac-dark)!important}
+html.pk9-studio .rev-chapters{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important}
+html.pk9-studio .rev-chapter{min-height:225px!important;border-radius:21px!important;overflow:hidden!important;box-shadow:var(--pk9-shadow)!important;transition:transform .2s var(--pk9-ease),box-shadow .2s var(--pk9-ease)!important}
+html.pk9-studio .rev-chapter:hover{transform:translateY(-4px)!important;box-shadow:var(--pk9-shadow-up)!important}
+html.pk9-studio .rev-bottom-banner{border-radius:24px!important;padding:22px 24px!important;box-shadow:var(--pk9-shadow)!important}
+
+/* Standardize content cards across courses, resources, admin and exam center */
+html.pk9-studio #main-content .tab-content:not(#tab-home)>div:not(.hidden),html.pk9-studio #main-content .tab-content:not(#tab-home) .phuc-exam-curated,html.pk9-studio #main-content .tab-content:not(#tab-home) .pec-card,html.pk9-studio #main-content .tab-content:not(#tab-home) .special-card,html.pk9-studio #main-content .tab-content:not(#tab-home) .phuc-tailieu-embed{border-radius:19px!important}
+html.pk9-studio #main-content .tab-content h2,html.pk9-studio #main-content .tab-content h3{letter-spacing:-.025em}
+html.pk9-studio #main-content .tab-content input:not([type=checkbox]):not([type=radio]),html.pk9-studio #main-content .tab-content select,html.pk9-studio #main-content .tab-content textarea{min-height:42px;border-radius:12px!important;border-color:var(--pk9-line)!important;background:var(--pk9-card)!important;color:var(--pk9-ink)!important}
+html.pk9-studio #main-content .tab-content button{transition:transform .16s var(--pk9-ease),box-shadow .16s var(--pk9-ease),background-color .16s ease,border-color .16s ease}
+html.pk9-studio #main-content .tab-content button:active:not(:disabled){transform:scale(.985)}
+html.pk9-studio input:focus-visible,html.pk9-studio select:focus-visible,html.pk9-studio textarea:focus-visible,html.pk9-studio button:focus-visible,html.pk9-studio a:focus-visible{outline:3px solid rgba(117,103,206,.28)!important;outline-offset:2px!important}
+html.pk9-studio .pec-player-head{border-radius:18px 18px 0 0!important}
+
+/* Motion: single, short transitions; no infinite float/pulse loops */
+@keyframes pk9StudioEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes pk9StudioCardIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
+html.pk9-studio .tab-content.pk9-studio-enter:not(.hidden){animation:pk9StudioEnter .24s var(--pk9-ease) both}
+html.pk9-studio .pk9-studio-reveal{opacity:0;transform:translateY(9px);transition:opacity .33s var(--pk9-ease),transform .33s var(--pk9-ease)}
+html.pk9-studio .pk9-studio-reveal.pk9-studio-visible{opacity:1;transform:none}
+html.pk9-studio .rev-action.pk9-studio-reveal,html.pk9-studio .rev-chapter.pk9-studio-reveal{transition-delay:var(--pk9-delay,0ms)}
+html.pk9-studio #auth-modal>div,html.pk9-studio #phuck9-dashboard-overlay .phuck9-overlay-card,html.pk9-studio #phuc-exam-admin-modal .pec-admin-card,html.pk9-studio .piv9-modal-box{animation:pk9StudioCardIn .2s var(--pk9-ease) both}
+html.pk9-studio a,html.pk9-studio button{-webkit-tap-highlight-color:transparent}
+
+/* Dedicated tablet + phone layout: vertical reading, thumb navigation, touch spacing */
+@media(max-width:1023px){
+ html.pk9-studio body{padding-left:0!important;background-size:21px 21px!important}
+ html.pk9-studio header{left:0!important;width:100%!important;position:sticky!important;top:0!important;z-index:1200!important}
+ html.pk9-studio header .max-w-7xl{height:64px!important;padding:0 14px!important;gap:8px!important}
+ html.pk9-studio #phuck9-sidebar{display:none!important}
+ html.pk9-studio #main-content{width:100%!important;max-width:100%!important;margin:0!important;padding:18px 17px 100px!important}
+ html.pk9-studio .rev-hero{grid-template-columns:minmax(0,1fr)!important;padding:24px!important;border-radius:25px!important;gap:18px!important}
+ html.pk9-studio .rev-hero-main{order:1!important}
+ html.pk9-studio .rev-hero-side{order:2!important}
+ html.pk9-studio .rev-teacher-card{max-width:none!important;min-height:0!important;display:grid!important;grid-template-columns:minmax(0,1fr) 150px!important;align-items:center!important;gap:12px!important;padding:11px!important}
+ html.pk9-studio .rev-teacher-photo{height:145px!important;border-radius:15px!important;grid-column:2;grid-row:1/3}
+ html.pk9-studio .rev-teacher-overlay{padding:27px 10px 9px!important}
+ html.pk9-studio .rev-teacher-overlay b{font-size:13px!important}
+ html.pk9-studio .rev-teacher-overlay span{font-size:9px!important}
+ html.pk9-studio .rev-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-column:1;grid-row:1/3;margin:0!important}
+ html.pk9-studio .rev-stat{padding:10px 5px!important}
+ html.pk9-studio .rev-stat strong{font-size:15px!important}
+ html.pk9-studio .rev-stat span{font-size:8px!important}
+ html.pk9-studio .rev-title{font-size:clamp(2rem,7vw,3rem)!important;line-height:1.02!important}
+ html.pk9-studio .rev-sub{font-size:13px!important;line-height:1.7!important}
+ html.pk9-studio .rev-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ html.pk9-studio .rev-action{min-height:158px!important;padding:14px!important;border-radius:18px!important}
+ html.pk9-studio .rev-action b{font-size:12px!important;margin-top:13px!important}
+ html.pk9-studio .rev-action > span:not(.rev-action-icon){font-size:10px!important}
+ html.pk9-studio .rev-visual-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+ html.pk9-studio .rev-course-strip{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;padding:11px!important}
+ html.pk9-studio .rev-course-card{min-height:190px!important;border-radius:15px!important}
+ html.pk9-studio .rev-course-info{left:9px!important;right:9px!important;bottom:9px!important}
+ html.pk9-studio .rev-course-info b{font-size:13px!important}
+ html.pk9-studio .rev-course-info span{font-size:9px!important}
+ html.pk9-studio .rev-chapters{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ html.pk9-studio .rev-chapter{min-height:205px!important;border-radius:18px!important}
+ html.pk9-studio .rev-section{margin-top:24px!important}
+ html.pk9-studio .rev-section-head{align-items:flex-start!important;gap:8px!important}
+ html.pk9-studio .rev-section-head h2{font-size:20px!important}
+ html.pk9-studio .rev-section-head p{font-size:11px!important}
+ html.pk9-studio #phuc-mobile-quickbar{left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(520px,calc(100vw - 16px))!important;bottom:max(8px,env(safe-area-inset-bottom))!important;min-height:62px!important;height:62px!important;padding:6px!important;gap:5px!important;border-radius:20px!important;background:rgba(255,253,248,.97)!important;border:1px solid #e3deef!important;box-shadow:0 10px 30px rgba(48,41,79,.14)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;pointer-events:auto!important}
+ html.pk9-studio.dark-mode #phuc-mobile-quickbar{background:rgba(29,33,52,.97)!important;border-color:#3b3a59!important}
+ html.pk9-studio #phuc-mobile-quickbar button{min-width:0!important;min-height:48px!important;height:48px!important;border-radius:13px!important;gap:3px!important;font-size:9px!important;color:var(--pk9-muted)!important;touch-action:manipulation!important}
+ html.pk9-studio #phuc-mobile-quickbar button i{font-size:16px!important;color:var(--pk9-lilac)!important}
+ html.pk9-studio #phuc-mobile-quickbar button.is-active{background:var(--pk9-lilac-soft)!important;color:var(--pk9-lilac-dark)!important}
+ html.pk9-studio #phuc-mobile-quickbar button span{font-size:9px!important}
+ html.pk9-studio #mobile-nav-panel{top:64px!important;border-radius:0 0 20px 20px!important;background:var(--pk9-paper)!important;border-color:var(--pk9-line)!important}
+ html.pk9-studio #mobile-nav-panel .mobile-nav-item{min-height:50px!important;border:1px solid var(--pk9-line)!important;border-radius:13px!important;background:var(--pk9-card)!important;color:var(--pk9-ink)!important;font-size:11px!important}
+ html.pk9-studio main{padding-bottom:90px!important}
+}
+@media(max-width:600px){
+ html.pk9-studio header .phuck9-header-wordmark{display:none!important}
+ html.pk9-studio header .max-w-7xl{padding:0 10px!important;height:60px!important}
+ html.pk9-studio #main-content{padding:13px 11px 96px!important}
+ html.pk9-studio .rev-hero{padding:19px!important;border-radius:22px!important}
+ html.pk9-studio .rev-title{font-size:2.05rem!important;max-width:100%!important}
+ html.pk9-studio .rev-kicker{font-size:8px!important;max-width:100%;line-height:1.4}
+ html.pk9-studio .rev-sub{font-size:12px!important}
+ html.pk9-studio .rev-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+ html.pk9-studio .rev-btn{width:100%!important;justify-content:center!important;min-height:45px!important}
+ html.pk9-studio .rev-meta{gap:6px!important}
+ html.pk9-studio .rev-meta-chip{font-size:9px!important}
+ html.pk9-studio .rev-teacher-card{grid-template-columns:minmax(0,1fr) 104px!important;gap:8px!important}
+ html.pk9-studio .rev-teacher-photo{height:126px!important;border-radius:13px!important}
+ html.pk9-studio .rev-stats{gap:5px!important}
+ html.pk9-studio .rev-stat{padding:8px 3px!important;border-radius:10px!important}
+ html.pk9-studio .rev-stat strong{font-size:13px!important}
+ html.pk9-studio .rev-stat span{font-size:7px!important;line-height:1.2!important}
+ html.pk9-studio .rev-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ html.pk9-studio .rev-action{padding:12px!important;min-height:148px!important}
+ html.pk9-studio .rev-action-icon{width:38px!important;height:38px!important;border-radius:13px!important}
+ html.pk9-studio .rev-action b{font-size:11px!important;line-height:1.35!important}
+ html.pk9-studio .rev-action > span:not(.rev-action-icon){font-size:9px!important;line-height:1.45!important}
+ html.pk9-studio .rev-action small{right:9px!important;top:9px!important;font-size:7px!important}
+ html.pk9-studio .rev-course-strip{grid-template-columns:repeat(3,minmax(72%,1fr))!important;overflow-x:auto!important;scroll-snap-type:x mandatory!important;scrollbar-width:none!important}
+ html.pk9-studio .rev-course-strip::-webkit-scrollbar{display:none}
+ html.pk9-studio .rev-course-card{min-height:205px!important;scroll-snap-align:start!important}
+ html.pk9-studio .rev-chapters{grid-template-columns:1fr!important}
+ html.pk9-studio .rev-chapter{min-height:230px!important}
+ html.pk9-studio .rev-bottom-banner{padding:17px!important}
+ html.pk9-studio .rev-bottom-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+ html.pk9-studio #phuc-mobile-quickbar{width:calc(100vw - 12px)!important;min-height:60px!important;height:60px!important;bottom:max(6px,env(safe-area-inset-bottom))!important}
+ html.pk9-studio #phuc-mobile-quickbar button{min-height:47px!important;height:47px!important;font-size:8px!important}
+ html.pk9-studio #phuc-mobile-quickbar button span{font-size:8px!important}
+}
+@media(max-width:380px){html.pk9-studio .rev-title{font-size:1.78rem!important}html.pk9-studio .rev-action-grid{grid-template-columns:1fr!important}html.pk9-studio .rev-action{min-height:116px!important}html.pk9-studio .rev-teacher-card{grid-template-columns:minmax(0,1fr) 88px!important}html.pk9-studio .rev-teacher-photo{height:114px!important}html.pk9-studio .rev-actions{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){html.pk9-studio,html.pk9-studio *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transform:none!important}}

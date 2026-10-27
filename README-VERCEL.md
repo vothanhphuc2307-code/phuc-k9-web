@@ -49,12 +49,12 @@
 Bản source này đã thay đổi cấu trúc/logic một số API, nhưng chưa thể kiểm thử trên tài khoản, Redis, Blob hay cấu hình production của bạn từ ZIP. Hãy dùng Preview deployment và checklist kiểm thử trước khi đưa lên Production. Không xóa key Redis hoặc chạy migration phá hủy dữ liệu để “làm sạch” dashboard.
 
 
-## Academic Notebook UI refresh (2026-10-27)
+## UI/animation/layout v2 — Phúc K9 Studio (2026-10-27)
 
-- `assets/phuck9-academic-ui.css` styles the existing shell as a warm study-notebook interface (paper, soft lavender, mint and peach) and provides a separate touch-first mobile layout.
-- `assets/phuck9-academic-ui.js` adds short page entrances, one-time reveal transitions and active navigation sync. It respects `prefers-reduced-motion`; it does not use continuous decorative animation.
-- The forced exam-bank maintenance overlays were removed so the existing internal/server exam-bank UI can render again. If the server returns an empty list, the app should show its real empty/error state rather than a fake maintenance screen.
-- Low-performance mode no longer turns off every transition/shadow solely because the device has four or fewer CPU threads. It still avoids expensive blur when manually enabled or when the network/device profile warrants it.
-- `sw.js` cache version changed to `phuc-k9-app-v3-academic-ui`; exam-center asset URLs were versioned to prevent an older static asset from being reused.
+- `assets/phuck9-studio-v2.css` is the final visual layer loaded after legacy styles so it can consistently restyle the old inline CSS stack. It reworks the app shell/sidebar, header, homepage hero, subject tiles, progress cards, cards/forms and shared spacing/typography.
+- `assets/phuck9-studio-v2.js` adds short tab-entry transitions, active-navigation synchronization and one-time viewport reveals. It does not change exam answers, student records, or business data.
+- Desktop uses a larger reading canvas and a wider, legible left navigation. Tablet/mobile use a different information hierarchy: stacked hero, touch-sized actions, horizontal swipeable subject rail, two-column quick actions and a bottom navigation dock.
+- Light mode uses warm paper, lavender, mint and peach. Dark mode remains user-selectable and uses softer plum/ink tones. Motion respects `prefers-reduced-motion`; no repeating decorative animation is used.
+- `sw.js` is bumped to `phuc-k9-app-v4-studio-ui` and pre-caches the new presentation assets.
 
-Deploy on a Preview first. Test light/dark theme, mobile navigation, login, Admin exam management and a complete attempt. UI refresh has not been deployed to the live Vercel project by this ZIP.
+Important: this is a visual/layout overhaul that preserves the existing app DOM and business logic to reduce the risk of breaking tab IDs, exam flows, auth and Admin hooks. It is not a rewrite of all 1.4 MB of legacy inline HTML/JavaScript. Use a Vercel Preview before production; the source has not been deployed to your live Vercel project from this environment.

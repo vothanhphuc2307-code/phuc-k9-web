@@ -1,5 +1,5 @@
-const VERSION='phuc-k9-app-v3-academic-ui';
-const SHELL=['/','/offline.html','/manifest.webmanifest','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png'];
+const VERSION='phuc-k9-app-v4-studio-ui';
+const SHELL=['/','/offline.html','/manifest.webmanifest','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png','/assets/phuck9-studio-v2.css?v=20261027-studio2','/assets/phuck9-studio-v2.js?v=20261027-studio2'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
