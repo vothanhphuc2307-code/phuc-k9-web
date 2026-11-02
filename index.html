@@ -372,6 +372,7 @@ html.dark-mode .phuc-share-box{background:#12172a;border-color:#4f46e5}
 
 <link rel="stylesheet" href="/assets/phuck9-study-atelier.css">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/phuck9-vip.css">
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen custom-scrollbar">
 <div id="pk9-site-loader" role="status" aria-live="polite" aria-label="Đang mở Học Cùng Phúc K9">
@@ -2359,6 +2360,8 @@ function scienceGlobalDuplicateAudit(){
             },
 
         ];
+        // Expose the verified lesson catalog to the shared dashboard, search and progress widgets.
+        window.courseData = courseData;
 
         let currentUser = null;
         let currentChapterIndex = 0;
@@ -6726,5 +6729,6 @@ html.dark-mode .phuc-v8-ref-source{background:rgba(15,23,42,.72);border-color:#3
 <script src="/assets/phuck9-study-atelier.js"></script>
 <script src="/assets/pk9-source-hub.js" defer></script>
 <script src="/assets/site-effects.js" defer></script>
+<script src="/assets/phuck9-vip.js" defer></script>
 </body>
 </html>
