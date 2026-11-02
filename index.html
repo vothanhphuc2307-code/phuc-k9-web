@@ -373,6 +373,7 @@ html.dark-mode .phuc-share-box{background:#12172a;border-color:#4f46e5}
 <link rel="stylesheet" href="/assets/phuck9-study-atelier.css">
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/phuck9-vip.css">
+<link rel="stylesheet" href="/assets/phuck9-ecosystem-v2.css">
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen custom-scrollbar">
 <div id="pk9-site-loader" role="status" aria-live="polite" aria-label="Đang mở Học Cùng Phúc K9">
@@ -1033,7 +1034,7 @@ html.dark-mode .phuc-ref-course-note{color:#94a3b8}
         <p>Mở đúng bảng khóa học gốc mà ông gửi. Không trộn khóa của khối khác, không tự tạo tên khóa hoặc giáo viên khi chưa đọc được dữ liệu nguồn.</p>
         <div class="pk9-2k8-badges"><span>🗂️ Bảng nguồn gốc</span><span>🔎 Chọn khóa trong sheet</span><span>🌱 Dùng trên PC &amp; điện thoại</span></div>
         <div class="pk9-2k8-actions">
-          <a class="pk9-2k8-primary" href="https://docs.google.com/spreadsheets/d/1kV4ZfZv5ZgtEwuWBgh-k8fxs5OvhvzlrF7807aJCF_U/htmlview?gid=1707769956&amp;pru=AAABoSFK4bg*ygBfbcBedkRw0mozUDIcUA#gid=662446747" target="_blank" rel="noopener noreferrer">Mở bảng khóa học 2K8 <span aria-hidden="true">↗</span></a>
+          <a class="pk9-2k8-primary" href="https://docs.google.com/spreadsheets/d/1kV4ZfZv5ZgtEwuWBgh-k8fxs5OvhvzlrF7807aJCF_U/edit?gid=662446747" target="_blank" rel="noopener noreferrer">Mở bảng khóa học 2K8 <span aria-hidden="true">↗</span></a>
           <button type="button" class="pk9-2k8-secondary" id="pk9-2k8-toggle" aria-expanded="false" aria-controls="pk9-2k8-frame-wrap">Xem trong website</button>
         </div>
         <p class="pk9-2k8-help">Nếu khung xem không tải do Google chặn nhúng, nút “Mở bảng khóa học 2K8” vẫn mở nguồn trực tiếp.</p>
@@ -1042,14 +1043,27 @@ html.dark-mode .phuc-ref-course-note{color:#94a3b8}
     </div>
     <div class="pk9-2k8-frame-wrap hidden" id="pk9-2k8-frame-wrap">
       <div class="pk9-2k8-frame-toolbar"><span>📄 Bảng khóa học gốc · 2K8</span><button id="pk9-2k8-close" type="button" aria-label="Đóng hướng dẫn">Đóng ×</button></div>
-      <div class="pk9-2k8-embed-fallback">
-        <div class="pk9-2k8-embed-icon" aria-hidden="true">📚</div>
-        <div><strong>Mở bảng khóa học gốc trong một tab riêng</strong><p>Google Sheets có thể chặn nhúng hoặc hiển thị bảng HTML rất dài trong khung nhỏ. Để tránh lỗi giao diện, trang này không nhúng bảng thô trực tiếp.</p>
-        <a class="pk9-2k8-primary" href="https://docs.google.com/spreadsheets/d/1kV4ZfZv5ZgtEwuWBgh-k8fxs5OvhvzlrF7807aJCF_U/htmlview?gid=1707769956&amp;pru=AAABoSFK4bg*ygBfbcBedkRw0mozUDIcUA#gid=662446747" target="_blank" rel="noopener noreferrer">Mở Google Sheets 2K8 ↗</a></div>
+      <div class="pk9-2k8-embed-shell">
+        <div class="pk9-2k8-embed-status" id="pk9-2k8-embed-status"><span class="pk9-live-dot"></span> Đang tải bảng khóa học gốc…</div>
+        <iframe id="pk9-2k8-sheet-frame" class="pk9-2k8-sheet-frame" title="Bảng khóa học Google Sheets lớp 2K8" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <div class="pk9-2k8-embed-actions"><a class="pk9-2k8-primary" href="https://docs.google.com/spreadsheets/d/1kV4ZfZv5ZgtEwuWBgh-k8fxs5OvhvzlrF7807aJCF_U/edit?gid=662446747" target="_blank" rel="noopener noreferrer">Mở bảng 2K8 trong Google Sheets ↗</a><a class="pk9-2k8-secondary" href="https://docs.google.com/spreadsheets/d/1kV4ZfZv5ZgtEwuWBgh-k8fxs5OvhvzlrF7807aJCF_U/edit?gid=1707769956" target="_blank" rel="noopener noreferrer">Tab còn lại ↗</a></div>
+        <p class="pk9-2k8-embed-note">Nếu chủ file chưa bật quyền xem bằng liên kết hoặc Google chặn nhúng, dùng nút mở Google Sheets ở trên. Quyền riêng tư của bảng vẫn do chủ file quyết định.</p>
       </div>
     </div>
-    <div class="pk9-2k8-footnote"><strong>Về dữ liệu:</strong> Nút mở nguồn dùng nguyên liên kết bạn cung cấp. Các thẻ khóa học riêng chỉ được tạo sau khi dữ liệu của đúng tab 2K8 được xuất và đối chiếu, tránh trộn lớp hoặc tự đặt tên khóa chưa có trong nguồn.</div>
+    <div class="pk9-2k8-footnote"><strong>Về dữ liệu:</strong> Bảng gốc được nhúng trực tiếp nếu quyền chia sẻ cho phép. Các thẻ khóa học riêng chỉ được tạo sau khi dữ liệu tab 2K8 được đối chiếu, tránh tự đặt tên khóa chưa có trong nguồn.</div>
   </div>
+  <section class="pk9-learning-network" aria-labelledby="pk9-network-title">
+    <div class="pk9-network-heading"><div><span class="pk9-network-kicker">LEARNING NETWORK · NGUỒN MỞ</span><h2 id="pk9-network-title">Mở rộng mạng lưới bài giảng.</h2><p>Khám phá thêm bài giảng, video, tài liệu và thư viện đề từ các nguồn có thể kiểm tra. Mỗi liên kết mở tại đơn vị phát hành.</p></div><span class="pk9-network-orbit" aria-hidden="true">✦</span></div>
+    <div class="pk9-network-grid">
+      <a class="pk9-network-card pk9-net-violet" href="https://khoahocthanhphuc2306.blogspot.com/" target="_blank" rel="noopener noreferrer"><span class="pk9-network-icon">🎓</span><small>THƯ VIỆN KHÓA HỌC</small><strong>Kho bài giảng Thành Phúc</strong><p>Khám phá các khóa học và video được tập hợp trong thư viện tham khảo.</p><span class="pk9-network-open">Mở thư viện ↗</span></a>
+      <a class="pk9-network-card pk9-net-cyan" href="https://www.flashstudy.vn/?page=1&amp;type=12" target="_blank" rel="noopener noreferrer"><span class="pk9-network-icon">⚡</span><small>HỌC LIỆU LỚP 12</small><strong>FlashStudy</strong><p>Tìm tài liệu theo lớp và môn; kiểm tra giấy phép và thông tin tài liệu tại nguồn.</p><span class="pk9-network-open">Khám phá lớp 12 ↗</span></a>
+      <a class="pk9-network-card pk9-net-green" href="https://thpt-ngogiatu-daklak.edu.vn/chuyen-muc/thu-vien/bai-giang-dien-tu" target="_blank" rel="noopener noreferrer"><span class="pk9-network-icon">🏫</span><small>THƯ VIỆN NHÀ TRƯỜNG</small><strong>Bài giảng điện tử · Ngô Gia Tự</strong><p>Kho bài giảng điện tử do trường THPT số 1 Ngô Gia Tự đăng tải.</p><span class="pk9-network-open">Mở bài giảng ↗</span></a>
+      <a class="pk9-network-card pk9-net-amber" href="https://vqa.moet.gov.vn/vi/news/thong-bao/cau-truc-dinh-dang-de-thi-tot-nghiep-thpt-tu-nam-2025-74.html" target="_blank" rel="noopener noreferrer"><span class="pk9-network-icon">🏛️</span><small>NGUỒN BỘ GD&amp;ĐT</small><strong>Cấu trúc đề thi tốt nghiệp</strong><p>Đối chiếu định dạng, số lượng câu hỏi và đề minh họa theo thông tin của Cục Quản lý chất lượng.</p><span class="pk9-network-open">Xem cấu trúc ↗</span></a>
+    
+      <a class="pk9-network-card pk9-net-violet pk9-net-exam-archive" href="https://thpt-ngogiatu-daklak.edu.vn/chuyen-muc/thu-vien/de-thi-dap-an" target="_blank" rel="noopener noreferrer"><span class="pk9-network-icon">🗃️</span><small>THƯ VIỆN ĐỀ &amp; ĐÁP ÁN</small><strong>Kho đề của trường THPT</strong><p>Danh mục đề kiểm tra tập trung theo khối và học kỳ, có liên kết mã đề và đáp án.</p><span class="pk9-network-open">Mở thư viện ↗</span></a>
+      <a class="pk9-network-card pk9-net-cyan" href="https://thpt-ngogiatu-daklak.edu.vn/chuyen-muc/thu-vien/tai-lieu-hoc-tap" target="_blank" rel="noopener noreferrer"><span class="pk9-network-icon">📘</span><small>TƯ LIỆU HỌC TẬP</small><strong>Kho tài liệu theo môn</strong><p>Đề cương ôn tập, kỹ năng và tài liệu tham khảo; xem năm đăng trước khi dùng.</p><span class="pk9-network-open">Mở kho tài liệu ↗</span></a>
+</div>
+  </section>
 </section>
 <!-- SCIENCE_EXPANSION_START_2026 -->
 <style id="science-2026-style">
@@ -3356,11 +3370,11 @@ html.dark-mode .phuc211-source-note{background:#0f172a;border-color:#273449;colo
       <div class="pk9-sourcebank-kicker">KHO ĐỀ · CÓ NGUỒN ĐỐI CHIẾU</div>
       <h1>Đề luyện có tài liệu gốc</h1>
       <p>Chỉ hiển thị PDF có sẵn trong source và có trang nguồn để đối chiếu. Đây là tài liệu <b>thi thử/khảo sát</b>, không gắn nhãn nhầm thành đề giữa kỳ và không dùng câu hỏi tự sinh để giả làm đề thật.</p>
-      <div class="pk9-sourcebank-stats"><span>📄 2 tệp PDF có sẵn</span><span>🔗 Có nguồn gốc</span><span>🚫 Không chế đề</span></div>
+      <div class="pk9-sourcebank-stats"><span>📚 Nhiều nguồn đề &amp; tài liệu thật</span><span>🔗 Có nguồn gốc</span><span>🚫 Không chế đề</span></div>
     </header>
     <div class="pk9-sourcebank-toolbar">
       <label class="pk9-sourcebank-search"><span aria-hidden="true">⌕</span><input id="pk9-sourcebank-search" type="search" placeholder="Tìm theo môn, tỉnh hoặc năm…" autocomplete="off" aria-label="Tìm đề PDF có nguồn"></label>
-      <div class="pk9-sourcebank-filter" role="group" aria-label="Lọc môn học"><button class="is-active" type="button" data-source-filter="all">Tất cả</button><button type="button" data-source-filter="Toán">Toán</button><button type="button" data-source-filter="Sinh học">Sinh học</button></div>
+      <div class="pk9-sourcebank-filter" role="group" aria-label="Lọc nguồn đề"><button class="is-active" type="button" data-source-filter="all">Tất cả</button><button type="button" data-source-filter="Toán">Toán</button><button type="button" data-source-filter="Ngữ văn">Văn</button><button type="button" data-source-filter="Tiếng Anh">Anh</button><button type="button" data-source-filter="Vật lí">Lý</button><button type="button" data-source-filter="Hóa học">Hóa</button><button type="button" data-source-filter="Sinh học">Sinh</button><button type="button" data-source-filter="Lịch sử">Sử</button><button type="button" data-source-filter="GD Kinh tế &amp; Pháp luật">KTPL</button><button type="button" data-source-filter="Nguồn chính thức">Chính thức</button></div>
     </div>
     <div class="pk9-sourcebank-grid" id="pk9-sourcebank-grid">
       <article class="pk9-source-exam-card" data-source-subject="Toán" data-source-search="toán lâm đồng khảo sát chất lượng thpt 2026 lần 1 đề có đáp án pdf">
@@ -3381,7 +3395,7 @@ html.dark-mode .phuc211-source-note{background:#0f172a;border-color:#273449;colo
       </article>
     </div>
     <div id="pk9-sourcebank-empty" class="pk9-sourcebank-empty hidden">Không tìm thấy PDF phù hợp. Thử đổi từ khóa hoặc chọn “Tất cả”.</div>
-    <aside class="pk9-sourcebank-honesty"><span aria-hidden="true">📌</span><div><strong>Đề giữa kỳ &amp; ôn tập kiểm tra</strong><p>Đang ẩn phần đề giữa kỳ/đề tự chấm vì source hiện có chưa chứa bộ đề giữa kỳ gốc đã xác minh. Khi có PDF hoặc link đề gốc, có thể bổ sung chính xác mà không phải dựng đề giả.</p></div></aside>
+    <aside class="pk9-sourcebank-honesty"><span aria-hidden="true">📌</span><div><strong>Đề giữa kỳ &amp; ôn tập kiểm tra</strong><p>Thư viện kết hợp PDF nội bộ, đề và đáp án do trường công bố, đề thi thử từ nguồn tham khảo, cùng tài liệu cấu trúc/đáp án chính thức. Mỗi thẻ đều ghi rõ nguồn và loại tài liệu; nội dung vẫn mở tại nguồn gốc.</p></div></aside>
   </div>
 </section>
 
@@ -6730,5 +6744,6 @@ html.dark-mode .phuc-v8-ref-source{background:rgba(15,23,42,.72);border-color:#3
 <script src="/assets/pk9-source-hub.js" defer></script>
 <script src="/assets/site-effects.js" defer></script>
 <script src="/assets/phuck9-vip.js" defer></script>
+<script src="/assets/phuck9-ecosystem-v2.js" defer></script>
 </body>
 </html>

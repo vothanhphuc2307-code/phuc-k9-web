@@ -18,9 +18,11 @@
   ['courses-2k11','Lớp 10 · 2K11','Khóa học tham khảo','11',['2k11','lop 10']],
   ['reference-courses','Khóa học tham khảo','Nguồn khóa học đã lưu','⌕',['2k8','khoa hoc']],
   ['dashboard','Tài khoản & tiến độ','Hồ sơ · quản lý · thống kê','◎',['tai khoan','tien do','ho so']],
-  ['flashcards','Thẻ ghi nhớ','Tạo thẻ · ôn tập chủ động','✦',['flashcard','the nho','the ghi nho','on tap','ghi nho']]
+  ['flashcards','Thẻ ghi nhớ','Tạo thẻ · ôn tập chủ động','✦',['flashcard','the nho','the ghi nho','on tap','ghi nho']],
+  ['study-planner','Kế hoạch học tập','Lập lịch tuần · checklist · mục tiêu','▦',['ke hoach','planner','lich hoc','muc tieu','task']],
+  ['saved-resources','Tài liệu đã lưu','Đề thi · bài giảng · nguồn yêu thích','☆',['da luu','yeu thich','bookmark','tai lieu da luu']]
  ];
- function route(tab){try{window.switchTab?.(tab)}catch(e){console.warn('[Phúc K9] route',e)}if(tab==='flashcards')renderFlashcards();if(tab==='biology')renderBiology()}
+ function route(tab){if((tab==='study-planner'||tab==='saved-resources')&&typeof window.pk9Navigate==='function'){window.pk9Navigate(tab);return}try{window.switchTab?.(tab)}catch(e){console.warn('[Phúc K9] route',e)}if(tab==='flashcards')renderFlashcards();if(tab==='biology')renderBiology()}
  function addNavigation(){
   const side=$('sa-sidebar'),mobile=$('sa-mobile-nav');
   if(side&&!side.querySelector('[data-sa-route="flashcards"]')){
