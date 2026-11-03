@@ -1,14 +1,38 @@
-const VERSION='phuc-k9-ecosystem-v2-20261102';
-const SHELL=['/','/offline.html','/manifest.webmanifest','/style.css','/assets/site-effects.js','/assets/pk9-source-hub.js','/assets/phuck9-study-atelier.css','/assets/phuck9-study-atelier.js','/assets/phuck9-vip.css','/assets/phuck9-vip.js','/assets/phuck9-ecosystem-v2.css','/assets/phuck9-ecosystem-v2.js','/exam-sources/lam-dong-toan-2026-lan-1.pdf','/exam-sources/dien-bien-sinh-2026-ma-0401.pdf','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',e=>{
-  const req=e.request; const u=new URL(req.url);
-  if(req.method!=='GET'||u.origin!==self.location.origin||u.pathname.startsWith('/api/')) return;
-  if(req.destination==='video'||req.destination==='audio') return;
-  if(req.mode==='navigate'){
-    e.respondWith(fetch(req).then(r=>{const copy=r.clone();caches.open(VERSION).then(c=>c.put('/',copy));return r}).catch(()=>caches.match('/').then(r=>r||caches.match('/offline.html'))));
-    return;
-  }
-  e.respondWith(caches.match(req).then(hit=>hit||fetch(req).then(r=>{if(r.ok&&['script','style','image','font'].includes(req.destination)){const copy=r.clone();caches.open(VERSION).then(c=>c.put(req,copy));}return r})).catch(()=>undefined));
+/* Temporary maintenance shell. Replaces any older Phuc K9 app cache. */
+const VERSION = 'phuc-k9-maintenance-20261104';
+const SHELL = ['/'];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(VERSION)
+      .then(cache => cache.addAll(SHELL))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== VERSION).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin || request.mode !== 'navigate') return;
+
+  event.respondWith(
+    fetch(request).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(VERSION).then(cache => cache.put('/', copy));
+      }
+      return response;
+    }).catch(() => caches.match('/').then(cached => cached || new Response(
+      '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KHÓA APP — PHÚC K9</title><body style="margin:0;background:#090b18;color:#fff;font:700 20px system-ui;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px">KHÓA APP<br><br>PHÚC K9 TẠM NGƯNG HOẠT ĐỘNG</body></html>',
+      { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    )))
+  );
 });
