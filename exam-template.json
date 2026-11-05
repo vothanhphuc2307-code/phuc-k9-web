@@ -19,7 +19,9 @@
         "C",
         "D"
       ],
-      "sourcePage": 1
+      "sourcePage": 1,
+      "topic": "",
+      "explanation": ""
     }
   ],
   "scoring": {

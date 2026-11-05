@@ -1,5 +1,5 @@
-const VERSION='phuc-k9-ecosystem-v2-20261102';
-const SHELL=['/','/offline.html','/manifest.webmanifest','/style.css','/assets/site-effects.js','/assets/pk9-source-hub.js','/assets/phuck9-study-atelier.css','/assets/phuck9-study-atelier.js','/assets/phuck9-vip.css','/assets/phuck9-vip.js','/assets/phuck9-ecosystem-v2.css','/assets/phuck9-ecosystem-v2.js','/exam-sources/lam-dong-toan-2026-lan-1.pdf','/exam-sources/dien-bien-sinh-2026-ma-0401.pdf','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png'];
+const VERSION='phuc-k9-ecosystem-exam-v3-20261105';
+const SHELL=['/','/offline.html','/manifest.webmanifest','/style.css','/assets/site-effects.js','/assets/pk9-source-hub.js','/assets/phuck9-study-atelier.css','/assets/phuck9-study-atelier.js','/assets/phuck9-vip.css','/assets/phuck9-vip.js','/assets/phuck9-ecosystem-v2.css','/assets/phuck9-ecosystem-v2.js','/assets/exam-center.css?v=3','/assets/exam-center.js?v=3','/exam-sources/lam-dong-toan-2026-lan-1.pdf','/exam-sources/dien-bien-sinh-2026-ma-0401.pdf','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
