@@ -1,14 +1,17 @@
 {
-  "name": "hoc-cung-phuc-k9-vercel",
+  "name": "hoc-cung-phuc-k9-ecosystem",
   "private": true,
-  "version": "1.0.0",
-  "description": "HỌC CÙNG PHÚC K9 - Vercel backend for auth, AI tutor and student library",
+  "version": "2.0.0",
+  "description": "HỌC CÙNG PHÚC K9 — Hệ sinh thái luyện thi, video bài giảng đa môn, kho luyện đề nguồn thật chấm điểm tự động & BXH học viên",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "@upstash/redis": "^1.38.3",
     "@vercel/blob": "^2.8.0",
     "openai": "^6.48.0"
   },
   "engines": {
-    "node": "24.x"
+    "node": ">=18.0.0"
   }
 }

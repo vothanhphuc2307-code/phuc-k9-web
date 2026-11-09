@@ -1,38 +1,47 @@
-/* Temporary maintenance shell. Replaces any older Phuc K9 app cache. */
-const VERSION = 'phuc-k9-maintenance-20261104';
-const SHELL = ['/'];
+/* ============================================================================
+ * HỌC CÙNG PHÚC K9 — PRODUCTION SERVICE WORKER (NETWORK-FIRST + SMART CACHE)
+ * ============================================================================ */
+const CACHE_NAME = 'phuc-k9-ecosystem-v30';
+const CORE_ASSETS = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/assets/exam-center.css',
+  '/assets/pk9-curriculum.js',
+  '/assets/exam-center.js',
+  '/assets/pk9-app.js'
+];
 
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(VERSION)
-      .then(cache => cache.addAll(SHELL))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).catch(() => {})
   );
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== VERSION).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
-  const request = event.request;
-  const url = new URL(request.url);
-  if (request.method !== 'GET' || url.origin !== self.location.origin || request.mode !== 'navigate') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
-    fetch(request).then(response => {
-      if (response.ok) {
-        const copy = response.clone();
-        caches.open(VERSION).then(cache => cache.put('/', copy));
-      }
-      return response;
-    }).catch(() => caches.match('/').then(cached => cached || new Response(
-      '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KHÓA APP — PHÚC K9</title><body style="margin:0;background:#090b18;color:#fff;font:700 20px system-ui;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px">KHÓA APP<br><br>PHÚC K9 TẠM NGƯNG HOẠT ĐỘNG</body></html>',
-      { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-    )))
+    fetch(req)
+      .then(resp => {
+        if (resp && resp.status === 200 && url.origin === self.location.origin) {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone)).catch(() => {});
+        }
+        return resp;
+      })
+      .catch(() => caches.match(req).then(hit => hit || caches.match('/index.html')))
   );
 });

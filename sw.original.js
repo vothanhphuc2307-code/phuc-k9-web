@@ -1,14 +1,47 @@
-const VERSION='phuc-k9-ecosystem-exam-v3-20261105';
-const SHELL=['/','/offline.html','/manifest.webmanifest','/style.css','/assets/site-effects.js','/assets/pk9-source-hub.js','/assets/phuck9-study-atelier.css','/assets/phuck9-study-atelier.js','/assets/phuck9-vip.css','/assets/phuck9-vip.js','/assets/phuck9-ecosystem-v2.css','/assets/phuck9-ecosystem-v2.js','/assets/exam-center.css?v=3','/assets/exam-center.js?v=3','/exam-sources/lam-dong-toan-2026-lan-1.pdf','/exam-sources/dien-bien-sinh-2026-ma-0401.pdf','/assets/pwa/icon-192.png','/assets/pwa/icon-512.png','/assets/pwa/icon-maskable.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',e=>{
-  const req=e.request; const u=new URL(req.url);
-  if(req.method!=='GET'||u.origin!==self.location.origin||u.pathname.startsWith('/api/')) return;
-  if(req.destination==='video'||req.destination==='audio') return;
-  if(req.mode==='navigate'){
-    e.respondWith(fetch(req).then(r=>{const copy=r.clone();caches.open(VERSION).then(c=>c.put('/',copy));return r}).catch(()=>caches.match('/').then(r=>r||caches.match('/offline.html'))));
-    return;
-  }
-  e.respondWith(caches.match(req).then(hit=>hit||fetch(req).then(r=>{if(r.ok&&['script','style','image','font'].includes(req.destination)){const copy=r.clone();caches.open(VERSION).then(c=>c.put(req,copy));}return r})).catch(()=>undefined));
+/* ============================================================================
+ * HỌC CÙNG PHÚC K9 — PRODUCTION SERVICE WORKER (NETWORK-FIRST + SMART CACHE)
+ * ============================================================================ */
+const CACHE_NAME = 'phuc-k9-ecosystem-v30';
+const CORE_ASSETS = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/assets/exam-center.css',
+  '/assets/pk9-curriculum.js',
+  '/assets/exam-center.js',
+  '/assets/pk9-app.js'
+];
+
+self.addEventListener('install', event => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).catch(() => {})
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.pathname.startsWith('/api/')) return;
+
+  event.respondWith(
+    fetch(req)
+      .then(resp => {
+        if (resp && resp.status === 200 && url.origin === self.location.origin) {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone)).catch(() => {});
+        }
+        return resp;
+      })
+      .catch(() => caches.match(req).then(hit => hit || caches.match('/index.html')))
+  );
 });

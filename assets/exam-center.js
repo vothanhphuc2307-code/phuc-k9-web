@@ -1,288 +1,1091 @@
-(function () {
+/* ============================================================================
+ * HỌC CÙNG PHÚC K9 — REAL-SOURCE EXAM PRACTICE & AUTOMATED GRADING ENGINE
+ * Supports: GDPT 2018 3-Part Grading (MCQ, Progressive True/False, Short Answer)
+ * ============================================================================ */
+(function (window, document) {
   'use strict';
-  if (window.__phucExamCenterV1) return;
-  window.__phucExamCenterV1 = true;
 
-  const API = '/api/exams';
-  const $ = (id, root = document) => root.getElementById ? root.getElementById(id) : root.querySelector('#' + id);
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function tableMarkup(table) {
-    if (!Array.isArray(table) || !table.length) return '';
-    const rows = table.slice(0, 30).map(row => Array.isArray(row)
-      ? '<tr>' + row.slice(0, 12).map(cell => '<td>' + esc(cell) + '</td>').join('') + '</tr>'
-      : '').join('');
-    return rows ? '<div class="pec-question-table-wrap"><table class="pec-question-table"><tbody>' + rows + '</tbody></table></div>' : '';
-  }
-  function typesetMath(root) {
-    if (!root) return;
-    let retries = 0;
-    const run = () => {
-      if (window.MathJax?.typesetPromise) { window.MathJax.typesetPromise([root]).catch(() => {}); return; }
-      if (retries++ < 12) window.setTimeout(run, 250);
-    };
-    run();
-  }
-  const getAccount = () => window.phucAccount || {};
-  const getUserKey = () => String(getAccount().user?.username || 'guest').toLowerCase().replace(/[^a-z0-9._-]/g, '_');
-  const activeKey = () => 'phuc_exam_active_v1:' + getUserKey();
-  const snapshotKey = id => 'phuc_exam_snapshot_v1:' + String(id || '').replace(/[^a-zA-Z0-9._-]/g, '_');
-  const csrfHeaders = () => ({'Content-Type':'application/json','Accept':'application/json','X-CSRF-Token':String(getAccount().csrf || '')});
-  let panel, searchBox, exams = [], active = null, timer = null, saveTimer = null, loading = false;
+  const SUBJECT_MAP = {
+    math: 'Toán',
+    physics: 'Vật lí',
+    chemistry: 'Hóa học',
+    biology: 'Sinh học',
+    english: 'Tiếng Anh',
+    history: 'Lịch sử',
+    dgnl: 'ĐGNL'
+  };
 
-  async function request(url, options = {}) {
-    const response = await fetch(url, {credentials:'same-origin', cache:'no-store', ...options});
-    const text = await response.text();
-    let data;
-    try { data = text ? JSON.parse(text) : {}; } catch { throw new Error('Máy chủ trả về dữ liệu không phải JSON.'); }
-    if (!response.ok || data?.ok === false) throw new Error(data?.message || ('HTTP ' + response.status));
-    return data;
-  }
-  function toast(message) { try { window.phucToast?.(message); } catch {} }
-  function authenticated() { return !!getAccount().authenticated; }
-  function showLogin() { if (typeof window.openAuthModal === 'function') window.openAuthModal('login'); else toast('Hãy đăng nhập trước khi bắt đầu thi.'); }
-  function isAdmin() { const a=getAccount(); return !!(a.isAdmin || a.is_admin || window.__phucIsAdmin); }
-  function localRead(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } }
-  function localWrite(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
-  function setStatus(text, kind='info') {
-    const el = $('pec-save-status');
-    if (!el) return;
-    el.textContent = text;
-    el.className = 'pec-save-status' + (kind === 'error' ? ' pec-no' : kind === 'ok' ? ' pec-ok' : '');
+  function subjLabel(s) {
+    const raw = String(s || '').trim();
+    return SUBJECT_MAP[raw.toLowerCase()] || raw || 'Tổng hợp';
   }
 
-  function mountStudentPanel() {
-    const tab = $('tab-exam-bank');
-    const oldList = $('exam-bank-list');
-    if (!tab || !oldList || $('phuc-server-exam-bank')) return;
-    panel = document.createElement('section');
-    panel.id = 'phuc-server-exam-bank';
-    panel.innerHTML = `
-      <div class="pec-head"><div><div class="pec-eyebrow">SERVER EXAM CENTER</div><h3 class="pec-title">Ngân hàng đề quản lý</h3><p class="pec-sub">Đề được lưu ở backend, chấm bằng dữ liệu phía máy chủ và có thể khôi phục lượt thi khi tải lại trang. Đề còn câu chưa được rà soát sẽ không hiển thị ở đây.</p></div><div class="pec-card-actions"><button type="button" class="pec-btn" data-pec-history><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử thi</button><button type="button" class="pec-btn" data-pec-resume hidden><i class="fa-solid fa-arrow-rotate-right"></i> Tiếp tục bài đang làm</button><button type="button" class="pec-btn" data-pec-refresh><i class="fa-solid fa-rotate"></i> Tải lại</button></div></div>
-      <div class="pec-toolbar"><input id="pec-exam-search" class="pec-search" type="search" placeholder="Tìm theo tên đề, môn học hoặc năm…" aria-label="Tìm kiếm đề"><span class="pec-tags" style="align-items:center">Đề hợp lệ mới xuất hiện sau khi Admin rà soát</span></div>
-      <div id="pec-bank-message" class="pec-notice">Đang tải danh sách đề…</div>
-      <div id="pec-exam-grid" class="pec-grid" aria-live="polite"></div>
-      <div id="pec-player-host" style="margin-top:12px"></div>`;
-    oldList.parentElement?.insertBefore(panel, oldList);
-    searchBox = $('pec-exam-search');
-    searchBox?.addEventListener('input', () => renderExamCards());
-    panel.querySelector('[data-pec-refresh]')?.addEventListener('click', loadExams);
-    panel.querySelector('[data-pec-history]')?.addEventListener('click', loadHistory);
-    panel.querySelector('[data-pec-resume]')?.addEventListener('click', resumeLast);
-    panel.addEventListener('click', onStudentClick);
-    loadExams();
-    resumeLast(true);
+  const STATE = {
+    view: 'catalog', // 'catalog' | 'sources' | 'taking' | 'result'
+    subjectFilter: 'ALL',
+    searchQuery: '',
+    exams: [],
+    activeExam: null,
+    attemptId: null,
+    answers: {},
+    flagged: {},
+    splitPdf: false,
+    startedAt: 0,
+    remainingSec: 0,
+    timerId: null,
+    lastResult: null,
+    xpAwarded: 0
+  };
+
+  function esc(str) {
+    return String(str ?? '').replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
   }
 
-  async function loadExams() {
-    if (!panel || loading) return;
-    loading = true;
-    const message = $('pec-bank-message');
-    if (message) { message.hidden = false; message.className='pec-notice'; message.textContent='Đang tải danh sách đề…'; }
-    try {
-      const data = await request(API + '?action=list');
-      exams = Array.isArray(data.exams) ? data.exams : [];
-      renderExamCards();
-      if (message) {
-        message.hidden = exams.length > 0;
-        message.textContent = exams.length ? '' : 'Chưa có đề đủ điều kiện công khai. Admin cần kiểm tra đáp án, hình minh họa và lời giải rồi mới xuất bản.';
+  function getCsrfToken() {
+    const m = document.cookie.match(/(?:^|;\s*)phuc_csrf=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : (window.PK9_AUTH?.csrf || '');
+  }
+
+  function typesetMath(el) {
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      window.MathJax.typesetPromise(el ? [el] : undefined).catch(() => {});
+    }
+  }
+
+  function normShortAnswer(val) {
+    let s = String(val ?? '').trim().toLowerCase();
+    s = s.replace(/,/g, '.').replace(/\s+/g, '').replace(/%$/, '');
+    return s;
+  }
+
+  function normalizeQuestionType(q) {
+    const t = String(q?.type || '').toLowerCase();
+    if (t === 'mcq' || t === 'single_choice') return 'mcq';
+    if (t === 'truefalse' || t === 'true_false_group') return 'truefalse';
+    return 'short';
+  }
+
+  // Client-side GDPT 2018 grader (matches api/exams.js 100%)
+  function gradeExamLocally(exam, answers) {
+    let raw = 0, max = 0, correctCount = 0;
+    const sections = {};
+    const topicMap = {};
+    const review = [];
+
+    for (const q of exam.questions || []) {
+      const qType = normalizeQuestionType(q);
+      const sec = q.section || (qType === 'mcq' ? 'I' : qType === 'truefalse' ? 'II' : 'III');
+      sections[sec] = sections[sec] || { earned: 0, max: 0, count: 0 };
+      const topicName = q.topic || `Phần ${sec}`;
+      topicMap[topicName] = topicMap[topicName] || { topic: topicName, earnedPts: 0, maxPts: 0, count: 0 };
+
+      const uAns = answers[q.id];
+      let earned = 0;
+      const qMax = Number(q.points || (qType === 'truefalse' ? 1 : qType === 'short' ? 0.5 : 0.25));
+      max += qMax;
+      sections[sec].max += qMax;
+      sections[sec].count += 1;
+      topicMap[topicName].maxPts += qMax;
+      topicMap[topicName].count += 1;
+
+      const promptText = q.text || q.prompt || '';
+
+      if (qType === 'mcq') {
+        const ok = String(uAns || '').toUpperCase() === String(q.answer || '').toUpperCase();
+        earned = ok ? qMax : 0;
+        if (ok) correctCount += 1;
+        review.push({
+          id: q.id, number: q.number, section: sec, type: 'mcq', topic: topicName,
+          text: promptText, options: q.options,
+          status: ok ? 'correct' : 'wrong',
+          correct: ok, earned, max: qMax, userAnswer: uAns ?? null,
+          correctAnswer: q.answer, explanation: q.explanation || '', sourcePage: q.sourcePage || null
+        });
+      } else if (qType === 'truefalse') {
+        const uArr = Array.isArray(uAns) ? uAns : [];
+        let hit = 0;
+        const stDetails = (q.statements || []).map((st, idx) => {
+          const got = uArr[idx];
+          const exp = Boolean(st.answer);
+          const ok = typeof got === 'boolean' && got === exp;
+          if (ok) hit += 1;
+          return { text: st.text, user: got ?? null, answer: exp, correct: ok };
+        });
+        const table = [0, 0.1, 0.25, 0.5, 1.0];
+        earned = (table[hit] ?? 0) * qMax;
+        if (hit === 4) correctCount += 1;
+        review.push({
+          id: q.id, number: q.number, section: sec, type: 'truefalse', topic: topicName,
+          text: promptText, statements: stDetails,
+          status: hit === 4 ? 'correct' : hit > 0 ? 'partial' : 'wrong',
+          correct: hit === 4, hitCount: hit, earned, max: qMax,
+          userAnswer: uArr, explanation: q.explanation || '', sourcePage: q.sourcePage || null
+        });
+      } else {
+        const accepted = Array.isArray(q.acceptedAnswers) && q.acceptedAnswers.length
+          ? q.acceptedAnswers
+          : Array.isArray(q.accepted) && q.accepted.length
+          ? q.accepted
+          : [q.answer];
+        const normU = normShortAnswer(uAns);
+        const ok = normU !== '' && accepted.some(a => {
+          const na = normShortAnswer(a);
+          if (na === normU) return true;
+          const nu = Number(normU), nExp = Number(na);
+          return Number.isFinite(nu) && Number.isFinite(nExp) && Math.abs(nu - nExp) <= 1e-6;
+        });
+        earned = ok ? qMax : 0;
+        if (ok) correctCount += 1;
+        review.push({
+          id: q.id, number: q.number, section: sec, type: 'short', topic: topicName,
+          text: promptText,
+          status: ok ? 'correct' : 'wrong',
+          correct: ok, earned, max: qMax, userAnswer: uAns ?? '',
+          correctAnswer: accepted[0], explanation: q.explanation || '', sourcePage: q.sourcePage || null
+        });
       }
-    } catch (error) {
-      if (message) { message.hidden=false; message.className='pec-error'; message.textContent='Không tải được ngân hàng đề: ' + error.message; }
-    } finally { loading = false; }
+
+      raw += earned;
+      sections[sec].earned = Math.round((sections[sec].earned + earned) * 1000) / 1000;
+      topicMap[topicName].earnedPts = Math.round((topicMap[topicName].earnedPts + earned) * 1000) / 1000;
+    }
+
+    const score10 = max > 0 ? Math.round((raw / max) * 10 * 100) / 100 : 0;
+    const topicStats = Object.values(topicMap).map(t => ({
+      ...t,
+      accuracy: t.maxPts > 0 ? Math.round((t.earnedPts / t.maxPts) * 100) : 0
+    }));
+
+    return {
+      score: score10,
+      rawScore: Math.round(raw * 100) / 100,
+      maxScore: Math.round(max * 100) / 100,
+      correct: correctCount,
+      total: (exam.questions || []).length,
+      sections,
+      topicStats,
+      review
+    };
   }
 
-  function renderExamCards() {
-    const grid = $('pec-exam-grid'); if (!grid) return;
-    const term = String(searchBox?.value || '').trim().toLowerCase();
-    const rows = exams.filter(e => [e.title,e.subject,e.grade,e.year,e.examType,e.source,e.periodLabel].some(v => String(v||'').toLowerCase().includes(term)));
-    if (!rows.length) { grid.innerHTML = exams.length ? '<div class="pec-empty" style="grid-column:1/-1">Không có đề khớp từ khóa.</div>' : ''; return; }
-    grid.innerHTML = rows.map(e => {
-      const count = Array.isArray(e.questions) ? e.questions.length : Number(e.questionCount || 0);
-      const subject = ({math:'Toán',biology:'Sinh học',chemistry:'Hóa học',physics:'Vật lý',english:'Tiếng Anh'}[String(e.subject||'').toLowerCase()] || e.subject || 'Môn học');
-      return `<article class="pec-card"><div class="pec-tags"><span class="pec-tag">${esc(subject)}</span><span class="pec-tag">Lớp ${esc(e.grade||'—')}</span><span class="pec-tag">${esc(e.year||'—')}</span></div><h4>${esc(e.title||'Đề chưa đặt tên')}</h4><p class="pec-sub">${esc(e.periodLabel||e.source||'Đề luyện tập')}</p><div class="pec-tags"><span><i class="fa-regular fa-clock"></i> ${esc(e.duration||60)} phút</span><span><i class="fa-solid fa-list-ol"></i> ${count} câu</span></div><div class="pec-card-actions"><button type="button" class="pec-btn primary" data-pec-start="${esc(e.id)}"><i class="fa-solid fa-play"></i> Bắt đầu</button></div></article>`;
-    }).join('');
-  }
-
-  function onStudentClick(event) {
-    const start = event.target.closest('[data-pec-start]');
-    if (start) startExam(start.dataset.pecStart);
-    const nav = event.target.closest('[data-pec-qnav]');
-    if (nav && active) { active.index = Math.max(0,Math.min(active.exam.questions.length-1,Number(nav.dataset.pecQnav))); renderPlayer(); }
-    const flag = event.target.closest('[data-pec-flag]');
-    if (flag && active) { const id=active.exam.questions[active.index].id; active.marked[id]=!active.marked[id]; saveLocal(); renderPlayer(); }
-    const opt = event.target.closest('[data-pec-answer]');
-    if (opt && active) { const q=active.exam.questions[active.index]; active.answers[q.id]=opt.dataset.pecAnswer; answerChanged(); renderPlayer(); }
-    const tf = event.target.closest('[data-pec-tf]');
-    if (tf && active) { const q=active.exam.questions[active.index]; const arr=Array.isArray(active.answers[q.id])?active.answers[q.id].slice():[]; const i=Number(tf.dataset.index); while(arr.length<q.statements.length)arr.push(null); const next=tf.dataset.pecTf==='true'; arr[i]=arr[i]===next?null:next; active.answers[q.id]=arr; answerChanged(); renderPlayer(); }
-    const navPrev = event.target.closest('[data-pec-prev]'); if (navPrev && active) { active.index=Math.max(0,active.index-1);renderPlayer(); }
-    const navNext = event.target.closest('[data-pec-next]'); if (navNext && active) { active.index=Math.min(active.exam.questions.length-1,active.index+1);renderPlayer(); }
-    const submit = event.target.closest('[data-pec-submit]'); if (submit && active) submitExam(false);
-    const exit = event.target.closest('[data-pec-exit]'); if (exit && active) { if (confirm('Thoát màn hình thi? Bài đã lưu vẫn có thể tiếp tục trước khi hết giờ.')) { stopTimer(); active=null; renderListHost(); } }
-    const prevResult = event.target.closest('[data-pec-result-back]'); if(prevResult){active=null;renderListHost();}
-  }
-
-  async function startExam(id) {
-    if (!authenticated()) { showLogin(); return; }
-    if (active && !active.submitted) { toast('Bạn đang có một lượt thi mở. Hãy tiếp tục hoặc nộp lượt đó trước.'); return; }
-    const button = panel?.querySelector(`[data-pec-start="${CSS.escape(String(id))}"]`);
-    if (button) {button.disabled=true;button.textContent='Đang mở đề…';}
+  async function loadExamCatalog() {
+    const seedList = Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS : [];
+    const byId = new Map();
+    for (const s of seedList) {
+      byId.set(s.id, {
+        ...s,
+        questionCount: Array.isArray(s.questions) ? s.questions.length : Number(s.questionCount || 0)
+      });
+    }
     try {
-      const data = await request(API+'?action=start',{method:'POST',headers:csrfHeaders(),body:JSON.stringify({id})});
-      active={attemptId:data.attemptId,exam:data.exam,answers:{},marked:{},index:0,startedAt:data.startedAt,expiresAt:data.expiresAt,submitted:false,submitting:false};
-      localWrite(activeKey(),{attemptId:active.attemptId,examId:id}); saveLocal(); renderPlayer(); startTimer(); scheduleSave(0);
-    } catch (error) { toast('Không mở được đề: '+error.message); }
-    finally { if(button){button.disabled=false;button.innerHTML='<i class="fa-solid fa-play"></i> Bắt đầu';} }
+      const resp = await fetch('/api/exams?action=list', { credentials: 'include' });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data?.exams)) {
+          for (const ex of data.exams) {
+            const localSeed = byId.get(ex.id);
+            byId.set(ex.id, { ...(localSeed || {}), ...ex, questions: localSeed?.questions || ex.questions });
+          }
+        }
+      }
+    } catch {}
+    STATE.exams = Array.from(byId.values());
   }
 
-  function saveLocal() { if (!active) return; localWrite(snapshotKey(active.attemptId),{answers:active.answers,marked:active.marked,index:active.index,updatedAt:Date.now()}); localWrite(activeKey(),{attemptId:active.attemptId,examId:active.exam.id}); }
-  function answerChanged() { saveLocal(); setStatus('Đã lưu trên thiết bị · đang đồng bộ máy chủ…'); scheduleSave(650); }
-  function scheduleSave(delay=650) { clearTimeout(saveTimer); saveTimer=setTimeout(saveDraft,delay); }
-  async function saveDraft() {
-    if (!active || active.submitted || active.submitting) return;
-    try { await request(API+'?action=save',{method:'POST',headers:csrfHeaders(),body:JSON.stringify({attemptId:active.attemptId,answers:active.answers})}); setStatus('✓ Đã đồng bộ bài làm lên máy chủ','ok'); }
-    catch (error) { setStatus('Chưa đồng bộ được: '+error.message+' · bản nháp trên thiết bị vẫn còn','error'); }
+  function findFullSeedExam(examId) {
+    const seedList = Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS : [];
+    return seedList.find(x => x.id === examId) || STATE.exams.find(x => x.id === examId) || null;
   }
 
-  async function resumeLast(silent=false) {
-    if (!authenticated() || !panel) return;
-    const memo=localRead(activeKey()); if(!memo?.attemptId) { const b=panel.querySelector('[data-pec-resume]'); if(b)b.hidden=true; return; }
-    try {
-      const data=await request(API+'?action=resume&attempt='+encodeURIComponent(memo.attemptId));
-      if(data.submitted){localStorage.removeItem(activeKey()); if(data.result) renderResult(data.result,data.exam,{submittedAt:data.submittedAt}); return;}
-      const snap=localRead(snapshotKey(data.attemptId))||{};
-      active={attemptId:data.attemptId,exam:data.exam,answers:{...(data.savedAnswers||{}),...(snap.answers||{})},marked:snap.marked||{},index:Number(snap.index||0),startedAt:data.startedAt,expiresAt:data.expiresAt,submitted:false,submitting:false};
-      const b=panel.querySelector('[data-pec-resume]');if(b)b.hidden=false;
-      saveLocal();renderPlayer();
-      if(Number(active.expiresAt)<=Date.now()) submitExam(true); else {startTimer();scheduleSave(0);}
-    } catch (error) {
-      localStorage.removeItem(activeKey());
-      const b=panel.querySelector('[data-pec-resume]');if(b)b.hidden=true;
-      if(!silent)toast('Không khôi phục được lượt thi: '+error.message);
+  function isQuestionAnswered(q, ans) {
+    if (ans === undefined || ans === null) return false;
+    const qType = normalizeQuestionType(q);
+    if (qType === 'mcq' || qType === 'short') return String(ans).trim() !== '';
+    if (qType === 'truefalse') {
+      return Array.isArray(ans) && ans.some(v => typeof v === 'boolean');
+    }
+    return false;
+  }
+
+  function formatClock(sec) {
+    const s = Math.max(0, Math.floor(sec));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+  }
+
+  function stopTimer() {
+    if (STATE.timerId) {
+      clearInterval(STATE.timerId);
+      STATE.timerId = null;
     }
   }
 
-  function stopTimer(){if(timer){clearInterval(timer);timer=null;}clearTimeout(saveTimer);}
-  function startTimer(){stopTimer();if(!active||active.submitted)return;const tick=()=>{if(!active)return;const n=Math.max(0,Number(active.expiresAt)-Date.now());const clock=$('pec-clock');if(clock){const seconds=Math.ceil(n/1000);clock.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');clock.style.color=n<60000?'#fca5a5':'';}if(n<=0){stopTimer();setStatus('Đã hết giờ — đang nộp phần trả lời đã đồng bộ…');submitExam(true);}};tick();timer=setInterval(tick,1000);}
-
-  function isAnswered(q){const a=active?.answers?.[q.id];if(q.type==='truefalse')return Array.isArray(a)&&a.some(v=>v===true||v===false);return String(a??'').trim()!=='';}
-  function renderPlayer(){
-    const host=$('pec-player-host');if(!host||!active)return;
-    const exam=active.exam,q=exam.questions[active.index];if(!q){host.innerHTML='<div class="pec-error">Đề chưa có câu hỏi hợp lệ.</div>';return;}
-    const typeLabel=q.type==='mcq'?'Trắc nghiệm':q.type==='truefalse'?'Đúng / Sai':'Trả lời ngắn';
-    let input='';
-    if(q.type==='mcq'){
-      const letters='ABCDEFGH';input=(q.options||[]).map((option,i)=>`<button type="button" class="pec-option ${active.answers[q.id]===letters[i]?'selected':''}" data-pec-answer="${letters[i]}"><b>${letters[i]}</b><span>${esc(option)}</span></button>`).join('');
-    }else if(q.type==='truefalse'){
-      const arr=Array.isArray(active.answers[q.id])?active.answers[q.id]:[];
-      input=(q.statements||[]).map((st,i)=>`<div class="pec-statement"><div><b>Ý ${i+1}.</b> ${esc(st.text)}</div><div class="pec-tf-actions"><button type="button" class="pec-tf ${arr[i]===true?'selected':''}" data-pec-tf="true" data-index="${i}">Đúng</button><button type="button" class="pec-tf ${arr[i]===false?'selected':''}" data-pec-tf="false" data-index="${i}">Sai</button></div></div>`).join('');
-    }else if(q.type==='short') input=`<label class="pec-label" for="pec-short-answer">Câu trả lời</label><input id="pec-short-answer" class="pec-short" type="text" maxlength="200" value="${esc(active.answers[q.id]||'')}" placeholder="Nhập đáp án ngắn…">`;
-    const nav=(exam.questions||[]).map((item,i)=>`<button type="button" class="pec-nav-btn ${i===active.index?'current':''} ${isAnswered(item)?'answered':''} ${active.marked[item.id]?'marked':''}" data-pec-qnav="${i}" title="Câu ${i+1}${active.marked[item.id]?' · cần xem lại':''}">${i+1}</button>`).join('');
-    const questionTable=tableMarkup(q.table);
-    const questionImage=q.imageUrl?`<figure class="pec-question-image-wrap"><img class="pec-question-image" src="${esc(q.imageUrl)}" alt="${esc(q.imageAlt||('Hình minh họa câu '+(active.index+1)))}" loading="lazy" decoding="async"><figcaption>${esc(q.imageAlt||'Hình minh họa')}</figcaption></figure>`:'';
-    host.innerHTML=`<section class="pec-player"><div class="pec-player-head"><div><div style="font-size:9px;font-weight:900;opacity:.7;letter-spacing:.1em">PHÒNG LUYỆN ĐỀ</div><h3>${esc(exam.title)}</h3><div style="font-size:10px;color:#cbd5e1;margin-top:4px">${(exam.questions||[]).length} câu · ${esc(exam.duration||'—')} phút · ${esc(exam.subject||'')}</div></div><div id="pec-clock" class="pec-clock">--:--</div></div><div class="pec-player-body"><div class="pec-question"><div class="pec-qmeta">Câu ${active.index+1}/${exam.questions.length} · ${esc(q.section||'')} · ${typeLabel}</div><div class="pec-qtext">${esc(q.text)}</div>${questionImage}${questionTable}${input}<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px"><button type="button" class="pec-btn" data-pec-flag><i class="fa-regular fa-bookmark"></i> ${active.marked[q.id]?'Bỏ đánh dấu':'Đánh dấu xem lại'}</button></div></div><aside class="pec-nav"><div class="pec-nav-title">Điều hướng câu hỏi</div><div class="pec-nav-grid">${nav}</div><div class="pec-tags" style="margin-top:10px"><span>Viền xanh: đã trả lời</span><span>Viền vàng: xem lại</span></div></aside></div><div class="pec-player-foot"><div><div id="pec-save-status" class="pec-save-status">Bản nháp được lưu trên thiết bị</div><button type="button" class="pec-btn" data-pec-exit>Thu gọn phòng thi</button></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" class="pec-btn" data-pec-prev ${active.index===0?'disabled':''}>← Câu trước</button><button type="button" class="pec-btn" data-pec-next ${active.index===exam.questions.length-1?'disabled':''}>Câu tiếp →</button><button type="button" class="pec-btn primary" data-pec-submit>Nộp bài</button></div></div></section>`;
-    $('pec-clock') && ( $('pec-clock').textContent = formatClock(active.expiresAt-Date.now()) );
-    typesetMath(host);
-    const short=$('pec-short-answer');short?.addEventListener('input',()=>{active.answers[q.id]=short.value;answerChanged();});
-  }
-  function formatClock(ms){const sec=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
-
-  async function submitExam(auto) {
-    if(!active||active.submitted||active.submitting)return;
-    if(!auto&&!confirm('Xác nhận nộp bài? Sau khi nộp sẽ không thể chỉnh sửa lượt thi này.'))return;
-    active.submitting=true;clearTimeout(saveTimer);if(timer){clearInterval(timer);timer=null;}
-    setStatus(auto?'Đang tự động nộp bài…':'Đang chấm bài…');
-    const submitButton=panel?.querySelector('[data-pec-submit]');if(submitButton)submitButton.disabled=true;
-    try{
-      const payload=auto?{attemptId:active.attemptId}:{attemptId:active.attemptId,answers:active.answers};
-      const data=await request(API+'?action=submit',{method:'POST',headers:csrfHeaders(),body:JSON.stringify(payload)});
-      active.submitted=true;const result=data.result;const exam=active.exam;const submittedAt=Date.now();
-      // XP and leaderboard data are recorded only after dashboard verifies the submitted server attempt.
-      let rewardMeta={};
-      try {
-        const reward=await request('/api/dashboard?action=record-exam',{method:'POST',headers:csrfHeaders(),body:JSON.stringify({attempt_id:active.attemptId})});
-        rewardMeta={xpEarned:Number(reward.xp_earned||0),xpTotal:Number(reward.xp_total||0),level:Number(reward.level||1)};
-      } catch (rewardError) { rewardMeta={xpError:rewardError.message}; }
-      localStorage.removeItem(activeKey());localStorage.removeItem(snapshotKey(active.attemptId));
-      renderResult(result,exam,{submittedAt,expired:!!data.expired,...rewardMeta});active=null;await loadHistory(false);
-    }catch(error){active.submitting=false;if(submitButton)submitButton.disabled=false;setStatus('Chưa xác nhận được kết quả: '+error.message+' · hãy thử nộp lại, đừng đóng tab.','error');toast('Chưa xác nhận nộp bài. Hãy thử lại.');if(auto){const host=$('pec-player-host');if(host&&!host.querySelector('[data-pec-retry-submit]')){const b=document.createElement('button');b.type='button';b.dataset.pecRetrySubmit='1';b.className='pec-btn primary';b.textContent='Thử nộp lại';b.addEventListener('click',()=>submitExam(true));host.querySelector('.pec-player-foot')?.appendChild(b);}}}
-  }
-
-  function renderResult(result,exam,meta={}){
-    const host=$('pec-player-host');if(!host)return;
-    const review=Array.isArray(result?.review)?result.review:[];
-    const details=review.map((item,i)=>{
-      let correct='';
-      if(item.type==='mcq')correct='Đáp án: '+String(item.correctAnswer||'—');
-      else if(item.type==='short')correct='Đáp án chấp nhận: '+(Array.isArray(item.correctAnswer)?item.correctAnswer.join(' / '):String(item.correctAnswer??'—'));
-      else if(item.type==='truefalse')correct='Đáp án Đúng/Sai: '+(Array.isArray(item.correctAnswer)?item.correctAnswer.map(v=>v?'Đúng':'Sai').join(' · '):'—');
-      const statementStatus=item.type==='truefalse'&&Array.isArray(item.statements)?'<div class="pec-tags" style="margin-top:5px">'+item.statements.map((s,j)=>`<span class="pec-tag ${s.correct?'pec-ok':'pec-no'}">Ý ${j+1}: ${s.correct?'đúng':'sai'}</span>`).join('')+'</div>':'';
-      return `<article class="pec-review-item"><h4>${item.correct?'✅':'📝'} Câu ${esc(item.number||i+1)} · ${esc(item.section||'')} · ${esc(item.points)} điểm</h4><div>${esc(correct)}</div>${statementStatus}<div style="margin-top:7px;color:#475569"><b>Lời giải:</b> ${esc(item.explanation||'Chưa có lời giải được nhập.')}</div></article>`;
-    }).join('');
+  function startTimer() {
     stopTimer();
-    const xpNotice=meta.xpError?`<div class="pec-notice">Bài đã được chấm và lưu, nhưng chưa cập nhật được XP/BXH: ${esc(meta.xpError)}</div>`:(Number.isFinite(meta.xpEarned)?`<div class="pec-notice">Đã xác minh kết quả trên máy chủ · +${esc(meta.xpEarned)} XP · cấp ${esc(meta.level||1)}</div>`:'');
-    host.innerHTML=`<section class="pec-result"><div class="pec-eyebrow">KẾT QUẢ ĐÃ ĐƯỢC MÁY CHỦ CHẤM</div><div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:10px 0 16px"><div><div class="pec-result-score">${esc(Number(result?.score||0).toFixed(2))}<span style="font-size:15px;color:#64748b">/10</span></div><div class="pec-sub">Điểm quy đổi theo thang 10</div></div><div class="pec-tags"><span class="pec-tag">Đúng trọn câu: ${esc(result?.correct||0)}/${esc(result?.total||0)}</span><span class="pec-tag">Chưa trả lời: ${esc(result?.unanswered||0)}</span><span class="pec-tag">Điểm thô: ${esc(result?.rawScore??0)}/${esc(result?.maxScore??0)}</span></div></div>${meta.expired?'<div class="pec-notice">Đã hết giờ. Máy chủ chấm theo câu trả lời được lưu trước thời hạn.</div>':''}${xpNotice}<div class="pec-admin-actions"><button type="button" class="pec-btn primary" data-pec-result-back>Quay lại kho đề</button></div><h4 style="font-size:13px;font-weight:950;margin-top:16px">Chữa bài từng câu</h4>${details||'<div class="pec-empty">Không có dữ liệu chữa bài.</div>'}</section>`;
-    typesetMath(host);
-    if(panel){const msg=$('pec-bank-message');if(msg){msg.hidden=false;msg.className='pec-notice';msg.textContent='Kết quả vừa nộp được lưu trong Lịch sử thi.';}}
-  }
-  function renderListHost(){const host=$('pec-player-host');if(host)host.innerHTML='';const b=panel?.querySelector('[data-pec-resume]');if(b)b.hidden=!localRead(activeKey())?.attemptId;}
-
-  async function loadHistory(show=true) {
-    if(!authenticated()){showLogin();return;}
-    try{
-      const data=await request(API+'?action=history');const rows=Array.isArray(data.history)?data.history:[];
-      let box=$('pec-history-box');if(!box){box=document.createElement('div');box.id='pec-history-box';panel?.appendChild(box)}
-      box.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin:14px 0 8px"><h4 style="font-size:12px;font-weight:950">Lịch sử thi gần đây</h4><button type="button" class="pec-btn" data-pec-history-close>Đóng</button></div>`+(rows.length?rows.slice(0,20).map((r,i)=>`<div class="pec-card" style="margin:7px 0"><h4>${esc(r.title||r.examId||'Lượt thi')}</h4><div class="pec-tags"><span class="pec-tag">Điểm ${esc(Number(r.score||0).toFixed(2))}/10</span><span class="pec-tag">Đúng ${esc(r.correct||0)}/${esc(r.total||0)}</span><span class="pec-tag">${esc(r.submittedAt?new Date(r.submittedAt).toLocaleString('vi-VN'):'—')}</span>${r.expired?'<span class="pec-tag">Hết giờ</span>':''}</div><div class="pec-card-actions"><button type="button" class="pec-btn" data-pec-result="${esc(r.attemptId)}">Xem chữa bài</button></div></div>`).join(''):'<div class="pec-empty">Chưa có lượt thi được lưu ở tài khoản này.</div>');
-      box.querySelector('[data-pec-history-close]')?.addEventListener('click',()=>box.remove());box.querySelectorAll('[data-pec-result]').forEach(b=>b.addEventListener('click',()=>loadResult(b.dataset.pecResult)));
-      if(show)box.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
-    }catch(error){toast('Không tải được lịch sử thi: '+error.message);}
-  }
-  async function loadResult(attemptId){try{const data=await request(API+'?action=result&attempt='+encodeURIComponent(attemptId));renderResult(data.result,data.exam,{submittedAt:data.submittedAt});}catch(e){toast('Không mở được kết quả: '+e.message);}}
-
-  // Admin panel is injected only for an account flagged Admin by the account API.
-  function mountAdminEntry(){
-    if(!isAdmin())return;
-    const root=$('phuc-admin-panel');const grid=root?.querySelector('.admin-grid');if(!grid||grid.querySelector('[data-pec-admin-open]'))return;
-    const card=document.createElement('article');card.className='phuc-dash-card';card.innerHTML='<div class="phuc-dash-card-head"><span>Ngân hàng đề máy chủ</span><i class="fa-solid fa-file-circle-check"></i></div><p class="text-[10px] text-slate-500 leading-relaxed">Nhập JSON, kiểm tra đáp án, lưu nháp, xem trước và xuất bản đề sau khi rà soát.</p><button type="button" class="phuc-dash-btn primary mt-3" data-pec-admin-open><i class="fa-solid fa-sliders"></i> Quản lý ngân hàng đề</button>';
-    grid.appendChild(card);card.querySelector('[data-pec-admin-open]')?.addEventListener('click',openAdminModal);
+    STATE.timerId = setInterval(() => {
+      if (STATE.view !== 'taking') {
+        stopTimer();
+        return;
+      }
+      STATE.remainingSec = Math.max(0, STATE.remainingSec - 1);
+      const timerEl = document.getElementById('pk9-exam-timer');
+      if (timerEl) {
+        timerEl.textContent = `⏱ ${formatClock(STATE.remainingSec)}`;
+        if (STATE.remainingSec <= 300) timerEl.classList.add('warning');
+      }
+      if (STATE.remainingSec === 0) {
+        stopTimer();
+        submitActiveExam(true);
+      }
+    }, 1000);
   }
 
-  function mountAdminModal(){if($('phuc-exam-admin-modal'))return;const modal=document.createElement('div');modal.id='phuc-exam-admin-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Quản lý ngân hàng đề');modal.innerHTML=`<section class="pec-admin-card"><header class="pec-admin-head"><div><div class="pec-eyebrow">ADMIN · EXAM MANAGEMENT</div><h3 style="font-size:16px;font-weight:950;margin-top:3px">Quản lý ngân hàng đề</h3><p class="pec-sub">Đề lưu trước ở trạng thái nháp. Máy chủ sẽ từ chối xuất bản nếu câu hỏi thiếu đáp án hoặc cần rà soát.</p></div><button type="button" class="pec-btn" data-pec-admin-close aria-label="Đóng">✕</button></header><div class="pec-admin-body"><section class="pec-admin-pane"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:12px">Đề trong hệ thống</b><button type="button" class="pec-btn" data-pec-admin-refresh>Tải lại</button></div><div id="pec-admin-list" class="pec-admin-list"><div class="pec-empty">Đang tải danh sách…</div></div></section><section class="pec-admin-pane"><b style="font-size:12px">Trình soạn đề JSON</b><label class="pec-label" for="pec-admin-json-file">Nhập file JSON (chỉ đọc, chưa gửi lên máy chủ)</label><input id="pec-admin-json-file" class="pec-file" type="file" accept="application/json,.json"><div class="pec-admin-actions"><button type="button" class="pec-btn" data-pec-template>Tải mẫu</button><button type="button" class="pec-btn" data-pec-new>Tạo bản nháp mới</button><button type="button" class="pec-btn" data-pec-preview>Kiểm tra / xem trước</button><button type="button" class="pec-btn" data-pec-download>Xuất JSON</button></div><textarea id="pec-admin-json" class="pec-json" spellcheck="false" aria-label="Nội dung đề JSON" placeholder="Dán JSON của đề vào đây…"></textarea><div id="pec-admin-preview" class="pec-admin-status">Chưa kiểm tra JSON.</div><div class="pec-admin-actions"><button type="button" class="pec-btn primary" data-pec-save><i class="fa-solid fa-floppy-disk"></i> Lưu nháp</button><button type="button" class="pec-btn primary" data-pec-publish><i class="fa-solid fa-paper-plane"></i> Xuất bản</button></div><div id="pec-admin-status" class="pec-admin-status" aria-live="polite">Không gửi file hoặc dữ liệu nào cho đến khi bấm Lưu nháp / Xuất bản.</div><div class="pec-admin-status">Quan trọng: đối chiếu đáp án và lời giải với nguồn gốc. Hình câu hỏi dùng imageUrl trỏ tới file cùng website trong /assets/ hoặc /exam-sources/ (chức năng upload ảnh riêng từng câu chưa được bật trong bản này). JSON hợp lệ không chứng minh nội dung học thuật đúng.</div></section></div></section>`;document.body.appendChild(modal);
-    modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-pec-admin-close]'))modal.classList.remove('open');const a=e.target.closest('[data-pec-admin-action]');if(a)adminAction(a.dataset.pecAdminAction,a.dataset.id);});
-    modal.querySelector('[data-pec-admin-refresh]')?.addEventListener('click',loadAdminList);
-    modal.querySelector('[data-pec-template]')?.addEventListener('click',loadTemplate);
-    modal.querySelector('[data-pec-new]')?.addEventListener('click',newDraft);
-    modal.querySelector('[data-pec-preview]')?.addEventListener('click',previewJson);
-    modal.querySelector('[data-pec-save]')?.addEventListener('click',saveExam);
-    modal.querySelector('[data-pec-publish]')?.addEventListener('click',publishExam);
-    modal.querySelector('[data-pec-download]')?.addEventListener('click',downloadJson);
-    modal.querySelector('#pec-admin-json-file')?.addEventListener('change',loadJsonFile);
-    modal.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open');});
-  }
-  function adminStatus(text,kind='info'){const el=$('pec-admin-status');if(!el)return;el.textContent=text;el.style.background=kind==='error'?'#fef2f2':kind==='ok'?'#ecfdf5':'#f1f5f9';el.style.color=kind==='error'?'#991b1b':kind==='ok'?'#065f46':'#475569';}
-  async function openAdminModal(){if(!isAdmin()){toast('Giao diện Admin không có quyền.');return;}mountAdminModal();$('phuc-exam-admin-modal')?.classList.add('open');await loadAdminList();}
-  async function loadAdminList(){const box=$('pec-admin-list');if(!box)return;box.innerHTML='<div class="pec-empty">Đang tải danh sách…</div>';try{const data=await request(API+'?action=admin-list');const rows=Array.isArray(data.exams)?data.exams:[];box.innerHTML=rows.length?rows.map(e=>`<article class="pec-admin-row"><h4>${esc(e.title||e.id)}</h4><div class="pec-admin-meta">${esc(e.id)}<br>${esc(e.subject||'—')} · lớp ${esc(e.grade||'—')} · ${esc(e.questionCount||0)} câu<br>Trạng thái: ${e.reviewCount?'<b style="color:#b45309">Cần rà soát ('+esc(e.reviewCount)+')</b>':e.published?'<b style="color:#047857">Đã xuất bản</b>':'Nháp'} </div><div class="pec-card-actions"><button type="button" class="pec-btn" data-pec-admin-action="edit" data-id="${esc(e.id)}">Sửa / rà soát</button><button type="button" class="pec-btn" data-pec-admin-action="clone" data-id="${esc(e.id)}">Nhân bản</button>${e.published?`<button type="button" class="pec-btn" data-pec-admin-action="unpublish" data-id="${esc(e.id)}">Ẩn khỏi học viên</button>`:''}</div></article>`).join(''):'<div class="pec-empty">Chưa có đề. Tạo mới hoặc nhập JSON ở bên phải.</div>';}catch(e){box.innerHTML='<div class="pec-error">Không tải được danh sách: '+esc(e.message)+'</div>';}}
-  async function adminAction(action,id){
-    if(action==='unpublish'){
-      if(!confirm('Ẩn đề này khỏi kho học viên? Dữ liệu đề và lịch sử thi sẽ được giữ nguyên.'))return;
-      try{const data=await request(API+'?action=unpublish',{method:'POST',headers:csrfHeaders(),body:JSON.stringify({id})});adminStatus(data.message||'Đã ẩn đề.','ok');await loadAdminList();await loadExams();}catch(e){adminStatus('Không ẩn được đề: '+e.message,'error');}return;
+  async function startExamById(examId, openSplitPdf = false) {
+    let fullExam = findFullSeedExam(examId);
+    let attemptId = `local-${examId}-${Date.now()}`;
+
+    try {
+      const resp = await fetch('/api/exams?action=start', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: JSON.stringify({ id: examId, exam_id: examId })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data?.ok && data.exam) {
+          const seedCopy = findFullSeedExam(examId);
+          fullExam = {
+            ...(seedCopy || {}),
+            ...data.exam,
+            questions: (data.exam.questions || []).map((q, i) => ({
+              ...(seedCopy?.questions?.[i] || {}),
+              ...q
+            }))
+          };
+          attemptId = data.attemptId || data.attempt_id || attemptId;
+        }
+      }
+    } catch {}
+
+    if (!fullExam) {
+      if (window.PK9_TOAST) window.PK9_TOAST('Không tìm thấy dữ liệu đề thi này.', 'error');
+      return;
     }
-    try{const data=await request(API+'?action=admin-get&id='+encodeURIComponent(id));const textarea=$('pec-admin-json');if(!textarea)return;textarea.value=JSON.stringify(data.exam,null,2);if(action==='clone'){const e=JSON.parse(textarea.value);e.id='clone-'+Date.now();e.title=(e.title||'Đề chưa đặt tên')+' — Bản sao';e.published=false;delete e.publishedAt;textarea.value=JSON.stringify(e,null,2);adminStatus('Đã tạo bản sao trong trình soạn. Bản sao chưa được lưu cho đến khi bấm Lưu nháp.','ok');}else{adminStatus('Đã nạp đề vào trình soạn. Khi bấm Lưu nháp, đề sẽ chuyển về trạng thái nháp.','ok');}previewJson();$('pec-admin-json')?.scrollIntoView({behavior:'auto',block:'nearest'});}catch(e){adminStatus('Không mở được đề: '+e.message,'error');}}
-  async function loadTemplate(){try{const r=await request('/exam-template.json');$('pec-admin-json').value=JSON.stringify(r,null,2);previewJson();adminStatus('Đã nạp mẫu JSON. Hãy đổi mã đề và thay nội dung ví dụ trước khi lưu.','ok');}catch(e){adminStatus('Không tải được mẫu: '+e.message,'error');}}
-  async function newDraft(){await loadTemplate();try{const e=JSON.parse($('pec-admin-json').value);e.id='draft-'+Date.now();e.title='Đề mới — cần chỉnh sửa';e.published=false;$('pec-admin-json').value=JSON.stringify(e,null,2);previewJson();adminStatus('Đã tạo bộ khung nháp mới.','ok');}catch{}}
-  function loadJsonFile(event){const f=event.target.files?.[0];if(!f)return;if(f.size>3*1024*1024){adminStatus('File JSON vượt quá 3 MB.','error');event.target.value='';return;}const reader=new FileReader();reader.onload=()=>{$('pec-admin-json').value=String(reader.result||'');previewJson();adminStatus('Đã đọc file JSON vào trình soạn; chưa upload lên máy chủ.','ok');};reader.onerror=()=>adminStatus('Không đọc được file.','error');reader.readAsText(f);}
-  function previewJson(){const box=$('pec-admin-preview');if(!box)return;try{const e=JSON.parse($('pec-admin-json').value||'{}');const qs=Array.isArray(e.questions)?e.questions:[];const missing=qs.filter(q=>{if(!q||q.reviewRequired)return true;if(q.type==='mcq')return q.answer==null||!Array.isArray(q.options)||String(q.answer).charCodeAt(0)-65<0||String(q.answer).charCodeAt(0)-65>=q.options.length;if(q.type==='truefalse')return !Array.isArray(q.statements)||q.statements.length===0||q.statements.some(s=>typeof s?.answer!=='boolean');if(q.type==='short')return !(Array.isArray(q.acceptedAnswers)&&q.acceptedAnswers.length||String(q.answer??'').trim());return true;});box.textContent=`Mã: ${e.id||'(thiếu)'} · Tên: ${e.title||'(thiếu)'}\n${qs.length} câu · ${e.duration||60} phút · ${missing.length} câu có thể cần rà soát.\n${qs.slice(0,8).map((q,i)=>`${i+1}. [${q.type||'chưa rõ'}] ${String(q.text||'').slice(0,120)}`).join('\n')}${qs.length>8?'\n…':''}`;box.style.background=missing.length?'#fffbeb':'#ecfdf5';box.style.color=missing.length?'#92400e':'#065f46';return e;}catch(e){box.textContent='JSON chưa hợp lệ: '+e.message;box.style.background='#fef2f2';box.style.color='#991b1b';return null;}}
-  async function saveExam(){const e=previewJson();if(!e)return;try{const data=await request(API+'?action=admin-import',{method:'POST',headers:csrfHeaders(),body:JSON.stringify({exam:e})});$('pec-admin-json').value=JSON.stringify(data.exam,null,2);adminStatus(data.message||'Đã lưu nháp.','ok');await loadAdminList();await loadExams();}catch(error){adminStatus('Không lưu được nháp: '+error.message,'error');}}
-  async function publishExam(){const e=previewJson();if(!e?.id){adminStatus('Thiếu mã đề.','error');return;}if(!confirm('Xuất bản đề này cho học viên? Chỉ tiếp tục sau khi đã đối chiếu toàn bộ đáp án, hình và lời giải với nguồn đáng tin cậy.'))return;try{const data=await request(API+'?action=publish',{method:'POST',headers:csrfHeaders(),body:JSON.stringify({id:e.id})});$('pec-admin-json').value=JSON.stringify(data.exam,null,2);adminStatus('Đã xuất bản đề.','ok');await loadAdminList();await loadExams();}catch(error){adminStatus('Chưa xuất bản: '+error.message,'error');}}
-  function downloadJson(){const raw=$('pec-admin-json')?.value||'';try{JSON.parse(raw);}catch(e){adminStatus('Không xuất được vì JSON lỗi: '+e.message,'error');return;}const blob=new Blob([raw],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='hoc-cung-phuc-k9-exam.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
-  function boot(){mountStudentPanel();mountAdminEntry();mountAdminModal();}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  // Auth state is populated asynchronously by the existing auth module; poll only this lightweight boolean.
-  // Keep checking at a low frequency because an admin may sign in after initial page load.
-  // This performs only a small DOM lookup and avoids a stale Admin menu after the first 30 seconds.
-  setInterval(mountAdminEntry, 4000);
-  const oldSwitch=window.switchTab;
-  if(typeof oldSwitch==='function'&&!oldSwitch.__pecWrapped){const wrapped=function(tab){const v=oldSwitch.apply(this,arguments);if(tab==='exam-bank')loadExams();return v;};wrapped.__pecWrapped=true;window.switchTab=wrapped;}
-  // Ctrl/Cmd+Enter submits answer or saves JSON only in the relevant focused panel; no surprise automatic changes.
-  document.addEventListener('keydown',e=>{const modal=$('phuc-exam-admin-modal');if(modal?.classList.contains('open')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'&&e.target?.id==='pec-admin-json'){e.preventDefault();previewJson();}});
-})();
+    let savedAnswers = {};
+    try {
+      const rawDraft = localStorage.getItem(`pk9_exam_draft_${examId}`);
+      if (rawDraft) savedAnswers = JSON.parse(rawDraft) || {};
+    } catch {}
+
+    const pdfPath = fullExam.sourceFile || fullExam.pdfUrl || '';
+    STATE.activeExam = fullExam;
+    STATE.attemptId = attemptId;
+    STATE.answers = savedAnswers;
+    STATE.flagged = {};
+    STATE.splitPdf = Boolean(openSplitPdf && pdfPath);
+    STATE.startedAt = Date.now();
+    STATE.remainingSec = Number(fullExam.duration || fullExam.durationMinutes || 50) * 60;
+    STATE.view = 'taking';
+    renderExamCenter();
+    startTimer();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function saveDraftDebounced() {
+    if (!STATE.activeExam) return;
+    try {
+      localStorage.setItem(`pk9_exam_draft_${STATE.activeExam.id}`, JSON.stringify(STATE.answers));
+    } catch {}
+  }
+
+  async function submitActiveExam(autoSubmitted = false) {
+    if (!STATE.activeExam) return;
+    if (!autoSubmitted) {
+      const totalQ = (STATE.activeExam.questions || []).length;
+      const doneQ = (STATE.activeExam.questions || []).filter(q => isQuestionAnswered(q, STATE.answers[q.id])).length;
+      if (doneQ < totalQ) {
+        const ok = window.confirm(`Bạn đã làm ${doneQ}/${totalQ} câu. Bạn có chắc chắn muốn nộp bài và chấm điểm ngay không?`);
+        if (!ok) return;
+      }
+    }
+
+    stopTimer();
+    const seedExam = findFullSeedExam(STATE.activeExam.id) || STATE.activeExam;
+    let graded = gradeExamLocally(seedExam, STATE.answers);
+    let xpEarned = 0;
+
+    try {
+      const resp = await fetch('/api/exams?action=submit', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: JSON.stringify({
+          attemptId: STATE.attemptId,
+          attempt_id: STATE.attemptId,
+          examId: STATE.activeExam.id,
+          exam_id: STATE.activeExam.id,
+          answers: STATE.answers
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data?.ok && data.result) {
+          graded = data.result;
+        }
+      }
+    } catch {}
+
+    // Record to dashboard & leaderboard
+    try {
+      const recResp = await fetch('/api/dashboard?action=record-exam', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: JSON.stringify({
+          attempt_id: STATE.attemptId,
+          exam_id: STATE.activeExam.id,
+          title: STATE.activeExam.title,
+          subject: subjLabel(STATE.activeExam.subject),
+          grade: STATE.activeExam.program?.toUpperCase() || '2K9',
+          score: graded.score,
+          correct: graded.correct,
+          total_questions: graded.total
+        })
+      });
+      if (recResp.ok) {
+        const recData = await recResp.json();
+        xpEarned = Number(recData?.xp_earned || 0);
+        if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
+          window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
+        }
+      }
+    } catch {}
+
+    try {
+      localStorage.removeItem(`pk9_exam_draft_${STATE.activeExam.id}`);
+      const hist = JSON.parse(localStorage.getItem('pk9_exam_history') || '[]');
+      hist.unshift({
+        examId: STATE.activeExam.id,
+        title: STATE.activeExam.title,
+        subject: subjLabel(STATE.activeExam.subject),
+        score: graded.score,
+        correct: graded.correct,
+        total: graded.total,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('pk9_exam_history', JSON.stringify(hist.slice(0, 30)));
+    } catch {}
+
+    STATE.lastResult = graded;
+    STATE.xpAwarded = xpEarned;
+    STATE.view = 'result';
+    renderExamCenter();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.PK9_TOAST) {
+      window.PK9_TOAST(`Đã chấm bài hoàn tất: ${Number(graded.score || 0).toFixed(2)}/10 điểm!${xpEarned ? ` (+${xpEarned} XP vào BXH)` : ''}`, 'success');
+    }
+  }
+
+  function renderCatalogView(root) {
+    const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
+    const q = STATE.searchQuery.trim().toLowerCase();
+    const filtered = STATE.exams.filter(ex => {
+      const sName = subjLabel(ex.subject);
+      if (STATE.subjectFilter !== 'ALL' && sName !== STATE.subjectFilter) return false;
+      if (!q) return true;
+      return `${ex.title} ${sName} ${ex.source || ex.sourceOrg || ''} ${ex.periodLabel || ''}`.toLowerCase().includes(q);
+    });
+
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem('pk9_exam_history') || '[]'); } catch {}
+    const bestLocal = hist.length ? Math.max(...hist.map(h => Number(h.score || 0))).toFixed(2) : '—';
+
+    const sourcesList = Array.isArray(window.PK9_EXAM_SOURCES) ? window.PK9_EXAM_SOURCES : [];
+    const refDocs = Array.isArray(window.PHUC_PDF_REFERENCE_V27) ? window.PHUC_PDF_REFERENCE_V27 : [];
+
+    root.innerHTML = `
+      <div class="pk9-exam-hub">
+        <div class="pk9-exam-hero">
+          <div class="pk9-exam-hero-grid">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.3rem 0.8rem;border-radius:999px;background:rgba(56,189,248,0.18);border:1px solid rgba(56,189,248,0.35);font-size:0.76rem;font-weight:800;margin-bottom:0.75rem;">
+                <span>🏛️ KHO LUYỆN ĐỀ NGUỒN GỐC THẬT • CHUẨN GDPT 2018</span>
+              </div>
+              <h2 style="font-size:1.65rem;font-weight:900;margin:0 0 0.55rem;line-height:1.25;">
+                Phòng Thi Ảo & Hệ Thống Chấm Điểm Tự Động Phúc K9
+              </h2>
+              <p style="margin:0;color:rgba(255,255,255,0.86);font-size:0.92rem;line-height:1.6;">
+                Tích hợp đề thi thật từ các Sở GD&ĐT (Lâm Đồng, Điện Biên, Hà Nội, Nghệ An...), THPT Ngô Gia Tự, Bộ GD&ĐT và ĐGNL HSA/V-ACT. Hệ thống chấm chuẩn 3 phần (Trắc nghiệm ABCD • Đúng/Sai lũy tiến 0.1→1.0đ • Trả lời ngắn), phân tích điểm yếu theo chuyên đề và cộng XP trực tiếp vào <b>BXH Hàng Tuần & BXH Top Học Viên</b>.
+              </p>
+            </div>
+            <div class="pk9-exam-kpis">
+              <div class="pk9-exam-kpi">
+                <strong>${STATE.exams.length} Đề</strong>
+                <span>Tương tác chấm điểm tự động</span>
+              </div>
+              <div class="pk9-exam-kpi">
+                <strong>${sourcesList.length + refDocs.length}+</strong>
+                <span>Đề gốc Sở/Bộ & PDF đối chiếu</span>
+              </div>
+              <div class="pk9-exam-kpi">
+                <strong>${hist.length} Lượt</strong>
+                <span>Đề bạn đã hoàn thành</span>
+              </div>
+              <div class="pk9-exam-kpi">
+                <strong>${bestLocal}</strong>
+                <span>Điểm cao nhất của bạn</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pk9-exam-toolbar">
+          <div class="pk9-exam-tabs">
+            ${subjects.map(sub => `
+              <button type="button" class="pk9-exam-chip ${STATE.subjectFilter === sub && STATE.view === 'catalog' ? 'active' : ''}" data-exam-subj="${esc(sub)}">
+                ${sub === 'ALL' ? '🔥 Tất cả môn' : esc(sub)}
+              </button>
+            `).join('')}
+            <button type="button" class="pk9-exam-chip ${STATE.view === 'sources' ? 'active' : ''}" data-exam-view="sources">
+              📚 Kho Đề Gốc Sở / Bộ (${sourcesList.length + refDocs.length})
+            </button>
+          </div>
+          <div class="pk9-exam-search">
+            <span class="pk9-exam-search-icon">🔍</span>
+            <input type="search" id="pk9-exam-search-input" placeholder="Tìm tên đề, Sở GD&ĐT, mã đề..." value="${esc(STATE.searchQuery)}" />
+          </div>
+        </div>
+
+        ${STATE.view === 'sources' ? renderVerifiedSourcesSection(sourcesList, refDocs, q) : `
+          <div class="pk9-exam-grid">
+            ${filtered.map(ex => {
+              const qCount = ex.questionCount || (ex.questions ? ex.questions.length : 22);
+              const sName = subjLabel(ex.subject);
+              const pdfPath = ex.sourceFile || ex.pdfUrl || '';
+              const duration = ex.duration || ex.durationMinutes || 50;
+              return `
+                <article class="pk9-exam-card">
+                  <div>
+                    <div class="pk9-exam-card-badges">
+                      <span class="pk9-badge pk9-badge-subj">📘 ${esc(sName)} • Khối ${esc(ex.grade || '12')}</span>
+                      <span class="pk9-badge pk9-badge-verified">✓ Nguồn thật đã kiểm duyệt</span>
+                    </div>
+                    <h4>${esc(ex.title)}</h4>
+                    <div class="pk9-exam-origin">
+                      🏛️ <b>Nguồn đề:</b> ${esc(ex.source || ex.sourceOrg || 'Bộ GD&ĐT / Sở GD&ĐT')}
+                    </div>
+                    <div class="pk9-exam-meta-row">
+                      <span>⏱ ${esc(duration)} phút</span>
+                      <span>•</span>
+                      <span>📝 ${qCount} câu hỏi (3 phần)</span>
+                      <span>•</span>
+                      <span>🎯 Thang 10đ + Giải chi tiết</span>
+                    </div>
+                  </div>
+                  <div class="pk9-exam-actions">
+                    <button type="button" class="pk9-btn-exam-primary" data-start-exam="${esc(ex.id)}">
+                      ⚡ Vào phòng thi & Chấm điểm
+                    </button>
+                    ${pdfPath ? `
+                      <button type="button" class="pk9-btn-exam-ghost" data-start-split="${esc(ex.id)}" title="Làm bài song song với file PDF gốc">
+                        📄 Thi kèm PDF
+                      </button>
+                    ` : ''}
+                  </div>
+                </article>
+              `;
+            }).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  }
+
+  function renderVerifiedSourcesSection(sourcesList, refDocs, q) {
+    const combined = [
+      ...sourcesList.map(s => ({
+        title: s.title,
+        subject: s.subject,
+        grade: s.grade || '2K9',
+        source: s.source,
+        format: s.format || 'Đề chuẩn GDPT 2018',
+        url: s.url,
+        interactiveExamId: s.interactiveExamId
+      })),
+      ...refDocs.map(d => ({
+        title: d.title,
+        subject: d.subject || 'Tổng hợp',
+        grade: d.grade || '2K9',
+        source: d.source || 'Sở GD&ĐT / Loigiaihay',
+        format: d.kind || 'Đề thi & Lời giải PDF',
+        url: d.url,
+        interactiveExamId: d.subject?.includes('Toán') ? 'exam-toan-lam-dong-2026-lan1'
+          : d.subject?.includes('Sinh') ? 'exam-sinh-dien-bien-2026-0401'
+          : d.subject?.includes('Anh') ? 'exam-tienganh-globalsuccess-2026'
+          : 'exam-vatli-quocgia-2026'
+      }))
+    ].filter(item => {
+      if (STATE.subjectFilter !== 'ALL' && !String(item.subject).toLowerCase().includes(STATE.subjectFilter.toLowerCase())) return false;
+      if (!q) return true;
+      return `${item.title} ${item.subject} ${item.source}`.toLowerCase().includes(q);
+    });
+
+    return `
+      <div class="pk9-exam-grid">
+        ${combined.map(item => `
+          <article class="pk9-exam-card">
+            <div>
+              <div class="pk9-exam-card-badges">
+                <span class="pk9-badge pk9-badge-subj">${esc(item.subject)} • ${esc(item.grade)}</span>
+                <span class="pk9-badge pk9-badge-verified">🏛️ ${esc(item.source)}</span>
+              </div>
+              <h4>${esc(item.title)}</h4>
+              <div class="pk9-exam-origin">Định dạng: ${esc(item.format)}</div>
+            </div>
+            <div class="pk9-exam-actions">
+              ${item.interactiveExamId ? `
+                <button type="button" class="pk9-btn-exam-primary" data-start-exam="${esc(item.interactiveExamId)}">
+                  ⚡ Làm đề tương tác
+                </button>
+              ` : ''}
+              <a href="${esc(item.url)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
+                🔗 Mở nguồn đề gốc ↗
+              </a>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderTakingView(root) {
+    const ex = STATE.activeExam;
+    const questions = ex.questions || [];
+    const answeredCount = questions.filter(q => isQuestionAnswered(q, STATE.answers[q.id])).length;
+    const pdfPath = ex.sourceFile || ex.pdfUrl || '';
+
+    const p1 = questions.filter(q => normalizeQuestionType(q) === 'mcq');
+    const p2 = questions.filter(q => normalizeQuestionType(q) === 'truefalse');
+    const p3 = questions.filter(q => normalizeQuestionType(q) === 'short');
+
+    root.innerHTML = `
+      <div class="pk9-exam-room">
+        <div class="pk9-exam-sticky-bar">
+          <div>
+            <div style="font-size:0.76rem;font-weight:800;color:#2563eb;text-transform:uppercase;">
+              🏛️ ${esc(ex.source || ex.sourceOrg || 'Đề thi chính thức')} • ${esc(subjLabel(ex.subject))}
+            </div>
+            <div style="font-size:1.02rem;font-weight:900;color:var(--pk9-text,#0f172a);">
+              ${esc(ex.title)}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
+            <span class="pk9-timer-pill" id="pk9-exam-timer">⏱ ${formatClock(STATE.remainingSec)}</span>
+            <span style="font-size:0.84rem;font-weight:800;padding:0.45rem 0.85rem;border-radius:999px;background:var(--pk9-surface-2,#f1f5f9);">
+              Đã làm: <b id="pk9-exam-progress-text">${answeredCount}/${questions.length}</b>
+            </span>
+            ${pdfPath ? `
+              <button type="button" class="pk9-btn-exam-ghost" data-toggle-split-pdf="1">
+                ${STATE.splitPdf ? '📐 Ẩn khung PDF' : '📄 Mở khung PDF gốc'}
+              </button>
+            ` : ''}
+            <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1">
+              ✅ Nộp bài & Chấm điểm
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-exit-exam="1">
+              ✕ Thoát
+            </button>
+          </div>
+        </div>
+
+        <div class="pk9-exam-workspace ${STATE.splitPdf && pdfPath ? 'with-pdf' : ''}">
+          ${STATE.splitPdf && pdfPath ? `
+            <div class="pk9-exam-pdf-pane">
+              <div style="padding:0.65rem 1rem;background:#0f172a;color:#fff;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
+                <span>📄 Đề gốc đối chiếu (${esc(ex.source || '')})</span>
+                <a href="${esc(pdfPath)}" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:none;">Mở tab mới ↗</a>
+              </div>
+              <iframe src="${esc(pdfPath)}" title="Đề PDF gốc"></iframe>
+            </div>
+          ` : ''}
+
+          <div class="pk9-exam-questions-col">
+            ${p1.length ? `
+              <div class="pk9-section-banner">
+                <h4>PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn (${p1.length} câu)</h4>
+                <p>Mỗi câu hỏi thí sinh chỉ chọn một phương án A, B, C hoặc D.</p>
+              </div>
+              ${p1.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
+            ` : ''}
+
+            ${p2.length ? `
+              <div class="pk9-section-banner">
+                <h4>PHẦN II. Câu trắc nghiệm Đúng / Sai (${p2.length} câu — Thang điểm lũy tiến Bộ GD&ĐT)</h4>
+                <p>Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn Đúng hoặc Sai. (Đúng 1 ý: 0,1đ • 2 ý: 0,25đ • 3 ý: 0,5đ • 4 ý: 1,0đ).</p>
+              </div>
+              ${p2.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
+            ` : ''}
+
+            ${p3.length ? `
+              <div class="pk9-section-banner">
+                <h4>PHẦN III. Câu trắc nghiệm trả lời ngắn (${p3.length} câu)</h4>
+                <p>Thí sinh tính toán và điền kết quả số (dùng dấu phẩy hoặc dấu chấm cho số thập phân).</p>
+              </div>
+              ${p3.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
+            ` : ''}
+          </div>
+
+          ${!(STATE.splitPdf && pdfPath) ? `
+            <aside class="pk9-exam-palette">
+              <div style="font-weight:800;font-size:0.92rem;color:var(--pk9-text,#0f172a);">
+                🧭 Bản đồ câu hỏi
+              </div>
+              <div style="font-size:0.76rem;color:var(--pk9-text-muted,#64748b);margin-top:0.2rem;">
+                Nhấn vào số câu để cuộn nhanh tới câu hỏi đó.
+              </div>
+              <div class="pk9-palette-grid" id="pk9-palette-grid">
+                ${questions.map((q, idx) => {
+                  const done = isQuestionAnswered(q, STATE.answers[q.id]);
+                  const flag = Boolean(STATE.flagged[q.id]);
+                  return `
+                    <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''}" data-jump-q="${esc(q.id)}">
+                      ${idx + 1}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+              <div style="margin-top:1rem;padding-top:0.85rem;border-top:1px dashed var(--pk9-border,#e2e8f0);display:flex;flex-direction:column;gap:0.5rem;">
+                <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1" style="width:100%;">
+                  ✅ Nộp bài & Chấm điểm ngay
+                </button>
+              </div>
+            </aside>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    typesetMath(root);
+  }
+
+  function renderQuestionCard(q, displayIndex) {
+    const ans = STATE.answers[q.id];
+    const done = isQuestionAnswered(q, ans);
+    const flagged = Boolean(STATE.flagged[q.id]);
+    const qType = normalizeQuestionType(q);
+    const promptText = q.text || q.prompt || '';
+
+    let bodyHtml = '';
+    if (qType === 'mcq') {
+      const letters = ['A', 'B', 'C', 'D'];
+      bodyHtml = `
+        <div class="pk9-mcq-list">
+          ${(q.options || []).map((opt, idx) => {
+            const key = typeof opt === 'object' && opt !== null ? (opt.key || letters[idx]) : letters[idx];
+            const text = typeof opt === 'object' && opt !== null ? opt.text : String(opt);
+            const selected = String(ans || '').toUpperCase() === String(key).toUpperCase();
+            return `
+              <div class="pk9-mcq-opt ${selected ? 'selected' : ''}" data-pick-mcq="${esc(q.id)}" data-mcq-key="${esc(key)}">
+                <span class="pk9-mcq-letter">${esc(key)}</span>
+                <div style="flex:1;">${esc(text)}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } else if (qType === 'truefalse') {
+      const curArr = Array.isArray(ans) ? ans : [null, null, null, null];
+      const letters = ['a', 'b', 'c', 'd'];
+      bodyHtml = `
+        <div class="pk9-tf-list">
+          ${(q.statements || []).map((st, idx) => {
+            const val = curArr[idx];
+            const label = st.key || letters[idx] || String(idx + 1);
+            return `
+              <div class="pk9-tf-row">
+                <div class="pk9-tf-text"><b>${esc(label)})</b> ${esc(st.text)}</div>
+                <div class="pk9-tf-toggle">
+                  <button type="button" class="pk9-tf-btn ${val === true ? 'active-true' : ''}" data-pick-tf="${esc(q.id)}" data-tf-idx="${idx}" data-tf-val="true">Đúng</button>
+                  <button type="button" class="pk9-tf-btn ${val === false ? 'active-false' : ''}" data-pick-tf="${esc(q.id)}" data-tf-idx="${idx}" data-tf-val="false">Sai</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } else {
+      bodyHtml = `
+        <div class="pk9-short-wrap">
+          <input type="text" class="pk9-short-input" data-short-q="${esc(q.id)}" placeholder="Nhập đáp số (VD: 12,5 hoặc -3)" value="${esc(ans ?? '')}" />
+          <span style="font-size:0.8rem;color:var(--pk9-text-muted,#64748b);">Chấp nhận cả dấu chấm (.) và dấu phẩy (,) thập phân</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="pk9-q-card ${done ? 'answered' : ''}" id="pk9-q-${esc(q.id)}">
+        <div class="pk9-q-header">
+          <div class="pk9-q-num">
+            <span>Câu ${q.number || displayIndex} (Phần ${esc(q.section || 'I')})</span>
+            ${q.topic ? `<span class="pk9-q-topic-tag">📌 ${esc(q.topic)}</span>` : ''}
+          </div>
+          <button type="button" class="pk9-btn-exam-ghost" data-flag-q="${esc(q.id)}" style="padding:0.28rem 0.65rem;font-size:0.75rem;">
+            ${flagged ? '🚩 Đã đánh dấu' : '🏳️ Đánh dấu'}
+          </button>
+        </div>
+        <div class="pk9-q-prompt">${esc(promptText)}</div>
+        ${bodyHtml}
+      </div>
+    `;
+  }
+
+  function renderResultView(root) {
+    const ex = STATE.activeExam;
+    const res = STATE.lastResult;
+    if (!ex || !res) {
+      STATE.view = 'catalog';
+      return renderCatalogView(root);
+    }
+
+    const gradeComment = res.score >= 9
+      ? '🏆 Xuất sắc! Phong độ Thủ khoa 9+!'
+      : res.score >= 8
+      ? '🔥 Rất tốt! Bạn đã nắm chắc kiến thức trọng tâm & vận dụng.'
+      : res.score >= 6.5
+      ? '💪 Khá tốt! Hãy xem kỹ lời giải các câu sai để bứt phá lên 8+.'
+      : '📚 Cần củng cố thêm lý thuyết ở các chuyên đề bên dưới.';
+
+    root.innerHTML = `
+      <div class="pk9-exam-hub">
+        <div class="pk9-result-banner">
+          <div class="pk9-score-circle">
+            <strong>${Number(res.score || 0).toFixed(2)}</strong>
+            <span>Thang 10đ</span>
+          </div>
+          <div>
+            <div style="font-size:0.8rem;font-weight:800;color:#38bdf8;text-transform:uppercase;margin-bottom:0.3rem;">
+              KẾT QUẢ CHẤM THI TỰ ĐỘNG • ${esc(ex.source || subjLabel(ex.subject))}
+            </div>
+            <h3 style="font-size:1.4rem;font-weight:900;margin:0 0 0.4rem;">${esc(ex.title)}</h3>
+            <p style="margin:0 0 0.75rem;color:rgba(255,255,255,0.88);font-size:0.92rem;">
+              ${gradeComment} • Trả lời đúng hoàn toàn: <b>${res.correct}/${res.total} câu</b> (Điểm thô: ${res.rawScore}/${res.maxScore})
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+              ${STATE.xpAwarded > 0 ? `<span class="pk9-badge" style="background:#10b981;color:#fff;">⚡ +${STATE.xpAwarded} XP đã cộng vào BXH Tuần & Top</span>` : `<span class="pk9-badge" style="background:rgba(255,255,255,0.16);color:#fff;">💡 Đăng nhập tài khoản để lưu điểm lên BXH Tuần & Top</span>`}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.55rem;">
+            <button type="button" class="pk9-btn-exam-primary" data-retry-exam="${esc(ex.id)}">
+              🔄 Làm lại đề này
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-back-catalog="1" style="background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25);">
+              ← Về kho luyện đề
+            </button>
+          </div>
+        </div>
+
+        ${Array.isArray(res.topicStats) && res.topicStats.length ? `
+          <div class="pk9-topic-breakdown">
+            <h4 style="margin:0 0 0.85rem;font-size:1.02rem;font-weight:800;">
+              📊 Phân tích năng lực theo Chuyên đề (Chẩn đoán điểm mạnh / điểm yếu)
+            </h4>
+            ${res.topicStats.map(t => {
+              const pct = Number(t.accuracy ?? t.percent ?? 0);
+              const earned = Number(t.earnedPts ?? t.earned ?? 0).toFixed(2);
+              const maxPts = Number(t.maxPts ?? t.max ?? 0).toFixed(2);
+              return `
+                <div class="pk9-topic-bar-row">
+                  <div style="font-weight:700;color:var(--pk9-text,#0f172a);">${esc(t.topic)}</div>
+                  <div class="pk9-topic-track">
+                    <div class="pk9-topic-fill" style="width:${Math.max(4, pct)}%;"></div>
+                  </div>
+                  <div style="font-weight:800;text-align:right;color:${pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444'};">
+                    ${pct}% (${earned}/${maxPts}đ)
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+
+        <div>
+          <h4 style="margin:0 0 0.85rem;font-size:1.08rem;font-weight:900;">
+            📝 Đáp án chuẩn & Lời giải chi tiết từng câu
+          </h4>
+          ${(res.review || []).map((r, idx) => {
+            const isOk = r.status === 'correct' || r.correct === true;
+            const isPartial = r.status === 'partial' || (!isOk && Number(r.earned || 0) > 0);
+            const statusClass = isOk ? 'correct' : isPartial ? 'partial' : 'wrong';
+            const statusBadge = isOk
+              ? `<span class="pk9-badge" style="background:rgba(16,185,129,0.15);color:#047857;">✓ Chính xác (+${r.earned}đ)</span>`
+              : isPartial
+              ? `<span class="pk9-badge" style="background:rgba(245,158,11,0.16);color:#b45309;">◐ Đúng một phần (+${r.earned}đ)</span>`
+              : `<span class="pk9-badge" style="background:rgba(239,68,68,0.15);color:#b91c1c;">✗ Chưa đúng (0đ)</span>`;
+
+            let ansCompare = '';
+            if (r.type === 'mcq' || r.type === 'single_choice') {
+              ansCompare = `
+                <div style="font-size:0.86rem;margin-top:0.5rem;">
+                  Bạn chọn: <b>${esc(r.userAnswer || 'Chưa chọn')}</b> • Đáp án đúng: <b style="color:#10b981;">${esc(r.correctAnswer ?? r.answer)}</b>
+                </div>
+              `;
+            } else if (r.type === 'short' || r.type === 'short_answer') {
+              ansCompare = `
+                <div style="font-size:0.86rem;margin-top:0.5rem;">
+                  Bạn điền: <b>${esc(r.userAnswer !== '' && r.userAnswer !== null ? r.userAnswer : 'Chưa điền')}</b> • Đáp số chuẩn: <b style="color:#10b981;">${esc(r.correctAnswer ?? r.answer)}</b>
+                </div>
+              `;
+            } else if (Array.isArray(r.statements)) {
+              const letters = ['a', 'b', 'c', 'd'];
+              ansCompare = `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.45rem;margin-top:0.6rem;">
+                  ${r.statements.map((st, sIdx) => `
+                    <div style="padding:0.45rem 0.7rem;border-radius:0.65rem;background:var(--pk9-surface-2,#f8fafc);border:1px solid ${st.correct ? '#10b981' : '#fca5a5'};font-size:0.81rem;">
+                      <b>Ý ${letters[sIdx]}):</b> Bạn chọn <b>${st.user === true ? 'Đúng' : st.user === false ? 'Sai' : 'Trống'}</b>
+                      → Chuẩn: <b style="color:#10b981;">${st.answer ? 'Đúng' : 'Sai'}</b>
+                    </div>
+                  `).join('')}
+                </div>
+              `;
+            }
+
+            return `
+              <div class="pk9-review-card ${statusClass}">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.45rem;">
+                  <div style="font-weight:800;color:#2563eb;">
+                    Câu ${r.number || idx + 1} (Phần ${esc(r.section || 'I')}) ${r.topic ? `• <span style="color:var(--pk9-text-muted,#64748b);font-weight:600;">${esc(r.topic)}</span>` : ''}
+                  </div>
+                  ${statusBadge}
+                </div>
+                <div style="font-size:0.93rem;line-height:1.6;white-space:pre-line;">${esc(r.text || r.prompt || '')}</div>
+                ${ansCompare}
+                ${r.explanation ? `
+                  <div class="pk9-exp-box">
+                    <b>💡 Lời giải & Phân tích chi tiết:</b><br/>
+                    <span style="white-space:pre-line;">${esc(r.explanation)}</span>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    typesetMath(root);
+  }
+
+  function updateTakingProgressUI() {
+    if (!STATE.activeExam) return;
+    const questions = STATE.activeExam.questions || [];
+    const answeredCount = questions.filter(q => isQuestionAnswered(q, STATE.answers[q.id])).length;
+    const progEl = document.getElementById('pk9-exam-progress-text');
+    if (progEl) progEl.textContent = `${answeredCount}/${questions.length}`;
+    const palette = document.getElementById('pk9-palette-grid');
+    if (palette) {
+      palette.querySelectorAll('[data-jump-q]').forEach(btn => {
+        const qId = btn.getAttribute('data-jump-q');
+        const qObj = questions.find(x => x.id === qId);
+        if (qObj) {
+          btn.classList.toggle('answered', isQuestionAnswered(qObj, STATE.answers[qId]));
+          btn.classList.toggle('flagged', Boolean(STATE.flagged[qId]));
+        }
+      });
+    }
+  }
+
+  function renderExamCenter() {
+    const root = document.getElementById('exam-center-root');
+    if (!root) return;
+    if (STATE.view === 'taking' && STATE.activeExam) {
+      renderTakingView(root);
+    } else if (STATE.view === 'result' && STATE.lastResult) {
+      renderResultView(root);
+    } else {
+      renderCatalogView(root);
+    }
+  }
+
+  function bindExamEvents() {
+    document.addEventListener('click', e => {
+      const subjBtn = e.target.closest('[data-exam-subj]');
+      if (subjBtn) {
+        STATE.subjectFilter = subjBtn.getAttribute('data-exam-subj') || 'ALL';
+        if (STATE.view !== 'sources') STATE.view = 'catalog';
+        renderExamCenter();
+        return;
+      }
+
+      const viewBtn = e.target.closest('[data-exam-view]');
+      if (viewBtn) {
+        STATE.view = STATE.view === 'sources' ? 'catalog' : 'sources';
+        renderExamCenter();
+        return;
+      }
+
+      const startBtn = e.target.closest('[data-start-exam]');
+      if (startBtn) {
+        startExamById(startBtn.getAttribute('data-start-exam'), false);
+        return;
+      }
+
+      const splitBtn = e.target.closest('[data-start-split]');
+      if (splitBtn) {
+        startExamById(splitBtn.getAttribute('data-start-split'), true);
+        return;
+      }
+
+      const toggleSplit = e.target.closest('[data-toggle-split-pdf]');
+      if (toggleSplit) {
+        STATE.splitPdf = !STATE.splitPdf;
+        renderExamCenter();
+        return;
+      }
+
+      const pickMcq = e.target.closest('[data-pick-mcq]');
+      if (pickMcq) {
+        const qId = pickMcq.getAttribute('data-pick-mcq');
+        const key = pickMcq.getAttribute('data-mcq-key');
+        STATE.answers[qId] = key;
+        saveDraftDebounced();
+        const card = document.getElementById(`pk9-q-${qId}`);
+        if (card) {
+          card.classList.add('answered');
+          card.querySelectorAll('[data-pick-mcq]').forEach(el => {
+            el.classList.toggle('selected', el.getAttribute('data-mcq-key') === key);
+          });
+        }
+        updateTakingProgressUI();
+        return;
+      }
+
+      const pickTf = e.target.closest('[data-pick-tf]');
+      if (pickTf) {
+        const qId = pickTf.getAttribute('data-pick-tf');
+        const tfIdx = Number(pickTf.getAttribute('data-tf-idx'));
+        const tfVal = pickTf.getAttribute('data-tf-val') === 'true';
+        if (!Array.isArray(STATE.answers[qId])) {
+          STATE.answers[qId] = [null, null, null, null];
+        }
+        STATE.answers[qId][tfIdx] = tfVal;
+        saveDraftDebounced();
+        const row = pickTf.closest('.pk9-tf-row');
+        if (row) {
+          row.querySelectorAll('[data-pick-tf]').forEach(btn => {
+            const isTrueBtn = btn.getAttribute('data-tf-val') === 'true';
+            btn.classList.toggle('active-true', isTrueBtn && tfVal === true);
+            btn.classList.toggle('active-false', !isTrueBtn && tfVal === false);
+          });
+        }
+        const card = document.getElementById(`pk9-q-${qId}`);
+        if (card) card.classList.add('answered');
+        updateTakingProgressUI();
+        return;
+      }
+
+      const flagBtn = e.target.closest('[data-flag-q]');
+      if (flagBtn) {
+        const qId = flagBtn.getAttribute('data-flag-q');
+        STATE.flagged[qId] = !STATE.flagged[qId];
+        flagBtn.textContent = STATE.flagged[qId] ? '🚩 Đã đánh dấu' : '🏳️ Đánh dấu';
+        updateTakingProgressUI();
+        return;
+      }
+
+      const jumpBtn = e.target.closest('[data-jump-q]');
+      if (jumpBtn) {
+        const qId = jumpBtn.getAttribute('data-jump-q');
+        const target = document.getElementById(`pk9-q-${qId}`);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const submitBtn = e.target.closest('[data-submit-exam]');
+      if (submitBtn) {
+        submitActiveExam(false);
+        return;
+      }
+
+      const exitBtn = e.target.closest('[data-exit-exam]');
+      if (exitBtn) {
+        stopTimer();
+        STATE.view = 'catalog';
+        renderExamCenter();
+        return;
+      }
+
+      const retryBtn = e.target.closest('[data-retry-exam]');
+      if (retryBtn) {
+        const exId = retryBtn.getAttribute('data-retry-exam');
+        try { localStorage.removeItem(`pk9_exam_draft_${exId}`); } catch {}
+        startExamById(exId, false);
+        return;
+      }
+
+      const backBtn = e.target.closest('[data-back-catalog]');
+      if (backBtn) {
+        STATE.view = 'catalog';
+        renderExamCenter();
+        return;
+      }
+    });
+
+    document.addEventListener('input', e => {
+      if (e.target && e.target.id === 'pk9-exam-search-input') {
+        STATE.searchQuery = e.target.value || '';
+        renderExamCenter();
+        const input = document.getElementById('pk9-exam-search-input');
+        if (input) {
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+        return;
+      }
+
+      const shortInput = e.target.closest('[data-short-q]');
+      if (shortInput) {
+        const qId = shortInput.getAttribute('data-short-q');
+        STATE.answers[qId] = shortInput.value;
+        saveDraftDebounced();
+        const card = document.getElementById(`pk9-q-${qId}`);
+        if (card) card.classList.toggle('answered', shortInput.value.trim() !== '');
+        updateTakingProgressUI();
+      }
+    });
+  }
+
+  async function initExamCenter() {
+    await loadExamCatalog();
+    renderExamCenter();
+  }
+
+  window.PK9_EXAM_CENTER = {
+    init: initExamCenter,
+    render: renderExamCenter,
+    startExamById,
+    filterBySubject(sub) {
+      STATE.subjectFilter = sub || 'ALL';
+      STATE.view = 'catalog';
+      renderExamCenter();
+    }
+  };
+
+  bindExamEvents();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initExamCenter);
+  } else {
+    initExamCenter();
+  }
+})(window, document);
