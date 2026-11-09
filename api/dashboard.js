@@ -84,20 +84,6 @@ function validVisitorId(v) {
   return /^[a-f0-9-]{24,80}$/i.test(String(v || ''));
 }
 
-// Baseline K9 community leaderboard profiles so the Weekly & Top leaderboards are always vibrant
-const COMMUNITY_BENCHMARK_MEMBERS = [
-  { username: 'minhanh_2k9_ams', display_name: 'Nguyễn Minh Anh', school: 'THPT Chuyên Hà Nội - Amsterdam', grade: '2K9', xp: 2480, weeklyXp: 640, streak: 19, attempts: 18, weeklyAttempts: 5, bestScore: 9.75, weeklyBestScore: 9.75, avgScore: 9.2, accuracy: 93, badges: ['Thủ Khoa Tuần', 'Thợ Săn 9+', 'Học Bá K9'] },
-  { username: 'hoangnam_khtn', display_name: 'Trần Hoàng Nam', school: 'THPT Chuyên KHTN', grade: '2K9', xp: 2310, weeklyXp: 590, streak: 16, attempts: 16, weeklyAttempts: 5, bestScore: 9.5, weeklyBestScore: 9.5, avgScore: 8.9, accuracy: 90, badges: ['Thợ Săn 9+', 'Chiến Thần Luyện Đề'] },
-  { username: 'khanhlinh_lhp', display_name: 'Lê Khánh Linh', school: 'THPT Chuyên Lê Hồng Phong', grade: '2K9', xp: 2150, weeklyXp: 540, streak: 14, attempts: 15, weeklyAttempts: 4, bestScore: 9.5, weeklyBestScore: 9.25, avgScore: 8.8, accuracy: 89, badges: ['Thợ Săn 9+', 'Chuỗi 7 Ngày Lửa'] },
-  { username: 'duykhanh_pbc', display_name: 'Phạm Duy Khánh', school: 'THPT Chuyên Phan Bội Châu', grade: '2K9', xp: 1940, weeklyXp: 485, streak: 12, attempts: 14, weeklyAttempts: 4, bestScore: 9.25, weeklyBestScore: 9.25, avgScore: 8.6, accuracy: 87, badges: ['Thợ Săn 9+', 'Chiến Thần Luyện Đề'] },
-  { username: 'thao_vy_lamdong', display_name: 'Võ Thảo Vy', school: 'THPT Chuyên Thăng Long - Đà Lạt', grade: '2K9', xp: 1790, weeklyXp: 450, streak: 11, attempts: 12, weeklyAttempts: 4, bestScore: 9.25, weeklyBestScore: 9.0, avgScore: 8.5, accuracy: 86, badges: ['Thợ Săn 9+', 'Chuỗi 7 Ngày Lửa'] },
-  { username: 'gia_huy_ngogiatu', display_name: 'Đặng Gia Huy', school: 'THPT Ngô Gia Tự', grade: '2K9', xp: 1620, weeklyXp: 410, streak: 9, attempts: 11, weeklyAttempts: 3, bestScore: 9.0, weeklyBestScore: 9.0, avgScore: 8.3, accuracy: 84, badges: ['Thợ Săn 9+', 'Chiến Thần Luyện Đề'] },
-  { username: 'quynh_nhu_2k9', display_name: 'Bùi Quỳnh Như', school: 'THPT Nguyễn Thị Minh Khai', grade: '2K9', xp: 1460, weeklyXp: 365, streak: 8, attempts: 10, weeklyAttempts: 3, bestScore: 8.75, weeklyBestScore: 8.75, avgScore: 8.1, accuracy: 82, badges: ['Chiến Thần Luyện Đề', 'Chuỗi 7 Ngày Lửa'] },
-  { username: 'tuan_kiet_2k11', display_name: 'Hoàng Tuấn Kiệt', school: 'THPT Chu Văn An', grade: '2K11', xp: 1290, weeklyXp: 320, streak: 7, attempts: 9, weeklyAttempts: 3, bestScore: 8.75, weeklyBestScore: 8.5, avgScore: 8.0, accuracy: 81, badges: ['Chiến Thần Luyện Đề'] },
-  { username: 'ngoc_han_dienbien', display_name: 'Lò Ngọc Hân', school: 'THPT Chuyên Lê Quý Đôn', grade: '2K9', xp: 1120, weeklyXp: 275, streak: 6, attempts: 8, weeklyAttempts: 2, bestScore: 8.5, weeklyBestScore: 8.5, avgScore: 7.9, accuracy: 79, badges: ['Chiến Thần Luyện Đề'] },
-  { username: 'minh_quan_2k12', display_name: 'Ngô Minh Quân', school: 'THCS Cầu Giấy', grade: '2K12', xp: 940, weeklyXp: 230, streak: 5, attempts: 7, weeklyAttempts: 2, bestScore: 8.5, weeklyBestScore: 8.25, avgScore: 7.8, accuracy: 78, badges: ['Tân Binh K9'] }
-];
-
 async function trackVisitor(req, res, redis) {
   const cookies = parseCookies(req);
   let vid = String(cookies.phuc_visitor || '');
@@ -260,18 +246,18 @@ module.exports = async function handler(req, res) {
         const doneCount = u.progress?.done && typeof u.progress.done === 'object'
           ? Object.values(u.progress.done).filter(Boolean).length
           : 0;
-        const baseXp = Math.max(100, Number(u.xp || 0), 100 + doneCount * 20 + x.attempts * 70);
+        const baseXp = Math.max(0, Number(u.xp || 0));
         const wkXp = u.week_key === currentWeek
-          ? Math.max(Number(u.weekly_xp || 0), x.weeklyAttempts * 75 + doneCount * 15, 50)
-          : Math.max(x.weeklyAttempts * 75, isWithinCurrentWeek(u.last_active, now) ? 60 : 0);
+          ? Math.max(0, Number(u.weekly_xp || 0))
+          : 0;
         const li = levelInfo(baseXp);
-        const accuracy = x.totalQuestions ? Math.round((x.totalCorrect / x.totalQuestions) * 100) : (doneCount > 0 ? 85 : 0);
+        const accuracy = x.totalQuestions ? Math.round((x.totalCorrect / x.totalQuestions) * 100) : 0;
         const avgScore = x.attempts ? Math.round((x.totalScore / x.attempts) * 100) / 100 : 0;
 
         rowsByUsername.set(u.username, {
           username: u.username,
           display_name: u.display_name || x.display_name || u.username,
-          school: u.settings?.school || 'Học viên Phúc K9',
+          school: u.settings?.school || '',
           grade: u.settings?.preferred_grade || '2K9',
           avatar_data: u.avatar_data || u.avatar_url || null,
           xp: baseXp,
@@ -292,19 +278,19 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Include any exam attempts from users whose profile wasn't in collectAllUsers
+      // Include any real exam attempts from users whose profile wasn't in collectAllUsers
       for (const [uname, x] of stats.entries()) {
         if (rowsByUsername.has(uname)) continue;
-        const xp = 100 + x.attempts * 75;
+        const xp = x.attempts * 60;
         const li = levelInfo(xp);
         rowsByUsername.set(uname, {
           username: uname,
           display_name: x.display_name || uname,
-          school: 'Học viên Phúc K9',
+          school: '',
           grade: '2K9',
           avatar_data: null,
           xp,
-          weeklyXp: x.weeklyAttempts * 75,
+          weeklyXp: x.weeklyAttempts * 60,
           level: li.level,
           streak: 1,
           xpToNext: li.next - li.into,
@@ -318,21 +304,6 @@ module.exports = async function handler(req, res) {
           badges: ['Thành Viên K9'],
           isRegisteredUser: true,
           updatedAt: x.updatedAt
-        });
-      }
-
-      // Merge community benchmark students if not already present so leaderboard is always lively
-      for (const bm of COMMUNITY_BENCHMARK_MEMBERS) {
-        if (rowsByUsername.has(bm.username)) continue;
-        const li = levelInfo(bm.xp);
-        rowsByUsername.set(bm.username, {
-          ...bm,
-          avatar_data: null,
-          level: li.level,
-          xpToNext: li.next - li.into,
-          lessonsDone: Math.round(bm.xp / 45),
-          isRegisteredUser: false,
-          updatedAt: now.toISOString()
         });
       }
 

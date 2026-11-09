@@ -476,24 +476,37 @@
         </div>
       </div>
 
-      <div class="pk9-lb-podium">
-        ${[topWeekly[1], topWeekly[0], topWeekly[2]].filter(Boolean).map(row => {
-          const r = row.rank;
-          const crown = r === 1 ? '👑' : r === 2 ? '🥈' : '🥉';
-          return `
-            <div class="pk9-podium-card rank-${r}">
-              <div class="pk9-podium-crown">${crown}</div>
-              <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
-              <div style="font-weight:900;font-size:1.02rem;">Hạng #${r} • ${esc(row.display_name)}</div>
-              <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">🏫 ${esc(row.school || 'Học viên Phúc K9')}</div>
-              <div style="display:flex;justify-content:center;gap:0.45rem;flex-wrap:wrap;">
-                <span class="pk9-badge pk9-badge-subj">🔥 +${row.weeklyXp} XP Tuần</span>
-                <span class="pk9-badge pk9-badge-verified">🎯 Đỉnh: ${Number(row.bestScore || 0).toFixed(2)}đ</span>
+      ${topWeekly.length ? `
+        <div class="pk9-lb-podium">
+          ${[topWeekly[1], topWeekly[0], topWeekly[2]].filter(Boolean).map(row => {
+            const r = row.rank;
+            const crown = r === 1 ? '👑' : r === 2 ? '🥈' : '🥉';
+            return `
+              <div class="pk9-podium-card rank-${r}">
+                <div class="pk9-podium-crown">${crown}</div>
+                <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
+                <div style="font-weight:900;font-size:1.02rem;">Hạng #${r} • ${esc(row.display_name)}</div>
+                <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">🏫 ${esc(row.school || 'Học viên đã đăng ký')}</div>
+                <div style="display:flex;justify-content:center;gap:0.45rem;flex-wrap:wrap;">
+                  <span class="pk9-badge pk9-badge-subj">🔥 +${row.weeklyXp} XP Tuần</span>
+                  <span class="pk9-badge pk9-badge-verified">🎯 Đỉnh: ${Number(row.bestScore || 0).toFixed(2)}đ</span>
+                </div>
               </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `
+        <div class="pk9-card" style="text-align:center;padding:2rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🏆</div>
+          <div style="font-weight:900;font-size:1.05rem;margin-bottom:0.35rem;">Chưa có học viên nào ghi danh trên Bảng Xếp Hạng</div>
+          <p style="margin:0 0 1rem;font-size:0.86rem;color:var(--pk9-text-muted);">
+            Bảng xếp hạng chỉ hiển thị dữ liệu thật 100% từ các tài khoản học viên đã đăng ký và làm đề trên web. Hãy đăng ký ngay để chiếm vị trí Top #1!
+          </p>
+          <button type="button" class="pk9-auth-btn" data-open-auth="register">
+            🚀 Đăng ký tài khoản chiếm Top #1 ngay
+          </button>
+        </div>
+      `}
     `;
   }
 
@@ -844,9 +857,9 @@
           </div>
         </div>
 
-        ${top3.length >= 3 ? `
+        ${top3.length >= 1 ? `
           <div class="pk9-lb-podium">
-            ${[top3[1], top3[0], top3[2]].map(row => {
+            ${[top3[1], top3[0], top3[2]].filter(Boolean).map(row => {
               const r = row.rank;
               const crown = r === 1 ? '👑' : r === 2 ? '🥈' : '🥉';
               const mainMetric = APP.lbMode === 'weekly'
@@ -860,7 +873,7 @@
                   <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
                   <div style="font-weight:900;font-size:1.06rem;">Hạng #${r} • ${esc(row.display_name)}</div>
                   <div style="font-size:0.79rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">
-                    🏫 ${esc(row.school || 'Học viên Phúc K9')} • Khối ${esc(row.grade || '2K9')}
+                    🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}
                   </div>
                   <div style="display:flex;justify-content:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem;">
                     <span class="pk9-badge pk9-badge-subj">${mainMetric}</span>
@@ -883,7 +896,7 @@
             <div class="hide-mob">Thành tích Luyện đề</div>
             <div class="hide-mob">Chuỗi & Huy hiệu</div>
           </div>
-          ${filtered.map(row => {
+          ${filtered.length ? filtered.map(row => {
             const isMe = APP.user && row.username === APP.user.username;
             const rankBadge = row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`;
             return `
@@ -897,10 +910,10 @@
                   </div>
                   <div style="min-width:0;">
                     <div style="font-weight:800;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      ${esc(row.display_name)} ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
+                      ${esc(row.display_name)} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
                     </div>
                     <div style="font-size:0.76rem;color:var(--pk9-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      🏫 ${esc(row.school || 'Học viên Phúc K9')} • ${esc(row.grade || '2K9')}
+                      🏫 ${esc(row.school || 'Chưa cập nhật trường')} • Khối ${esc(row.grade || '2K9')}
                     </div>
                   </div>
                 </div>
@@ -917,7 +930,11 @@
                 </div>
               </div>
             `;
-          }).join('')}
+          }).join('') : `
+            <div style="padding:2.2rem 1.5rem;text-align:center;color:var(--pk9-text-muted);font-size:0.9rem;">
+              Chưa có học viên thật nào ghi nhận ở mục này. Hãy đăng ký tài khoản hoặc hoàn thành 1 đề thi để xuất hiện đầu tiên!
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -1125,11 +1142,7 @@
         </div>
 
         <div class="pk9-exam-grid">
-          ${(APP.communityItems.length ? APP.communityItems : [
-            { title: 'Sổ tay Công thức Giải nhanh Toán 12 Oxyz & Tích phân', subject: 'Toán 12', author: 'Nguyễn Minh Anh (Chuyên Ams)', url: 'https://www.kimvan.org/2026/07/ie-ebook-so-tay-tong-hop-kien-thuc-mon.html' },
-            { title: 'Mindmap Toàn bộ Lý thuyết Hóa 12 Danh pháp IUPAC', subject: 'Hóa học 12', author: 'Trần Hoàng Nam (Chuyên KHTN)', url: 'https://loigiaihay.com' },
-            { title: 'Tổng hợp 50 câu Đúng/Sai Sinh học 12 Di truyền & Phả hệ', subject: 'Sinh học 12', author: 'Lê Khánh Linh (Chuyên LHP)', url: 'https://dienbien.edu.vn' }
-          ]).map(item => `
+          ${APP.communityItems.length ? APP.communityItems.map(item => `
             <article class="pk9-exam-card">
               <div>
                 <span class="pk9-badge pk9-badge-subj" style="margin-bottom:0.5rem;">${esc(item.subject || 'Tài liệu K9')}</span>
@@ -1140,7 +1153,11 @@
                 🔗 Mở tài liệu chia sẻ ↗
               </a>
             </article>
-          `).join('')}
+          `).join('') : `
+            <div class="pk9-card" style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--pk9-text-muted);">
+              Chưa có tài liệu cộng đồng nào được tải lên. Hãy là học viên đầu tiên chia sẻ tài liệu phía trên!
+            </div>
+          `}
         </div>
       </div>
     `;
