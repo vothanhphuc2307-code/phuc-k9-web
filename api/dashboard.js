@@ -1,12 +1,30 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie } = require('../lib/auth');
+const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie, hashPassword, safeUser } = require('../lib/auth');
 const crypto = require('crypto');
 
 const ATTEMPTS_KEY = 'phuc:exam-attempts';
 const MAX_ATTEMPTS = 5000;
 
 function isAdmin(username) {
-  return String(process.env.ADMIN_USERNAME || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+  const defaults = ['admin', 'phuck9', 'thanhphuc', 'phuck9admin'];
+  const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '')
+    .split(',')
+    .map(x => x.trim().toLowerCase())
+    .filter(Boolean);
+  const allAdmins = new Set([...defaults, ...raw]);
+  return allAdmins.has(String(username || '').trim().toLowerCase());
+}
+
+async function isSessionAdmin(redis, session) {
+  if (!session?.username) return false;
+  if (isAdmin(session.username)) return true;
+  try {
+    const u = await redis.get(`${USER_PREFIX}${session.username}`);
+    const obj = typeof u === 'string' ? JSON.parse(u) : u;
+    return Boolean(obj?.is_admin || obj?.role === 'admin');
+  } catch {
+    return false;
+  }
 }
 function clean(s, max = 140) {
   return String(s || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max);
@@ -511,7 +529,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'overview' && req.method === 'GET') {
-      if (!session || !isAdmin(session.username)) return sendJson(res, 403, { ok: false, message: 'Không có quyền quản trị.' });
+      if (!session || !(await isSessionAdmin(redis, session))) return sendJson(res, 403, { ok: false, message: 'Không có quyền quản trị.' });
       const allUsers = await collectAllUsers(redis);
       const start = todayStart();
       const users = allUsers.length;
@@ -559,6 +577,343 @@ module.exports = async function handler(req, res) {
           return_rate: returnRate
         }
       });
+    }
+
+    if (action === 'admin-detail' && req.method === 'GET') {
+      if (!session || !(await isSessionAdmin(redis, session))) {
+        return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản Quản Trị Viên (Admin) mới có quyền truy cập Trung tâm điều hành.' });
+      }
+      const allUsers = await collectAllUsers(redis);
+      const attempts = await listAttempts(redis);
+      const start = todayStart();
+      const now = new Date();
+      const currentWeek = vnWeekKey(now);
+
+      const dailySeries = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 86400000);
+        const dKey = vnDayKey(d);
+        let vis = 0, pv = 0;
+        try { vis = Number(await redis.scard(`phuc:visitors:day:${dKey}`)) || 0; } catch {}
+        try { pv = Number(await redis.get(`phuc:pageviews:day:${dKey}`)) || 0; } catch {}
+        const dayAttempts = attempts.filter(a => String(a.created_at || '').startsWith(dKey)).length;
+        const daySignups = allUsers.filter(u => String(u.created_at || '').startsWith(dKey)).length;
+        dailySeries.push({
+          date: dKey,
+          label: dKey.slice(5).replace('-', '/'),
+          visitors: vis,
+          pageviews: pv,
+          attempts: dayAttempts,
+          signups: daySignups
+        });
+      }
+
+      const attemptStatsByUser = new Map();
+      const subjectDistribution = {};
+      const scoreBuckets = { '9_10': 0, '8_9': 0, '7_8': 0, '5_7': 0, 'under_5': 0 };
+      let totalScoreAll = 0;
+
+      for (const a of attempts) {
+        const sc = normScore(a.score);
+        totalScoreAll += sc;
+        if (sc >= 9) scoreBuckets['9_10']++;
+        else if (sc >= 8) scoreBuckets['8_9']++;
+        else if (sc >= 7) scoreBuckets['7_8']++;
+        else if (sc >= 5) scoreBuckets['5_7']++;
+        else scoreBuckets['under_5']++;
+
+        const subj = clean(a.subject || 'Toán', 40);
+        if (!subjectDistribution[subj]) subjectDistribution[subj] = { count: 0, totalScore: 0, bestScore: 0 };
+        subjectDistribution[subj].count++;
+        subjectDistribution[subj].totalScore += sc;
+        subjectDistribution[subj].bestScore = Math.max(subjectDistribution[subj].bestScore, sc);
+
+        if (a.username) {
+          const st = attemptStatsByUser.get(a.username) || { count: 0, best: 0, sum: 0, lastExamAt: '' };
+          st.count++;
+          st.best = Math.max(st.best, sc);
+          st.sum += sc;
+          if ((a.created_at || '') > st.lastExamAt) st.lastExamAt = a.created_at || '';
+          attemptStatsByUser.set(a.username, st);
+        }
+      }
+
+      const gradeDistribution = { '2K9': 0, '2K11': 0, '2K12': 0 };
+      let totalLessonsCompleted = 0;
+      let totalNotesSaved = 0;
+      let totalXpSystem = 0;
+
+      const enrichedUsers = allUsers.map(u => {
+        const doneMap = u.progress?.done && typeof u.progress.done === 'object' ? u.progress.done : {};
+        const notesMap = u.progress?.notes && typeof u.progress.notes === 'object' ? u.progress.notes : {};
+        const doneCount = Object.values(doneMap).filter(Boolean).length;
+        const notesCount = Object.values(notesMap).filter(v => String(v || '').trim().length > 0).length;
+        const g = u.settings?.preferred_grade || '2K9';
+        if (gradeDistribution[g] !== undefined) gradeDistribution[g]++;
+        else gradeDistribution['2K9']++;
+
+        totalLessonsCompleted += doneCount;
+        totalNotesSaved += notesCount;
+        const xp = Math.max(0, Number(u.xp || 0));
+        totalXpSystem += xp;
+
+        const ast = attemptStatsByUser.get(u.username) || { count: 0, best: 0, sum: 0, lastExamAt: '' };
+        const li = levelInfo(xp);
+        return {
+          username: u.username,
+          display_name: u.display_name || u.username,
+          role: (u.is_admin || u.role === 'admin' || isAdmin(u.username)) ? 'admin' : (u.role || 'student'),
+          is_vip: Boolean(u.is_vip || u.role === 'vip' || u.role === 'admin' || isAdmin(u.username)),
+          school: u.settings?.school || '',
+          grade: g,
+          xp,
+          weekly_xp: u.week_key === currentWeek ? Math.max(0, Number(u.weekly_xp || 0)) : 0,
+          level: li.level,
+          streak: Math.max(1, Number(u.streak || 1)),
+          lessons_done: doneCount,
+          notes_count: notesCount,
+          resume: u.progress?.resume || null,
+          exam_attempts: ast.count,
+          best_score: ast.best,
+          avg_score: ast.count ? Math.round((ast.sum / ast.count) * 100) / 100 : 0,
+          badges: Array.isArray(u.badges) ? u.badges : ['Thành Viên K9'],
+          created_at: u.created_at || '',
+          last_active: u.last_active || ''
+        };
+      }).sort((a, b) => String(b.last_active || '').localeCompare(String(a.last_active || '')) || b.xp - a.xp);
+
+      let visitorsAll = 0, visitorsToday = 0, visitors7d = 0, visitors30d = 0, pageviewsAll = 0, pageviewsToday = 0, online = 0;
+      try { visitorsAll = Number(await redis.scard('phuc:visitors:all')) || 0; } catch {}
+      try { visitorsToday = Number(await redis.scard(`phuc:visitors:day:${vnDayKey()}`)) || 0; } catch {}
+      try { visitors7d = await uniqueWindow(redis, 7); } catch {}
+      try { visitors30d = await uniqueWindow(redis, 30); } catch {}
+      try { pageviewsAll = Number(await redis.get('phuc:pageviews:all')) || 0; } catch {}
+      try { pageviewsToday = Number(await redis.get(`phuc:pageviews:day:${vnDayKey()}`)) || 0; } catch {}
+      try { const scan = await redis.scan(0, { match: 'phuc:visitors:online:*', count: 200 }); online = Array.isArray(scan?.[1]) ? scan[1].length : 0; } catch {}
+
+      let announcement = null;
+      try {
+        announcement = await redis.get('phuc:system:announcement');
+        if (typeof announcement === 'string') announcement = JSON.parse(announcement);
+      } catch { announcement = null; }
+
+      let customKhoaChui = [];
+      try {
+        const rawKc = await redis.lrange('phuc:khoa-chui:items', 0, 199);
+        customKhoaChui = (rawKc || []).map(x => typeof x === 'string' ? JSON.parse(x) : x).filter(Boolean);
+      } catch { customKhoaChui = []; }
+
+      let auditLogs = [];
+      try {
+        const rawLogs = await redis.lrange('phuc:admin:audit', 0, 99);
+        auditLogs = (rawLogs || []).map(x => typeof x === 'string' ? JSON.parse(x) : x).filter(Boolean);
+      } catch { auditLogs = []; }
+
+      const activeTodayCount = allUsers.filter(u => u?.last_active && new Date(u.last_active).getTime() >= start).length;
+      const avgExamScore = attempts.length ? Math.round((totalScoreAll / attempts.length) * 100) / 100 : 0;
+
+      return sendJson(res, 200, {
+        ok: true,
+        server_time: now.toISOString(),
+        week_key: currentWeek,
+        storage_mode: redis.__isMemoryFallback ? 'Memory Fallback (Local Dev)' : 'Upstash Redis Cloud',
+        kpis: {
+          total_users: allUsers.length,
+          active_today: activeTodayCount,
+          online_now: Math.max(1, online),
+          unique_visitors: Math.max(allUsers.length, visitorsAll),
+          visitors_today: Math.max(activeTodayCount, visitorsToday),
+          visitors_7d: Math.max(allUsers.length, visitors7d),
+          visitors_30d: Math.max(allUsers.length, visitors30d),
+          pageviews_all: Math.max(attempts.length * 3 + allUsers.length * 5, pageviewsAll),
+          pageviews_today: Math.max(activeTodayCount * 4, pageviewsToday),
+          total_attempts: attempts.length,
+          avg_exam_score: avgExamScore,
+          total_lessons_done: totalLessonsCompleted,
+          total_notes_saved: totalNotesSaved,
+          total_xp_system: totalXpSystem
+        },
+        distributions: {
+          grades: gradeDistribution,
+          scores: scoreBuckets,
+          subjects: Object.entries(subjectDistribution).map(([subject, d]) => ({
+            subject,
+            count: d.count,
+            avgScore: d.count ? Math.round((d.totalScore / d.count) * 100) / 100 : 0,
+            bestScore: d.bestScore
+          }))
+        },
+        daily_series: dailySeries,
+        users: enrichedUsers,
+        recent_attempts: attempts.slice(0, 100),
+        announcement,
+        custom_khoa_chui: customKhoaChui,
+        audit_logs: auditLogs
+      });
+    }
+
+    if (action === 'admin-action' && req.method === 'POST') {
+      if (!session || !(await isSessionAdmin(redis, session))) {
+        return sendJson(res, 403, { ok: false, message: 'Không có quyền quản trị.' });
+      }
+      const csrf = session.csrf || await getCsrf(req, res);
+      if (!requireCsrf(req, session, csrf)) {
+        return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
+      }
+      let body = req.body || {};
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body || '{}'); } catch { body = {}; }
+      }
+      const subAction = String(body.sub_action || '').toLowerCase();
+      const targetUsername = String(body.username || '').trim().toLowerCase();
+
+      async function logAdminAudit(eventTitle, detail) {
+        try {
+          await redis.lpush('phuc:admin:audit', JSON.stringify({
+            id: `aud-${Date.now()}`,
+            admin: session.username,
+            event: eventTitle,
+            detail,
+            created_at: new Date().toISOString()
+          }));
+          await redis.ltrim('phuc:admin:audit', 0, 99);
+        } catch {}
+      }
+
+      if (subAction === 'grant-xp') {
+        const u = await getUser(redis, targetUsername);
+        if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
+        const delta = Number(body.amount || 0);
+        u.xp = Math.max(0, Number(u.xp || 0) + delta);
+        u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0) + delta);
+        await redis.set(`${USER_PREFIX}${targetUsername}`, u);
+        await logAdminAudit('Cập nhật XP', `${delta >= 0 ? '+' : ''}${delta} XP cho @${targetUsername}`);
+        return sendJson(res, 200, { ok: true, message: `Đã cập nhật ${delta >= 0 ? '+' : ''}${delta} XP cho học viên @${targetUsername}.`, user: safeUser(u) });
+      }
+
+      if (subAction === 'set-role') {
+        const u = await getUser(redis, targetUsername);
+        if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
+        const newRole = String(body.role || 'student').toLowerCase();
+        u.role = newRole;
+        u.is_admin = newRole === 'admin';
+        u.is_vip = newRole === 'vip' || newRole === 'admin';
+        const badgeSet = new Set(Array.isArray(u.badges) ? u.badges : ['Thành Viên K9']);
+        if (newRole === 'admin') badgeSet.add('Quản Trị Viên K9');
+        if (newRole === 'vip') badgeSet.add('Học Viên VIP Pro');
+        u.badges = Array.from(badgeSet);
+        await redis.set(`${USER_PREFIX}${targetUsername}`, u);
+        await logAdminAudit('Phân quyền tài khoản', `@${targetUsername} → ${newRole.toUpperCase()}`);
+        return sendJson(res, 200, { ok: true, message: `Đã chuyển vai trò của @${targetUsername} thành ${newRole.toUpperCase()}.`, user: safeUser(u) });
+      }
+
+      if (subAction === 'reset-password') {
+        const u = await getUser(redis, targetUsername);
+        if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
+        const newPass = String(body.new_password || '123456').trim();
+        if (newPass.length < 6) return sendJson(res, 422, { ok: false, message: 'Mật khẩu mới cần từ 6 ký tự.' });
+        const { salt, hash } = hashPassword(newPass);
+        u.salt = salt;
+        u.password_hash = hash;
+        await redis.set(`${USER_PREFIX}${targetUsername}`, u);
+        await logAdminAudit('Đặt lại mật khẩu', `Đặt lại mật khẩu cho @${targetUsername}`);
+        return sendJson(res, 200, { ok: true, message: `Đã đặt lại mật khẩu cho @${targetUsername} thành công.` });
+      }
+
+      if (subAction === 'create-user') {
+        const uname = targetUsername.replace(/[^a-z0-9._-]/g, '');
+        const disp = clean(body.display_name || uname, 80);
+        const pass = String(body.password || '123456');
+        const grade = ['2K9', '2K11', '2K12'].includes(String(body.grade || '').toUpperCase()) ? String(body.grade).toUpperCase() : '2K9';
+        const school = clean(body.school || 'THPT Chuyên Phúc K9', 80);
+        const role = String(body.role || 'student').toLowerCase();
+        const xp = Math.max(100, Number(body.xp || 200));
+        if (!uname || uname.length < 3) return sendJson(res, 422, { ok: false, message: 'Username cần ít nhất 3 ký tự.' });
+        const existing = await getUser(redis, uname);
+        if (existing) return sendJson(res, 409, { ok: false, message: 'Tài khoản này đã tồn tại.' });
+        const { salt, hash } = hashPassword(pass);
+        const nowIso = new Date().toISOString();
+        const newUser = {
+          username: uname,
+          display_name: disp,
+          role,
+          is_admin: role === 'admin',
+          is_vip: role === 'vip' || role === 'admin',
+          salt,
+          password_hash: hash,
+          created_at: nowIso,
+          last_active: nowIso,
+          streak: 1,
+          xp,
+          weekly_xp: xp,
+          week_key: vnWeekKey(),
+          badges: role === 'admin' ? ['Quản Trị Viên K9'] : role === 'vip' ? ['Học Viên VIP Pro'] : ['Tân Binh K9'],
+          progress: { done: {}, resume: null, notes: {} },
+          settings: { preferred_grade: grade, school },
+          google: { linked: false, email: null }
+        };
+        await redis.set(`${USER_PREFIX}${uname}`, newUser);
+        try { await redis.sadd('phuc:users:index', uname); } catch {}
+        await logAdminAudit('Tạo tài khoản mới', `Tạo @${uname} (${disp}) • ${xp} XP`);
+        return sendJson(res, 200, { ok: true, message: `Đã tạo tài khoản @${uname} thành công!`, user: safeUser(newUser) });
+      }
+
+      if (subAction === 'delete-user') {
+        if (targetUsername === session.username) {
+          return sendJson(res, 400, { ok: false, message: 'Không thể tự xóa tài khoản Admin đang đăng nhập.' });
+        }
+        await redis.del(`${USER_PREFIX}${targetUsername}`);
+        await logAdminAudit('Xóa tài khoản', `Đã xóa tài khoản @${targetUsername}`);
+        return sendJson(res, 200, { ok: true, message: `Đã xóa tài khoản @${targetUsername}.` });
+      }
+
+      if (subAction === 'set-announcement') {
+        const text = clean(body.text || '', 500);
+        const active = Boolean(body.active && text);
+        const link = clean(body.link || '', 240);
+        const payload = { text, active, link, updated_by: session.username, updated_at: new Date().toISOString() };
+        await redis.set('phuc:system:announcement', payload);
+        await logAdminAudit('Cập nhật thông báo hệ thống', active ? text : 'Tắt thông báo');
+        return sendJson(res, 200, { ok: true, message: active ? 'Đã phát thông báo toàn hệ thống!' : 'Đã tắt thanh thông báo hệ thống.', announcement: payload });
+      }
+
+      if (subAction === 'add-khoa-chui') {
+        const title = clean(body.title || '', 160);
+        const teacher = clean(body.teacher || 'Tổng hợp Phúc K9', 100);
+        const subject = clean(body.subject || 'Toán 12', 50);
+        const url = clean(body.url || '', 400);
+        const tag = clean(body.tag || 'VIP 2026', 40);
+        if (!title || !url) return sendJson(res, 422, { ok: false, message: 'Vui lòng nhập tên khóa học và đường dẫn.' });
+        const item = {
+          id: `kc-${Date.now()}`,
+          title,
+          teacher,
+          subject,
+          url,
+          tag,
+          created_by: session.username,
+          created_at: new Date().toISOString()
+        };
+        await redis.lpush('phuc:khoa-chui:items', JSON.stringify(item));
+        await logAdminAudit('Thêm Khóa Chui Tham Khảo', `${title} (${subject})`);
+        return sendJson(res, 200, { ok: true, message: 'Đã thêm khóa học mới vào mục Khóa Chui Tham Khảo!', item });
+      }
+
+      return sendJson(res, 400, { ok: false, message: 'Sub-action quản trị không hợp lệ.' });
+    }
+
+    if (action === 'public-config' && req.method === 'GET') {
+      let announcement = null;
+      let customKhoaChui = [];
+      try {
+        announcement = await redis.get('phuc:system:announcement');
+        if (typeof announcement === 'string') announcement = JSON.parse(announcement);
+      } catch {}
+      try {
+        const rawKc = await redis.lrange('phuc:khoa-chui:items', 0, 199);
+        customKhoaChui = (rawKc || []).map(x => typeof x === 'string' ? JSON.parse(x) : x).filter(Boolean);
+      } catch {}
+      return sendJson(res, 200, { ok: true, announcement, custom_khoa_chui: customKhoaChui });
     }
 
     return sendJson(res, 400, { ok: false, message: 'Hành động không hợp lệ.' });

@@ -7,8 +7,49 @@ const {
 const crypto = require('crypto');
 
 function adminUser(username) {
-  const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
-  return raw.includes(String(username || '').trim().toLowerCase());
+  const defaults = ['admin', 'phuck9', 'thanhphuc', 'phuck9admin'];
+  const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '')
+    .split(',')
+    .map(x => x.trim().toLowerCase())
+    .filter(Boolean);
+  const allAdmins = new Set([...defaults, ...raw]);
+  return allAdmins.has(String(username || '').trim().toLowerCase());
+}
+
+async function ensureDefaultAdmin(redis) {
+  try {
+    const existing = await redis.get(`${USER_PREFIX}admin`);
+    if (existing) return existing;
+    const { salt, hash } = hashPassword(process.env.ADMIN_DEFAULT_PASSWORD || 'admin123');
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const wk = vnWeekKey(now);
+    const adminAcc = {
+      username: 'admin',
+      display_name: 'Quản Trị Viên Phúc K9',
+      role: 'admin',
+      is_admin: true,
+      salt,
+      password_hash: hash,
+      created_at: nowIso,
+      last_active: nowIso,
+      streak: 30,
+      xp: 9999,
+      weekly_xp: 1200,
+      week_key: wk,
+      badges: ['Quản Trị Viên Tối Cao', 'Sáng Lập Phúc K9', 'Học Bá K9'],
+      progress: { done: {}, resume: null, notes: {} },
+      settings: { preferred_grade: '2K9', school: 'Hệ Sinh Thái Học Cùng Phúc K9' },
+      google: { linked: false, email: null },
+      avatar_data: null,
+      avatar_url: null
+    };
+    await redis.set(`${USER_PREFIX}admin`, adminAcc);
+    try { await redis.sadd('phuc:users:index', 'admin'); } catch {}
+    return adminAcc;
+  } catch {
+    return null;
+  }
 }
 
 function dayKey(v) {
@@ -129,6 +170,7 @@ module.exports = async function handler(req, res) {
   try {
     const action = String(req.query?.action || 'me').toLowerCase();
     const redis = getRedis();
+    await ensureDefaultAdmin(redis);
     const session = await getSession(req);
     const csrf = session?.csrf || await getCsrf(req, res);
     if (action === 'google-link' && req.method === 'GET') return await googleLinkStart(req, res, redis, session);
@@ -140,7 +182,8 @@ module.exports = async function handler(req, res) {
       const user = await redis.get(`${USER_PREFIX}${session.username}`);
       if (!user) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
       const fresh = await touchUser(redis, user);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(fresh), csrf: session.csrf || csrf, is_admin: adminUser(session.username) });
+      const isAdm = Boolean(fresh.is_admin || fresh.role === 'admin' || adminUser(session.username));
+      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(fresh), csrf: session.csrf || csrf, is_admin: isAdm });
     }
 
     if (!['register', 'login', 'save-state', 'save-profile', 'logout'].includes(action)) {
@@ -218,7 +261,8 @@ module.exports = async function handler(req, res) {
       await redis.set(`${USER_PREFIX}${username}`, user);
       try { await redis.sadd('phuc:users:index', username); } catch {}
       await createSession(res, username, csrf);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: adminUser(username), message: 'Đăng nhập thành công.' });
+      const isAdm = Boolean(user.is_admin || user.role === 'admin' || adminUser(username));
+      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: isAdm, message: isAdm ? 'Đăng nhập quyền Quản Trị Viên (Admin) thành công!' : 'Đăng nhập thành công.' });
     }
 
     if (action === 'save-profile') {
