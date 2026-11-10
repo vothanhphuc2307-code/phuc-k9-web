@@ -1238,8 +1238,8 @@ html.dark .pk9-podium-card.rank-3 {
   background: var(--pk9-surface);
   border-top: 1px solid var(--pk9-border);
   z-index: 60;
-  grid-template-columns: repeat(5, 1fr);
-  padding: 0.25rem 0.4rem;
+  grid-template-columns: repeat(6, 1fr);
+  padding: 0.25rem 0.25rem;
   box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
 }
 
@@ -1416,4 +1416,315 @@ html.dark .pk9-podium-card.rank-3 {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==========================================================================
+ * KHÓA CHUI THAM KHẢO IN-WEB WORKSPACE & SUPER DETAILED ADMIN DASHBOARD
+ * ========================================================================== */
+
+.pk9-announce-banner {
+  background: linear-gradient(90deg, #0f172a, #1e3a8a, #0f766e);
+  color: #ffffff;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 45;
+}
+
+.pk9-sheet-workspace {
+  background: var(--pk9-surface);
+  border: 1.5px solid var(--pk9-border);
+  border-radius: 1.45rem;
+  overflow: hidden;
+  box-shadow: var(--pk9-shadow-md);
+  margin-bottom: 1.5rem;
+  transition: all 0.25s ease;
+}
+
+.pk9-sheet-workspace.fullscreen-focus {
+  position: fixed;
+  inset: 0.65rem;
+  z-index: 150;
+  margin: 0;
+  border-radius: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65);
+}
+
+.pk9-sheet-toolbar {
+  padding: 0.85rem 1.25rem;
+  background: var(--pk9-surface-2);
+  border-bottom: 1px solid var(--pk9-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pk9-sheet-frame-container {
+  position: relative;
+  width: 100%;
+  height: 76vh;
+  min-height: 540px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.pk9-sheet-workspace.fullscreen-focus .pk9-sheet-frame-container {
+  flex: 1;
+  height: auto;
+}
+
+.pk9-sheet-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  transform-origin: top left;
+  transition: transform 0.2s ease;
+}
+
+/* Split-View / In-App Course & Document Reader Modal */
+.pk9-inapp-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  background: rgba(7, 13, 25, 0.82);
+  backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.pk9-inapp-viewer-overlay.open {
+  display: flex;
+  animation: pk9FadeSlideUp 0.22s ease;
+}
+
+.pk9-inapp-viewer-box {
+  width: 100%;
+  max-width: 1280px;
+  height: 90vh;
+  background: var(--pk9-surface);
+  border: 1px solid var(--pk9-border);
+  border-radius: 1.4rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--pk9-shadow-lg);
+}
+
+/* Admin Dashboard Pro Styles */
+.pk9-admin-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.65rem;
+  padding: 1.85rem 2.1rem;
+  background: linear-gradient(135deg, #090d16 0%, #1e1b4b 48%, #311042 100%);
+  color: #ffffff;
+  box-shadow: var(--pk9-shadow-lg);
+  margin-bottom: 1.4rem;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.pk9-admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.pk9-admin-kpi-card {
+  background: var(--pk9-surface);
+  border: 1px solid var(--pk9-border);
+  border-radius: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  box-shadow: var(--pk9-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.pk9-admin-kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, #2563eb, #0d9488);
+}
+
+.pk9-admin-kpi-card.rose::after {
+  background: linear-gradient(90deg, #e11d48, #f59e0b);
+}
+
+.pk9-admin-kpi-card.emerald::after {
+  background: linear-gradient(90deg, #10b981, #06b6d4);
+}
+
+.pk9-admin-kpi-card.violet::after {
+  background: linear-gradient(90deg, #7c3aed, #ec4899);
+}
+
+.pk9-admin-kpi-val {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--pk9-text);
+  margin: 0.35rem 0 0.2rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pk9-admin-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.35rem;
+  background: var(--pk9-surface);
+  padding: 0.5rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--pk9-border);
+}
+
+.pk9-admin-subtab {
+  border: none;
+  background: transparent;
+  color: var(--pk9-text-muted);
+  font-weight: 800;
+  font-size: 0.83rem;
+  padding: 0.6rem 1.05rem;
+  border-radius: 0.8rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pk9-admin-subtab:hover {
+  background: var(--pk9-surface-2);
+  color: var(--pk9-text);
+}
+
+.pk9-admin-subtab.active {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #ffffff;
+  box-shadow: 0 8px 18px -6px rgba(225, 29, 72, 0.5);
+}
+
+.pk9-admin-chart-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 1.4rem;
+}
+
+@media (max-width: 1024px) {
+  .pk9-admin-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pk9-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.45rem;
+  height: 195px;
+  padding: 1.2rem 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--pk9-border);
+}
+
+.pk9-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.pk9-bar-fill {
+  width: 100%;
+  max-width: 30px;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #38bdf8, #2563eb);
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 6px;
+  position: relative;
+}
+
+.pk9-bar-fill:hover {
+  filter: brightness(1.15);
+}
+
+.pk9-admin-table-wrap {
+  background: var(--pk9-surface);
+  border: 1px solid var(--pk9-border);
+  border-radius: 1.3rem;
+  overflow-x: auto;
+  box-shadow: var(--pk9-shadow-sm);
+}
+
+.pk9-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  min-width: 780px;
+}
+
+.pk9-admin-table th {
+  background: var(--pk9-surface-2);
+  color: var(--pk9-text-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--pk9-border);
+}
+
+.pk9-admin-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--pk9-border);
+  vertical-align: middle;
+}
+
+.pk9-admin-table tr:hover td {
+  background: var(--pk9-surface-2);
+}
+
+.pk9-admin-btn-xs {
+  padding: 0.32rem 0.62rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--pk9-border);
+  background: var(--pk9-surface-2);
+  color: var(--pk9-text);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.pk9-admin-btn-xs:hover {
+  border-color: var(--pk9-primary);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--pk9-primary);
+}
+
+.pk9-admin-btn-xs.danger:hover {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
 }

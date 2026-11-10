@@ -93,6 +93,14 @@
           <span class="pk9-nav-pill">84+ PDF</span>
         </button>
 
+        <button type="button" class="pk9-nav-item" data-nav-tab="khoa-chui">
+          <span class="pk9-nav-item-left">
+            <span class="pk9-nav-icon">💎</span>
+            <span>Khóa Chui Tham Khảo</span>
+          </span>
+          <span class="pk9-nav-pill hot">TRỰC TIẾP</span>
+        </button>
+
         <button type="button" class="pk9-nav-item" data-nav-tab="archive">
           <span class="pk9-nav-item-left">
             <span class="pk9-nav-icon">🗂️</span>
@@ -128,6 +136,15 @@
           </span>
           <span class="pk9-nav-pill">24/7</span>
         </button>
+
+        <div class="pk9-nav-group-label" id="pk9-nav-admin-group" style="display:none;">Quản trị hệ thống</div>
+        <button type="button" class="pk9-nav-item" id="pk9-nav-admin-btn" data-nav-tab="admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.12),rgba(245,158,11,0.12));border-color:rgba(225,29,72,0.3);">
+          <span class="pk9-nav-item-left">
+            <span class="pk9-nav-icon">🛡️</span>
+            <span>Admin Dashboard</span>
+          </span>
+          <span class="pk9-nav-pill hot">ADMIN</span>
+        </button>
       </nav>
 
       <!-- Live Student Profile & Rank Card -->
@@ -137,6 +154,9 @@
 
     <!-- MAIN WORKSPACE -->
     <div class="pk9-main-wrap">
+      <!-- SYSTEM ANNOUNCEMENT BANNER -->
+      <div id="pk9-system-announcement-bar" style="display:none;"></div>
+
       <!-- STICKY TOPBAR -->
       <header class="pk9-topbar">
         <div style="display:flex;align-items:center;gap:0.65rem;flex:1;min-width:0;">
@@ -150,6 +170,12 @@
         </div>
 
         <div class="pk9-topbar-actions">
+          <button type="button" class="pk9-xp-chip" id="pk9-top-khoa-chui-btn" data-nav-tab="khoa-chui" title="Mở ngay Khóa Chui Tham Khảo trực tiếp trong web" style="background:linear-gradient(135deg,rgba(16,185,129,0.16),rgba(37,99,235,0.16));border-color:rgba(16,185,129,0.4);color:#0d9488;">
+            💎 <span class="hide-xs">Khóa Chui Tham Khảo</span>
+          </button>
+          <button type="button" class="pk9-xp-chip" id="pk9-top-admin-btn" data-nav-tab="admin" title="Mở Trung tâm điều hành Admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.18),rgba(245,158,11,0.18));border-color:rgba(225,29,72,0.45);color:#e11d48;">
+            🛡️ <span class="hide-xs">Admin Pro</span>
+          </button>
           <button type="button" class="pk9-xp-chip" id="pk9-top-xp-chip" data-nav-tab="leaderboard" title="Xem thứ hạng của bạn trên BXH Tuần & Top">
             🔥 Chuỗi 1 ngày • ⚡ 100 XP
           </button>
@@ -171,11 +197,13 @@
         </section>
         <section id="tab-leaderboard" class="pk9-tab-pane"></section>
         <section id="tab-docs" class="pk9-tab-pane"></section>
+        <section id="tab-khoa-chui" class="pk9-tab-pane"></section>
         <section id="tab-archive" class="pk9-tab-pane"></section>
         <section id="tab-flashcards" class="pk9-tab-pane"></section>
         <section id="tab-community" class="pk9-tab-pane"></section>
         <section id="tab-planner" class="pk9-tab-pane"></section>
         <section id="tab-ai" class="pk9-tab-pane"></section>
+        <section id="tab-admin" class="pk9-tab-pane"></section>
       </main>
     </div>
   </div>
@@ -189,6 +217,10 @@
     <button type="button" class="pk9-mob-nav-btn" data-nav-tab="lectures">
       <span>🎬</span>
       <span>Bài giảng</span>
+    </button>
+    <button type="button" class="pk9-mob-nav-btn" data-nav-tab="khoa-chui">
+      <span>💎</span>
+      <span>Khóa chui</span>
     </button>
     <button type="button" class="pk9-mob-nav-btn" data-nav-tab="exams">
       <span>🏛️</span>
