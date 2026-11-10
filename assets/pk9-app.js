@@ -181,6 +181,7 @@
 
     const sidebar = document.getElementById('pk9-sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
+    document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
 
     if (target === 'home') renderHomeTab();
     if (target === 'lectures') renderLecturesTab();
@@ -258,14 +259,14 @@
     const streakVal = APP.user ? Math.max(1, Number(APP.user.streak || 1)) : 1;
 
     if (xpChip) {
-      xpChip.innerHTML = `🔥 Chuỗi ${streakVal} ngày • ⚡ <b>${xpVal} XP</b> (Lv.${levelVal})`;
+      xpChip.innerHTML = `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b> <span class="hide-xs">(Lv.${levelVal})</span>`;
     }
 
     if (authBtn) {
       if (APP.user) {
         authBtn.innerHTML = `👤 ${esc(APP.user.display_name || APP.user.username)}`;
       } else {
-        authBtn.innerHTML = `🚀 Đăng ký / Đăng nhập (+100 XP)`;
+        authBtn.innerHTML = `🚀 Đăng ký <span class="hide-xs">/ Đăng nhập (+100 XP)</span>`;
       }
     }
 
@@ -511,7 +512,8 @@
   }
 
   // ==========================================================================
-  // TAB 2: MULTI-SUBJECT VIDEO LECTURE STUDIO
+  // ==========================================================================
+  // TAB 2: MULTI-SUBJECT VIDEO LECTURE STUDIO (2-TIER: GRADE -> SUBJECT)
   // ==========================================================================
   function renderLecturesTab() {
     const root = document.getElementById('tab-lectures');
@@ -520,6 +522,15 @@
     const catalog = getCatalog();
     const course = getCourseById(APP.activeCourseId);
     if (!course) return;
+
+    const activeGrade = course.grade || '2K9';
+    const gradeMeta = [
+      { code: '2K9', icon: '🎓', label: 'Khối 12 — Luyện Thi THPT Quốc Gia (2K9)', sub: '5 Môn thi THPT: Toán 12, Vật Lí 12, Hóa Học 12, Sinh Học 12, Tiếng Anh 12' },
+      { code: '2K11', icon: '📘', label: 'Khối 10 — Chương Trình Mới GDPT 2018 (2K11)', sub: '5 Môn nền tảng: Toán 10, Vật Lí 10, Hóa Học 10, Sinh Học 10, Tiếng Anh 10' },
+      { code: '2K12', icon: '🎯', label: 'Khối 9 — Ôn Thi Tuyển Sinh Vào Lớp 10 (2K12)', sub: '5 Môn vào 10: Toán 9, Ngữ Văn 9, Tiếng Anh 9, KHTN 9, Lịch Sử & Địa Lí 9' }
+    ];
+    const coursesInActiveGrade = catalog.filter(c => c.grade === activeGrade);
+
     const found = findTopicInCourse(course, APP.activeTopicId);
     const activeChapter = found?.chapter;
     const activeTopic = found?.topic;
@@ -547,33 +558,77 @@
     const isDone = Boolean(activeTopic && APP.doneMap[activeTopic.id]);
     const prog = countCourseProgress(course);
     const qFilter = APP.lectureSearch.trim().toLowerCase();
+    const ytSearchUrl = activeTopic?.youtubeSearchUrl
+      || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${course.shortName || course.name} ${activeTopic?.title || ''}`)}`;
 
     root.innerHTML = `
-      <div style="margin-bottom:1.15rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;">
-        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
-          ${catalog.map(c => `
-            <button type="button" class="pk9-exam-chip ${c.id === course.id ? 'active' : ''}" data-select-course="${esc(c.id)}">
-              ${c.icon || '📘'} ${esc(c.shortName || c.name)}
-            </button>
-          `).join('')}
-        </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <button type="button" class="pk9-btn-exam-ghost" data-toggle-theater="1">
+      <!-- 2-TIER COURSE SELECTOR: BƯỚC 1 (CHỌN KHỐI LỚP) -> BƯỚC 2 (CHỌN MÔN HỌC) -->
+      <section class="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp và Môn học">
+        <div class="pk9-tier-label">
+          <span>📚 BƯỚC 1: CHỌN KHỐI LỚP HỌC TẬP</span>
+          <button type="button" class="pk9-btn-exam-ghost" data-toggle-theater="1" style="padding:0.35rem 0.75rem;font-size:0.76rem;">
             ${APP.theaterMode ? '📐 Thu nhỏ màn hình' : '🖥️ Chế độ Rạp chiếu'}
           </button>
         </div>
-      </div>
+
+        <div class="pk9-grade-tier-grid">
+          ${gradeMeta.map(gm => {
+            const gCourses = catalog.filter(c => c.grade === gm.code);
+            const gTopicsCount = gCourses.reduce((s, c) => s + c.chapters.reduce((a, ch) => a + ch.topics.length, 0), 0);
+            const isAct = gm.code === activeGrade;
+            return `
+              <button type="button" class="pk9-grade-tier-card ${isAct ? 'active' : ''}" data-select-lecture-grade="${gm.code}">
+                <div class="pk9-grade-tier-icon">${gm.icon}</div>
+                <div style="min-width:0;flex:1;">
+                  <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(gm.label)}</div>
+                  <div style="font-size:0.73rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
+                    ${gCourses.length} môn học • <b>${gTopicsCount} video bài giảng</b>
+                  </div>
+                </div>
+              </button>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
+          <span>🎯 BƯỚC 2: CHỌN MÔN HỌC THUỘC KHỐI ${esc(activeGrade)} (${coursesInActiveGrade.length} MÔN)</span>
+          <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
+            Đang học: <b>${esc(course.name)}</b>
+          </span>
+        </div>
+
+        <div class="pk9-subject-tier-grid">
+          ${coursesInActiveGrade.map(c => {
+            const cp = countCourseProgress(c);
+            const isAct = c.id === course.id;
+            return `
+              <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(c.id)}">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;width:100%;">
+                  <span style="font-size:1.35rem;">${c.icon || '📘'}</span>
+                  <span class="pk9-subj-meta">${cp.done}/${cp.total} bài (${cp.percent}%)</span>
+                </div>
+                <div>
+                  <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(c.shortName || c.name)}</div>
+                  <div class="pk9-subj-meta" style="margin-top:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    👨‍🏫 ${esc(c.teacher)}
+                  </div>
+                </div>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </section>
 
       <div class="pk9-lecture-studio ${APP.theaterMode ? 'theater' : ''}">
         <aside class="pk9-course-sidebar">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;">
-            <strong style="font-size:0.95rem;">${course.icon} ${esc(course.shortName || course.name)}</strong>
+            <strong style="font-size:0.95rem;">📑 Mục lục: ${course.icon} ${esc(course.shortName || course.name)}</strong>
             <span class="pk9-badge pk9-badge-verified">${prog.done}/${prog.total} bài (${prog.percent}%)</span>
           </div>
           <div class="pk9-topic-track" style="margin-bottom:0.75rem;">
             <div class="pk9-topic-fill" style="width:${Math.max(4, prog.percent)}%;"></div>
           </div>
-          <input type="search" id="pk9-lecture-search-input" class="pk9-input" placeholder="🔍 Tìm bài giảng trong môn này..." value="${esc(APP.lectureSearch)}" style="margin-top:0;margin-bottom:0.5rem;" />
+          <input type="search" id="pk9-lecture-search-input" class="pk9-input" placeholder="🔍 Tìm bài giảng trong môn ${esc(course.shortName || course.name)}..." value="${esc(APP.lectureSearch)}" style="margin-top:0;margin-bottom:0.5rem;" />
 
           <div>
             ${(course.chapters || []).map(ch => {
@@ -620,20 +675,21 @@
             </div>
 
             <div class="pk9-video-info-bar">
-              <div style="flex:1;min-width:240px;">
+              <div style="flex:1;min-width:220px;">
                 <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">
-                  ${esc(course.name)} • ${esc(activeChapter?.title || '')}
+                  Khối ${esc(course.grade)} • ${esc(course.name)} • ${esc(activeChapter?.title || '')}
                 </div>
-                <h2 style="margin:0.2rem 0 0.35rem;font-size:1.22rem;font-weight:900;">
+                <h2 style="margin:0.2rem 0 0.35rem;font-size:1.18rem;font-weight:900;">
                   ${esc(activeTopic.title)}
                 </h2>
-                <div style="font-size:0.82rem;color:var(--pk9-text-muted);display:flex;flex-wrap:wrap;gap:0.75rem;">
+                <div style="font-size:0.81rem;color:var(--pk9-text-muted);display:flex;flex-wrap:wrap;gap:0.75rem;">
                   <span>👨‍🏫 <b>Giảng viên:</b> ${esc(activeTopic.teacher)}</span>
                   <span>⏱ <b>Thời lượng:</b> ${esc(activeTopic.duration || '50 phút')}</span>
+                  <span>🎞️ <b>Mã Video:</b> <code>${esc(activeTopic.videoId)}</code></span>
                 </div>
               </div>
 
-              <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+              <div style="display:flex;flex-wrap:wrap;gap:0.45rem;align-items:center;">
                 ${prevTopic ? `
                   <button type="button" class="pk9-btn-exam-ghost" data-select-topic="${esc(prevTopic.id)}">← Bài trước</button>
                 ` : ''}
@@ -642,6 +698,9 @@
                 </button>
                 <a href="https://www.youtube.com/watch?v=${esc(activeTopic.videoId)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
                   ▶️ Mở YouTube ↗
+                </a>
+                <a href="${esc(ytSearchUrl)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tìm thêm bài giảng cùng chủ đề trên YouTube">
+                  🔎 Tìm thêm trên YouTube ↗
                 </a>
                 ${nextTopic ? `
                   <button type="button" class="pk9-btn-exam-ghost" data-select-topic="${esc(nextTopic.id)}">Bài tiếp →</button>
@@ -788,26 +847,38 @@
 
     const top3 = (list || []).slice(0, 3);
     const myRank = APP.lbData.my_rank;
+    const maxMetric = Math.max(100, ...(list || []).map(x => Number(APP.lbMode === 'weekly' ? x.weeklyXp : x.xp) || 100));
+    const podiumSlots = [
+      { rank: 2, row: top3.find(x => x.rank === 2) || null, crown: '🥈', title: 'Á Quân #2' },
+      { rank: 1, row: top3.find(x => x.rank === 1) || null, crown: '👑', title: 'Thủ Khoa #1' },
+      { rank: 3, row: top3.find(x => x.rank === 3) || null, crown: '🥉', title: 'Quý Quân #3' }
+    ];
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
         <div class="pk9-exam-hero">
           <div class="pk9-exam-hero-grid">
             <div>
-              <div style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.3rem 0.85rem;border-radius:999px;background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.45);font-size:0.76rem;font-weight:800;margin-bottom:0.75rem;">
-                <span>🏆 BẢNG VÀNG VINH DANH HỌC VIÊN • HỌC CÙNG PHÚC K9 (${esc(APP.lbData.week_key || 'Tuần này')})</span>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;margin-bottom:0.8rem;">
+                <div style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.32rem 0.85rem;border-radius:999px;background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.45);font-size:0.75rem;font-weight:800;">
+                  <span>🏆 ĐẤU TRƯỜNG BẢNG VÀNG PHÚC K9 • ${esc(APP.lbData.week_key || 'Tuần này')}</span>
+                </div>
+                <div class="pk9-lb-live-pill">
+                  <span class="pk9-live-dot"></span>
+                  <span>100% Dữ liệu thật từ Học viên đăng ký</span>
+                </div>
               </div>
               <h2 style="font-size:1.65rem;font-weight:900;margin:0 0 0.5rem;">
                 Bảng Xếp Hạng Hàng Tuần & Top Học Viên Toàn Hệ Thống
               </h2>
               <p style="margin:0;color:rgba(255,255,255,0.88);font-size:0.92rem;line-height:1.6;">
-                Mỗi khi bạn <b>đăng ký tài khoản (+100 XP)</b>, <b>hoàn thành bài giảng video (+25 XP)</b> hoặc <b>nộp bài thi tại Phòng Luyện Đề (+60 → +140 XP)</b>, điểm số và thứ hạng của bạn được cập nhật trực tiếp lên <b>BXH Hàng Tuần</b> và <b>BXH Top Học Viên</b>!
+                Mỗi khi bạn <b>đăng ký tài khoản (+100 XP)</b>, <b>hoàn thành bài giảng video (+25 XP)</b> hoặc <b>nộp bài thi tại Phòng Luyện Đề (+60 → +140 XP)</b>, điểm số và thứ hạng của bạn được cập nhật trực tiếp theo thời gian thực!
               </p>
             </div>
             <div>
               ${APP.user ? `
                 <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.22);border-radius:1.25rem;padding:1.2rem;">
-                  <div style="font-size:0.76rem;font-weight:800;color:#fde047;text-transform:uppercase;">🌟 THỨ HẠNG HIỆN TẠI CỦA BẠN</div>
+                  <div style="font-size:0.76rem;font-weight:800;color:#fde047;text-transform:uppercase;">🌟 THỨ HẠNG THẬT CỦA BẠN</div>
                   <div style="font-size:1.15rem;font-weight:900;margin:0.25rem 0 0.75rem;">👤 ${esc(APP.user.display_name)} (@${esc(APP.user.username)})</div>
                   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem;text-align:center;">
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
@@ -826,7 +897,7 @@
                 </div>
               ` : `
                 <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.22);border-radius:1.25rem;padding:1.25rem;text-align:center;">
-                  <div style="font-size:1.05rem;font-weight:900;margin-bottom:0.4rem;">🚀 Bạn chưa có tên trên Bảng Xếp Hạng?</div>
+                  <div style="font-size:1.05rem;font-weight:900;margin-bottom:0.4rem;">🚀 Ghi Danh Lên Bảng Xếp Hạng Thật!</div>
                   <p style="margin:0 0 0.9rem;font-size:0.84rem;color:rgba(255,255,255,0.86);">
                     Đăng ký tài khoản miễn phí trong 10 giây để nhận ngay <b>+100 XP</b> khởi đầu và xuất hiện tức thì trên BXH Hàng Tuần & BXH Top!
                   </p>
@@ -842,13 +913,13 @@
         <div class="pk9-exam-toolbar">
           <div class="pk9-exam-tabs">
             <button type="button" class="pk9-exam-chip ${APP.lbMode === 'weekly' ? 'active' : ''}" data-lb-mode="weekly">
-              🔥 BXH Hàng Tuần (Đua Top Tuần)
+              🔥 BXH Hàng Tuần (${(APP.lbData.weekly_leaderboard || []).length} học viên)
             </button>
             <button type="button" class="pk9-exam-chip ${APP.lbMode === 'top' ? 'active' : ''}" data-lb-mode="top">
-              🏆 BXH Top Học Viên (Toàn Thời Gian)
+              🏆 BXH Top Học Viên (${(APP.lbData.leaderboard || []).length} học viên)
             </button>
             <button type="button" class="pk9-exam-chip ${APP.lbMode === 'exam' ? 'active' : ''}" data-lb-mode="exam">
-              🎯 BXH Cao Thủ Luyện Đề (Điểm Thi)
+              🎯 BXH Cao Thủ Luyện Đề (${(APP.lbData.exam_leaderboard || []).length})
             </button>
           </div>
           <div class="pk9-exam-search">
@@ -857,36 +928,50 @@
           </div>
         </div>
 
-        ${top3.length >= 1 ? `
-          <div class="pk9-lb-podium">
-            ${[top3[1], top3[0], top3[2]].filter(Boolean).map(row => {
-              const r = row.rank;
-              const crown = r === 1 ? '👑' : r === 2 ? '🥈' : '🥉';
-              const mainMetric = APP.lbMode === 'weekly'
-                ? `🔥 ${row.weeklyXp} XP Tuần`
-                : APP.lbMode === 'exam'
-                ? `🎯 Đỉnh: ${Number(row.bestScore || 0).toFixed(2)}đ`
-                : `⚡ ${row.xp} XP (Lv.${row.level})`;
+        <!-- 3-SLOT ANIMATED PODIUM STAGE (100% REAL ACCOUNTS + VACANT CHALLENGER SLOTS) -->
+        <div class="pk9-lb-podium">
+          ${podiumSlots.map(slot => {
+            const r = slot.rank;
+            const row = slot.row;
+            if (!row) {
               return `
-                <div class="pk9-podium-card rank-${r}">
-                  <div class="pk9-podium-crown">${crown}</div>
-                  <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
-                  <div style="font-weight:900;font-size:1.06rem;">Hạng #${r} • ${esc(row.display_name)}</div>
-                  <div style="font-size:0.79rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">
-                    🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}
+                <div class="pk9-podium-card rank-${r} vacant">
+                  <div class="pk9-podium-crown">${slot.crown}</div>
+                  <div class="pk9-lb-avatar" style="background:var(--pk9-surface-2);color:var(--pk9-text-muted);box-shadow:none;border:2px dashed var(--pk9-border);">?</div>
+                  <div style="font-weight:900;font-size:1.02rem;">${slot.title} • Đang chờ chủ nhân</div>
+                  <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin:0.35rem 0 0.85rem;">
+                    Vị trí Hạng #${r} đang bỏ trống. Đăng ký tài khoản hoặc làm đề ngay để chiếm vị trí này!
                   </div>
-                  <div style="display:flex;justify-content:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem;">
-                    <span class="pk9-badge pk9-badge-subj">${mainMetric}</span>
-                    <span class="pk9-badge pk9-badge-verified">📝 ${row.attempts || 0} đề • Cao nhất ${Number(row.bestScore || 0).toFixed(2)}đ</span>
-                  </div>
-                  <div style="display:flex;justify-content:center;gap:0.35rem;flex-wrap:wrap;">
-                    ${(row.badges || []).slice(0, 2).map(b => `<span class="pk9-badge pk9-badge-code">🏅 ${esc(b)}</span>`).join('')}
-                  </div>
+                  <button type="button" class="pk9-btn-exam-ghost" data-open-auth="register" style="padding:0.45rem 0.9rem;font-size:0.78rem;">
+                    ⚡ Chiếm Hạng #${r} ngay
+                  </button>
                 </div>
               `;
-            }).join('')}
-          </div>
-        ` : ''}
+            }
+            const mainMetric = APP.lbMode === 'weekly'
+              ? `🔥 ${row.weeklyXp} XP Tuần`
+              : APP.lbMode === 'exam'
+              ? `🎯 Đỉnh: ${Number(row.bestScore || 0).toFixed(2)}đ`
+              : `⚡ ${row.xp} XP (Lv.${row.level})`;
+            return `
+              <div class="pk9-podium-card rank-${r}">
+                <div class="pk9-podium-crown">${slot.crown}</div>
+                <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
+                <div style="font-weight:900;font-size:1.06rem;">${slot.title} • ${esc(row.display_name)}</div>
+                <div style="font-size:0.79rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">
+                  🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}
+                </div>
+                <div style="display:flex;justify-content:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+                  <span class="pk9-badge pk9-badge-subj">${mainMetric}</span>
+                  <span class="pk9-badge pk9-badge-verified">📝 ${row.attempts || 0} đề • Cao nhất ${Number(row.bestScore || 0).toFixed(2)}đ</span>
+                </div>
+                <div style="display:flex;justify-content:center;gap:0.35rem;flex-wrap:wrap;">
+                  ${(row.badges || []).slice(0, 2).map(b => `<span class="pk9-badge pk9-badge-code">🏅 ${esc(b)}</span>`).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
 
         <div class="pk9-lb-table-wrap">
           <div class="pk9-lb-row" style="background:var(--pk9-surface-2);font-weight:800;font-size:0.78rem;color:var(--pk9-text-muted);text-transform:uppercase;">
@@ -896,16 +981,18 @@
             <div class="hide-mob">Thành tích Luyện đề</div>
             <div class="hide-mob">Chuỗi & Huy hiệu</div>
           </div>
-          ${filtered.length ? filtered.map(row => {
+          ${filtered.length ? filtered.map((row, idx) => {
             const isMe = APP.user && row.username === APP.user.username;
             const rankBadge = row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`;
+            const curVal = Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 100;
+            const pct = Math.min(100, Math.max(12, Math.round((curVal / maxMetric) * 100)));
             return `
-              <div class="pk9-lb-row ${isMe ? 'me' : ''}">
+              <div class="pk9-lb-row ${isMe ? 'me' : ''}" style="animation-delay:${Math.min(idx * 0.05, 0.4)}s;">
                 <div style="font-weight:900;font-size:0.95rem;color:${row.rank <= 3 ? '#d97706' : 'var(--pk9-text)'};">
                   ${rankBadge}
                 </div>
                 <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                  <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px -4px rgba(37,99,235,0.45);">
                     ${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}
                   </div>
                   <div style="min-width:0;">
@@ -913,14 +1000,19 @@
                       ${esc(row.display_name)} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
                     </div>
                     <div style="font-size:0.76rem;color:var(--pk9-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      🏫 ${esc(row.school || 'Chưa cập nhật trường')} • Khối ${esc(row.grade || '2K9')}
+                      🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}
                     </div>
                   </div>
                 </div>
-                <div style="font-weight:800;color:var(--pk9-primary);">
-                  ${APP.lbMode === 'weekly'
-                    ? `🔥 ${row.weeklyXp} XP Tuần`
-                    : `⚡ ${row.xp} XP <span style="font-size:0.75rem;color:var(--pk9-text-muted);">(Lv.${row.level})</span>`}
+                <div>
+                  <div style="font-weight:800;color:var(--pk9-primary);font-size:0.86rem;">
+                    ${APP.lbMode === 'weekly'
+                      ? `🔥 ${row.weeklyXp} XP Tuần`
+                      : `⚡ ${row.xp} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${row.level})</span>`}
+                  </div>
+                  <div class="pk9-topic-track" style="height:0.38rem;margin-top:0.28rem;">
+                    <div class="pk9-topic-fill" style="width:${pct}%;"></div>
+                  </div>
                 </div>
                 <div class="hide-mob" style="font-size:0.83rem;">
                   🎯 Đỉnh: <b>${Number(row.bestScore || 0).toFixed(2)}đ</b> • ${row.attempts || 0} đề
@@ -1435,7 +1527,15 @@
         document.querySelectorAll('[data-set-grade]').forEach(b => {
           b.classList.toggle('active', b.getAttribute('data-set-grade') === APP.gradeFilter);
         });
+        if (APP.gradeFilter !== 'ALL') {
+          const firstCourse = getCatalog().find(c => c.grade === APP.gradeFilter);
+          if (firstCourse) {
+            APP.activeCourseId = firstCourse.id;
+            APP.activeTopicId = firstCourse.chapters?.[0]?.topics?.[0]?.id || '';
+          }
+        }
         if (APP.activeTab === 'home') renderHomeTab();
+        if (APP.activeTab === 'lectures') renderLecturesTab();
         return;
       }
 
@@ -1452,6 +1552,22 @@
         const exId = quickExamBtn.getAttribute('data-quick-start-exam');
         switchTab('exams');
         if (window.PK9_EXAM_CENTER) window.PK9_EXAM_CENTER.startExamById(exId);
+        return;
+      }
+
+      const selLectureGrade = e.target.closest('[data-select-lecture-grade]');
+      if (selLectureGrade) {
+        const gCode = selLectureGrade.getAttribute('data-select-lecture-grade') || '2K9';
+        APP.gradeFilter = gCode;
+        document.querySelectorAll('[data-set-grade]').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-set-grade') === gCode);
+        });
+        const firstCourse = getCatalog().find(c => c.grade === gCode);
+        if (firstCourse) {
+          APP.activeCourseId = firstCourse.id;
+          APP.activeTopicId = firstCourse.chapters?.[0]?.topics?.[0]?.id || '';
+        }
+        renderLecturesTab();
         return;
       }
 
@@ -1686,7 +1802,17 @@
 
       const mobMenuBtn = e.target.closest('[data-toggle-mobile-sidebar]');
       if (mobMenuBtn) {
-        document.getElementById('pk9-sidebar')?.classList.toggle('mobile-open');
+        const sb = document.getElementById('pk9-sidebar');
+        const bd = document.getElementById('pk9-sidebar-backdrop');
+        const open = sb?.classList.toggle('mobile-open');
+        if (bd) bd.classList.toggle('open', Boolean(open));
+        return;
+      }
+
+      const closeMobMenu = e.target.closest('[data-close-mobile-sidebar]');
+      if (closeMobMenu) {
+        document.getElementById('pk9-sidebar')?.classList.remove('mobile-open');
+        document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
         return;
       }
 
