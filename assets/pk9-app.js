@@ -12,6 +12,7 @@
     activeTopicId: '',
     showTeacherPdfDrawer: false,
     teacherPdfSearch: '',
+    openChaptersMap: {},
     studySubtab: 'theory', // 'theory' | 'types' | 'quiz' | 'notes'
     theaterMode: false,
     lectureSearch: '',
@@ -1139,12 +1140,19 @@
                 return `${t.title} ${t.code || ''} ${t.desc || ''}`.toLowerCase().includes(qFilter);
               });
               if (!topics.length) return '';
+              const chKey = `${course.id}::${ch.id}`;
+              const isOpen = qFilter
+                ? true
+                : (APP.openChaptersMap[chKey] !== undefined
+                    ? Boolean(APP.openChaptersMap[chKey])
+                    : (ch.id === activeChapter?.id || (course.chapters || []).length <= 2));
               return `
                 <div class="pk9-chapter-block">
-                  <div class="pk9-chapter-head">
-                    <span>${esc(ch.title)}</span>
-                    <span style="font-size:0.72rem;color:var(--pk9-text-muted);">${topics.length} bài</span>
-                  </div>
+                  <button type="button" class="pk9-chapter-head" data-toggle-chapter="${esc(chKey)}">
+                    <span>${isOpen ? '▾ ' : '▸ '}${esc(ch.title)}</span>
+                    <span style="font-size:0.72rem;color:var(--pk9-text-muted);flex-shrink:0;">${topics.length} bài</span>
+                  </button>
+                  ${isOpen ? `
                   <div class="pk9-topic-list">
                     ${topics.map(t => {
                       const done = Boolean(APP.doneMap[t.id]);
@@ -1161,6 +1169,7 @@
                       `;
                     }).join('')}
                   </div>
+                  ` : ''}
                 </div>
               `;
             }).join('')}
@@ -3152,6 +3161,24 @@
         APP.showTeacherPdfDrawer = false;
         APP.teacherPdfSearch = '';
         renderLecturesTab();
+        return;
+      }
+
+      const toggleCh = e.target.closest('[data-toggle-chapter]');
+      if (toggleCh) {
+        const chKey = toggleCh.getAttribute('data-toggle-chapter');
+        if (chKey) {
+          const cur = APP.openChaptersMap[chKey];
+          if (cur === undefined) {
+            const c = getCourseById(APP.activeCourseId);
+            const actCh = findTopicInCourse(c, APP.activeTopicId)?.chapter;
+            const defaultOpen = (actCh && `${c.id}::${actCh.id}` === chKey) || ((c?.chapters || []).length <= 2);
+            APP.openChaptersMap[chKey] = !defaultOpen;
+          } else {
+            APP.openChaptersMap[chKey] = !cur;
+          }
+          renderLecturesTab();
+        }
         return;
       }
 
