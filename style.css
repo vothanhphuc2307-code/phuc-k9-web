@@ -778,6 +778,7 @@ html.dark .pk9-xp-chip {
 .pk9-subj-meta {
   font-size: 0.72rem;
   color: var(--pk9-text-muted);
+  font-weight: 700;
 }
 
 .pk9-teacher-tier-grid {
@@ -841,8 +842,6 @@ html.dark .pk9-xp-chip {
   border-radius: 0.8rem;
   background: var(--pk9-surface-2);
   border: 1px solid var(--pk9-border);
-}
-  font-weight: 700;
 }
 
 /* Video Lecture Studio Workspace */
