@@ -108,29 +108,38 @@ body::before {
 }
 
 .pk9-brand-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb 0%, #0d9488 100%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #172554, #090d16);
   color: #ffffff;
   font-weight: 900;
   font-size: 1.05rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.55);
+  box-shadow: 0 10px 24px -6px rgba(56, 189, 248, 0.55), 0 0 0 2px rgba(251, 191, 36, 0.35);
   flex-shrink: 0;
   position: relative;
+  overflow: hidden;
+}
+
+.pk9-brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
 }
 
 .pk9-brand-logo::after {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #38bdf8, #10b981);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #fbbf24);
   z-index: -1;
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .pk9-brand-title {
@@ -468,6 +477,32 @@ html.dark .pk9-xp-chip {
   align-items: center;
 }
 
+.pk9-hero-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.pk9-hero-emblem {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #090d16;
+  border: 2px solid rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+}
+
+.pk9-hero-emblem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .pk9-hero-badge {
   display: inline-flex;
   align-items: center;
@@ -479,7 +514,7 @@ html.dark .pk9-xp-chip {
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.03em;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0;
 }
 
 .pk9-hero h1 {
@@ -1267,13 +1302,37 @@ html.dark .pk9-podium-card.rank-3 {
 }
 
 /* Hide menu toggle button on desktop */
-[data-toggle-mobile-sidebar] {
+[data-toggle-mobile-sidebar],
+.pk9-mobile-brand-pill {
   display: none;
+}
+
+.pk9-mobile-brand-pill {
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  background: #090d16;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+
+.pk9-mobile-brand-pill img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Responsive Breakpoints (Tablet & Mobile) */
 @media (max-width: 1024px) {
-  [data-toggle-mobile-sidebar] {
+  [data-toggle-mobile-sidebar],
+  .pk9-mobile-brand-pill {
     display: inline-flex;
   }
   .pk9-shell {

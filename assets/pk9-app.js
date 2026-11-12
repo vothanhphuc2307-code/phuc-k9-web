@@ -392,8 +392,13 @@
         <div class="pk9-hero-orb-2"></div>
         <div class="pk9-hero-grid">
           <div>
-            <div class="pk9-hero-badge">
-              <span>⚡ HỆ SINH THÁI GIÁO DỤC TOÀN DIỆN • HỌC CÙNG PHÚC K9</span>
+            <div class="pk9-hero-brand-row">
+              <div class="pk9-hero-emblem">
+                <img src="/assets/logo-phuc-k9.png?v=2026" alt="Logo Học Cùng Phúc K9" width="52" height="52" />
+              </div>
+              <div class="pk9-hero-badge">
+                <span>⚡ HỆ SINH THÁI GIÁO DỤC TOÀN DIỆN • HỌC CÙNG PHÚC K9</span>
+              </div>
             </div>
             <h1>
               Bứt Phá Điểm Số 9+ Cùng<br/>

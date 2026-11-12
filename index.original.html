@@ -4,8 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>HỌC CÙNG PHÚC K9 — Hệ Sinh Thái Luyện Thi, Video Bài Giảng, Kho Đề Nguồn Thật & BXH Học Viên</title>
-  <meta name="description" content="Hệ sinh thái giáo dục HỌC CÙNG PHÚC K9: 262+ Video bài giảng đa môn (Toán, Lí, Hóa, Sinh, Anh, Khối 10 & Ôn vào 10), Phòng luyện đề nguồn gốc thật Sở/Bộ chấm điểm tự động chuẩn GDPT 2018 và Bảng xếp hạng Hàng Tuần & Top Học Viên." />
+  <meta name="description" content="Hệ sinh thái giáo dục HỌC CÙNG PHÚC K9: 258+ Video bài giảng đa môn (Toán, Lí, Hóa, Sinh, Anh, Khối 10 & Ôn vào 10), Phòng luyện đề nguồn gốc thật Sở/Bộ chấm điểm tự động chuẩn GDPT 2018 và Bảng xếp hạng Hàng Tuần & Top Học Viên." />
   <meta name="theme-color" content="#0f172a" />
+
+  <!-- Favicons & PWA -->
+  <link rel="icon" href="/favicon.ico?v=2026" sizes="any" />
+  <link rel="icon" type="image/png" sizes="128x128" href="/assets/phuc-k9-favicon.png?v=2026" />
+  <link rel="shortcut icon" href="/favicon.ico?v=2026" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=2026" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+
+  <!-- Open Graph / Zalo / Facebook Link Preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="HỌC CÙNG PHÚC K9" />
+  <meta property="og:locale" content="vi_VN" />
+  <meta property="og:title" content="HỌC CÙNG PHÚC K9 — Hệ Sinh Thái Luyện Thi & Kho Đề Nguồn Thật 9+" />
+  <meta property="og:description" content="258+ Video bài giảng đa môn theo từng lớp, Kho đề thi thật Sở/Bộ chấm điểm tự động & Bảng xếp hạng Học viên hàng tuần. Học miễn phí ngay!" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="/assets/og-phuc-k9.jpg?v=2026" />
+  <meta property="og:image:secure_url" content="/assets/og-phuc-k9.jpg?v=2026" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="HỌC CÙNG PHÚC K9 — Hệ sinh thái luyện thi 9+" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="HỌC CÙNG PHÚC K9 — Hệ Sinh Thái Luyện Thi 9+" />
+  <meta name="twitter:description" content="258+ Video bài giảng, Kho đề thi thật Sở/Bộ chấm điểm tự động & Bảng xếp hạng Học viên hàng tuần." />
+  <meta name="twitter:image" content="/assets/og-phuc-k9.jpg?v=2026" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,7 +61,9 @@
     <!-- LEFT SIDEBAR (PC & MOBILE DRAWER) -->
     <aside class="pk9-sidebar" id="pk9-sidebar" aria-label="Điều hướng Hệ sinh thái Học Cùng Phúc K9">
       <div class="pk9-brand" data-nav-tab="home">
-        <div class="pk9-brand-logo">PK9</div>
+        <div class="pk9-brand-logo">
+          <img src="/assets/logo-phuc-k9.png?v=2026" alt="Logo Học Cùng Phúc K9" width="44" height="44" />
+        </div>
         <div>
           <div class="pk9-brand-title">HỌC CÙNG PHÚC K9</div>
           <div class="pk9-brand-sub">Hệ Sinh Thái Luyện Thi 9+</div>
@@ -93,6 +120,14 @@
           <span class="pk9-nav-pill">84+ PDF</span>
         </button>
 
+        <button type="button" class="pk9-nav-item" data-nav-tab="khoa-chui">
+          <span class="pk9-nav-item-left">
+            <span class="pk9-nav-icon">💎</span>
+            <span>Khóa Chui Tham Khảo</span>
+          </span>
+          <span class="pk9-nav-pill hot">TRỰC TIẾP</span>
+        </button>
+
         <button type="button" class="pk9-nav-item" data-nav-tab="archive">
           <span class="pk9-nav-item-left">
             <span class="pk9-nav-icon">🗂️</span>
@@ -128,19 +163,35 @@
           </span>
           <span class="pk9-nav-pill">24/7</span>
         </button>
+
+        <div class="pk9-nav-group-label" id="pk9-nav-admin-group" style="display:none;">Quản trị hệ thống</div>
+        <button type="button" class="pk9-nav-item" id="pk9-nav-admin-btn" data-nav-tab="admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.12),rgba(245,158,11,0.12));border-color:rgba(225,29,72,0.3);">
+          <span class="pk9-nav-item-left">
+            <span class="pk9-nav-icon">🛡️</span>
+            <span>Admin Dashboard</span>
+          </span>
+          <span class="pk9-nav-pill hot">ADMIN</span>
+        </button>
       </nav>
 
       <!-- Live Student Profile & Rank Card -->
       <div class="pk9-sidebar-footer" id="pk9-sidebar-user-card"></div>
     </aside>
+    <div class="pk9-sidebar-backdrop" id="pk9-sidebar-backdrop" data-close-mobile-sidebar="1"></div>
 
     <!-- MAIN WORKSPACE -->
     <div class="pk9-main-wrap">
+      <!-- SYSTEM ANNOUNCEMENT BANNER -->
+      <div id="pk9-system-announcement-bar" style="display:none;"></div>
+
       <!-- STICKY TOPBAR -->
       <header class="pk9-topbar">
         <div style="display:flex;align-items:center;gap:0.65rem;flex:1;min-width:0;">
           <button type="button" class="pk9-icon-btn" data-toggle-mobile-sidebar="1" title="Mở menu điều hướng" aria-label="Menu">
             ☰
+          </button>
+          <button type="button" class="pk9-mobile-brand-pill" data-nav-tab="home" title="Học Cùng Phúc K9" aria-label="Trang chủ Học Cùng Phúc K9">
+            <img src="/assets/logo-phuc-k9.png?v=2026" alt="Phúc K9" width="28" height="28" />
           </button>
           <button type="button" class="pk9-cmd-trigger" data-open-cmd="1">
             <span>🔍 Tìm nhanh bài giảng video, đề thi Sở/Bộ, tài liệu...</span>
@@ -149,6 +200,12 @@
         </div>
 
         <div class="pk9-topbar-actions">
+          <button type="button" class="pk9-xp-chip" id="pk9-top-khoa-chui-btn" data-nav-tab="khoa-chui" title="Mở ngay Khóa Chui Tham Khảo trực tiếp trong web" style="background:linear-gradient(135deg,rgba(16,185,129,0.16),rgba(37,99,235,0.16));border-color:rgba(16,185,129,0.4);color:#0d9488;">
+            💎 <span class="hide-xs">Khóa Chui Tham Khảo</span>
+          </button>
+          <button type="button" class="pk9-xp-chip" id="pk9-top-admin-btn" data-nav-tab="admin" title="Mở Trung tâm điều hành Admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.18),rgba(245,158,11,0.18));border-color:rgba(225,29,72,0.45);color:#e11d48;">
+            🛡️ <span class="hide-xs">Admin Pro</span>
+          </button>
           <button type="button" class="pk9-xp-chip" id="pk9-top-xp-chip" data-nav-tab="leaderboard" title="Xem thứ hạng của bạn trên BXH Tuần & Top">
             🔥 Chuỗi 1 ngày • ⚡ 100 XP
           </button>
@@ -170,11 +227,13 @@
         </section>
         <section id="tab-leaderboard" class="pk9-tab-pane"></section>
         <section id="tab-docs" class="pk9-tab-pane"></section>
+        <section id="tab-khoa-chui" class="pk9-tab-pane"></section>
         <section id="tab-archive" class="pk9-tab-pane"></section>
         <section id="tab-flashcards" class="pk9-tab-pane"></section>
         <section id="tab-community" class="pk9-tab-pane"></section>
         <section id="tab-planner" class="pk9-tab-pane"></section>
         <section id="tab-ai" class="pk9-tab-pane"></section>
+        <section id="tab-admin" class="pk9-tab-pane"></section>
       </main>
     </div>
   </div>
@@ -188,6 +247,10 @@
     <button type="button" class="pk9-mob-nav-btn" data-nav-tab="lectures">
       <span>🎬</span>
       <span>Bài giảng</span>
+    </button>
+    <button type="button" class="pk9-mob-nav-btn" data-nav-tab="khoa-chui">
+      <span>💎</span>
+      <span>Khóa chui</span>
     </button>
     <button type="button" class="pk9-mob-nav-btn" data-nav-tab="exams">
       <span>🏛️</span>

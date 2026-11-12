@@ -1,5 +1,29 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Zalo|ZaloPC|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Discordbot|WhatsApp|LinkedInBot).*"
+        }
+      ],
+      "destination": "/api/og-meta"
+    },
+    {
+      "source": "/index.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Zalo|ZaloPC|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Discordbot|WhatsApp|LinkedInBot).*"
+        }
+      ],
+      "destination": "/api/og-meta"
+    }
+  ],
   "headers": [
     {
       "source": "/index.html",
@@ -7,6 +31,15 @@
         {
           "key": "Content-Type",
           "value": "text/html; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/assets/og-phuc-k9.jpg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
         }
       ]
     }
