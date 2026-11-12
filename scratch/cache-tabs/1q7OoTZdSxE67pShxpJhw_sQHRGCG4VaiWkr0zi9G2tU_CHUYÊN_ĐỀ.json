@@ -1,0 +1,3961 @@
+{
+  "sheetId": "1q7OoTZdSxE67pShxpJhw_sQHRGCG4VaiWkr0zi9G2tU",
+  "tabTitle": "CHUYÊN ĐỀ",
+  "vals": [
+    [
+      "GIÁO VIÊN HUY HƯỚNG NỘI - KHÓA CHUYÊN ĐỀ"
+    ],
+    [
+      "STT",
+      "TÊN BÀI HỌC",
+      "TÀI LIỆU",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "BỔ TRỢ TOÁN 11"
+    ],
+    [
+      "1",
+      "PT MŨ LOGA",
+      "x",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BÀI GIẢNG",
+      "BÀI GIẢNG"
+    ],
+    [
+      "2",
+      "BPT MŨ LOGA",
+      "x",
+      "x",
+      "BÀI GIẢNG",
+      "BÀI GIẢNG"
+    ],
+    [
+      "3",
+      "GÓC GIỮA 2 MẶT PHẲNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BÀI GIẢNG 2"
+    ],
+    [
+      "4",
+      "GÓC NHỊ DIỆN - THIẾT DIỆN VUÔNG GÓC",
+      "",
+      "",
+      "BÀI GIẢNG"
+    ],
+    [
+      "5",
+      "KHOẢNG CÁCH TỪ 1 ĐIỂM ĐẾN MP",
+      "x",
+      "x",
+      "BÀI GIẢNG"
+    ],
+    [
+      "6",
+      "KHOẢNG CÁCH 2 ĐT CHÉO NHAU",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "7",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 01",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "8",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 02",
+      "x",
+      "x",
+      "x"
+    ],
+    [
+      "9",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 03",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "10",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 04",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "11",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 05",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "12",
+      "QUY TẮC CỘNG XÁC SUẤT",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "13",
+      "QUY TẮC NHÂN XÁC SUẤT",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "14",
+      "ĐẠO HÀM B01 - TÍNH ĐẠO HÀM THEO ĐN",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "15",
+      "ĐẠO HÀM VD VDC B01",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "16",
+      "ĐẠO HÀM VD VDC B02 - ĐẠO HÀM HÀM HỢP",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "17",
+      "ĐẠO HÀM VD VDC B03 - BT TIẾP TUYẾN",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "18",
+      "TỈ LỆ THỂ TÍCH",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "19",
+      "BỘ ĐỀ HK2 - PHẦN I (10 ĐỀ)",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "x"
+    ],
+    [
+      "20",
+      "BỘ ĐỀ HK2 - PHẦN II (7 ĐỀ)",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "x"
+    ],
+    [
+      "HÀM SỐ"
+    ],
+    [
+      "1",
+      "BỔ TRỢ XÉT DẤU",
+      "x",
+      "x",
+      "BÀI GIẢNG"
+    ],
+    [
+      "2",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B01 - NỀN TẢNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "3",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B02 - BT THAM SỐ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "4",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B03 - KỸ THUẬT ĐẶT ẨN",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "5",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B04 - BT HÀM HỢP",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "6",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B05 - HÀM BẬC 3",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "7",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B06 - HÀM PHÂN THỨC",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "8",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B07 - BT THỰC TẾ 1",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "9",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B08 - BT THỰC TẾ 2",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "10",
+      "CỰC TRỊ HÀM SỐ B01 - NỀN TẢNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "11",
+      "CỰC TRỊ HÀM SỐ B02 - BT HÀM HỢP",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "12",
+      "CỰC TRỊ HÀM SỐ B03 - HÀM HỢP CÓ THAM SỐ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "13",
+      "CỰC TRỊ HÀM SỐ B04 - HS BẬC 3",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "14",
+      "CỰC TRỊ HÀM SỐ B05 - BÀM B2/1",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "15",
+      "THỰC CHIẾN ĐƠN ĐIỆU - CỰC TRỊ - 01",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "16",
+      "CỰC TRỊ HÀM SỐ B06 - BT THỰC TẾ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "17",
+      "CỰC TRỊ HÀM SỐ B07 - BT THỰC TẾ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "18",
+      "MAX MIN HÀM SỐ NỀN TẢNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "19",
+      "MAX MIN HÀM SỐ - BT THAM SỐ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "20",
+      "MAX MIN HÀM SỐ BT THỰC TẾ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "21",
+      "TIỆM CẬN ĐỒ THỊ HÀM SỐ NỀN TẢNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "22",
+      "TIỆM CẬN ĐỒ THỊ HÀM SỐ VDC",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "23",
+      "NHẬN DẠNG ĐỒ THỊ HÀM SỐ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "24",
+      "TƯƠNG GIAO - NỀN TẢNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "25",
+      "TƯƠNG GIAO - VDC",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "26",
+      "TỔNG ÔN BÀI TOÁN THỰC TẾ 1",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "27",
+      "TỔNG ÔN BÀI TOÁN THỰC TẾ 2"
+    ],
+    [
+      "28",
+      "TỔNG ÔN BÀI TOÁN THỰC TẾ 3",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "29",
+      "CHỮA ĐỀ THỰC CHIẾN 02"
+    ],
+    [
+      "30",
+      "CHỮA ĐỀ THỰC CHIẾN 03"
+    ],
+    [
+      "Sang tháng 8 thầy chuyển qua live ZOOM nên khó đảm bảo được nguồn update đầy đủ"
+    ],
+    [
+      "Nếu thấy hợp với thầy thì tốt nhất các bạn nên đăng ký học trực tiếp với thầy nhé."
+    ],
+    [
+      "HÌNH OXYZ"
+    ],
+    [
+      "1",
+      "VECTO - HỆ TRỤC OXYZ 1 - NỀN TẢNG",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "2",
+      "VECTO - HỆ TRỤC OXYZ 2- TÍCH VÔ HƯỚNG",
+      "",
+      "",
+      "BÀI GIẢNG"
+    ],
+    [
+      "3",
+      "VECTO - HỆ TRỤC OXYZ 3 - TÍCH CÓ HƯỚNG",
+      "ĐỀ",
+      "",
+      "BÀI GIẢNG"
+    ],
+    [
+      "4",
+      "VECTO - HỆ TRỤC OXYZ 4 - TỌA ĐỘ HÓA",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "5",
+      "VECTO - HỆ TRỤC OXYZ 5 - BT THỰC TẾ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG"
+    ],
+    [
+      "BỔ TRỢ ĐGNL"
+    ],
+    [
+      "HÌNH OXYZ"
+    ],
+    [
+      "1",
+      "HỆ TRỤC OXYZ - MỞ ĐẦU",
+      "VIDEO"
+    ],
+    [
+      "2",
+      "VECTO VÀ CÁC PHÉP TOÁN",
+      "VIDEO"
+    ],
+    [
+      "3",
+      "TÍCH VÔ HƯỚNG VÀ ỨNG DỤNG",
+      "VIDEO"
+    ],
+    [
+      "4",
+      "PHƯƠNG TRÌNH MẶT CẦU",
+      "VIDEO"
+    ],
+    [
+      "5",
+      "PHƯƠNG TRÌNH MẶT PHẲNG 01",
+      "VIDEO"
+    ],
+    [
+      "6",
+      "PHƯƠNG TRÌNH MẶT PHẲNG 02",
+      "VIDEO"
+    ],
+    [
+      "7",
+      "PHƯƠNG TRÌNH ĐƯỜNG THẲNG 01",
+      "VIDEO"
+    ],
+    [
+      "8",
+      "PHƯƠNG TRÌNH ĐƯỜNG THẲNG 02",
+      "VIDEO"
+    ],
+    [
+      "9",
+      "BÀI TOÁN GÓC TRONG OXYZ",
+      "VIDEO"
+    ],
+    [
+      "10",
+      "BÀI TOÁN KHOẢNG CÁCH TRONG OXYZ",
+      "VIDEO"
+    ],
+    [
+      "11",
+      "PHƯƠNG PHÁP TỌA ĐỘ HÓA TRONG KG",
+      "VIDEO"
+    ],
+    [
+      "12",
+      "BÀI TOÁN MAX MIN TRONG OXYZ",
+      "VIDEO"
+    ],
+    [
+      "13",
+      "CÔNG THỨC TỌA ĐỘ HÌNH CHIẾU",
+      "VIDEO"
+    ],
+    [
+      "GIẢI NHANH HÀM SỐ"
+    ],
+    [
+      "1",
+      "Song trục //",
+      "VIDEO",
+      "BTVN",
+      "SÁCH HÀM SỐ",
+      "ĐÁP ÁN"
+    ],
+    [
+      "2",
+      "Song trục V",
+      "VIDEO",
+      "BTVN",
+      "",
+      "ĐÁP ÁN"
+    ],
+    [
+      "3",
+      "Song trục tương giao",
+      "VIDEO",
+      "BTVN +ĐA",
+      "",
+      "GIẢI NHANH HÀM SỐ"
+    ],
+    [
+      "4",
+      "Sơ đồ V - cực trị - b01",
+      "VIDEO"
+    ],
+    [
+      "5",
+      "Sơ đồ V - Cực trị - b02",
+      "VIDEO",
+      "TOÀN TẬP SĐV"
+    ],
+    [
+      "6",
+      "Sơ đồ V - Đơn điệu - b01",
+      "VIDEO"
+    ],
+    [
+      "7",
+      "Sơ đồ V - Đơn điệu - b02",
+      "VIDEO"
+    ],
+    [
+      "8",
+      "Sơ đồ V - Ghép trục theo sđv",
+      "VIDEO"
+    ],
+    [
+      "9",
+      "Sơ đồ V - Tương giao hàm hợp",
+      "VIDEO",
+      "TÀI LIỆU"
+    ],
+    [
+      "10",
+      "Kỹ thuật ốc sên",
+      "VIDEO",
+      "ĐỀ",
+      "",
+      "ĐÁP ÁN"
+    ],
+    [
+      "11",
+      "Hàm tương đồng",
+      "VIDEO",
+      "TÀI LIỆU"
+    ],
+    [
+      "12",
+      "Max min hàm trị",
+      "VIDEO",
+      "TÀI LIỆU",
+      "",
+      "ĐÁP ÁN"
+    ],
+    [
+      "13",
+      "Ghép trục",
+      "VIDEO",
+      "BTVN",
+      "",
+      "ĐÁP ÁN"
+    ],
+    [
+      "14",
+      "đơn điệu hàm hợp f(x)+g(x)",
+      "VIDEO"
+    ],
+    [
+      "15",
+      "Bài toán truy ngược",
+      "VIDEO",
+      "TÀI LIỆU"
+    ],
+    [
+      "LOGA"
+    ],
+    [
+      "16",
+      "Hàm đặc trưng",
+      "VIDEO",
+      "VIDEO 2",
+      "SÁCH MŨ - LOGA",
+      "BÀI TẬP"
+    ],
+    [
+      "17",
+      "Kỹ thuật phân khoảng",
+      "VIDEO",
+      "ĐỀ",
+      "",
+      "ĐA"
+    ],
+    [
+      "18",
+      "Tìm x để tồn tại y",
+      "VIDEO"
+    ],
+    [
+      "19",
+      "Cặp nghiệm (x;y) - đại số",
+      "VIDEO",
+      "VIDEO 3",
+      "",
+      "ĐÁP ÁN"
+    ],
+    [
+      "20",
+      "Cặp nghiệm (x;y) - hình học",
+      "VIDEO",
+      "VIDEO 4",
+      "",
+      "BÀI TẬP"
+    ],
+    [
+      "21",
+      "Cặp nghiệm (x;y) - pp hàm số",
+      "VIDEO",
+      "TÀI LIỆU"
+    ],
+    [
+      "CÀY VD VDC MỖI NGÀY 2025 - THẦY HUY - TMTSCHOOL"
+    ],
+    [
+      "MỤC",
+      "VIDEO",
+      "",
+      "TÀI LIỆU",
+      "ĐÁP ÁN",
+      "GHI CHÚ THÊM"
+    ],
+    [
+      "DAY 01",
+      "ĐƠN ĐIỆU HÀM HỢP - D01",
+      "VIDEO",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 02",
+      "ĐƠN ĐIỆU HÀM TRỊ TUYỆT ĐỐI",
+      "VIDEO",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 03",
+      "BỔ TRỢ SƠ ĐỒ V - 01",
+      "VIDEO",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 04",
+      "BỔ TRỢ SONG TRỤC - 01",
+      "VIDEO",
+      "TÀI LIỆU"
+    ],
+    [
+      "DAY 05",
+      "CỰC TRỊ HÀM BẬC 4 TRÙNG PHƯƠNG",
+      "VIDEO",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 06",
+      "MAX MIN HÀM SỐ VD VDC",
+      "VIDEO",
+      "TÀI LIỆU"
+    ],
+    [
+      "DAY 07",
+      "CỰC TRỊ HÀM TRỊ TUYỆT ĐỐI - TDM",
+      "VIDEO",
+      "TÀI LIỆU",
+      "VIẾT TAY"
+    ],
+    [
+      "DAY 08",
+      "MAX MIN HÀM TRỊ TUYỆT ĐỐI",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 09",
+      "TỔNG ÔN ĐƠN ĐIỆU - CỰC TRỊ",
+      "",
+      "TÀI LIỆU"
+    ],
+    [
+      "DAY 10",
+      "",
+      "BÀI GIẢNG 02"
+    ],
+    [
+      "DAY 11",
+      "",
+      "BÀI GIẢNG 03"
+    ],
+    [
+      "DAY 12",
+      "TỔNG ÔN ĐƠN ĐIỆU VDC - B01",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 13",
+      "TỔNG ÔN ĐƠN ĐIỆU VDC - B02",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "ĐÁP ÁN"
+    ],
+    [
+      "DAY 14",
+      "BỔ TRỢ CỰC TRỊ VD VDC 01",
+      "BÀI GIẢNG",
+      "TÀI LIỆU"
+    ],
+    [
+      "DAY 15",
+      "BỔ TRỢ CỰC TRỊ VD VDC 02",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "VIẾT TAY"
+    ],
+    [
+      "DAY 16",
+      "BỔ TRỢ CỰC TRỊ VD VDC 03",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "VIẾT TAY"
+    ],
+    [
+      "DAY 17",
+      "BỔ TRỢ CỰC TRỊ VD VDC 04",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "VIẾT TAY"
+    ],
+    [
+      "DAY 18",
+      "BỔ TRỢ ĐƠN ĐIỆU VD VDC 01",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "VIẾT TAY"
+    ],
+    [
+      "DAY 19",
+      "BỔ TRỢ ĐƠN ĐIỆU VD VDC 02",
+      "BÀI GIẢNG",
+      "TÀI LIỆU",
+      "VIẾT TAY"
+    ],
+    [
+      "DAY 20",
+      "BỔ TRỢ ĐƠN ĐIỆU VD VDC 03",
+      "",
+      "TÀI LIỆU"
+    ],
+    [
+      ""
+    ]
+  ],
+  "links": [
+    [
+      "GIÁO VIÊN HUY HƯỚNG NỘI - KHÓA CHUYÊN ĐỀ",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "STT",
+      "TÊN BÀI HỌC",
+      "TÀI LIỆU",
+      "ĐÁP ÁN",
+      "BÀI GIẢNG",
+      "BTVN",
+      "ĐÁP ÁN"
+    ],
+    [
+      "BỔ TRỢ TOÁN 11",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "1",
+      "PT MŨ LOGA",
+      "x",
+      "https://drive.google.com/file/d/1bzHNVB7ws4YQ-gxUzTIUAp967Hx0_dlr/view",
+      "https://www.google.com/url?q=https://www.youtube.com/watch?v%3D2EohSudDCDk&sa=D&source=editors&ust=1785774553080858&usg=AOvVaw0FZP19wQb9F9Ruat6__OkF",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/RenZxtUFctQ?si%2525253DyRhWBfpYuNZGL4xB%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100946008%252526usg%25253DAOvVaw1mHXmQ2sr3dJo70ThC6Tt4%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942223009%2526usg%253DAOvVaw3At09BADOBC5r06nd2z1T4%26sa%3DD%26source%3Deditors%26ust%3D1753525831383238%26usg%3DAOvVaw3UY3pe83JNjT42Ib9zWOgd&sa=D&source=editors&ust=1785774553081008&usg=AOvVaw0aZ1y4JEIpYgHj__tdc9Kf",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/jnh_uQBve1I?si%2525253DT8zGpHOyeDpQraQZ%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100946112%252526usg%25253DAOvVaw2SztazWfCSrHV8U-Eb0rv5%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942223119%2526usg%253DAOvVaw2xL5GBmluqj-5upa-Ns8lk%26sa%3DD%26source%3Deditors%26ust%3D1753525831383311%26usg%3DAOvVaw2noMB0Dsu81kZ5xg8Q7jhR&sa=D&source=editors&ust=1785774553081174&usg=AOvVaw3tm9heNViclINwW5dmOjpO"
+    ],
+    [
+      "2",
+      "BPT MŨ LOGA",
+      "x",
+      "x",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/WahIWJ-7xfU?si%2525253DoiifF6JELJxW5RH7%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100946398%252526usg%25253DAOvVaw2YQrN5N_zIBB_1BrHami64%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942223315%2526usg%253DAOvVaw0ahmofItXhKwh-MdCwyK_q%26sa%3DD%26source%3Deditors%26ust%3D1753525831383499%26usg%3DAOvVaw2UkIfvsrvfYyste-fTm8SV&sa=D&source=editors&ust=1785774553081869&usg=AOvVaw23R7MgMZOqyyIJjQdUabMu",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/65KgxNBQUBw?si%2525253D2i0_czVAraIbgCFC%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100946476%252526usg%25253DAOvVaw1e-ve2kR612BF9n33O6788%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942223429%2526usg%253DAOvVaw2nzMgK6GskQ7lNHIu8ICEd%26sa%3DD%26source%3Deditors%26ust%3D1753525831383573%26usg%3DAOvVaw1loBWKbhRDENJ_xhFYTZAL&sa=D&source=editors&ust=1785774553082107&usg=AOvVaw38KBom-9_RXS-Pk8oNm6aL",
+      ""
+    ],
+    [
+      "3",
+      "GÓC GIỮA 2 MẶT PHẲNG",
+      "https://drive.google.com/file/d/1XM4l4qHcJpo_nG56dlY1IMT3FwL3Ob-C/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1MgqXAGHLmiUrWcc26Y9rLvDnCe49zSjR/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553082931&usg=AOvVaw2zDpnz_4uH2Xzwfph3LRcO",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/FUT2Up90JUQ?si%2525253D3YLaynvohlmadEiZ%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100947207%252526usg%25253DAOvVaw3fr2OrMeNW2ZdpO8nJHcNA%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942224106%2526usg%253DAOvVaw1dVtnSfRnt250M5HudYENE%26sa%3DD%26source%3Deditors%26ust%3D1753525831383972%26usg%3DAOvVaw2ynu6IM_nRU8u7swe6MZz3&sa=D&source=editors&ust=1785774553083082&usg=AOvVaw2mZt3GuyBiIn6zLbdlY1K7",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/j6CzkkIeIfc?si%2525253DgQGdYrZJSQHQdGyu%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100947291%252526usg%25253DAOvVaw2vJFQeHZof11abxlgihhhn%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942224234%2526usg%253DAOvVaw1B9zY52vLXm_J6pcFaogka%26sa%3DD%26source%3Deditors%26ust%3D1753525831384069%26usg%3DAOvVaw1hN1oo51auyDa_bGzbJcOY&sa=D&source=editors&ust=1785774553083265&usg=AOvVaw2SmK-5rdFNhdSDcrFl9xCI",
+      ""
+    ],
+    [
+      "4",
+      "GÓC NHỊ DIỆN - THIẾT DIỆN VUÔNG GÓC",
+      "",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/OoRW_Kuta50?si%2525253DGbaFgxNaiF3OjnrO%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100947704%252526usg%25253DAOvVaw27uQDSZl2lhu_53IeXbvZo%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942225167%2526usg%253DAOvVaw1EVgupcdnGzl9-BSqpTzf0%26sa%3DD%26source%3Deditors%26ust%3D1753525831384247%26usg%3DAOvVaw1SDus-dJGsoPvAziHk5CO4&sa=D&source=editors&ust=1785774553084001&usg=AOvVaw3bnkVuNy4E7YfEvFKbl5F1",
+      "",
+      ""
+    ],
+    [
+      "5",
+      "KHOẢNG CÁCH TỪ 1 ĐIỂM ĐẾN MP",
+      "x",
+      "x",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/EERSCr2ZaCA%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100948111%252526usg%25253DAOvVaw3pt0EQ_MjC5OvwdUJ5Ff2V%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942225580%2526usg%253DAOvVaw1n0jSF3ENdtBZFm9brlOvB%26sa%3DD%26source%3Deditors%26ust%3D1753525831384481%26usg%3DAOvVaw2YwWIN1JXTdaMJQews5KN5&sa=D&source=editors&ust=1785774553084810&usg=AOvVaw2RPA3DrAJj3w4e-Dz0hmZn",
+      "",
+      ""
+    ],
+    [
+      "6",
+      "KHOẢNG CÁCH 2 ĐT CHÉO NHAU",
+      "https://drive.google.com/file/d/1Km0CIOOvnAllSOBvoR30wThpk9NwDl1m/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1QHjn2ETLqmHD-bp-l6sIZQ2W0JlxuSPB/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553085641&usg=AOvVaw3N4IqVYjI7mGZRp8sZzVE_",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/AU67QQEzJB8%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100948779%252526usg%25253DAOvVaw3de-r7Y4-yBCpgGzqK8VEK%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942226160%2526usg%253DAOvVaw3dsdWXQfE-Rswp6jpai-lW%26sa%3DD%26source%3Deditors%26ust%3D1753525831384930%26usg%3DAOvVaw1Zb6jGW2UgOxD1xFbpkoDF&sa=D&source=editors&ust=1785774553085751&usg=AOvVaw3lUSJBArID7-_QFpR3CRi6",
+      "",
+      ""
+    ],
+    [
+      "7",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 01",
+      "https://drive.google.com/file/d/1asyGGaVti2A_7WLxwGot-LBMTVq24bhP/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1jE7QOupHxXGvIAyuTLL8jUxRwi31BvkW/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553086443&usg=AOvVaw0foPKM__K3iNP5-lLZ4Qgc",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DQ1zHnycM7pk%25252526list%2525253DPLeFlK_QuXKEwaYPGY75SPlYc1sBimEjTw%25252526index%2525253D7%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100949374%252526usg%25253DAOvVaw1Yxfz7G59gP_KINgZiaxQZ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942226736%2526usg%253DAOvVaw3J6VEfpQwqsko19LeQZfwq%26sa%3DD%26source%3Deditors%26ust%3D1753525831385330%26usg%3DAOvVaw1W9dqKczD_tT_XfMiCfbr7&sa=D&source=editors&ust=1785774553086579&usg=AOvVaw07sg3nCoRKXH_nyjNfyV6-",
+      "",
+      ""
+    ],
+    [
+      "8",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 02",
+      "x",
+      "x",
+      "x",
+      "",
+      ""
+    ],
+    [
+      "9",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 03",
+      "https://drive.google.com/file/d/1j9e1I4hL2Ihm_Y81FOfgeYPaM8Fyls4F/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1UbbL4gmkjRkAYq55Is0BPyPo-lgFZELJ/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553087760&usg=AOvVaw3jFy_k9v2SipHjaF0JX2Ya",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253Dn6kWiHl_AyM%25252526list%2525253DPLeFlK_QuXKEwaYPGY75SPlYc1sBimEjTw%25252526index%2525253D8%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100950152%252526usg%25253DAOvVaw32Oz_lOdx2dfEVlYOr4fMu%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942227383%2526usg%253DAOvVaw15O_jckKwyDOSetWfWFePv%26sa%3DD%26source%3Deditors%26ust%3D1753525831385834%26usg%3DAOvVaw25MuvKYiO06MoXb2wzNyw8&sa=D&source=editors&ust=1785774553087913&usg=AOvVaw1smDO-7a2UnIPnMlY0zwjL",
+      "",
+      ""
+    ],
+    [
+      "10",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 04",
+      "https://drive.google.com/file/d/1zEngnMadQ4eb6S-fEsgUxsQXpm3acPMg/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1SODvh9zNT-owcfcDOyTt-u6CCUOnZDl6/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553088579&usg=AOvVaw3E5tpoMKtiQDVNbxA8cgR5",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DOEXBaT3r1yE%25252526list%2525253DPLeFlK_QuXKEwaYPGY75SPlYc1sBimEjTw%25252526index%2525253D9%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100950637%252526usg%25253DAOvVaw3tRjOZtYKLb6ftw8cCGTwD%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942227902%2526usg%253DAOvVaw1LiqLKHZuHzdHitIaGeF3J%26sa%3DD%26source%3Deditors%26ust%3D1753525831386196%26usg%3DAOvVaw0WbhdwkfYQGfcompdS5Hui&sa=D&source=editors&ust=1785774553088680&usg=AOvVaw2qXwRlYioZkS0E-tQHY-KS",
+      "",
+      ""
+    ],
+    [
+      "11",
+      "BÀI TOÁN TỔ HỢP CHỈNH HỢP HOÁN VỊ VDC 05",
+      "https://drive.google.com/file/d/12n-7d7klpUEhfqxXcF2lJGAz2krg7U9F/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1Su2f2n-vSldjWAx_ZOOtxKOyJ6jvy5fq/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553089398&usg=AOvVaw1kOUfCgIzl8R15Y9_CmD-O",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253Dm8TWLPP1Iws%25252526list%2525253DPLeFlK_QuXKEwaYPGY75SPlYc1sBimEjTw%25252526index%2525253D10%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100951097%252526usg%25253DAOvVaw22CMeCozuscrwew64NSwIH%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942228345%2526usg%253DAOvVaw1eAX5Pl7f42cSMXKfkEFyn%26sa%3DD%26source%3Deditors%26ust%3D1753525831386565%26usg%3DAOvVaw1IBLgJvj_GCVToFz9m3mRs&sa=D&source=editors&ust=1785774553089552&usg=AOvVaw3UpB5wXoM18d77eDxu0i0o",
+      "",
+      ""
+    ],
+    [
+      "12",
+      "QUY TẮC CỘNG XÁC SUẤT",
+      "https://drive.google.com/file/d/1rIhVTdRc58O20zlzMgyGV5zneQaVuu4J/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1lTB651RmLE8RnhH_ZHTKHQjHlcAOaH2_/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553090223&usg=AOvVaw0DbeIRex21651DeGpIbBgf",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/yskcqHi-5RY%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100951661%252526usg%25253DAOvVaw2QfP3QMs9G_d5X-CorhrBZ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942228866%2526usg%253DAOvVaw2MRJLPHm7o3OyVQCtFOyuC%26sa%3DD%26source%3Deditors%26ust%3D1753525831386933%26usg%3DAOvVaw3V8ewEsfPch9ULK4NQWcoa&sa=D&source=editors&ust=1785774553090359&usg=AOvVaw0qc_P2GVQMIdLIf4t6YY4o",
+      "",
+      ""
+    ],
+    [
+      "13",
+      "QUY TẮC NHÂN XÁC SUẤT",
+      "https://drive.google.com/file/d/1TmtHeo3dzgi2WhIF9Yo8vVoylgoF6xU6/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/148m6T7Obc3w6GrvNF_aZtWuG_iNnDNgh/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553091111&usg=AOvVaw2extHoUEoRo76O0-WPSZ-B",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/zjgQjJpASrU%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100952182%252526usg%25253DAOvVaw1805Kege2vuFK4xCLP-b5V%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942229332%2526usg%253DAOvVaw0gcBkmrkMK9qgJ1Cuw9xvA%26sa%3DD%26source%3Deditors%26ust%3D1753525831387313%26usg%3DAOvVaw0ArR76FhxPDW19FCKAEw4p&sa=D&source=editors&ust=1785774553091250&usg=AOvVaw1GYwK2Co3N0VzfkIaXAIpz",
+      "",
+      ""
+    ],
+    [
+      "14",
+      "ĐẠO HÀM B01 - TÍNH ĐẠO HÀM THEO ĐN",
+      "https://drive.google.com/file/d/1z4mGtqyI3AM4dRKxCxRwNV9owdg3W5P7/view",
+      "https://drive.google.com/file/d/14kDKBLyMSFsQQh1cxtTD8Jxm8QDgIRCD/view",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/HR-rZA9kzTM%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100953055%252526usg%25253DAOvVaw0YHpHoBvLG3sQ7UY71YM5Q%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942229801%2526usg%253DAOvVaw2HYfbiuxk4aaVSnzFb5JEJ%26sa%3DD%26source%3Deditors%26ust%3D1753525831387652%26usg%3DAOvVaw3IkNy9Z2FygZ_ecna6q2t4&sa=D&source=editors&ust=1785774553092231&usg=AOvVaw1OrSQGaz_H88QP55XRr8yp",
+      "",
+      ""
+    ],
+    [
+      "15",
+      "ĐẠO HÀM VD VDC B01",
+      "https://drive.google.com/file/d/11cCuqg3ylduaE05MjA8G8dAew2VV_c_b/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/10Q9Ix0XHzpAca1MCBJAJwRu8JdcmVFT0/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553093076&usg=AOvVaw3ZThSpo7PopvSDInp20Gdl",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253Dn3DhTNnwqaE%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100953607%252526usg%25253DAOvVaw3mhZxqWFurVusKXeLSCIZe%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942230217%2526usg%253DAOvVaw0gH_DKCdwMrUA_vmSzOMKp%26sa%3DD%26source%3Deditors%26ust%3D1753525831388013%26usg%3DAOvVaw2BgU1HTG-VGDI9AnAeC2k4&sa=D&source=editors&ust=1785774553093213&usg=AOvVaw24_meUf7qLSs2zVfM7bMKH",
+      "",
+      ""
+    ],
+    [
+      "16",
+      "ĐẠO HÀM VD VDC B02 - ĐẠO HÀM HÀM HỢP",
+      "https://drive.google.com/file/d/1HDNVICeauCWD7pEFuwQ_g9kMwYERFy_J/view",
+      "https://drive.google.com/file/d/10Fg-UouILYG4l-Ycl_E2QFVHR1UfMOCy/view",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DFG7kaR42qxU%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100954156%252526usg%25253DAOvVaw0jqXeTQ7KkU7bkb-rkbJy8%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942230670%2526usg%253DAOvVaw2PTxk86Ldv8fG1spBpEIlY%26sa%3DD%26source%3Deditors%26ust%3D1753525831388353%26usg%3DAOvVaw3v7UoM2o2HRxG7iO0H9VAC&sa=D&source=editors&ust=1785774553094138&usg=AOvVaw1CLJOT30au6ZiE2V_A8zJs",
+      "",
+      ""
+    ],
+    [
+      "17",
+      "ĐẠO HÀM VD VDC B03 - BT TIẾP TUYẾN",
+      "https://drive.google.com/file/d/1pXIqkxLefot8bXOjMOTKC6ne_8TLsEqh/view",
+      "https://drive.google.com/file/d/1-4G0uTFDHvmOVoGuvNTN5TmaHK-x9bdS/view",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DgYiBB4PBaSQ%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100954737%252526usg%25253DAOvVaw2JsQN9vNYFpbp9zbnt5J57%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942231160%2526usg%253DAOvVaw3WUXxZkZPlBkjHWGjrDqQV%26sa%3DD%26source%3Deditors%26ust%3D1753525831388763%26usg%3DAOvVaw3waN1jeUyaHl-x6qmFa-kq&sa=D&source=editors&ust=1785774553094963&usg=AOvVaw0JJkMP7YOmQumzbAUOMdE_",
+      "",
+      ""
+    ],
+    [
+      "18",
+      "TỈ LỆ THỂ TÍCH",
+      "https://drive.google.com/file/d/1HJUV0O5b_yfoYJl7MWtT3BG1TXGCufqC/view",
+      "https://drive.google.com/file/d/11Fo36eQgquC-6kOoxMPVk31DA7Wc27lj/view",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DzfRzPLb3sz8%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100955342%252526usg%25253DAOvVaw0pf47szafTliT2hTLL4awi%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942231627%2526usg%253DAOvVaw1rovsDdWuk_6TLaHHP1h7Q%26sa%3DD%26source%3Deditors%26ust%3D1753525831389137%26usg%3DAOvVaw1z-ijXCfC5414xpLmpOZVL&sa=D&source=editors&ust=1785774553095798&usg=AOvVaw3e4AMtA7ZmKESx27ufR6Sg",
+      "",
+      ""
+    ],
+    [
+      "19",
+      "BỘ ĐỀ HK2 - PHẦN I (10 ĐỀ)",
+      "https://drive.google.com/file/d/1LdM70cekSJgjxhxdNOBKhtrRQchHaYMn/view",
+      "https://www.google.com/url?q=https://drive.google.com/file/d/1ZzGsxRTvjvy2K4t9MQsUAdliCbztgS7D/view?usp%3Ddrive_link&sa=D&source=editors&ust=1785774553096497&usg=AOvVaw1-rN-YziWZRptoyOFD5qzg",
+      "x",
+      "",
+      ""
+    ],
+    [
+      "20",
+      "BỘ ĐỀ HK2 - PHẦN II (7 ĐỀ)",
+      "https://drive.google.com/file/d/1fQTt0r3YsFS6GuY9KP1eWLHTdo8wIQRE/view",
+      "https://drive.google.com/file/d/1LZiSrExju2mttCGSrARFAAwc2SXNmn0a/view",
+      "x",
+      "",
+      ""
+    ],
+    [
+      "HÀM SỐ",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "1",
+      "BỔ TRỢ XÉT DẤU",
+      "x",
+      "x",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/EPyVr3i27pA?si%2525253DxiXgK3o2-l2ldbH9%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100957392%252526usg%25253DAOvVaw0OcYzqyZLo2bQ-dyfVCqVe%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942232673%2526usg%253DAOvVaw2OhCZ8fMQR5RZtQa2HIZPy%26sa%3DD%26source%3Deditors%26ust%3D1753525831390143%26usg%3DAOvVaw076z4-pyIjxHUotRUyAbB7&sa=D&source=editors&ust=1785774553097629&usg=AOvVaw1ElgzEZm1EdPGXlmWcBpEh",
+      "",
+      ""
+    ],
+    [
+      "2",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B01 - NỀN TẢNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1tSvP-e_mU4WitclMHshRfllIjCYRPxtW/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100957807%252526usg%25253DAOvVaw1OPltEW_lzOeBLSUn9kSUv%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233013%2526usg%253DAOvVaw0SOzK36M9fkgrunH9WOGCI%26sa%3DD%26source%3Deditors%26ust%3D1753525831390340%26usg%3DAOvVaw3ENcsYoqAS_-g2r0VHqAhf&sa=D&source=editors&ust=1785774553098032&usg=AOvVaw1DBRAJMxe6ph-YXaJoP89b",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1oSEBfPfBrbyx7LfdC0y50C4L3JPiOQ17/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100957898%252526usg%25253DAOvVaw0uNRy0aQsqsw_1VzvjDRwV%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233150%2526usg%253DAOvVaw0UJzguLnBSey3fAmpd5Z_4%26sa%3DD%26source%3Deditors%26ust%3D1753525831390419%26usg%3DAOvVaw0LzuYaIJxFhtYoIgNGY5S6&sa=D&source=editors&ust=1785774553098140&usg=AOvVaw1SPC5ak04UhO03Onvb-b8H",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DECpO5MxNFYA%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100957995%252526usg%25253DAOvVaw1RoZcvtmqKLeT_6ZtMiO1C%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233284%2526usg%253DAOvVaw08dY8V8pkx4FRo5zh-i2hJ%26sa%3DD%26source%3Deditors%26ust%3D1753525831390500%26usg%3DAOvVaw3F-bM5Gl4rBHfgdMFkUv1W&sa=D&source=editors&ust=1785774553098238&usg=AOvVaw0TV0GbvNigrt_49FrYbD-8",
+      "",
+      ""
+    ],
+    [
+      "3",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B02 - BT THAM SỐ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1I_wGDJFjl4SQZ7Pv2JPSRqjAB9xsdwDJ/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100958334%252526usg%25253DAOvVaw03zIbehASfh5cZGp4LGrlD%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233506%2526usg%253DAOvVaw02VPZaTHZBOyLxpMbdSCo9%26sa%3DD%26source%3Deditors%26ust%3D1753525831390704%26usg%3DAOvVaw2qh6k8LeAnfs18PnezhEm9&sa=D&source=editors&ust=1785774553098694&usg=AOvVaw31aqmfQmHXiQWp8mc24cHW",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1QadrSpWjt5OR9-CU28vZXA7f7kHn1xzw/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100958492%252526usg%25253DAOvVaw0UByZUoTZUkug8YBqB2Ccx%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233646%2526usg%253DAOvVaw2Pkoxwp100po8JQt3v9-9I%26sa%3DD%26source%3Deditors%26ust%3D1753525831390781%26usg%3DAOvVaw0YYmpvEFTu12M6x7CyNoqo&sa=D&source=editors&ust=1785774553098876&usg=AOvVaw1VMAnJ8ukAuV9Z5fq7d2FJ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253D7Z_aQfMZiTM%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100958568%252526usg%25253DAOvVaw0cCYnpkus3li1xyWUMj81h%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233777%2526usg%253DAOvVaw0WGuIkXoWXBGVNacnx1A-f%26sa%3DD%26source%3Deditors%26ust%3D1753525831390852%26usg%3DAOvVaw2Vrc3GcawLUG23IjlPkYMI&sa=D&source=editors&ust=1785774553099088&usg=AOvVaw0Uijo21rrYC09MYRYQFauu",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1eao-YnYAR4WLSABopmArnqR2fvttqaiW/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100958640%252526usg%25253DAOvVaw1BQ4gY2I84yIQDXW7XTbTm%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233884%2526usg%253DAOvVaw0IqoqClcSTmhUAqfibobVp%26sa%3DD%26source%3Deditors%26ust%3D1753525831390923%26usg%3DAOvVaw1cpOZlxsWYc3ZEsf_8wskk&sa=D&source=editors&ust=1785774553099258&usg=AOvVaw2Ks9dj938Ij_oi-c1n1SfR",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1-e12ldvJMf5gPzBF9c5dw4ZL3l0Wcyfq/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100958710%252526usg%25253DAOvVaw0TttdXzHuEOrTkpskkLtFZ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942233995%2526usg%253DAOvVaw19x6mNsNwaeeJU77ExTFzg%26sa%3DD%26source%3Deditors%26ust%3D1753525831390996%26usg%3DAOvVaw2SoH5KAU1XwbZyoGm0gi7Y&sa=D&source=editors&ust=1785774553099369&usg=AOvVaw0mZ0pbh1tVEVmRrclXfoKW"
+    ],
+    [
+      "4",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B03 - KỸ THUẬT ĐẶT ẨN",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1A19FbOc0rKVTGDAbJDg8wyZKeQHZpW9E/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959152%252526usg%25253DAOvVaw2t2nQQpXIg4fhP6GUg_Elh%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942234279%2526usg%253DAOvVaw1yQDzj9042jj_lEKe2H7y8%26sa%3DD%26source%3Deditors%26ust%3D1753525831391160%26usg%3DAOvVaw2Olb4Lo6MbnsvD9MmWrv-9&sa=D&source=editors&ust=1785774553099745&usg=AOvVaw3UttRhTV0pGrXME7JNseOC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1L8dNnKargBdf-OWQP7LSltWDUgB2_s5R/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959246%252526usg%25253DAOvVaw3jh-cfQLdGSrxn-W14YON5%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942234418%2526usg%253DAOvVaw1DmnHWcTyYVfhSUHHpRutH%26sa%3DD%26source%3Deditors%26ust%3D1753525831391240%26usg%3DAOvVaw0EKv7q_UdavzZtIUrcYHnq&sa=D&source=editors&ust=1785774553099848&usg=AOvVaw2zYgMGih4OPbBvyDeD9Dti",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DiRkD8MjZROI%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959342%252526usg%25253DAOvVaw1x5WRxIMAD3XlBz7JKaZ2V%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942234537%2526usg%253DAOvVaw2V8Vf5gjItj7D5FgkTl-Fx%26sa%3DD%26source%3Deditors%26ust%3D1753525831391314%26usg%3DAOvVaw1TAtwUSZ9DmLN5p5A1p-lK&sa=D&source=editors&ust=1785774553099974&usg=AOvVaw24nve6U47XYCxRYQkyXeUI",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1dP0Zv0j9KT8yr9TjGSA6d7b3In_Ar0dK/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959438%252526usg%25253DAOvVaw1RdrJzQYhcKbiPi1yFUCh1%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942234629%2526usg%253DAOvVaw06RDGRqCdQfvdTGDOLm0zj%26sa%3DD%26source%3Deditors%26ust%3D1753525831391384%26usg%3DAOvVaw3Rtf5mqvwFQ_j5YjqQmEuL&sa=D&source=editors&ust=1785774553100132&usg=AOvVaw005ZOFfO4w7iIZL6L9gr8_",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1NrLB6I_cfRuJxRdOrbnOeSR8FSAedlIS/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959511%252526usg%25253DAOvVaw17GaYtYRkYjN1Vl-5b0S4m%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942234757%2526usg%253DAOvVaw3LRSYQ_PCRhGGiAz2sdB8c%26sa%3DD%26source%3Deditors%26ust%3D1753525831391464%26usg%3DAOvVaw1foxyzJe8sYiezaVN4L8SK&sa=D&source=editors&ust=1785774553100290&usg=AOvVaw2yhmp22PJjeQBA-VlmR9tV"
+    ],
+    [
+      "5",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B04 - BT HÀM HỢP",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1YxEvKjrNyP4wLfIyRz1XFLPmfRGwPsvg/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959746%252526usg%25253DAOvVaw3c2V2DRrvE8P3UixQjscbQ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942234949%2526usg%253DAOvVaw2PUcdPC7ZMofKpT0mKvJmk%26sa%3DD%26source%3Deditors%26ust%3D1753525831391654%26usg%3DAOvVaw0sR0VuibdpJhfiZTMP5lyO&sa=D&source=editors&ust=1785774553100930&usg=AOvVaw13msMEumpkoDQQVA5um2Yy",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1aVTSKRBuhOIheA7Kf80Uwz23awbmPE9H/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959832%252526usg%25253DAOvVaw2pYqzds6iuTNsarZki70oQ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235142%2526usg%253DAOvVaw3-ZaCxS1Wf2k9uuNukU4jM%26sa%3DD%26source%3Deditors%26ust%3D1753525831391748%26usg%3DAOvVaw1ApxQlq2PJpQ2SsvClXKfG&sa=D&source=editors&ust=1785774553101142&usg=AOvVaw1W6keKFQz55PQF8alo15B_",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DGK4-9q49XJA%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959906%252526usg%25253DAOvVaw3cK4OFICUZZAinliJ7AHG7%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235268%2526usg%253DAOvVaw0UdVBQa4j-hv8FtT1ux1Ik%26sa%3DD%26source%3Deditors%26ust%3D1753525831391822%26usg%3DAOvVaw0XC1g9SJYCe5TSt0lpt3Vi&sa=D&source=editors&ust=1785774553101346&usg=AOvVaw0yRoxkSzEvrd7HcVZbokDe",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1ohDLPomfIAW7LyVT2_9rmddvCxSt-_na/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100959975%252526usg%25253DAOvVaw2IPmVRjW4pRZVw0fQGNLXb%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235360%2526usg%253DAOvVaw3HmJud7fcfQ9OUq65yYyrT%26sa%3DD%26source%3Deditors%26ust%3D1753525831391899%26usg%3DAOvVaw0Sts4PWY8N7HUEHO-pIVCe&sa=D&source=editors&ust=1785774553101588&usg=AOvVaw22sLzsO6V4saxlZzUUz_eG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1IuwLHtKtRla1qArnYMNzDRepFizvqxd6/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960053%252526usg%25253DAOvVaw3UYcTqt0AZ9kK87gKUSoUj%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235471%2526usg%253DAOvVaw0OO5a7WARWV1mxPPl1FinC%26sa%3DD%26source%3Deditors%26ust%3D1753525831391976%26usg%3DAOvVaw29UjEulWZKd1DBBt7vIZr7&sa=D&source=editors&ust=1785774553101769&usg=AOvVaw3zmYeCxitpHqxiVnCsad2L"
+    ],
+    [
+      "6",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B05 - HÀM BẬC 3",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1NVhyhNqxI_nZWKbXAo_Zy9y2Lq2jHZ_W/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960296%252526usg%25253DAOvVaw0cXbvaCP7fod7IRwhftsXM%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235634%2526usg%253DAOvVaw2RpAZsIiRa7QokO0GX-bAK%26sa%3DD%26source%3Deditors%26ust%3D1753525831392143%26usg%3DAOvVaw3r5_O3YoVk2ZZUIE14jzNz&sa=D&source=editors&ust=1785774553102359&usg=AOvVaw1hUC3ElGHmypKFN_VD_5qC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/11PBdV6vTssYXOiSRDNwVeB53tZJpLZuM/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960387%252526usg%25253DAOvVaw1FWdcM9WAsc1Y1ECU2DZY7%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235749%2526usg%253DAOvVaw3otChl4xqtYTH82fDdAtEl%26sa%3DD%26source%3Deditors%26ust%3D1753525831392218%26usg%3DAOvVaw0ou-CHvLBmxbmSFt-TmQid&sa=D&source=editors&ust=1785774553102552&usg=AOvVaw1b0vFR4vVkEqLd81c5IW40",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DjX_ljRBTKus%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960484%252526usg%25253DAOvVaw1ccNyjU6sVNOaSswBX9tXi%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235884%2526usg%253DAOvVaw1wkYFe2ZtYheluGQRIBFVe%26sa%3DD%26source%3Deditors%26ust%3D1753525831392294%26usg%3DAOvVaw2ceCpJS99vnaBf883Q-4Jq&sa=D&source=editors&ust=1785774553102717&usg=AOvVaw034ahMrq9V1HKx1JhQxM2d",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1POv1TDNmfzqLEbt5K5mJjaNrYBe3WZ-Q/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960577%252526usg%25253DAOvVaw2yK0v13bnVK5PspxTRrE1-%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942235975%2526usg%253DAOvVaw3XOOj5eeJWVEHLslUFWK75%26sa%3DD%26source%3Deditors%26ust%3D1753525831392374%26usg%3DAOvVaw3iR5s_4GrxVYcmSWbbxH79&sa=D&source=editors&ust=1785774553102877&usg=AOvVaw2ZN6drbjzbs_kO_a6W6a8f",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/17VQINVZ7js13mJBdeAomRGp7R9IPAW5H/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960660%252526usg%25253DAOvVaw0ZzOB8ilCqO0R4TTZwp11O%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942236084%2526usg%253DAOvVaw140entX4WQrThsl9Fjlv1c%26sa%3DD%26source%3Deditors%26ust%3D1753525831392457%26usg%3DAOvVaw2MIZQot_kUm-yhyWavZeh-&sa=D&source=editors&ust=1785774553103059&usg=AOvVaw0b_ea6UP2rD5SwgLv_MyEe"
+    ],
+    [
+      "7",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B06 - HÀM PHÂN THỨC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1ovjhYKwVZlOMsnttAQaibKje_2v70AfW/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100960984%252526usg%25253DAOvVaw0muCrWu9-JOxrD2WyG4RZ_%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942236342%2526usg%253DAOvVaw1rvcNF089W5Zr0TII-JtR9%26sa%3DD%26source%3Deditors%26ust%3D1753525831392612%26usg%3DAOvVaw1XqPbhkz4QPge10shzpp8I&sa=D&source=editors&ust=1785774553103594&usg=AOvVaw1Jv6X298QhgdOxFapTt42w",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1FRMOKpbHTWlFdask7RiwJE9OWQENisMB/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100961068%252526usg%25253DAOvVaw0KsvLnyNu47N_FJpQULDrU%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942236489%2526usg%253DAOvVaw3wWE8exdvgoOgXpb_eQuji%26sa%3DD%26source%3Deditors%26ust%3D1753525831392697%26usg%3DAOvVaw0mz6Eo5fiibk_pPp0mO1uH&sa=D&source=editors&ust=1785774553103776&usg=AOvVaw2Ib1Cz7kxEi3hJ_afOpoQ1",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://www.youtube.com/watch?v%2525253DvTUsMYSASL0%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100961159%252526usg%25253DAOvVaw2EZi-PSt_OV9OqARUJNFgZ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942236609%2526usg%253DAOvVaw2g4xYjFkCq94HVcgOqTTbU%26sa%3DD%26source%3Deditors%26ust%3D1753525831392775%26usg%3DAOvVaw3su7x9eJgXWbE_2wWx0xVP&sa=D&source=editors&ust=1785774553103960&usg=AOvVaw0LzDVYDHaaQRSgwD7W92Ox",
+      "",
+      ""
+    ],
+    [
+      "8",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B07 - BT THỰC TẾ 1",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1rwNkTaac6mqcUK8GP1UjxbsEEptWHJ67/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100961497%252526usg%25253DAOvVaw3F4rIJCMMZcCnXu5lAhRhW%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942236818%2526usg%253DAOvVaw0jqoLzlaOp_efRKToFhsUT%26sa%3DD%26source%3Deditors%26ust%3D1753525831393023%26usg%3DAOvVaw03eYp6--KaN8xJ7Y3BSzmk&sa=D&source=editors&ust=1785774553104693&usg=AOvVaw0MunmtoDfoHIl6RiT8rb7q",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1jITPWi7TNQautaHUcdLhIBXdKfpFxlm3/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100961592%252526usg%25253DAOvVaw187wPV7GOlVixLja-aoOkx%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942236941%2526usg%253DAOvVaw2vLjeuu3-WOaSqPV7SieZr%26sa%3DD%26source%3Deditors%26ust%3D1753525831393137%26usg%3DAOvVaw3oqMzh7N4ruipOJCQBvTs-&sa=D&source=editors&ust=1785774553104918&usg=AOvVaw2IBbVvptrXG6M5DWhkbmlF",
+      "https://www.google.com/url?q=https://youtu.be/9BGB1puSQ4s&sa=D&source=editors&ust=1785774553105118&usg=AOvVaw0S5YP9Nl365fl4M3ZdhA0C",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1COOUi2YFsqTdkJg7vQQL4AsffCDKWrCP/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100961758%252526usg%25253DAOvVaw3YJBsuWqzQv77ssZFO03_O%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942237135%2526usg%253DAOvVaw1_GHe059IYuBMzPHCqTN6Z%26sa%3DD%26source%3Deditors%26ust%3D1753525831393288%26usg%3DAOvVaw2q6RypunFYIJogTgUxbrU3&sa=D&source=editors&ust=1785774553105244&usg=AOvVaw2m_WNyXfWPr8inntXGORVc",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1RDMgaTr0UvjxSeyseVFUHUs5rx8nh6Uf/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100961846%252526usg%25253DAOvVaw2ePlCcCE1bgvojQUqKWmiW%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942237249%2526usg%253DAOvVaw3fgxGMwxh4-hb5LB-xCH9F%26sa%3DD%26source%3Deditors%26ust%3D1753525831393360%26usg%3DAOvVaw0Je0D0opv-jF1thiwBoPGJ&sa=D&source=editors&ust=1785774553105407&usg=AOvVaw3rOWoRZgHeS-Kh3egK5ERL"
+    ],
+    [
+      "9",
+      "SỰ ĐƠN ĐIỆU HÀM SỐ B08 - BT THỰC TẾ 2",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1ckiyRyZBsD_J2jeuKM5Lj3GzgCNg4iaG/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100962153%252526usg%25253DAOvVaw2MXYFXAcRCFfqmSyQxdF94%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942237404%2526usg%253DAOvVaw32Bd_NCYq59AkUpuT_xfOQ%26sa%3DD%26source%3Deditors%26ust%3D1753525831393533%26usg%3DAOvVaw0kQ2wSkqdOKGZGgYhfpcez&sa=D&source=editors&ust=1785774553105861&usg=AOvVaw2qXkqo4mD52u-zShiOVNFO",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1GZt14uNJzht-X0dZkKSmhgn0mywawh7m/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100962241%252526usg%25253DAOvVaw1_EyzPX_76BdauE9gR9JNO%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942237528%2526usg%253DAOvVaw02pmQ0vys8nzMl2nQ0gQHQ%26sa%3DD%26source%3Deditors%26ust%3D1753525831393623%26usg%3DAOvVaw3XG_uJxUE553pVJa3AoWjF&sa=D&source=editors&ust=1785774553105990&usg=AOvVaw1UAmmfAaksGfOmnDKMRaX0",
+      "https://www.google.com/url?q=https://youtu.be/a8YBNptwJfI&sa=D&source=editors&ust=1785774553106097&usg=AOvVaw28K9eASe4wBjHkpP8lIMy3",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1PJS2TdtUgGx5ScMDKVyetO0BjjNPWoa5/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100962389%252526usg%25253DAOvVaw1sKEVJQHNkhpr9uDrfX3BJ%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942237729%2526usg%253DAOvVaw0ufVOq7f2--x3vUhjrE0S1%26sa%3DD%26source%3Deditors%26ust%3D1753525831393807%26usg%3DAOvVaw1VHZl13q13sbr3eJ0co7-h&sa=D&source=editors&ust=1785774553106182&usg=AOvVaw3Adbt1SV0Olt7RopbZKhAW",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1ewDv_lW7wgR9kPOrYjgYn0kO6dqK_H7r/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100962458%252526usg%25253DAOvVaw2aMRIZvxRHYZFbrKjHAa8z%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942237839%2526usg%253DAOvVaw23eGTTSwQUV_LkV06A9Px2%26sa%3DD%26source%3Deditors%26ust%3D1753525831393878%26usg%3DAOvVaw1Ii5TRQvTdqPYMe3NFDFww&sa=D&source=editors&ust=1785774553106277&usg=AOvVaw1Gu39HsfGZcpOJ6oZx_G_V"
+    ],
+    [
+      "10",
+      "CỰC TRỊ HÀM SỐ B01 - NỀN TẢNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1szByiDwoHdQF86w6qCQJozi9cTAxzJqz/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100962701%252526usg%25253DAOvVaw1orf-tLKLJrwO4dh1yJLyW%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238012%2526usg%253DAOvVaw2AUBrJjNFWqqRY6LsdWYiJ%26sa%3DD%26source%3Deditors%26ust%3D1753525831394055%26usg%3DAOvVaw0Xi6PaZ3Jf2iCfkittEPev&sa=D&source=editors&ust=1785774553106723&usg=AOvVaw06iyNpnXxdXvBdPspoy1eY",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1QHMWlslOXAc3EvyWlGXWtYlrEOcqPJxs/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100962779%252526usg%25253DAOvVaw1OvFhcVoO4qKjdn3CKbjeq%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238132%2526usg%253DAOvVaw1ph2J_6vJLH2xyTqt3QvUF%26sa%3DD%26source%3Deditors%26ust%3D1753525831394133%26usg%3DAOvVaw2m-aBkCSxt4j35wNLWvF5i&sa=D&source=editors&ust=1785774553106888&usg=AOvVaw246z2nFNhHTJSvgBRpSsSo",
+      "https://www.google.com/url?q=https://youtu.be/IRsq930Yc0A&sa=D&source=editors&ust=1785774553107032&usg=AOvVaw3tcmmqXNzgptZXFvRWqBZd",
+      "",
+      ""
+    ],
+    [
+      "11",
+      "CỰC TRỊ HÀM SỐ B02 - BT HÀM HỢP",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1DfljlpZBXQ6FeHB-cNhKomphH8lnl8A4/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963132%252526usg%25253DAOvVaw2O5YtOQ-6nlG0sxM5J9qvX%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238387%2526usg%253DAOvVaw3udkKDqSudm_W53hvSXzzf%26sa%3DD%26source%3Deditors%26ust%3D1753525831394407%26usg%3DAOvVaw3h3Qyb-TGSo4nqz5xID2yD&sa=D&source=editors&ust=1785774553107413&usg=AOvVaw0xvwRfmto322JvlQ_p6AGM",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1vbW3HG16GUvU0Min6wxkunxJiBi3QxG5/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963206%252526usg%25253DAOvVaw0NmdPc04aQ2bpyk1YxE2hE%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238501%2526usg%253DAOvVaw1Vqne8r9EiI9a-NwFGCS6n%26sa%3DD%26source%3Deditors%26ust%3D1753525831394488%26usg%3DAOvVaw0ZBhiL84HKausXHoinIog8&sa=D&source=editors&ust=1785774553107543&usg=AOvVaw2npK3zkLwj85IHBEaRP-_M",
+      "https://www.google.com/url?q=https://youtu.be/jk8-avahq3k&sa=D&source=editors&ust=1785774553107646&usg=AOvVaw2GHNfoaOoLBBbmENxwtamr",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1tQ6VDiWTZvDJ5B4AP1KbIraWLPZcnFQd/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963372%252526usg%25253DAOvVaw1SbtXcN9AvcM6HJPL398MP%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238671%2526usg%253DAOvVaw01R5Y7Sase_xB660fkQJP2%26sa%3DD%26source%3Deditors%26ust%3D1753525831394628%26usg%3DAOvVaw3RunGAGMJZ2nOUhlaXGdkU&sa=D&source=editors&ust=1785774553107726&usg=AOvVaw1MpG95nbmXgzqTkdWXqnBA",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1JcT4o5VYHA1rKOj2XI02Wi49CpJDEJud/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963452%252526usg%25253DAOvVaw2NdHvx1xac7STWCdCztOEb%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238780%2526usg%253DAOvVaw1q7zltvg63JJpmIbFtS7S8%26sa%3DD%26source%3Deditors%26ust%3D1753525831394769%26usg%3DAOvVaw2TZQjeqMlmzIu0R8OFck7c&sa=D&source=editors&ust=1785774553107847&usg=AOvVaw19VnSSago-YelxG7wlgmSc"
+    ],
+    [
+      "12",
+      "CỰC TRỊ HÀM SỐ B03 - HÀM HỢP CÓ THAM SỐ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1qbT80f_khCWuiX-wCXFbd-9Li0lLDQ3f/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963687%252526usg%25253DAOvVaw0TFsTv3w3KiWbYIPFSLi2s%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942238915%2526usg%253DAOvVaw2UwqQToyG5Yr1BQOy4Dhuf%26sa%3DD%26source%3Deditors%26ust%3D1753525831394950%26usg%3DAOvVaw1Vg7KE5J14bQeYitWg9gIK&sa=D&source=editors&ust=1785774553108267&usg=AOvVaw04ZnBnPi_Cowv_HiC3SrZN",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1RVQ1czBRcGxV8bOecqoj8B5KcG5JWqfv/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963765%252526usg%25253DAOvVaw2LAAn8UCkls2r3GN9Mo90Y%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239030%2526usg%253DAOvVaw2NbAmhotHBEL3QDql1-04E%26sa%3DD%26source%3Deditors%26ust%3D1753525831395026%26usg%3DAOvVaw3uDS4H81esBzfi2E9CHDp4&sa=D&source=editors&ust=1785774553108404&usg=AOvVaw17RLgWBwutDjaluuPXF00b",
+      "https://www.google.com/url?q=https://youtu.be/ZXXEYNwEdvw&sa=D&source=editors&ust=1785774553108527&usg=AOvVaw2Z6Oaf3rTYPB_1XxLoCeH-",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1a0ouGPvrruAEmfZTN5BA2BJQ60W4sYFa/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100963935%252526usg%25253DAOvVaw1ZU3yW8UvZWmmCRJ03x4Bb%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239203%2526usg%253DAOvVaw1DQ6gN0QNqYotfzmN2R-ll%26sa%3DD%26source%3Deditors%26ust%3D1753525831395161%26usg%3DAOvVaw2ibjC4YuTmHd9MMW7vXcZh&sa=D&source=editors&ust=1785774553108617&usg=AOvVaw1sptuxtaDOCsP_JfcTolOO",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1r__AePLz5lE0PTHQlGauymAQFs77At0c/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964016%252526usg%25253DAOvVaw3dybS2svGk9QUR__V8YkfP%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239313%2526usg%253DAOvVaw0THSGPGgDNam5JogC4LdDf%26sa%3DD%26source%3Deditors%26ust%3D1753525831395231%26usg%3DAOvVaw0Q_Hwt1kCeANmjAl-tvaTl&sa=D&source=editors&ust=1785774553108716&usg=AOvVaw2R7CGu772iftE9hWHO1wh-"
+    ],
+    [
+      "13",
+      "CỰC TRỊ HÀM SỐ B04 - HS BẬC 3",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1L1M4W0ZK-r_3bE6ehM76TVymkTh8z2op/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964246%252526usg%25253DAOvVaw2-KTSP5Ap6DdQy_p-Eaecr%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239464%2526usg%253DAOvVaw0CVXWWmoaKWHHK5J6W24jM%26sa%3DD%26source%3Deditors%26ust%3D1753525831395397%26usg%3DAOvVaw2PchnDPMHIKpYz_Pnd8uZ6&sa=D&source=editors&ust=1785774553109229&usg=AOvVaw0kYVP6e7C5uFP3SGAYKOWT",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1uCYVsXInRs-39HTPb8NXW0ay83WfY1Ow/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964322%252526usg%25253DAOvVaw3x0CHzP-0tadUAucm0eCU4%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239577%2526usg%253DAOvVaw3RMw3XKjP9khtf3XXu5oOe%26sa%3DD%26source%3Deditors%26ust%3D1753525831395472%26usg%3DAOvVaw2YC4i_gVr5CzPrXI9Vb-Mg&sa=D&source=editors&ust=1785774553109391&usg=AOvVaw0bD0FsYJ8RDxjGJ6WIfWF8",
+      "https://www.google.com/url?q=https://youtu.be/cAT9Yx__R4Y&sa=D&source=editors&ust=1785774553109527&usg=AOvVaw3MFPNBlYlLFXEWP4GP_1Rm",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1SMUgA3ImE-vZbaLEIHc_0dBcQsNKmgUV/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964502%252526usg%25253DAOvVaw39bSNB901dSlIBaYrlkeJp%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239745%2526usg%253DAOvVaw3RmGqSGhCgLeFp4eWb-2pp%26sa%3DD%26source%3Deditors%26ust%3D1753525831395630%26usg%3DAOvVaw3J8PEorhOw6kkBNx2pkYGL&sa=D&source=editors&ust=1785774553109622&usg=AOvVaw22ICsyf4zQjxai1pGeGQ0o",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1Bpe7YZ1bYue_6lWVPcTGcMm9Lg6d5zdF/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964575%252526usg%25253DAOvVaw0tZrsCeCNfCPJK5CeRnR5i%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942239855%2526usg%253DAOvVaw3eBG7V7fLp4VsMTKN5i7Xu%26sa%3DD%26source%3Deditors%26ust%3D1753525831395717%26usg%3DAOvVaw2bduFx_pHb-tqCxTJjsWcv&sa=D&source=editors&ust=1785774553109726&usg=AOvVaw0PGzX_ZPXrtghvGMvjjgDS"
+    ],
+    [
+      "14",
+      "CỰC TRỊ HÀM SỐ B05 - BÀM B2/1",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1HUPTLMCsDJMnfafi_E6qmy9saoxP7zFs/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964813%252526usg%25253DAOvVaw3vxhf9QXNuT6imSgOCfGKS%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240005%2526usg%253DAOvVaw3sy1ORNsJtHmLLbPykZ01c%26sa%3DD%26source%3Deditors%26ust%3D1753525831395875%26usg%3DAOvVaw0RR_LZRGzKkGTjj62pQMrM&sa=D&source=editors&ust=1785774553110208&usg=AOvVaw1-ucazyhoz9oEUeHkUBN5L",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/13VFcsNSYOMUWSZlqUxwCINtp8JMDU0No/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100964906%252526usg%25253DAOvVaw15kqou8yAimFe8nl179CI1%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240137%2526usg%253DAOvVaw2KokVt7m5n1Mabhq5KjG2l%26sa%3DD%26source%3Deditors%26ust%3D1753525831395954%26usg%3DAOvVaw1bipeFnbwhCYMbmWNZvBHa&sa=D&source=editors&ust=1785774553110400&usg=AOvVaw0fC0HYHIUD2ZU-j_uNlnTM",
+      "https://www.google.com/url?q=https://youtu.be/N51qXnZnHGM&sa=D&source=editors&ust=1785774553110585&usg=AOvVaw3wCKheLOfaiwBCRbMb7mqE",
+      "",
+      ""
+    ],
+    [
+      "15",
+      "THỰC CHIẾN ĐƠN ĐIỆU - CỰC TRỊ - 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1d7kicrVY-JjLz_00EDP7k4hfkM5u6JN4/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100965279%252526usg%25253DAOvVaw3ZY1H3FdX10TYFcgh1Wp_l%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240387%2526usg%253DAOvVaw1edjSHZAyWXPIif89v9548%26sa%3DD%26source%3Deditors%26ust%3D1753525831396232%26usg%3DAOvVaw3I_jaoSxEcew4ZCDjPBAM2&sa=D&source=editors&ust=1785774553111224&usg=AOvVaw3Zvv1HieN-9Dr6n0OFQ_K9",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1m8mkqjvooNQ4nZKP3VJzoIj1kjQSfFhL/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100965383%252526usg%25253DAOvVaw1C6UeuY-CKOhq50Qz4vySC%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240501%2526usg%253DAOvVaw0XcNHeUGjVzi_YiapLOJ_s%26sa%3DD%26source%3Deditors%26ust%3D1753525831396315%26usg%3DAOvVaw3XHBFE0aupETFiByJ6NcFo&sa=D&source=editors&ust=1785774553111411&usg=AOvVaw3o-DI9HWxfKjD_17vzHzul",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://youtu.be/P3cIkAeato0%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100965458%252526usg%25253DAOvVaw1eqzNKSXNrwUQSZfaUM5pN%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240639%2526usg%253DAOvVaw3VXrJUKU_mlgVhhZCgQt0c%26sa%3DD%26source%3Deditors%26ust%3D1753525831396399%26usg%3DAOvVaw3D4RLlNDMMWzPwMPJVCk9U&sa=D&source=editors&ust=1785774553111587&usg=AOvVaw19SkiNprTd9B0R3At2Ybe_",
+      "",
+      ""
+    ],
+    [
+      "16",
+      "CỰC TRỊ HÀM SỐ B06 - BT THỰC TẾ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1jbZhrTB91NfyHg04GORk6qXVQ8mZ73hP/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100965850%252526usg%25253DAOvVaw2Dszni_MUXNj-w3cLRy92v%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240829%2526usg%253DAOvVaw0rLjlBIoiI3Uw0ImUiOS__%26sa%3DD%26source%3Deditors%26ust%3D1753525831396596%26usg%3DAOvVaw0lKRBLEYzLRF1uJ4IzbHlL&sa=D&source=editors&ust=1785774553112298&usg=AOvVaw3RodVMy83eWp5KKsnlX3HP",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1kVZwZMMEs5Kst7NS6DkJsvSkF8fwzymz/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100965943%252526usg%25253DAOvVaw3kWs9h_9qFhb50yvzzp3OA%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942240950%2526usg%253DAOvVaw24iJCUPwuVHI3jJiTTKiGr%26sa%3DD%26source%3Deditors%26ust%3D1753525831396672%26usg%3DAOvVaw1OOtE8XMHHZxTaphIBvCBE&sa=D&source=editors&ust=1785774553112478&usg=AOvVaw3-C5YANtPwqShV1Xv-k2iC",
+      "https://www.google.com/url?q=https://youtu.be/YMmWAk2pN9w&sa=D&source=editors&ust=1785774553112635&usg=AOvVaw2VqezFw5iZk2EGe6taiXrC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/14u17tTvv4mbUV7I6CAWTJlXA-ujsErIY/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100966096%252526usg%25253DAOvVaw0Lf3Z4AglnFAW2ynQ-Xnix%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942241156%2526usg%253DAOvVaw3hYPyOaZgJwSrd9wt22luw%26sa%3DD%26source%3Deditors%26ust%3D1753525831396851%26usg%3DAOvVaw0wfp_WQd22OpDBumYancUR&sa=D&source=editors&ust=1785774553112759&usg=AOvVaw1VpVHlkxLO9ADyVylDTT0x",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1mF_tmiUED73BRfMqfGlHdVjVYoDZOvJV/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100966172%252526usg%25253DAOvVaw214uPQ1bj9Je-78S1o09g2%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942241276%2526usg%253DAOvVaw1hIlG9Z47pAVeClKPrJnFj%26sa%3DD%26source%3Deditors%26ust%3D1753525831396954%26usg%3DAOvVaw0MEbVkIGx8vlQ-clkHx6m5&sa=D&source=editors&ust=1785774553112913&usg=AOvVaw0-qWSzbfs8YFWizqM0IghO"
+    ],
+    [
+      "17",
+      "CỰC TRỊ HÀM SỐ B07 - BT THỰC TẾ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1q-OtStTxwVmb-3MOiOuoYvpdqWbF0B0Y/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100966410%252526usg%25253DAOvVaw1a1KfceG5-ZyopW5DiHqmK%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942241426%2526usg%253DAOvVaw1c9cdgfzUkEcTt-LpWuJhX%26sa%3DD%26source%3Deditors%26ust%3D1753525831397110%26usg%3DAOvVaw14kNODiokInos4I15p0ggy&sa=D&source=editors&ust=1785774553113463&usg=AOvVaw1N1dURod6kjdBzg4-XkZJ7",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1uG7Md2MPjcdPwu1FlT26nJVtKZ5EWBHF/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100966487%252526usg%25253DAOvVaw00dPCOkRHiKo_t6d6k7Qra%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942241564%2526usg%253DAOvVaw2rnm28GyyhMomAuTSpKGHE%26sa%3DD%26source%3Deditors%26ust%3D1753525831397189%26usg%3DAOvVaw1ReU3ewsn4kH8it9t00zoO&sa=D&source=editors&ust=1785774553113666&usg=AOvVaw37tIBOqEqK2Sh_npVPDetB",
+      "https://www.google.com/url?q=https://youtu.be/1NOF7IHzYCc&sa=D&source=editors&ust=1785774553113889&usg=AOvVaw1mbBPw5LqTxKxRgtdIsmF1",
+      "",
+      ""
+    ],
+    [
+      "18",
+      "MAX MIN HÀM SỐ NỀN TẢNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1JCBhJlIjv3k8dNI7bljExRmnjoHnJ-tJ/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100966821%252526usg%25253DAOvVaw1FQ71tLSb0wKg4v7_N-bwc%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942241813%2526usg%253DAOvVaw2xe13DcjbKe0enPA08UX99%26sa%3DD%26source%3Deditors%26ust%3D1753525831397433%26usg%3DAOvVaw3_3kccPwJYGJO7-jgnx6px&sa=D&source=editors&ust=1785774553114570&usg=AOvVaw0bIqtDQ38Kog9vsVYO8YnM",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1lQDO-lZo0O2LD0KL7IcNXuKMw6q2mLwC/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100966908%252526usg%25253DAOvVaw1wZZEoV9ULywxDYW4waizR%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942241943%2526usg%253DAOvVaw3wW-l43txwHX-yvCszgbhP%26sa%3DD%26source%3Deditors%26ust%3D1753525831397525%26usg%3DAOvVaw3dODKLROmSU7hg4NQUMxA0&sa=D&source=editors&ust=1785774553114819&usg=AOvVaw0kDnwQx9-vcBNh5YcbZBQ0",
+      "https://www.google.com/url?q=https://youtu.be/ikdtEmH4kX8&sa=D&source=editors&ust=1785774553115009&usg=AOvVaw3kr-_5h0bp1gQbotwt75e-",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1uVx9QyDkiKOeCjWwZ8_iDH8A41QcCuga/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100967088%252526usg%25253DAOvVaw3yXofbS2q_i2iJst8ugRq-%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942242169%2526usg%253DAOvVaw3RIGtuOH5FzAPoPxaT7vJ8%26sa%3DD%26source%3Deditors%26ust%3D1753525831397673%26usg%3DAOvVaw2PC7_QewPNfuqaReLBPuEu&sa=D&source=editors&ust=1785774553115146&usg=AOvVaw2HdLixNhEPS1aBnPeWaJr9",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1NGwdGfORTHGD2voJ_E9S7lgGkWNbHyeg/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100967190%252526usg%25253DAOvVaw3wBJcB6EhC6UAHEldgqNUl%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942242293%2526usg%253DAOvVaw0UwHxeF3XhSxtF6841nSbD%26sa%3DD%26source%3Deditors%26ust%3D1753525831397767%26usg%3DAOvVaw3RadIJ0P-SJ7Xq20XM1t3h&sa=D&source=editors&ust=1785774553115324&usg=AOvVaw0Tiyz5ysG_H4VDUW6DiK7w"
+    ],
+    [
+      "19",
+      "MAX MIN HÀM SỐ - BT THAM SỐ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1vBpqvXJO_5veNVvrsUe7NGPrrKF2nFdO/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100967430%252526usg%25253DAOvVaw10M59d82py95XFyd542C5r%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942242501%2526usg%253DAOvVaw1RCsWo8Dn8AIgoKsW0lfXn%26sa%3DD%26source%3Deditors%26ust%3D1753525831397933%26usg%3DAOvVaw148k5SJljmsKm1emN3WDUz&sa=D&source=editors&ust=1785774553115985&usg=AOvVaw3FSgQCwbodJLbSIOA7IGWw",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1j5e6tT95m2k33JJQ3otbYC_HHzOoeySm/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100967514%252526usg%25253DAOvVaw1TQfhx_BMcm2CIBsBucRgi%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942242645%2526usg%253DAOvVaw02BKemcrGhmYlhy3g_OFXh%26sa%3DD%26source%3Deditors%26ust%3D1753525831398016%26usg%3DAOvVaw2vP_YeQyBr-IMXiqZVlvUP&sa=D&source=editors&ust=1785774553116193&usg=AOvVaw0NSeU6Oz_5ZAWa6F8NTciV",
+      "https://www.google.com/url?q=https://youtu.be/FvOCcRkzjvQ&sa=D&source=editors&ust=1785774553116362&usg=AOvVaw3WU0tm5oUb-YsGEK9Q3f5x",
+      "",
+      ""
+    ],
+    [
+      "20",
+      "MAX MIN HÀM SỐ BT THỰC TẾ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1sS6Zu-Q3YllFxUPdk6VvAZ3SNNGBT5sI/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100967872%252526usg%25253DAOvVaw2ZxADLngOIDZriX7GD-CIW%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942242933%2526usg%253DAOvVaw0v07aQeWoaojDR3Mz2N_6u%26sa%3DD%26source%3Deditors%26ust%3D1753525831398256%26usg%3DAOvVaw1UeMoK7hVkqAqUT96hvT4v&sa=D&source=editors&ust=1785774553116890&usg=AOvVaw3k_gcitutRDrxmGRYSR5ks",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1QxlQ-rqpNQ00lqvWV2xRXbS83oWuxzv4/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719461880%26usg%3DAOvVaw2faPzmH9v1ALvVfzfDR4CN&sa=D&source=editors&ust=1785774553117105&usg=AOvVaw3S2_HyqrkgVpL2muOclA-6",
+      "https://www.google.com/url?q=https://youtu.be/0c8kYRqPu-s&sa=D&source=editors&ust=1785774553117237&usg=AOvVaw3QXxvMfRKyPeP-022FVeb0",
+      "",
+      ""
+    ],
+    [
+      "21",
+      "TIỆM CẬN ĐỒ THỊ HÀM SỐ NỀN TẢNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/10c3FtNEUmDStxuX6RwrYZJ_XNAsHBCAt/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100968486%252526usg%25253DAOvVaw3j1Zf1-f7CpgEmdAOOV5zP%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942243309%2526usg%253DAOvVaw3OOJBg4B4_lNqBszbrdWnF%26sa%3DD%26source%3Deditors%26ust%3D1753525831398539%26usg%3DAOvVaw3XgzKxXfU_-hB-8xUkveZ5&sa=D&source=editors&ust=1785774553117734&usg=AOvVaw2OwybvLPBJ3uO2ZerT_28Y",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/13NTy9p7IlmaX1XYCH57IN2rJARz0806R/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719462346%26usg%3DAOvVaw2L50i-cF0nxn5zcu1cX0vl&sa=D&source=editors&ust=1785774553117920&usg=AOvVaw257Uz3_XpwZeUHrb3SoNOd",
+      "https://www.google.com/url?q=https://youtu.be/FLqjoOgezB8&sa=D&source=editors&ust=1785774553118083&usg=AOvVaw3SJmPsuIpFfbbGvRUb07Du",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/14_m0tgqdgB4DATuHsHAhk0Es-B-vv6bw/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100968745%252526usg%25253DAOvVaw3Ma93u42DHNnXAhvfMWSUx%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942243523%2526usg%253DAOvVaw1uQGlslvr93jxbd2helvL4%26sa%3DD%26source%3Deditors%26ust%3D1753525831398824%26usg%3DAOvVaw3eSOYa6ANrCeqz1vj2BrqV&sa=D&source=editors&ust=1785774553118211&usg=AOvVaw2zavfe4TyixkViRXyA879o",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1YhmU9Ah6KFfPSxbtbvgMU8AEoByJ9JNQ/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464088%26usg%3DAOvVaw1MZdZsiNW70C0kJMSGwn6K&sa=D&source=editors&ust=1785774553118402&usg=AOvVaw1QAcfTntueeYbv6z5TZF_q"
+    ],
+    [
+      "22",
+      "TIỆM CẬN ĐỒ THỊ HÀM SỐ VDC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.google.com/url?q%253Dhttps://www.google.com/url?q%25253Dhttps://drive.google.com/file/d/1Exo5EfDkyzmbyAlkW82KaoYmFaUsMUTb/view?usp%2525253Dsharing%252526sa%25253DD%252526source%25253Deditors%252526ust%25253D1752824100969062%252526usg%25253DAOvVaw0-qNnhOd4Zaizrkx-wK1ij%2526sa%253DD%2526source%253Deditors%2526ust%253D1753446942243712%2526usg%253DAOvVaw351ReHy1xUA2x5G9hrdTXs%26sa%3DD%26source%3Deditors%26ust%3D1753525831399021%26usg%3DAOvVaw1ZReaLeX7Wzl950fQrwZx1&sa=D&source=editors&ust=1785774553118866&usg=AOvVaw2Plhj6j1NQqGUXoSD_g_ZQ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1Nr5sQFUsj6BSXzeN-38FwpDZAT9rI5bx/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719462910%26usg%3DAOvVaw3trXD6avRIIckOLs9bTJ_C&sa=D&source=editors&ust=1785774553119077&usg=AOvVaw1SggKHw1hTTWzVtTz_GDWu",
+      "https://www.google.com/url?q=https://youtu.be/n62WCm2gTOA&sa=D&source=editors&ust=1785774553119227&usg=AOvVaw1vKDwhjADWPXzExOs-mDIP",
+      "",
+      ""
+    ],
+    [
+      "23",
+      "NHẬN DẠNG ĐỒ THỊ HÀM SỐ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1PAekD_wCGj-0eUmtAQRNa_NNy8vo_ZgP/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719463214%26usg%3DAOvVaw2kiCYIYbeae_nsG09o9hi2&sa=D&source=editors&ust=1785774553119762&usg=AOvVaw2JQl5__NkQ6HRqLhrvID0e",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1SosUYZQs6hT6W9ygjcBPMSmTZZocrZC5/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719463296%26usg%3DAOvVaw0TD6i70YbPdVQYL1A58X0A&sa=D&source=editors&ust=1785774553119929&usg=AOvVaw2vplelJ_f8X_hrPuLJe9m1",
+      "https://www.google.com/url?q=https://youtu.be/324v-dHwW_Q&sa=D&source=editors&ust=1785774553120086&usg=AOvVaw3ir5XDgCLDcuaLiMa6v0kM",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1vDS6grr6PlKsFVvF1DI_7BQgPCNhybqK/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719463451%26usg%3DAOvVaw2bLiULn7_AboPYV8RcehPN&sa=D&source=editors&ust=1785774553120263&usg=AOvVaw3d_sV3s9bHUKicJ-ApPH79",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1ooXHvoMa6mWSn-iGIP_dxg9_6_1SSnJo/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719463522%26usg%3DAOvVaw3lCSJFWeSa_XlhnFYqU-SJ&sa=D&source=editors&ust=1785774553120444&usg=AOvVaw1cfDg6OzG-NB5f8mS4HGtC"
+    ],
+    [
+      "24",
+      "TƯƠNG GIAO - NỀN TẢNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1A52UnvQyRg1eTrLlYIzjeWi61hIQ6YAz/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719463766%26usg%3DAOvVaw32lTuvvj6MucJ7_2U85-UD&sa=D&source=editors&ust=1785774553120811&usg=AOvVaw3rUNSjW-Y9eRky8csjDkez",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1FViR6Lm6TbI5rLOzeMrv_bTzYgn7dSGb/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719463838%26usg%3DAOvVaw09IdnA0hGuXO7SYqK976qn&sa=D&source=editors&ust=1785774553120969&usg=AOvVaw1TGt51bDQzy7P3PxTBjcMV",
+      "https://www.google.com/url?q=https://youtu.be/riS_CPtc0Ak&sa=D&source=editors&ust=1785774553121091&usg=AOvVaw3JUfzJtIBgqKnDPF5iWWXr",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1_5kDHOTwfoJgL9zMuxyjZIq7oeSAoadQ/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464004%26usg%3DAOvVaw2UrFz0TsihV3lWdbhGNdtP&sa=D&source=editors&ust=1785774553121212&usg=AOvVaw3wkQlw2fN6V00HirXIztv3",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1YhmU9Ah6KFfPSxbtbvgMU8AEoByJ9JNQ/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464088%26usg%3DAOvVaw1MZdZsiNW70C0kJMSGwn6K&sa=D&source=editors&ust=1785774553121365&usg=AOvVaw2eNK1UJVK6zhveliCWMCbC"
+    ],
+    [
+      "25",
+      "TƯƠNG GIAO - VDC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1YowITmD2lW_AbTzisco72BuXWtWameV_/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464287%26usg%3DAOvVaw18e5Ul6ifo5rHEdlIUxbbd&sa=D&source=editors&ust=1785774553121792&usg=AOvVaw0cvay2Fdr5n_Fum5jyCpkU",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/10xLI0B6y_klnDSbp94BNoE9nMqnB5-7S/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464365%26usg%3DAOvVaw14y_lAsu7BmuwsHYGI_bua&sa=D&source=editors&ust=1785774553122026&usg=AOvVaw2vk-O2PSXxhhKtRWFPN7_U",
+      "https://www.google.com/url?q=https://youtu.be/EZkXVjO2BTo&sa=D&source=editors&ust=1785774553122262&usg=AOvVaw3sH6QEOT_g-LjSJt9XCiP-",
+      "",
+      ""
+    ],
+    [
+      "26",
+      "TỔNG ÔN BÀI TOÁN THỰC TẾ 1",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1YowITmD2lW_AbTzisco72BuXWtWameV_/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464287%26usg%3DAOvVaw18e5Ul6ifo5rHEdlIUxbbd&sa=D&source=editors&ust=1785774553122943&usg=AOvVaw05sUu34ytDa8aLW-ZeBMYL",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1e62aukXWZE2JvPjFgVniO91P7ktFjQHs/view%26sa%3DD%26source%3Deditors%26ust%3D1754654719464721%26usg%3DAOvVaw0wOxRfrlulwv3fT0MZMu73&sa=D&source=editors&ust=1785774553123160&usg=AOvVaw1UxKpMLUZDbA9lCBi-c-Rw",
+      "https://www.google.com/url?q=https://youtu.be/StqsKack_xk&sa=D&source=editors&ust=1785774553123341&usg=AOvVaw2gryUkC_dAQdnHuhdH7GHq",
+      "",
+      ""
+    ],
+    [
+      "27",
+      "TỔNG ÔN BÀI TOÁN THỰC TẾ 2",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "28",
+      "TỔNG ÔN BÀI TOÁN THỰC TẾ 3",
+      "https://drive.google.com/file/d/1jMezZNs6eg0iMBnsRKDKB_cz46YKFMMR/view",
+      "https://drive.google.com/file/d/1x9DbxpeqSh7_SOXF6w9pJlfmoR-BeAd2/view",
+      "https://www.google.com/url?q=https://youtu.be/5GDWyrWbPEA&sa=D&source=editors&ust=1785774553125020&usg=AOvVaw3HypGsZ9z0afFxub_6974d",
+      "",
+      ""
+    ],
+    [
+      "29",
+      "CHỮA ĐỀ THỰC CHIẾN 02",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "30",
+      "CHỮA ĐỀ THỰC CHIẾN 03",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Sang tháng 8 thầy chuyển qua live ZOOM nên khó đảm bảo được nguồn update đầy đủ"
+    ],
+    [
+      "Nếu thấy hợp với thầy thì tốt nhất các bạn nên đăng ký học trực tiếp với thầy nhé.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "HÌNH OXYZ",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "1",
+      "VECTO - HỆ TRỤC OXYZ 1 - NỀN TẢNG",
+      "https://drive.google.com/file/d/1DaivDENujqATdyX70jvEE1q7IhjikDu1/view",
+      "https://drive.google.com/file/d/1WiN4EkkPa2ZqjjycRJECvPb4dI0FyXh5/view",
+      "https://www.google.com/url?q=https://youtu.be/k1HnxPShrbU&sa=D&source=editors&ust=1785774553127827&usg=AOvVaw3gPmHY4SEc_QjLkbCVSHGC",
+      "",
+      ""
+    ],
+    [
+      "2",
+      "VECTO - HỆ TRỤC OXYZ 2- TÍCH VÔ HƯỚNG",
+      "",
+      "",
+      "https://www.google.com/url?q=https://youtu.be/f_Ra14BTtuk&sa=D&source=editors&ust=1785774553128476&usg=AOvVaw1Ohsk67OjdGwvJsDTEkkjv",
+      "",
+      ""
+    ],
+    [
+      "3",
+      "VECTO - HỆ TRỤC OXYZ 3 - TÍCH CÓ HƯỚNG",
+      "https://drive.google.com/file/d/11EdwvZ9BcXJruWAmpUMJ3K6c3L4vVoJ7/view",
+      "",
+      "https://www.google.com/url?q=https://youtu.be/u8abDjsYxAE&sa=D&source=editors&ust=1785774553129294&usg=AOvVaw2gYgwvjeyX6QijZ7zHgJYt",
+      "",
+      ""
+    ],
+    [
+      "4",
+      "VECTO - HỆ TRỤC OXYZ 4 - TỌA ĐỘ HÓA",
+      "https://drive.google.com/file/d/1i66KMSC7XYNFoQi1qnXMJcSMpiPAWkob/view",
+      "https://drive.google.com/file/d/1Y9jgq5VnwuKf9bd09Gq9x7W5bwDjY6XG/view",
+      "https://www.google.com/url?q=https://youtu.be/lDRDjcyKb9Q&sa=D&source=editors&ust=1785774553130199&usg=AOvVaw0pCqUIN0U8uMPy0hgJPBfG",
+      "",
+      ""
+    ],
+    [
+      "5",
+      "VECTO - HỆ TRỤC OXYZ 5 - BT THỰC TẾ",
+      "ĐỀ",
+      "ĐÁP ÁN",
+      "https://www.google.com/url?q=https://youtu.be/9EroUfnZ4Ms&sa=D&source=editors&ust=1785774553130905&usg=AOvVaw1dIVoGzUjWbKSCHDUD-AGF",
+      "",
+      ""
+    ],
+    [
+      "BỔ TRỢ ĐGNL",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "HÌNH OXYZ",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "1",
+      "HỆ TRỤC OXYZ - MỞ ĐẦU",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/Ge2sqe1tvvY%26sa%3DD%26source%3Deditors%26ust%3D1754025623388699%26usg%3DAOvVaw1JhkjsU8RigzUvnP9Vn3i7&sa=D&source=editors&ust=1785774553133027&usg=AOvVaw0XV4m4rWzh-jkDpLA0AjHJ",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "2",
+      "VECTO VÀ CÁC PHÉP TOÁN",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/gbQJCoyLHXI%26sa%3DD%26source%3Deditors%26ust%3D1754025623388974%26usg%3DAOvVaw0DilMJNJB0QUHnneJ-PJEA&sa=D&source=editors&ust=1785774553133673&usg=AOvVaw2Rgq7o5XFowrhbl2z-nn2q",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "3",
+      "TÍCH VÔ HƯỚNG VÀ ỨNG DỤNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/pN7slLUPvmI%26sa%3DD%26source%3Deditors%26ust%3D1754025623389263%26usg%3DAOvVaw37NYsb7O0ukLR1jIawMZEF&sa=D&source=editors&ust=1785774553134530&usg=AOvVaw0tYzhmP-uTUr6p-C7bSkOf",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "4",
+      "PHƯƠNG TRÌNH MẶT CẦU",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/pq0H0sJR0kM%26sa%3DD%26source%3Deditors%26ust%3D1754025623389547%26usg%3DAOvVaw1qAOcO85zvkBPNsK8HDw3C&sa=D&source=editors&ust=1785774553135732&usg=AOvVaw2_Wd5cD0OEl6mIrdpnjmuY",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "5",
+      "PHƯƠNG TRÌNH MẶT PHẲNG 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/ZPRbhRGOuG0%26sa%3DD%26source%3Deditors%26ust%3D1754025623389853%26usg%3DAOvVaw2C7D0wZbcuArwV_YgoUcOB&sa=D&source=editors&ust=1785774553136555&usg=AOvVaw3OqoipnIAfl_WFt-I1mBWf",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "6",
+      "PHƯƠNG TRÌNH MẶT PHẲNG 02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/GgUVoYW5Ax4%26sa%3DD%26source%3Deditors%26ust%3D1754025623390111%26usg%3DAOvVaw3Ph6de12ekfgZ9je2dnvuI&sa=D&source=editors&ust=1785774553137327&usg=AOvVaw31ZnMU2gLaxWcalJCLRK1c",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "7",
+      "PHƯƠNG TRÌNH ĐƯỜNG THẲNG 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/ZPRbhRGOuG0%26sa%3DD%26source%3Deditors%26ust%3D1754025623390343%26usg%3DAOvVaw0qB5dZ5mEQ-stDpuZV4qAT&sa=D&source=editors&ust=1785774553138069&usg=AOvVaw3md0HEeD25yqpKg9BuzL-D",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "8",
+      "PHƯƠNG TRÌNH ĐƯỜNG THẲNG 02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/qZxkaSSPStk%26sa%3DD%26source%3Deditors%26ust%3D1754025623390539%26usg%3DAOvVaw0CzJeLmBOyt2uij0IZCZ3X&sa=D&source=editors&ust=1785774553138805&usg=AOvVaw0KlQuBdC_h-vASV9bGVkDv",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "9",
+      "BÀI TOÁN GÓC TRONG OXYZ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/9NnicJDjSjA%26sa%3DD%26source%3Deditors%26ust%3D1754025623390755%26usg%3DAOvVaw12gX1aLRX54F0HPS50YSoz&sa=D&source=editors&ust=1785774553139614&usg=AOvVaw3VT2-zf1upv5Yv0e81MNNV",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "10",
+      "BÀI TOÁN KHOẢNG CÁCH TRONG OXYZ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/LvMTZRMG9YA%26sa%3DD%26source%3Deditors%26ust%3D1754025623390919%26usg%3DAOvVaw32Z-BNKqazSX-JJQUughi4&sa=D&source=editors&ust=1785774553140406&usg=AOvVaw1XA3A3CY7cB8ELqkYZoGOI",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "11",
+      "PHƯƠNG PHÁP TỌA ĐỘ HÓA TRONG KG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/XW93t6Cya6s%26sa%3DD%26source%3Deditors%26ust%3D1754025623391111%26usg%3DAOvVaw05-AB2x2buTGbo20QUWfUV&sa=D&source=editors&ust=1785774553141253&usg=AOvVaw2Oop-u62Fcwph4BL8LCkcm",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "12",
+      "BÀI TOÁN MAX MIN TRONG OXYZ",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/n4kvyYFgVuc%26sa%3DD%26source%3Deditors%26ust%3D1754025623391269%26usg%3DAOvVaw2nvA-qEu-iEqHokqIcUgDE&sa=D&source=editors&ust=1785774553142006&usg=AOvVaw2ysD4KsUewfJR1zaXgO1jO",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "13",
+      "CÔNG THỨC TỌA ĐỘ HÌNH CHIẾU",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/NjmOQLF7_nM%26sa%3DD%26source%3Deditors%26ust%3D1754025623391428%26usg%3DAOvVaw1I07nu64g_eS7iglBTINu3&sa=D&source=editors&ust=1785774553142748&usg=AOvVaw3lgW51SAV7VZTMLWOAxTeH",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "GIẢI NHANH HÀM SỐ",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "1",
+      "Song trục //",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/gIoqDLtSXG0?si%253DHlr0VZtS6aIATJzs%26sa%3DD%26source%3Deditors%26ust%3D1754025623391870%26usg%3DAOvVaw29_yPxZH-Haq8eGWFdVcCe&sa=D&source=editors&ust=1785774553143872&usg=AOvVaw1oDmsCi2nQaa05JR2CfFAT",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/11tLH6b0Iu7ZofZOVhD2HzwBpdC5g_1Uc/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623391934%26usg%3DAOvVaw3Kb_LdneVbKPdsCRLvDaAE&sa=D&source=editors&ust=1785774553144090&usg=AOvVaw2LdBKfE1BRe9sQowVLFIea",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1a733GP376tBIb0lPlZAMrKMKATtFizWj/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623392041%26usg%3DAOvVaw1pvm3nbDHSEeAcl_535oks&sa=D&source=editors&ust=1785774553144297&usg=AOvVaw3G-GlyxPPy0EBxFVmgCeWo",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1BaGYAzfgPHFqKysZstcoMy8zF3oSd1Bf/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623391991%26usg%3DAOvVaw3hC4-ZS3HsfX08oNHY4gnX&sa=D&source=editors&ust=1785774553144459&usg=AOvVaw0DqtnE-imkxb01IiMn5EtS",
+      ""
+    ],
+    [
+      "2",
+      "Song trục V",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/9K3YpctDIGE?si%253DciFqWHugIXgCTHmK%26sa%3DD%26source%3Deditors%26ust%3D1754025623392275%26usg%3DAOvVaw0k4W3pqMGz4yXq6E7cXQAg&sa=D&source=editors&ust=1785774553144905&usg=AOvVaw2DRvQNsAembnHRVLBQMTSG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1Qjkj2MxqOL_wQROy8kfzeT_dZ7Q33df2/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623392335%26usg%3DAOvVaw2AwSvkO2FDAnBkUYpuoRgF&sa=D&source=editors&ust=1785774553145091&usg=AOvVaw3G7fQWp0ahd3W1c2pznwZm",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1OizMfPAlSm3VSXKvW1TtxzXDlRQjEW34/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623392385%26usg%3DAOvVaw0WhmqzzKA2Bbh_hbLhya8f&sa=D&source=editors&ust=1785774553145252&usg=AOvVaw1JiVswkkRJcZU9heOSLnOz",
+      ""
+    ],
+    [
+      "3",
+      "Song trục tương giao",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/9gWLVYCn_cI?si%253Dtv4e-rsBx5ri_K4T%26sa%3DD%26source%3Deditors%26ust%3D1754025623392534%26usg%3DAOvVaw37XOnLH31o2lSUkpUn1DT-&sa=D&source=editors&ust=1785774553145805&usg=AOvVaw1fSxTqsWyojTKWEt1uqDRt",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1jxIy5jzDX_ZV_gqMIY4TiiSVAsN5pMJZ/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623392596%26usg%3DAOvVaw3UizhUUbSm8bbYlVQTBO0I&sa=D&source=editors&ust=1785774553146043&usg=AOvVaw3bfT8QJNPQiAGErGvSx1AS",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1bBcrOC3Ha-mLfNVhTpQm1vVfO95DoAeZ/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623392654%26usg%3DAOvVaw3KoiGjuTjb5qGsTlxLbk-y&sa=D&source=editors&ust=1785774553146223&usg=AOvVaw3Euadyk10SNpAaVqWOUfSE",
+      ""
+    ],
+    [
+      "4",
+      "Sơ đồ V - cực trị - b01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/QxX2uCKR8p0?si%253DnaKLyF77UVFw-3QC%26sa%3DD%26source%3Deditors%26ust%3D1754025623392791%26usg%3DAOvVaw3fMH7epq6tXuTGo8qYHacN&sa=D&source=editors&ust=1785774553146778&usg=AOvVaw0gMiGhIgk2Zy5kZ6hKSuuS",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "5",
+      "Sơ đồ V - Cực trị - b02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/kttpBy7iDVg%26sa%3DD%26source%3Deditors%26ust%3D1754025623392950%26usg%3DAOvVaw18bwnnuJGuro7dzvSJ__69&sa=D&source=editors&ust=1785774553147468&usg=AOvVaw2R8lrSmzb2T15UAyNOaRj7",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1NOzuSPOjr2tx27ztlWi8PaQIrgnj_elH/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623393008%26usg%3DAOvVaw11mtkqEtyQgqUYXzBBqW4x&sa=D&source=editors&ust=1785774553147645&usg=AOvVaw3oIMqTVq29QQxPyWiYw_EJ",
+      "",
+      "",
+      ""
+    ],
+    [
+      "6",
+      "Sơ đồ V - Đơn điệu - b01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/-BoVjMZ-_xE%26sa%3DD%26source%3Deditors%26ust%3D1754025623393132%26usg%3DAOvVaw06sdlpLb_SEsVbfWfLIXkV&sa=D&source=editors&ust=1785774553148264&usg=AOvVaw3Da7UWw_kAJJfTMLyj7VJM",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "7",
+      "Sơ đồ V - Đơn điệu - b02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/56eofC_d0F0%26sa%3DD%26source%3Deditors%26ust%3D1754025623393254%26usg%3DAOvVaw3oaB6f6-rRra08CkBTIuxT&sa=D&source=editors&ust=1785774553148890&usg=AOvVaw1kRYKBoRmJfiRlDKTe09uq",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "8",
+      "Sơ đồ V - Ghép trục theo sđv",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/3ylMY2FRIJg%26sa%3DD%26source%3Deditors%26ust%3D1754025623393393%26usg%3DAOvVaw0EIbic3DyUuIJvI2g6JXMd&sa=D&source=editors&ust=1785774553149498&usg=AOvVaw0MvyT-2vV10O4aw6lae_sV",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "9",
+      "Sơ đồ V - Tương giao hàm hợp",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/xrrtTt19QlI?si%253D2zaGdY3nmm--0vDs%26sa%3DD%26source%3Deditors%26ust%3D1754025623393530%26usg%3DAOvVaw3zKjZm7N2THMgMflDqwK-9&sa=D&source=editors&ust=1785774553150121&usg=AOvVaw2zWWbArYqJDYNHiZidN8Cc",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1MPTKZjNL1A1F5X_U-IsT-XZRDp_SnsdZ/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623393587%26usg%3DAOvVaw2kbF9GyqhEiRAUuVAlWCnP&sa=D&source=editors&ust=1785774553150292&usg=AOvVaw3lg_jLe8s15JCjXLCNUIQq",
+      "",
+      "",
+      ""
+    ],
+    [
+      "10",
+      "Kỹ thuật ốc sên",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/o5xmC-QkmIo?si%253DOLUZIW3WPmZjHs32%26sa%3DD%26source%3Deditors%26ust%3D1754025623393719%26usg%3DAOvVaw1sXKdhfNaTTwJCbWnbnawi&sa=D&source=editors&ust=1785774553150895&usg=AOvVaw3gVvCgq2FCHeT4tadialGz",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1q6fbZi0Q2N3XeslZT6j9oBuj4MkaeWXn/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623393775%26usg%3DAOvVaw1iTjpD-6N0TqLE2Ks0e6E-&sa=D&source=editors&ust=1785774553151080&usg=AOvVaw2fKel6-auV5p08lA95-852",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1xcIpZ3WvTzisPoG8ZOiAPQQ0rVX1UHWA/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623393827%26usg%3DAOvVaw1eMN33r80isisgrxPCLd3j&sa=D&source=editors&ust=1785774553151264&usg=AOvVaw0M-PeHO5rnKcAk3Kitbeur",
+      ""
+    ],
+    [
+      "11",
+      "Hàm tương đồng",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/pbmqk8dliNg?si%253DxtpSUU5egfjPUe8b%26sa%3DD%26source%3Deditors%26ust%3D1754025623393957%26usg%3DAOvVaw24EAmiKe4pRZuacCfdNZu8&sa=D&source=editors&ust=1785774553151827&usg=AOvVaw14zcitu3pQZoR2B9gYs1if",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1m8Lqsj0R1w0hZ-U7OIOMmyA7N8SPsAv1/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623394014%26usg%3DAOvVaw2dYhev2sQRmTMzNyrbC1ND&sa=D&source=editors&ust=1785774553152003&usg=AOvVaw2fsvgCGuNP2r7h4iyYoCPP",
+      "",
+      "",
+      ""
+    ],
+    [
+      "12",
+      "Max min hàm trị",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/3qPo6LHdIJQ%26sa%3DD%26source%3Deditors%26ust%3D1754025623394171%26usg%3DAOvVaw2MtyZXRLt8ajZ2h23okmiJ&sa=D&source=editors&ust=1785774553152616&usg=AOvVaw1UiV6t28XseucfTy_GBm17",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1RiSel0hQpctdJAKFJ-0a90enxbnOpfe8/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623394229%26usg%3DAOvVaw2Pt9eHdNBuVOjaFGnYLVRf&sa=D&source=editors&ust=1785774553152782&usg=AOvVaw1rs5S2cHOWe-OnJqZR-fb3",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1GJLi5fadtzk54OElofsVuJMZ44SU7gwj/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623394282%26usg%3DAOvVaw3QMy_drp0Jt2S3pL52JDGC&sa=D&source=editors&ust=1785774553152934&usg=AOvVaw3NaBKw70EIFKb_WDLrLZn5",
+      ""
+    ],
+    [
+      "13",
+      "Ghép trục",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/qQ7pHYwGbR8%26sa%3DD%26source%3Deditors%26ust%3D1754025623394460%26usg%3DAOvVaw0ZcytczVg-9kPmfU43fWaI&sa=D&source=editors&ust=1785774553153516&usg=AOvVaw1hrHT5qz6jfETPMv0VNI_A",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1wSSHY3r5OOBD05V3qrlfMwEVP_olvUzw/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623394530%26usg%3DAOvVaw2jR1lNAa0qJ6UezHDi92A5&sa=D&source=editors&ust=1785774553153675&usg=AOvVaw2vdp1xnI1_AxSJq-YOjhwi",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1-B5lHyLXo6Ty_0HOEbt_qn_tReVUL2ae/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623394580%26usg%3DAOvVaw0ufh-3bwpy9IW1h0BDgPJ6&sa=D&source=editors&ust=1785774553153823&usg=AOvVaw3vMaP4mgK3_G9eE_XpqG3x",
+      ""
+    ],
+    [
+      "14",
+      "đơn điệu hàm hợp f(x)+g(x)",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.youtube.com/live/no7VWtnff2A?si%253DWziLwtkx0EFJcQhY%26sa%3DD%26source%3Deditors%26ust%3D1754025623394689%26usg%3DAOvVaw3rfrou8h4_tJOFvXkPxH8t&sa=D&source=editors&ust=1785774553154456&usg=AOvVaw3e_7oMSqU2IJLs27yzzJzY",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "15",
+      "Bài toán truy ngược",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/r9a6PBUM86w%26sa%3DD%26source%3Deditors%26ust%3D1754025623394809%26usg%3DAOvVaw3ttDVZchk7n_vdzSZo0RR1&sa=D&source=editors&ust=1785774553155162&usg=AOvVaw2N1BP4KCeb447jx_yQ90cW",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1m9oFtA4uguDkx6Pu3EpHEISmFJRBuXwd/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623394852%26usg%3DAOvVaw28kzfGzJYuhA2jaVKd2pi-&sa=D&source=editors&ust=1785774553155333&usg=AOvVaw0SEPSHcoBV5TmOr5sk4_Sc",
+      "",
+      "",
+      ""
+    ],
+    [
+      "LOGA",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "16",
+      "Hàm đặc trưng",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/e3yac9k0loM?si%253DE_7Ohb5-RYFw1cqI%26sa%3DD%26source%3Deditors%26ust%3D1754025623395209%26usg%3DAOvVaw0DjP2g2xn1P0QFiBtWLk2B&sa=D&source=editors&ust=1785774553156312&usg=AOvVaw15HqRtxCQrx25AQPT0PccX",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/K7iipLhN0xU?si%253DkRaXav80IcADbTrq%26sa%3DD%26source%3Deditors%26ust%3D1754025623395248%26usg%3DAOvVaw2i2cXBSw_A2JxtloQRUBpB&sa=D&source=editors&ust=1785774553156532&usg=AOvVaw0jhVzLfi2R60pdiL6FdRE0",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1xR9r32vWk9ZlDKmX4vujFWLiInC1M4_C/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395317%26usg%3DAOvVaw2tF6YNF46JHlKUjDNQwOU2&sa=D&source=editors&ust=1785774553156700&usg=AOvVaw2rIyjW0uh41a0POvWCBEBL",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1218XGcsEC8C5xhNU4NNzqPeLnpBTyb90/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395281%26usg%3DAOvVaw3f9-GfzZc2oJKELpRITnCt&sa=D&source=editors&ust=1785774553156877&usg=AOvVaw1sePgk51qA3PFQ3Bzi9hPB",
+      ""
+    ],
+    [
+      "17",
+      "Kỹ thuật phân khoảng",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/OOFD3oooLVM%26sa%3DD%26source%3Deditors%26ust%3D1754025623395424%26usg%3DAOvVaw1IIkSptS37rCcHdghn15XJ&sa=D&source=editors&ust=1785774553157539&usg=AOvVaw01bXlHhwITKLYUT9CB0yJX",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1OW_DNzXftfSUGj2o0OqNtcj1N5sR56br/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395463%26usg%3DAOvVaw1CRneDtTU_r7HZROZvHqA0&sa=D&source=editors&ust=1785774553157711&usg=AOvVaw0g7m0Xm-BFi9aUq_cW65fY",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1hDQ_WPLuW-pc4xz6GgSVPWfv_hje2v-K/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395497%26usg%3DAOvVaw1AAG-czQJRz61-VRnZCBPQ&sa=D&source=editors&ust=1785774553157871&usg=AOvVaw28mI4Dd__U5nKw5hzeVphK",
+      ""
+    ],
+    [
+      "18",
+      "Tìm x để tồn tại y",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/GjyPc6nYK2A?si%253DC9rKl96qpYSc94bT%26sa%3DD%26source%3Deditors%26ust%3D1754025623395573%26usg%3DAOvVaw1q5S2i4-V4gqN7ZpuHN1tt&sa=D&source=editors&ust=1785774553158701&usg=AOvVaw2mjVKCdZuXGNZnlUlp5J0j",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "19",
+      "Cặp nghiệm (x;y) - đại số",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/EWWzGcTpc-g?si%253D_k_dFFBj112BZXuF%26sa%3DD%26source%3Deditors%26ust%3D1754025623395677%26usg%3DAOvVaw2OjTe9cOB8FRXyO1RrkQBQ&sa=D&source=editors&ust=1785774553159525&usg=AOvVaw26bNyfiHYUEy92NTp-OC1t",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/5TIneuBHnxY?si%253D9VwvJgy5L7VrBvbx%26sa%3DD%26source%3Deditors%26ust%3D1754025623395710%26usg%3DAOvVaw0dCzOe3tFrTnNjl5X7VDjI&sa=D&source=editors&ust=1785774553159756&usg=AOvVaw3m9yodTX8WFA5WPHiK4dHN",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1NEbM9CFeoCFYXDYmiAZZnFcUKeixluPB/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395741%26usg%3DAOvVaw3DPHrHczvYDENXbSRMKavP&sa=D&source=editors&ust=1785774553159979&usg=AOvVaw399CLJfPpl7ZqqcTInVud4",
+      ""
+    ],
+    [
+      "20",
+      "Cặp nghiệm (x;y) - hình học",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/-vcTwpYOpNk%26sa%3DD%26source%3Deditors%26ust%3D1754025623395818%26usg%3DAOvVaw2Un1x-A4jbbbtEqoHgnHlU&sa=D&source=editors&ust=1785774553160644&usg=AOvVaw2AbYcd711YJQuWQIbu9mIx",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://www.youtube.com/watch?v%253D6Kq8Cakyfxs%26sa%3DD%26source%3Deditors%26ust%3D1754025623395850%26usg%3DAOvVaw0oyuyft-ah6LWwTq5pyygk&sa=D&source=editors&ust=1785774553160831&usg=AOvVaw0eu7-Usl5fGeZHl1HQvq9L",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1218XGcsEC8C5xhNU4NNzqPeLnpBTyb90/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395881%26usg%3DAOvVaw17ipEbbeNpvVHDQLaxPzJV&sa=D&source=editors&ust=1785774553161195&usg=AOvVaw3V6afuBztwBJrDyVtrl0fq",
+      ""
+    ],
+    [
+      "21",
+      "Cặp nghiệm (x;y) - pp hàm số",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/zwbgk_BFq1g%26sa%3DD%26source%3Deditors%26ust%3D1754025623395959%26usg%3DAOvVaw2nwCbIv4HC1xuGUOvdm-KE&sa=D&source=editors&ust=1785774553162284&usg=AOvVaw1Bwk6-WIW0JCOQBm34QKv_",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1cyIYRLU98V6JcBAKKaa6o5WY3lkJZZhY/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623395991%26usg%3DAOvVaw3Q6T3YxXTNorppx0A9bhXV&sa=D&source=editors&ust=1785774553162460&usg=AOvVaw0IshpAluesWRgd29fGEoB4",
+      "",
+      "",
+      ""
+    ],
+    [
+      "CÀY VD VDC MỖI NGÀY 2025 - THẦY HUY - TMTSCHOOL",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "MỤC",
+      "VIDEO",
+      "",
+      "TÀI LIỆU",
+      "ĐÁP ÁN",
+      "GHI CHÚ THÊM",
+      ""
+    ],
+    [
+      "DAY 01",
+      "ĐƠN ĐIỆU HÀM HỢP - D01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/mCdgH1qZxQo%26sa%3DD%26source%3Deditors%26ust%3D1754025623380222%26usg%3DAOvVaw0Q2ZPHKOhMNlazfk2KrAHZ&sa=D&source=editors&ust=1785774553165357&usg=AOvVaw2LsAKUHx4iiou6XfblYGym",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1KfssRMaXj8_EkgrTM4uRfTGikmybDiNs/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623380271%26usg%3DAOvVaw30hw2qIVsdslT8wlm5aggT&sa=D&source=editors&ust=1785774553165693&usg=AOvVaw3sZlMlBQ4T84qGUfKsFyoX",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/12tfGo-ne3LmeGd6V_OL895bbbr90yXEk/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623380318%26usg%3DAOvVaw0ByevyFdJm0lRQ9Pv9VgFO&sa=D&source=editors&ust=1785774553165859&usg=AOvVaw0HfgzZgRBXyUwwvmBGo9-H",
+      "",
+      ""
+    ],
+    [
+      "DAY 02",
+      "ĐƠN ĐIỆU HÀM TRỊ TUYỆT ĐỐI",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/hAohMIY8u84%26sa%3DD%26source%3Deditors%26ust%3D1754025623380692%26usg%3DAOvVaw2-Zyqch_xXc_KfRUyhRqGV&sa=D&source=editors&ust=1785774553166516&usg=AOvVaw3wMnBdom3PPC-nDyQvsl78",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1kPODv3trueU25NfPwz8IeMactJw7N0mZ/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623380734%26usg%3DAOvVaw1hENfl7tdJPNUqxOeLcv0w&sa=D&source=editors&ust=1785774553166771&usg=AOvVaw0xc3CncPmHHQ8nhl4nTxZN",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1WFTKEobImQF_90Z-pakIpmcM37K9YaAz/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623380774%26usg%3DAOvVaw3lDH2uknZSrGpaLV6cMnVg&sa=D&source=editors&ust=1785774553167037&usg=AOvVaw0F2JeuTN2k_lbnI4ucs_oF",
+      "",
+      ""
+    ],
+    [
+      "DAY 03",
+      "BỔ TRỢ SƠ ĐỒ V - 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/lVqUJsSxLpU%26sa%3DD%26source%3Deditors%26ust%3D1754025623381041%26usg%3DAOvVaw3_3XPAto0VMsSg__wCPvzH&sa=D&source=editors&ust=1785774553167906&usg=AOvVaw1ygSKhd5PiMAdLveOuEMh9",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1PkhlPtAf1jemkcVmcIm1On7Ia91TSYW0/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623381077%26usg%3DAOvVaw1u__Y94mvabv8IdrztyShw&sa=D&source=editors&ust=1785774553168100&usg=AOvVaw0quSC9XD9yUo6df2m5whIF",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1ESfanBM89D8QLVv-N1sPAjwEx0b4VHQC/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623381115%26usg%3DAOvVaw09wBu73ttJZ8UYOYGnAf1e&sa=D&source=editors&ust=1785774553168343&usg=AOvVaw1cLXZXdan-W7Ju8UhCfzNl",
+      "",
+      ""
+    ],
+    [
+      "DAY 04",
+      "BỔ TRỢ SONG TRỤC - 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/jUjoq92g4G0%26sa%3DD%26source%3Deditors%26ust%3D1754025623381452%26usg%3DAOvVaw1FZQUpaUaG6hJeTZG0WzPX&sa=D&source=editors&ust=1785774553168924&usg=AOvVaw0Wvj8kJqvCKdNQ99dY82lz",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1v1STFKNaEKvRSgJGFMBrN7EWxDwolqAs/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623381486%26usg%3DAOvVaw26kofJD-jWt9g5AZ6ojHVS&sa=D&source=editors&ust=1785774553169073&usg=AOvVaw010D8zm0BCt0calZ4erDvQ",
+      "",
+      "",
+      ""
+    ],
+    [
+      "DAY 05",
+      "CỰC TRỊ HÀM BẬC 4 TRÙNG PHƯƠNG",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/drN_jnIvbiQ%26sa%3DD%26source%3Deditors%26ust%3D1754025623381778%26usg%3DAOvVaw3Cqtv-qVTQaPsx4QUMnstC&sa=D&source=editors&ust=1785774553169643&usg=AOvVaw0K8tiY-7kKLgMCas84eY3E",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1lOfrP9-RRz12sxMhhpvuhKK_pMTu7RpN/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623381816%26usg%3DAOvVaw1zx-dcse7y58awDmnoFTaH&sa=D&source=editors&ust=1785774553169774&usg=AOvVaw1gER5OQTWkBsOX9mSj8QhP",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1EJN-EtkQVOebk4rLyYJhe6VqPC9aItDE/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623381852%26usg%3DAOvVaw2PVb75iY2CMimiduu6hO8Y&sa=D&source=editors&ust=1785774553169933&usg=AOvVaw1E7mac_94Vksf_y2dMS6Hu",
+      "",
+      ""
+    ],
+    [
+      "DAY 06",
+      "MAX MIN HÀM SỐ VD VDC",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/7XRHoJJJAO8%26sa%3DD%26source%3Deditors%26ust%3D1754025623382100%26usg%3DAOvVaw2X_Ze7ZoX6uhPDKePQg1HR&sa=D&source=editors&ust=1785774553170521&usg=AOvVaw2n02VoGv17oLcJcsGFlZBE",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1xaZ894XavXr-WvGHYCOZly-VnZSFXOHK/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623382135%26usg%3DAOvVaw29ggU45-KR_R04cTjPAWe_&sa=D&source=editors&ust=1785774553170657&usg=AOvVaw39OJ7F5JAODoQ8pQGRnu4p",
+      "",
+      "",
+      ""
+    ],
+    [
+      "DAY 07",
+      "CỰC TRỊ HÀM TRỊ TUYỆT ĐỐI - TDM",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/JPMg_VbozkY%26sa%3DD%26source%3Deditors%26ust%3D1754025623382429%26usg%3DAOvVaw1sl2ua079SBm1Bw-Sq6e6c&sa=D&source=editors&ust=1785774553171263&usg=AOvVaw3Z7K4_TsUtpW_LkerhLnUE",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1faPmwsbN2F-HKSHkRCfSn6TwINimCubD/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623382464%26usg%3DAOvVaw0rR5-vL48JWRBHSWE92p-r&sa=D&source=editors&ust=1785774553171403&usg=AOvVaw0KrNuZiY_TBzw03zSm3e4y",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1aT_sKDlVuSfiYtXovAOBs6gW_d0RXoyn/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623382499%26usg%3DAOvVaw0Yq6ZoQ47b_3OKOq4KGhWD&sa=D&source=editors&ust=1785774553171585&usg=AOvVaw2pOBd_qbGaN2tYZSRlYCg7",
+      "",
+      ""
+    ],
+    [
+      "DAY 08",
+      "MAX MIN HÀM TRỊ TUYỆT ĐỐI",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/K0JKTiBWyKk%26sa%3DD%26source%3Deditors%26ust%3D1754025623382739%26usg%3DAOvVaw3IFBGyUYprFgZI_xWgUTpY&sa=D&source=editors&ust=1785774553172389&usg=AOvVaw2aggUayoadXgWbfaUR4TmV",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/13Bf798LSX22GGFVEfet0Euw0jbWt8mCh/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623382772%26usg%3DAOvVaw1LNd7zdkX27WvLIx2B0Qe1&sa=D&source=editors&ust=1785774553172545&usg=AOvVaw3pzTVKDrp0eynKZmIamAzg",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/12aaPHnB31PiVoygHPwtywixFMqlAUIbP/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623382807%26usg%3DAOvVaw2JI5qrDgDaoEY19lEBNs-E&sa=D&source=editors&ust=1785774553172677&usg=AOvVaw3ygZPpZ2sZhzRrnxR_ik4W",
+      "",
+      ""
+    ],
+    [
+      "DAY 09",
+      "TỔNG ÔN ĐƠN ĐIỆU - CỰC TRỊ",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1dwWlU7Xw3NJfGgFXm1NxA2TMch4BkDEO/view?usp%253Dsharing%2526fbclid%253DIwZXh0bgNhZW0CMTAAAR26AZlTteup2ozmWJWWLRyNI5nwoORrDciACqAklCjPchSjal9oAa0bTbY_aem_gRFUHVCVO4URmKUIFaxGVQ%26sa%3DD%26source%3Deditors%26ust%3D1754025623383057%26usg%3DAOvVaw1A0ru7ICCppodqLC2Qbg2y&sa=D&source=editors&ust=1785774553173277&usg=AOvVaw1jmDEFzl8XXvTc8P_wmeX9",
+      "",
+      "",
+      ""
+    ],
+    [
+      "DAY 10",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/N7AO86z5J2Y%26sa%3DD%26source%3Deditors%26ust%3D1754025623383241%26usg%3DAOvVaw2clu8APhdGwymDqS-vJpeS&sa=D&source=editors&ust=1785774553173771&usg=AOvVaw2SCVi41KQrYLiuOHZCdYQ6",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "DAY 11",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/0y-GC0xMGcs%26sa%3DD%26source%3Deditors%26ust%3D1754025623383384%26usg%3DAOvVaw36URxVSzTKwRWyiFwX3r5e&sa=D&source=editors&ust=1785774553174256&usg=AOvVaw0_jfbXAWa0Sgm8NiCapHtn",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "DAY 12",
+      "TỔNG ÔN ĐƠN ĐIỆU VDC - B01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/QmNpTjQ80CQ%26sa%3DD%26source%3Deditors%26ust%3D1754025623383617%26usg%3DAOvVaw0b5f9F__KpWf6iUCXy3PE5&sa=D&source=editors&ust=1785774553174876&usg=AOvVaw1_IW06RRT__WWzhCIUfPeW",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1Tta-rBj95p5qUifGZ-cA8sMjJW36r3iU/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623383654%26usg%3DAOvVaw1nZp2g9EKje8ka7Ov6vOnJ&sa=D&source=editors&ust=1785774553175062&usg=AOvVaw1ACyjHz0FeH58sHFvebIn3",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1ZhyZCM_TU9V3igG7tblhM2UNlIVt9gPw/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623383690%26usg%3DAOvVaw16SyrmEtih5fAWG0X8X6yJ&sa=D&source=editors&ust=1785774553175236&usg=AOvVaw3JK48mwJjOtrGO9H9myc7i",
+      "",
+      ""
+    ],
+    [
+      "DAY 13",
+      "TỔNG ÔN ĐƠN ĐIỆU VDC - B02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/oN-DRB7n-ms%26sa%3DD%26source%3Deditors%26ust%3D1754025623383877%26usg%3DAOvVaw04lAJxPZtfL2eS_b3zNrbY&sa=D&source=editors&ust=1785774553175924&usg=AOvVaw3qUxu4uzYiHb5LYEiVQPCx",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/15mQCZ6-sdkep4RuItV6mlkDbdAquVais/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623383911%26usg%3DAOvVaw18GtRR28XqW0hkuh8Mwhid&sa=D&source=editors&ust=1785774553176104&usg=AOvVaw2-c2M_OfVciyFzaf40xhrB",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1-dPQgKJa-iJ5Cv1xH-r6bOrPprKLXL-G/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623383945%26usg%3DAOvVaw2b7X5PqayQUtuQXD17cQeG&sa=D&source=editors&ust=1785774553176257&usg=AOvVaw3XPwfeXWTtPFT5OGhEcB4p",
+      "",
+      ""
+    ],
+    [
+      "DAY 14",
+      "BỔ TRỢ CỰC TRỊ VD VDC 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/Gt0hRdQ7MKM?si%253DSCYz-l0bin85qbPQ%26sa%3DD%26source%3Deditors%26ust%3D1754025623384101%26usg%3DAOvVaw0p0bP5xnu8UeCT0D63q2CT&sa=D&source=editors&ust=1785774553176878&usg=AOvVaw1Zq8sFsAfKJJ_ANoY-r1md",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1bhk_hItNS5SzzA4eF-UC-QqRiyNOF-iy/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384139%26usg%3DAOvVaw33j2jH9OdzZFc6QLqMWiMq&sa=D&source=editors&ust=1785774553177058&usg=AOvVaw2MvyKUD-2tOJ6FYseOPPiO",
+      "",
+      "",
+      ""
+    ],
+    [
+      "DAY 15",
+      "BỔ TRỢ CỰC TRỊ VD VDC 02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/dEnzbtsr31E%26sa%3DD%26source%3Deditors%26ust%3D1754025623384319%26usg%3DAOvVaw1ECEfIPqnf7Fsv_UPc3xte&sa=D&source=editors&ust=1785774553177755&usg=AOvVaw1iAzpAhDIR_n_-QwJ6VxQE",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1goyq59a4sgGPlCQBP90Aod35KQXp2eoA/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384368%26usg%3DAOvVaw3n-fP1S8Ey6XEoxEz6fwR1&sa=D&source=editors&ust=1785774553177925&usg=AOvVaw09BmWfqBI2wZk6eo31zSSn",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1dMYCz3P9lGWHk0ozLOHSjp2WK9r8Rb8O/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384408%26usg%3DAOvVaw3ccCWGDoU9OBMl86lQfSyq&sa=D&source=editors&ust=1785774553178093&usg=AOvVaw3uCsTVIEX7oxic5oRcl8mP",
+      "",
+      ""
+    ],
+    [
+      "DAY 16",
+      "BỔ TRỢ CỰC TRỊ VD VDC 03",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/RzVIprcZBMI%26sa%3DD%26source%3Deditors%26ust%3D1754025623384650%26usg%3DAOvVaw0fXXhM7dmCMyOtRqaDH1jU&sa=D&source=editors&ust=1785774553178795&usg=AOvVaw2i_E3u9HfopCxbXk27dBjK",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1RfYxJj_KpVGF3FO0p_aenTBGgIsXWk1b/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384686%26usg%3DAOvVaw1zK5B4ZynSuJc40SFC5aZX&sa=D&source=editors&ust=1785774553179011&usg=AOvVaw3r6kVcqDlMuyJCORfjpOaM",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1oQFrUGu1KtsTD1K6STYYI1zpozQz82oi/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384720%26usg%3DAOvVaw3txzWeo7PuL8vstSpKPwgj&sa=D&source=editors&ust=1785774553179170&usg=AOvVaw26SQUEFYtKBeVB6Lt_6sRC",
+      "",
+      ""
+    ],
+    [
+      "DAY 17",
+      "BỔ TRỢ CỰC TRỊ VD VDC 04",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/xQTv5xCIJAY%26sa%3DD%26source%3Deditors%26ust%3D1754025623384915%26usg%3DAOvVaw22An9nv7pD2_ntx5acL-Xt&sa=D&source=editors&ust=1785774553179735&usg=AOvVaw3X0IU6eKDGYPky50Z_xAdR",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1AStM2nXEPBvwJabNEFPv4KZUkyfkgr6Z/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384947%26usg%3DAOvVaw3q2H3t7GcNO5kzYz_ZZIpw&sa=D&source=editors&ust=1785774553179874&usg=AOvVaw18wFub1hm5LeMZI9UMTBRy",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1bOGb9f2lgQkbyeVwksgnA9rZwwXDTZG1/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623384980%26usg%3DAOvVaw1Ho5cOgia-tCFn5Dm453q_&sa=D&source=editors&ust=1785774553180000&usg=AOvVaw0GhpgkCqVCmiNdK5QJrQfN",
+      "",
+      ""
+    ],
+    [
+      "DAY 18",
+      "BỔ TRỢ ĐƠN ĐIỆU VD VDC 01",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/dcMn6v9JV1k%26sa%3DD%26source%3Deditors%26ust%3D1754025623385143%26usg%3DAOvVaw3VJ8ZRYZA752lGrtLskQT3&sa=D&source=editors&ust=1785774553180577&usg=AOvVaw3nQUzBd63nQtOSe4GYTG-_",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1DZgv6OggkxyF8M7M9WhFTUHTakaaxMSF/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623385178%26usg%3DAOvVaw2Gu9rB0iPx9NKWRpspS4SP&sa=D&source=editors&ust=1785774553180746&usg=AOvVaw1UgClWGbhjBMc84ypL8x1i",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1rVYEb5dQBq-lmJ4VPD-zM41EutL8564b/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623385212%26usg%3DAOvVaw2VbVG6LOtQryH3qTGN9KtN&sa=D&source=editors&ust=1785774553180909&usg=AOvVaw10emX97FH_PQHKPAsrLXcP",
+      "",
+      ""
+    ],
+    [
+      "DAY 19",
+      "BỔ TRỢ ĐƠN ĐIỆU VD VDC 02",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://youtu.be/Sp75nv2JAv4%26sa%3DD%26source%3Deditors%26ust%3D1754025623385448%26usg%3DAOvVaw1a1kumVZegi8rx9E9rUPZ2&sa=D&source=editors&ust=1785774553181570&usg=AOvVaw2_-ncPbKYr04VZQpKXo7r3",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1Duv4wVjU_KUX8PtcXdOgkXDbLvpim_Gs/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623385485%26usg%3DAOvVaw20Nhr86RS0zoRb1T-huyuA&sa=D&source=editors&ust=1785774553181740&usg=AOvVaw1Gp32BhxR2k4mm2amzD_bS",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1frhowb57MMXbVzdpAUtg5sTS6R8PLvfg/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623385521%26usg%3DAOvVaw34hdY5LBgKYO_oaMDyeBs8&sa=D&source=editors&ust=1785774553181902&usg=AOvVaw3iiyPzjHUKS6PpffiUlYvC",
+      "",
+      ""
+    ],
+    [
+      "DAY 20",
+      "BỔ TRỢ ĐƠN ĐIỆU VD VDC 03",
+      "",
+      "https://www.google.com/url?q=https://www.google.com/url?q%3Dhttps://drive.google.com/file/d/1ZzBwEUfHKnl9G98bL3REhHTtaOi5Fw7C/view?usp%253Dsharing%26sa%3DD%26source%3Deditors%26ust%3D1754025623385800%26usg%3DAOvVaw0vnuZd34QrDEQBliZMeyil&sa=D&source=editors&ust=1785774553182599&usg=AOvVaw3AfBo8-HSxy4S58wR34so8",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      ""
+    ]
+  ]
+}

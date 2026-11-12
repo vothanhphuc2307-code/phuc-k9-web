@@ -1,0 +1,5215 @@
+{
+  "sheetId": "1aAPedwD1EY9rh1RSs3HJQjOKZSeXxITc6aDlSy3Z76Y",
+  "tabTitle": "GIAI ĐOẠN 1",
+  "vals": [
+    [
+      "GIAI ĐOẠN 1: HỌC LÝ THUYẾT CÁC CHUYÊN ĐỀ TRỌNG TÂM"
+    ],
+    [
+      "STT",
+      "BÀI HỌC",
+      "VIEW",
+      "NOTE"
+    ],
+    [
+      "",
+      "ĐỀ THI KHẢO SÁT CHẤT LƯỢNG HÀNG THÁNG",
+      "VIEW",
+      "UPDATE 3/8"
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 5",
+      "VIEW"
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 6",
+      "VIEW"
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 7",
+      "VIEW"
+    ],
+    [
+      "",
+      "PHẦN 1. TOÁN HỌC - XỬ LÝ SỐ LIỆU",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.1 BỔ TRỢ KIẾN THỨC 10-11",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 1 - QUY TẮC ĐẾM",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 2 - HOÁN VỊ - CHỈNH HỢP - TỔ HỢP",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 3 - GIẢI PT CHỨA CPA VÀ ỨNG DỤNG NHỊ THỨC NEWTON VÀO TÍNH TỔNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 4 - TÌM HỆ SỐ CHỨA X TRONG KHAI TRIỂN",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 5 - MỆNH ĐỀ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 6 - TẬP HỢP",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 7 - TRUNG BÌNH - TRUNG VỊ - TỨ PHÂN VỤ - MỐT",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 8 - TRUNG BÌNH - TRUNG VỊ - TỨ PHÂN VỊ - MỐT CỦA BẢNG SỐ LIỆU GHÉP NHÓM",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 9 - ĐƯỜNG TRÒN",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 10 - PHƯƠNG TRÌNH LƯỢNG GIÁC CƠ BẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 11 - TẬP XÁC ĐỊNH - TÍNH CHẴN LẺ - CHU KÌ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 12 - MIN - MAX VÀ ĐỒ THỊ HÀM SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 13 - PHƯƠNG TRÌNH LƯỢNG GIÁC THƯỜNG GẶP",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 14 - CẤP SỐ CỘNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 15 - CẤP SỐ NHÂN",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 16 - ỨNG DỤNG CẤP SỐ CỘNG - CẤP SỐ NHÂN VÀO THỰC TẾ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 17 - GIỚI HẠN DÃY SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 18 - GIỚI HẠN HÀM SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 19 - TÍNH LIÊN TỤC CỦA HÀM SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 20 - HÀM SỐ MŨ - LOGARIT",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 21 - PHƯƠNG TRÌNH MŨ - LOGARIT",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 22 - PHƯƠNG TRÌNH MŨ - LOGARIT CHỨA THAM SỐ M",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 23 - THỰC TẾ LIÊN MÔN ỨNG DỤNG MŨ - LOGARIT",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 24 - PHƯƠNG TRÌNH ĐƯỜNG THẲNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 25 - GÓC - KHOẢNG CÁCH",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 26 - TỔNG ÔN ĐẠI SỐ TỔ HỢP",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 27 - TỔNG ÔN THỐNG KÊ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 28 - TỔNG ÔN LƯỢNG GIÁC",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 29 - TỔNG ÔN DÃY SỐ CẤP SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 30 - TỔNG ÔN GIỚI HẠN",
+      "VIEW"
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 31 - TỔNG ÔN MŨ LOGARIT",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.2 ĐẠI SỐ - SỐ HỌC - GIẢI TÍCH 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. TOÁN ĐẠI (THẦY CƯỜNG).LT - GIÁ TRỊ LƯỢNG GIÁC, CÔNG THỨC LƯỢNG GIÁC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HÀM SỐ LƯỢNG GIÁC, PHƯƠNG TRÌNH LƯỢNG GIÁC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - DÃY SỐ - CẤP SỐ CỘNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - CẤP SỐ NHÂN",
+      "VIEW"
+    ],
+    [
+      "",
+      "Thầy sắp xếp B04 đến bài tiếp là B10 luôn, không có B5-B9, theo dõi info check đầu sheet"
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HÀM SỐ LIÊN TỤC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - THỐNG KÊ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9 TOÁN ĐẠI (THẦY CƯỜNG).LT - ÔN TẬP HỌC KỲ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - BIẾN CỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - CÔNG THỨC TÍNH XÁC SUẤT",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - LŨY THỪA - LOGARIT",
+      "VIEW"
+    ],
+    [
+      "",
+      "B16.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HÀM SỐ - PHƯƠNG TRÌNH - BẤT PHƯƠNG TRÌNH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B17.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HAI ĐƯỜNG THẲNG VUÔNG GÓC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B18.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - ĐƯỜNG THẲNG VUÔNG GÓC VỚI MẶT PHẲNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B19. NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - PHÉP CHIẾU VUÔNG GÓC, GÓC GIỮA ĐƯỜNG VÀ MẶT",
+      "VIEW"
+    ],
+    [
+      "",
+      "B20.NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - HAI MẶT PHẲNG VUÔNG GÓC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B21.NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - KHOẢNG CÁCH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B22.NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - THỂ TÍCH KHỐI ĐA DIỆN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B23.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - ĐỊNH NGHĨA VÀ Ý NGHĨA CỦA ĐẠO HÀM",
+      "VIEW"
+    ],
+    [
+      "",
+      "B24.NT01.HSA.2K9. TOÁN ĐẠI (THẦY CƯỜNG).LT - CÁC QUY TẮC TÍNH ĐẠO HÀM. ĐẠO HÀM CẤP 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "B25.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - ÔN TẬP HỌC KỲ II",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.3 BỔ TRỢ KỸ NĂNG CASIO",
+      "VIEW",
+      "UPDATE 17/6"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 5",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 6",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 7",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 8",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 9",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 10",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 12",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 13",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 14",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 15",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 16",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 17",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 18",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 19",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 20",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 21",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 22",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 23",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 24",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 25",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 26",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 27",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 28",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 29",
+      "VIEW"
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 30",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 5",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 6",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 7",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 8",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 9",
+      "VIEW"
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 10",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.4 TOÁN ĐẠI LỚP 12_HỌC ZOOM",
+      "VIEW",
+      "UPDATE 18/8"
+    ],
+    [
+      "",
+      "B00. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - BỔ TRỢ ĐẠO HÀM VÀ KHẢO SÁT HÀM SỐ CƠ BẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01.HSA. 2K9.Toán đại 12 (Thầy Thắng). LT - TÍNH ĐƠN ĐIỆU CỦA HÀM SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍNH ĐƠN ĐIỆU CỦA HÀM SỐ (TT)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍNH ĐƠN ĐIỆU CỦA HÀM SỐ (TIẾP 2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - CỰC TRỊ HÀM SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - CỰC TRỊ HÀM SỐ (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - CỰC TRỊ HÀM SỐ (TIẾP 2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - GTLN-GTNN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - GTLN-GTNN (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TƯƠNG GIAO ĐỒ THỊ HÀM SỐ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TƯƠNG GIAO ĐỒ THỊ HÀM SỐ (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TIỆM CẬN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TIỆM CẬN (TT)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG HÀM SỐ VÀO BÀI TOÁN THỰC TẾ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - NGUYÊN HÀM HÀM SỐ CƠ BẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍCH PHÂN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B16. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍCH PHÂN HÀM CHO BỞI NHIỀU CÔNG THỨC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B17. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TÍNH DIỆN TÍCH HÌNH PHẲNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B18. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TÍNH THỂ TÍCH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B19. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TRONG BÀI TOÁN CHUYỂN ĐỘNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B20. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TRONG CÁC BÀI TOÁN THỰC TẾ",
+      "VIEW",
+      "CHƯA CÓ BÀI GIẢNG"
+    ],
+    [
+      "",
+      "1.5 TOÁN HÌNH LỚP 12_HỌC ZOOM",
+      "VIEW",
+      "UPDATE 14/8"
+    ],
+    [
+      "",
+      "BUỔI 1. HSA. TOÁN HÌNH (CÔ TRINH) - LT - VÉC TƠ VÀ CÁC PHÉP TOÁN",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 2. HSA. TOÁN HÌNH (CÔ TRINH) - LT - VÉC TƠ VÀ CÁC PHÉP TOÁN TRONG KHÔNG GIAN PHẦN 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 3. HSA. TOÁN HÌNH (CÔ TRINH) - LT - HỆ TRỤC TỌA ĐỘ OXYZ",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 4. HSA. TOÁN HÌNH (CÔ TRINH) - LT - TỌA ĐỘ CỦA CÁC PHÉP TOÁN VÉC TƠ PHẦN I",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 5. HSA. TOÁN HÌNH (CÔ TRINH) - LT - TỌA ĐỘ CỦA CÁC PHÉP TOÁN VÉC TƠ TRONG KHÔNG GIAN PHẦN II",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 6. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT PHẲNG PHẦN 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 7. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT PHẲNG PHẦN 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 8. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH ĐƯỜNG THẲNG (P1)",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 9. HSA.TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH ĐƯỜNG THẲNG (P2)",
+      "VIEW",
+      "2 buổi"
+    ],
+    [
+      "",
+      "BUỔI 10. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH ĐƯỜNG THẲNG (P3)",
+      "VIEW",
+      "4 buổi"
+    ],
+    [
+      "",
+      "BUỔI 11. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT CẦU PHẦN 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 12. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT CẦU PHẦN 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 13. HSA. TOÁN HÌNH (CÔ TRINH) - LT - CÁC BÀI TOÁN CÓ YẾU TỐ THỰC TẾ LIÊN QUAN ĐẾN ĐT, MP, MC",
+      "VIEW",
+      "2 buổi"
+    ],
+    [
+      "",
+      "BUỔI 14. HSA TOÁN HÌNH (CÔ TRINH) - LT - CỰC TRỊ OXYZ",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 15. HSA. TOÁN HÌNH (CÔ TRINH) - LT - CỰC TRỊ OXYZ P2",
+      "VIEW",
+      "2 buổi"
+    ],
+    [
+      "",
+      "PHẦN 2. NGỮ VĂN - TƯ DUY ĐỊNH TÍNH",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.1 KIẾN THỨC VĂN HỌC - NGÔN NGỮ 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. VĂN HỌC (THẦY LINH).LT - ĐỀ THI MINH HOẠ HSA 2025",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 1. THƠ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K8. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 1. THƠ (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). LĐ - LUYỆN ĐỀ 01",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 2. TRUYỆN VÀ TIỂU THUYẾT",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 2. TRUYỆN VÀ TIỂU THUYẾT (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 2. TRUYỆN VÀ TIỂU THUYẾT (p3)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). LĐ - THI THỬ 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 3. KÝ VÀ TRUYỆN KÝ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 3. KÝ VÀ TRUYỆN KÝ (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 4. SÂN KHẤU DÂN GIAN VÀ KỊCH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 4. SÂN KHẤU DÂN GIAN VÀ KỊCH (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). LĐ - THI THỬ 02",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHỮA THI THỬ + CHUYÊN ĐỀ 5. VĂN BẢN THÔNG TIN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 5. VĂN BẢN THÔNG TIN (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B16.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 5. VĂN BẢN THÔNG TIN (LUYỆN TẬP ĐỌC HIỂU)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B17.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 6. VĂN BẢN NGHỊ LUẬN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B18.NT01.HSA.2K9.VĂN HỌC (THẦY LINH).LĐ - THI THỬ 03",
+      "VIEW"
+    ],
+    [
+      "",
+      "B19.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 6. VĂN BẢN NGHỊ LUẬN (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B20.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 6. VĂN BẢN NGHỊ LUẬN (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B21.NT01.HSA.2K9.VĂN HỌC (THẦY LINH).LUYỆN TẬP VĂN BẢN NGHỊ LUẬN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B22.NT01.HSA.2K9.VĂN HỌC (THẦY LINH). LT. THI THỬ ĐỊNH KÌ CÁC CHUYÊN ĐỀ P1",
+      "VIEW"
+    ],
+    [
+      "",
+      "B23.NT01.HSA.2K9.VĂN HỌC (THẦY LINH). LT.THI THỬ CHUYÊN ĐỀ P2",
+      "VIEW"
+    ],
+    [
+      "",
+      "B24.NT01.HSA.2K9.VĂN HỌC (THẦY LINH). HỌC PHẦN TIẾNG VIỆT (BPTT)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B25.NT01. HSA.2K9.VĂN HỌC (THẦY LINH). ĐỀ LUYỆN THÁNG 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.2 LÝ THUYẾT TƯ DUY ĐỊNH TÍNH_HỌC ZOOM",
+      "VIEW",
+      "UPDATE 11/8"
+    ],
+    [
+      "",
+      "B1-HSA.2K9. Tư duy định tính (Thầy Linh) LT - Chữa đề minh họa, đề thi thử 2025",
+      "VIEW"
+    ],
+    [
+      "",
+      "B2-6.HSA.2K9. Tư duy định tính (Thầy Linh) Chuyên đề Thơ",
+      "VIEW",
+      "5 BUỔI"
+    ],
+    [
+      "",
+      "B7-9.HSA.2K9. Tư duy định tính (Thầy Linh) Chuyên đề Truyện",
+      "VIEW",
+      "3 BUỔI"
+    ],
+    [
+      "",
+      "B10-HSA.2K9. Tư duy định tính (Thầy Linh) Đề kiểm tra định kì",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11-12.HSA.2K9. Tư duy định tính (Thầy Linh) Chuyên đề Kí",
+      "VIEW",
+      "2 BUỔI"
+    ],
+    [
+      "",
+      "B13.HSA.2K9. Tư duy định tính (Thầy Linh) Luyện tập từ vựng",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14-16.HSA.2K9. Tư duy định tính (Thầy Linh) Văn bản thông tin",
+      "VIEW",
+      "3 BUỔI"
+    ],
+    [
+      "",
+      "B17-18.HSA.2K9. Tư duy định tính (Thầy Linh). Văn bản nghị luận",
+      "VIEW"
+    ],
+    [
+      "",
+      "PHẦN 3. TIẾNG ANH",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.1 BỔ TRỢ TIẾNG ANH LỚP 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - ĐỀ THI MINH HOẠ HSA + TỪ VỰNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG +THÌ ĐỘNG TỪ (P1)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 1 + THÌ ĐỘNG TỪ (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 1 + THÌ ĐỘNG TỪ (P3)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 1 + THÌ ĐỘNG TỪ (P4)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + CÂU TƯỜNG THUẬT",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + CÂU TƯỜNG THUẬT (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + CÂU TƯỜNG THUẬT (P3)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + DANH ĐỘNG TỪ/ĐỘNG TỪ NGUYÊN MẪU",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + DANH ĐỘNG TỪ/ĐỘNG TỪ NGUYÊN MẪU (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 +CÂU ĐIỀU KIỆN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 + CÂU ĐIỀU KIỆN (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 + CÂU GIẢ ĐỊNH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 - THỂ BỊ ĐỘNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 - THỂ SAI KHIẾN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B16 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - MỆNH ĐỀ QUAN HỆ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B17 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - MỆNH ĐỀ QUAN HỆ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B18 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - MỆNH ĐỀ QUAN HỆ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B19 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - UNIT4 + Mệnh đề trang ngữ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B20 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U4 + MỆNH ĐỀ TRẠNG NGỮ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B21 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + MỆNH ĐỀ TRẠNG NGỮ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B22 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + MỆNH ĐỀ TRẠNG NGỮ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B23 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + MỆNH ĐỀ TRẠNG NGỮ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B24 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + Trật tự từ và Cấu tạo từ",
+      "VIEW"
+    ],
+    [
+      "",
+      "1.2 TIẾNG ANH LỚP 12_HỌC ZOOM",
+      "VIEW",
+      "UPDATE 14/8"
+    ],
+    [
+      "",
+      "HSA.2K9. Tiếng Anh (Thầy Đức) LT - Chữa đề minh họa, đề thi thử 2025",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 2 - SEQUENCE OF TENSES",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 3 - SEQUENCE OF TENSES (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 4 - Chữa Homework Buổi 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 5 - Chữa homework Buổi 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 6 - Chữa homework Buổi 5",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 7 - Chữa homework Buổi 6",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 8 - Chữa homework Buổi 7 - CÂU BỊ ĐỘNG (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 9 - Chữa homework Buổi 8 - CÂU ĐIỀU KIỆN",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 10 - Chữa homework Buổi 9 - MỆNH ĐỀ QUAN HỆ",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 11 - MỆNH ĐỀ QUAN HỆ (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 12 - MỆNH ĐỀ QUAN HỆ (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 13: MỆNH ĐỀ TRẠNG NGỮ",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 14 - MỆNH ĐỀ TRẠNG NGỮ (TIẾP )",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 15 - MỆNH ĐỀ TRẠNG NGỮ (TIẾP 2) & CÂU TƯỜNG THUẬT",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 16 - CÂU TƯỜNG THUẬT (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "Buổi 17 - CÂU TƯỜNG THUẬT (TIẾP 2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "BUỔI 18 - ĐẢO NGỮ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B19. 2K9. Tiếng Anh (Thầy Đức) LT - Chữa đề thi thử 01",
+      "VIEW",
+      "CHƯA CÓ TL"
+    ],
+    [
+      "",
+      "PHẦN 4. TỔ HỢP KHOA HỌC",
+      "VIEW"
+    ],
+    [
+      "",
+      "01. VẬT LÝ",
+      "VIEW",
+      "UPDATE 18/8"
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG 1,2 LÝ 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG 1,2 LÝ 11 (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG 3 LÝ 11 (P3)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - LỰC TƯƠNG TÁC GIỮA CÁC ĐIỆN TÍCH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05 - NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ĐIỆN TRƯỜNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06 - NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ÔN TẬP ĐIỆN TRƯỜNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07-NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG ĐIỆN TÍCH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - BUỔI 4. THẾ NĂNG ĐIỆN & BÀI 5. ĐIỆN THẾ (P1)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ĐIỆN THẾ & ĐỀ GIỮA KỲ II",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - TỤ ĐIỆN & ĐỀ GIỮA KỲ II",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - CHƯƠNG 4: CƯỜNG ĐỘ DÒNG ĐIỆN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ĐIỆN TRỞ, ĐỊNH LUẬT OHM",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - NGUỒN ĐIỆN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ÔN TẬP HK2",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ÔN TẬP HK2 (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "2. Chuyên đề vật lý 12",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01 - HSA.2K9.VẬT LÝ 12 (CÔ YẾN) - ĐỀ MINH HỌA 2025",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02 - HSA.2K9.VẬT LÝ 12 (CÔ YẾN) - CHUONG 1 VAT LY NHIET",
+      "VIEW"
+    ],
+    [
+      "",
+      "02. HÓA HỌC",
+      "VIEW",
+      "UPDATE 10/7"
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG).LĐ - TỔNG ÔN KIẾN THỰC HK1",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG).LĐ - KIẾN THỨC NỀN TẢNG HÓA HỌC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG).LĐ - NĂNG LƯỢNG HÓA HỌC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - OXI HÓA KHỬ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - LIÊN KẾT HÓA HỌC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HYDROCARBON NO VÀ KHÔNG NO (P1)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HYDROCARBON NO VÀ KHÔNG NO (P2)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỐC ĐỘ PHẢN ỨNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HẰNG SỐ CÂN BẰNG",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HẰNG SỐ CÂN BẰNG (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỔNG ÔN ALCOHOL PHENOL",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỔNG ÔN ALCOHOL PHENOL (TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - BÀI THỰC TẾ ALCOHOL",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỔNG ÔN ACID, ALDEHYDE, KETONE",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - DẠNG BÀI HỮU CƠ HAY GẶP",
+      "VIEW"
+    ],
+    [
+      "",
+      "03. SINH HỌC",
+      "VIEW",
+      "UPDATE 14/8"
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01-NT01.HSA.2K9.SINH HỌC 11(Thầy Lộc) - Trao đổi nước và khoáng",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Quang hợp",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hô hấp ở thực vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ tiêu hóa động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ hô hấp ở động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ tuần hoàn động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ miễn dịch",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Bài tiết và cân bằng nội môi",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-KHÁI QUÁ CẢM ỨNG VÀ CẢM ỨNG Ở THỰC VẬT",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Cảm ứng ở động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Tập tính ở động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh trưởng và phát triển ở thực vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh trưởng và phát triển ở động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh sản ở thực vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh sản ở động vật",
+      "VIEW"
+    ],
+    [
+      "",
+      "B16-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Thực hành thí nghiệm",
+      "VIEW"
+    ],
+    [
+      "",
+      "04. LỊCH SỬ",
+      "VIEW",
+      "UPDATE 10/7"
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT- CHỦ ĐỀ 1: CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN - BÀI 1: MỘT SỐ VẤN ĐỀ CHUNG VỀ CÁCH MẠNG TƯ SẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT. CHỦ ĐỀ 1: CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN - BÀI 2 CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT-CHỦ ĐỀ 1: CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN - BÀI 3: CÁCH MẠNG TƯ SẢN VÀ SỰ HÌNH THÀNH LIÊN BANG CỘNG HOÀ XÃ HỘI CHỦ NGHĨA XÔ VIẾT LIÊN XÔ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 2. CNXH TỪ 1917 ĐẾN NAY - SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA XÃ HỘI",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 3: QUÁ TRÌNH GIÀNH ĐỘC LẬP CỦA CÁC QUỐC GIA ĐÔNG NAM Á",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 3: QUÁ TRÌNH GIÀNH ĐỘC LẬP CỦA CÁC QUỐC GIA ĐÔNG NAM Á(TIẾP)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 4: CHIẾN TRANH BẢO VỆ TỔ QUỐC VÀ GIẢI PHÓNG DÂN TỘC TRONG LỊCH SỬ VIỆT NAM (TRƯỚC 1945)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 4: CHIẾN TRANH BẢO VỆ TỔ QUỐC VÀ GIẢI PHÓNG DÂN TỘC TRONG LỊCH SỬ VIỆT NAM (TRƯỚC 1945) (tiếp)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 5: MỘT SỐ CUỘC CẢI CÁCH LỚN TRONG LỊCH SỬ VIỆT NAM (trước năm 1858)",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 5: MỘT SỐ CUỘC CẢI CÁCH LỚN TRONG LỊCH SỬ VIỆT NAM (trước năm 1858) (tiếp)",
+      "VIEW"
+    ],
+    [
+      "",
+      "05. ĐỊA LÝ",
+      "VIEW",
+      "UPDATE 10/7"
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "VIEW"
+    ],
+    [
+      "",
+      "B01. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- VỊ TRÍ ĐỊA LÍ, ĐIỀU KIỆN TỰ NHIÊN, DÂN CƯ, XÃ HỘI KHU VỰC ĐÔNG NAM Á",
+      "VIEW"
+    ],
+    [
+      "",
+      "B02. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- KINH TẾ ĐÔNG NAM Á",
+      "VIEW"
+    ],
+    [
+      "",
+      "B03. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- VỊ TRÍ ĐỊA LÍ, ĐIỀU KIỆN TỰ NHIÊN, DÂN CƯ, XÃ HỘI VÀ KINH TẾ CỦA KHU VỰC TÂY NAM Á",
+      "VIEW"
+    ],
+    [
+      "",
+      "B04. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- ĐỊA LÝ TỰ NHIÊN, DÂN CƯ HOA KÌ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B05. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- KINH TẾ HOA KÌ",
+      "VIEW"
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - TỰ NHIÊN, DÂN CƯ LIÊN BANG NGA",
+      "VIEW"
+    ],
+    [
+      "",
+      "B07.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KINH TẾ LIÊN BANG NGA",
+      "VIEW"
+    ],
+    [
+      "",
+      "B08.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - TỰ NHIÊN, DÂN CƯ NHẬT BẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B09.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KINH TẾ NHẬT BẢN",
+      "VIEW"
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - TỰ NHIÊN, DÂN CƯ VÀ XÃ HỘI TRUNG QUỐC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KINH TẾ TRUNG QUỐC",
+      "VIEW"
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - CỘNG HÒA NAM PHI",
+      "VIEW"
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - MỘT SỐ VẤN ĐỀ KT - XH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KHU VỰC MỸ LATINH",
+      "VIEW"
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - LIÊN MINH CHÂU ÂU",
+      "VIEW"
+    ],
+    [
+      "",
+      "HỌP PHỤ HUYNH VÀ KHAI GIẢNG HS",
+      "VIEW"
+    ],
+    [
+      "",
+      "HỌP PHỤ HUYNH (30/3)",
+      "VIEW"
+    ],
+    [
+      "",
+      "KHAI GIẢNG ĐẦU KHOÁ (1/4)",
+      "VIEW"
+    ],
+    [
+      "",
+      "TÀI LIỆU SÁCH TỔNG ÔN LTHUYET TRỌNG TÂM",
+      "VIEW"
+    ],
+    [
+      "",
+      "LIVE BỔ TRỢ TOÁN LẤY GỐC - THẦY HẬU",
+      "VIEW"
+    ],
+    [
+      "",
+      "ĐẠI SỐ",
+      "VIEW",
+      "UPDATE 7/8"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 4: CỰC TRỊ HÀM HỢP KHÔNG CHỨA M",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 4: CỰC TRỊ HÀM HỢP KHÔNG CHƯA THAM SỐ M - CHỮA LẠI CÂU 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 5: CỰC TRỊ HÀM CHƯA THAM SỐ M",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 6: TOÁN THỰC TẾ (P1)",
+      "VIEW",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU"
+    ],
+    [
+      "",
+      "HÌNH HỌC",
+      "VIEW",
+      "UPDATE 7/8"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 5",
+      "VIEW",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU"
+    ],
+    [
+      "",
+      "LIVE BỔ TRỢ CASIO - THẦY ĐẠT",
+      "VIEW",
+      "UPDATE 7/8"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 1",
+      "VIEW"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 2",
+      "VIEW"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 3",
+      "VIEW"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 4",
+      "VIEW"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 5",
+      "VIEW"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 6",
+      "VIEW",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU"
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 7",
+      "VIEW",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU"
+    ],
+    [
+      ""
+    ]
+  ],
+  "links": [
+    [
+      "https://drive.google.com/drive/folders/1cMFKYHUjRb8ppkx3cgBFEtSSd2MVPR-c",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "STT",
+      "BÀI HỌC",
+      "https://drive.google.com/drive/folders/1W2GUnFGm5KxXHnyjxdmWIqmDXnvI-FpN",
+      "NOTE",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "ĐỀ THI KHẢO SÁT CHẤT LƯỢNG HÀNG THÁNG",
+      "https://drive.google.com/drive/folders/1VZqtvdpCCEFTR32ZxQfAMKWb6rUeztLC",
+      "UPDATE 3/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 4",
+      "https://drive.google.com/drive/folders/1ybTPu1pWlxzrbaLHu26AzwVcRJdkd13-",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 5",
+      "https://drive.google.com/drive/folders/11lp9YN5deJlp24T56RIoq3Ko57wHmfCw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 6",
+      "https://drive.google.com/drive/folders/1Tok_qD8AdMe0f_2t_z1ML7fcowNTX9dW",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "ĐỀ THI KSCL THÁNG 7",
+      "https://drive.google.com/drive/folders/1TxP5SXCrOu6riLelaYg2LLZKjn14N_mF",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "PHẦN 1. TOÁN HỌC - XỬ LÝ SỐ LIỆU",
+      "https://drive.google.com/drive/folders/19XsPu64Ai-Yr4zdV8YYFQxGull4NxkIz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.1 BỔ TRỢ KIẾN THỨC 10-11",
+      "https://drive.google.com/drive/folders/1r3ROJqtiIhn_LjUZBTKNoPtfnG2gUTCt",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 1 - QUY TẮC ĐẾM",
+      "https://drive.google.com/drive/folders/19s4IHosY9KYLAtzMZIvw5OPuJnCeSbrA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 2 - HOÁN VỊ - CHỈNH HỢP - TỔ HỢP",
+      "https://drive.google.com/drive/folders/1ZPizArTVNZllexRH6RYA7QdTzTeIqO7v",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 3 - GIẢI PT CHỨA CPA VÀ ỨNG DỤNG NHỊ THỨC NEWTON VÀO TÍNH TỔNG",
+      "https://drive.google.com/drive/folders/1rQCVw6mEhHcdZ6Fz4zw94KzdTr-tBASH",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 4 - TÌM HỆ SỐ CHỨA X TRONG KHAI TRIỂN",
+      "https://drive.google.com/drive/folders/1NAAue_OLAW_HWGjpXWo1KtPr0fcem3fU",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 5 - MỆNH ĐỀ",
+      "https://drive.google.com/drive/folders/15BhnZ847rfryLNhqme3U26bU0uq29hOM",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 6 - TẬP HỢP",
+      "https://drive.google.com/drive/folders/1gbSiBdbKxg-26M5SlUVEaKxZqGuSTU5B",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 7 - TRUNG BÌNH - TRUNG VỊ - TỨ PHÂN VỤ - MỐT",
+      "https://drive.google.com/drive/folders/1ySg2wGpqbaxZyl-9CuJJL-26YQS5jzeu",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 8 - TRUNG BÌNH - TRUNG VỊ - TỨ PHÂN VỊ - MỐT CỦA BẢNG SỐ LIỆU GHÉP NHÓM",
+      "https://drive.google.com/drive/folders/1uAICy990to-_-Ni6L8vQfORlFgnBSdzU",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 9 - ĐƯỜNG TRÒN",
+      "https://drive.google.com/drive/folders/1XpWWRo9uApDm836pG5lXd8UJNP3H3Wcf",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 10 - PHƯƠNG TRÌNH LƯỢNG GIÁC CƠ BẢN",
+      "https://drive.google.com/drive/folders/1QsUZ-TQaTtZzItt61_4CTXZ0Q2iMTCx1",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 11 - TẬP XÁC ĐỊNH - TÍNH CHẴN LẺ - CHU KÌ",
+      "https://drive.google.com/drive/folders/1ApjhWOai-9co0_RrhzxybbHXpzzdBwJy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 12 - MIN - MAX VÀ ĐỒ THỊ HÀM SỐ",
+      "https://drive.google.com/drive/folders/1AdY6_V2DBH2QRXDcfX0T1Modlqm9rYhV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 13 - PHƯƠNG TRÌNH LƯỢNG GIÁC THƯỜNG GẶP",
+      "https://drive.google.com/drive/folders/1tjXYfPcW2GUvXkyRQpRpQBMtc456sIvR",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 14 - CẤP SỐ CỘNG",
+      "https://drive.google.com/drive/folders/1juFwO9HX8l5ca9GpHVWDa6gmB-Pn7m5Z",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 15 - CẤP SỐ NHÂN",
+      "https://drive.google.com/drive/folders/1ZgZ_IINzCB3c_xN-AYh42FVA8gZ38Hlb",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 16 - ỨNG DỤNG CẤP SỐ CỘNG - CẤP SỐ NHÂN VÀO THỰC TẾ",
+      "https://drive.google.com/drive/folders/15x_j4mPPben75y-_6NpwmbT9Bw4lAl0c",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 17 - GIỚI HẠN DÃY SỐ",
+      "https://drive.google.com/drive/folders/19P4_Z_GvO-EVbKHinX-n9RnEjqt2ul6P",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 18 - GIỚI HẠN HÀM SỐ",
+      "https://drive.google.com/drive/folders/1W9uVOx0yfmvPFblSb06l8hQdjP_4ayv_",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 19 - TÍNH LIÊN TỤC CỦA HÀM SỐ",
+      "https://drive.google.com/drive/folders/1NuYY31txdefUZnoUp3qWzEZI7XTC9iRZ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 20 - HÀM SỐ MŨ - LOGARIT",
+      "https://drive.google.com/drive/folders/18p47kNMGGv1JyOQuD2IRxNwKrAzcLyDx",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 21 - PHƯƠNG TRÌNH MŨ - LOGARIT",
+      "https://drive.google.com/drive/folders/1u0czd8i3KPDjrjdR6xRVu1lXpyxS0Spo",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 22 - PHƯƠNG TRÌNH MŨ - LOGARIT CHỨA THAM SỐ M",
+      "https://drive.google.com/drive/folders/1b1kJwuSTZ0x9j3FH9vajSRQg03hnL7_T",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 23 - THỰC TẾ LIÊN MÔN ỨNG DỤNG MŨ - LOGARIT",
+      "https://drive.google.com/drive/folders/1B8I0gCOJBchzdwTeg7-CBYDcy2kB3ghY",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 24 - PHƯƠNG TRÌNH ĐƯỜNG THẲNG",
+      "https://drive.google.com/drive/folders/1FAVo5gqnrkNCMAjo5jUw8WqO4feMeGnd",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 25 - GÓC - KHOẢNG CÁCH",
+      "https://drive.google.com/drive/folders/1W05H1H2gCjNGM3XYtzTXRrrIGwtji6Hp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 26 - TỔNG ÔN ĐẠI SỐ TỔ HỢP",
+      "https://drive.google.com/drive/folders/1Vtzp64_4sUZw74JM0Sj1dugwqt_MBhiv",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 27 - TỔNG ÔN THỐNG KÊ",
+      "https://drive.google.com/drive/folders/1yzDQqjPWICmWKeCempxykc9KUdYfeXpm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 28 - TỔNG ÔN LƯỢNG GIÁC",
+      "https://drive.google.com/drive/folders/1zfOHuHEHWr-JG0_kEAh5Jimae5C8i_gY",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 29 - TỔNG ÔN DÃY SỐ CẤP SỐ",
+      "https://drive.google.com/drive/folders/1LObCW5BsOU4UExu0UBIvfcvoHU9XWGiW",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 30 - TỔNG ÔN GIỚI HẠN",
+      "https://drive.google.com/drive/folders/1tzy6_ICY8BdeTR-qAX2NQtflc7e_-79t",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CHUYÊN ĐỀ 31 - TỔNG ÔN MŨ LOGARIT",
+      "https://drive.google.com/drive/folders/1fZU5GXit8l8BhRIqWxzyh-C8lkciY-j_",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.2 ĐẠI SỐ - SỐ HỌC - GIẢI TÍCH 11",
+      "https://drive.google.com/drive/folders/1urYpXh9NAoKC5DQ3DGOm6ildjDWyYgOs",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. TOÁN ĐẠI (THẦY CƯỜNG).LT - GIÁ TRỊ LƯỢNG GIÁC, CÔNG THỨC LƯỢNG GIÁC",
+      "https://drive.google.com/drive/folders/1BdgpyAyORxpXQnZoiyEkSo313Bzt9rGF",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HÀM SỐ LƯỢNG GIÁC, PHƯƠNG TRÌNH LƯỢNG GIÁC",
+      "https://drive.google.com/drive/folders/1RlHJC-LGZ5dHg51x9Xgk9OHQGzdcdbA1",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - DÃY SỐ - CẤP SỐ CỘNG",
+      "https://drive.google.com/drive/folders/1IZRbtJELbMYLBRg7W7jEL-3Lh5Pf-zm1",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - CẤP SỐ NHÂN",
+      "https://drive.google.com/drive/folders/1A13AwUH9ekgCxSV1q9Aa8VrBFKrHCmIG",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Thầy sắp xếp B04 đến bài tiếp là B10 luôn, không có B5-B9, theo dõi info check đầu sheet",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HÀM SỐ LIÊN TỤC",
+      "https://drive.google.com/drive/folders/14vBVdRgm40zKO-wF1xIPTWuw1sX-wqIA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - THỐNG KÊ",
+      "https://drive.google.com/drive/folders/1ACEfdS_TmtNKsL-PRmWNI0Gj7CLEMaRb",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9 TOÁN ĐẠI (THẦY CƯỜNG).LT - ÔN TẬP HỌC KỲ",
+      "https://drive.google.com/drive/folders/1JCKnRvYkn7wp7BudE-agpGm4Br5sazLC",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - BIẾN CỐ",
+      "https://drive.google.com/drive/folders/1tDtJnmcIQdyaVD-OEsDSyz72YsxCebu5",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - CÔNG THỨC TÍNH XÁC SUẤT",
+      "https://drive.google.com/drive/folders/1F59oXw-DQDcXaMsFnzdMkIKaG9EyNNba",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - LŨY THỪA - LOGARIT",
+      "https://drive.google.com/drive/folders/1ZJLihZ-zXhn8Hty4UUxv82Olt6mpuISR",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B16.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HÀM SỐ - PHƯƠNG TRÌNH - BẤT PHƯƠNG TRÌNH",
+      "https://drive.google.com/drive/folders/13aJpLcsG9YsWBoIQYdshpLOGyTwR9d3w",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B17.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - HAI ĐƯỜNG THẲNG VUÔNG GÓC",
+      "https://drive.google.com/drive/folders/1J0oMf9mwTwX4GnLMXoActIpWifCWNiNX",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B18.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - ĐƯỜNG THẲNG VUÔNG GÓC VỚI MẶT PHẲNG",
+      "https://drive.google.com/drive/folders/1uJdr-qxseeQn3pwVjIFaHBOKprsrLo8w",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B19. NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - PHÉP CHIẾU VUÔNG GÓC, GÓC GIỮA ĐƯỜNG VÀ MẶT",
+      "https://drive.google.com/drive/folders/10N-CWdfCwjj9qI15fd3wpBtV-nKI6c-u",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B20.NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - HAI MẶT PHẲNG VUÔNG GÓC",
+      "https://drive.google.com/drive/folders/1BGU8eIMV6GJvvqCrG0wmwn1JKUy1lje7",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B21.NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - KHOẢNG CÁCH",
+      "https://drive.google.com/drive/folders/1w4ldI_jL9DWBSD_UJSaDdpQlW8znmDG3",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B22.NT01.HSA.2K9.TOÁN HÌNH (THẦY CƯỜNG).LT - THỂ TÍCH KHỐI ĐA DIỆN",
+      "https://drive.google.com/drive/folders/1i6RYgVt_ZN6Yey_I-cjyM4fIBeatEurK",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B23.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - ĐỊNH NGHĨA VÀ Ý NGHĨA CỦA ĐẠO HÀM",
+      "https://drive.google.com/drive/folders/1e3fa9U2w16VVpR-oBv2mQKwO_b6Mkw1l",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B24.NT01.HSA.2K9. TOÁN ĐẠI (THẦY CƯỜNG).LT - CÁC QUY TẮC TÍNH ĐẠO HÀM. ĐẠO HÀM CẤP 2",
+      "https://drive.google.com/drive/folders/10GRvt-N77-HFPYROrywoCRlILdreBKPz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B25.NT01.HSA.2K9.TOÁN ĐẠI (THẦY CƯỜNG).LT - ÔN TẬP HỌC KỲ II",
+      "https://drive.google.com/drive/folders/1vRshrctFmvNtKyLre8SpdNQVL4pp_GN_",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.3 BỔ TRỢ KỸ NĂNG CASIO",
+      "https://drive.google.com/drive/folders/1oxtv8uEZJ7k5G-5bGjmfgDpJeFyMu8bb",
+      "UPDATE 17/6",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 1",
+      "https://drive.google.com/drive/folders/17x8ug0QmkzziTF8yApxoXeDgrTnzjif3",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 2",
+      "https://drive.google.com/drive/folders/1o5Ye45xm1Cr9I8wEoUrIWMTK8JhaK_sw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 3",
+      "https://drive.google.com/drive/folders/1xbtP3swfj8opEi5-9FvL37FJYc0YCHjI",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 4",
+      "https://drive.google.com/drive/folders/1b8BI164c3N5AACg5Lz-c82rMWQM1P5yV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 5",
+      "https://drive.google.com/drive/folders/1KlRfD0IOFa7RAK60HxkyuKyfJLjAmTsC",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 6",
+      "https://drive.google.com/drive/folders/18eqG5C94MZ9XOn2FOEF3DgAMmR8zu0qk",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 7",
+      "https://drive.google.com/drive/folders/1seLNx-WfZ0-A3eiX6-QWTLxj1rVisb67",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 8",
+      "https://drive.google.com/drive/folders/1A_fBXPjmugcxs2kWcBku7XVrYpF1goW4",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 9",
+      "https://drive.google.com/drive/folders/1Q6B9-eEGeQL87mKb3hKgXSDj1IjtFt4D",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 10",
+      "https://drive.google.com/drive/folders/1IMNofmgEB-0Krqa-k7nZ2mMFi2_4rc4O",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 11",
+      "https://drive.google.com/drive/folders/1hZv_UMPFjtM4MVkICixWTpulB2I3G1BB",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 12",
+      "https://drive.google.com/drive/folders/1yqHM6wr6MEBVUCCthFDu5zjQznsSNpNe",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 13",
+      "https://drive.google.com/drive/folders/1em2aVD3CNjeP_MHGjpfhLJQK7XuqCOrP",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 14",
+      "https://drive.google.com/drive/folders/1UbjrBUYUQwTlob-zdHG3lAVsxJT95lVo",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 15",
+      "https://drive.google.com/drive/folders/18OkGOB_lzLVcsotM-oQ_IPGLllYs0jDA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 16",
+      "https://drive.google.com/drive/folders/1K2UeZOSOFATUkkuO_y0qSNQIczoT_4vi",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 17",
+      "https://drive.google.com/drive/folders/1QiHG-ppvL21FRrPv0a5DAAoCvFVVDEO_",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 18",
+      "https://drive.google.com/drive/folders/1AVUEV8FiBrFlWfI8KwuQSL5mdnk2Vvwc",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 19",
+      "https://drive.google.com/drive/folders/1jwZwCcKohGecKD5dr4SQCU7IiRPff3io",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 20",
+      "https://drive.google.com/drive/folders/1wz9HvY0bkS-IgZI42S01PRURD8WULXNq",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 21",
+      "https://drive.google.com/drive/folders/1AxecPnpP1aJnEanNQIGDxxuS8OZrdrsg",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 22",
+      "https://drive.google.com/drive/folders/1Pkj5EMA5LFt6ReWIbKOSLwZ-T4IJVnbw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 23",
+      "https://drive.google.com/drive/folders/1SdNGTlX8Gef0gTEGiqOvH-pYLI9ToCik",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 24",
+      "https://drive.google.com/drive/folders/15BNUwRamp9ZsqkN3LZTob274_WcIo8nj",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 25",
+      "https://drive.google.com/drive/folders/1HP51vNYWJSaGuej_ZH65ixu8mF0e2ulz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 26",
+      "https://drive.google.com/drive/folders/169p_1uc_wtM_XxhjOaEy3I6Z2dHdLkgo",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 27",
+      "https://drive.google.com/drive/folders/1sCkypOhi9u1xyhz1-SI3gHUBTU3d5QGA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 28",
+      "https://drive.google.com/drive/folders/1axxB_b4IojBdI4a9MC_phK4-S8SX8P9b",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 29",
+      "https://drive.google.com/drive/folders/1Ffv3372BE9s41dbO7Z3ohokDHLlk08kE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA LT - Casio - Buổi 30",
+      "https://drive.google.com/drive/folders/1fDAIPgebS-0wR8Z3kYKAGR--BJJ1khJY",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 1",
+      "https://drive.google.com/drive/folders/1IQojP2QCT4eilnxPmJC4GTqxX_c6uELP",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 2",
+      "https://drive.google.com/drive/folders/1cNBIUQtxXjdJlA-QR2Q6AN4G8hmQIBTp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 3",
+      "https://drive.google.com/drive/folders/15KrMcE3i0NusLHV9tDoKT1unjEh76uEf",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 4",
+      "https://drive.google.com/drive/folders/1MJpNF92j11zyQisPOpNxf9gJxRY8aRS4",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 5",
+      "https://drive.google.com/drive/folders/1Y7vBvhvy988eOlD3rrVO_1CIS3Drh24h",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 6",
+      "https://drive.google.com/drive/folders/13Ym-C3SHS70zA2pVm68aBtF3uF1DJRy8",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 7",
+      "https://drive.google.com/drive/folders/1pq7i-uD-wHH9yjWqYuzJeWRfh5SBp8Sy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 8",
+      "https://drive.google.com/drive/folders/1q-P0Y1O_JbSlglFVtLL0NRnyr4KTs0nz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 9",
+      "https://drive.google.com/drive/folders/1rH-qpl37Hroy7L7JzSvwSmfvabYgt55i",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Bổ trợ kỹ năng Casio - Buổi 10",
+      "https://drive.google.com/drive/folders/1HBf1HjoVJZroslD2dDZ2ki8SnHYsr_qN",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.4 TOÁN ĐẠI LỚP 12_HỌC ZOOM",
+      "https://drive.google.com/drive/folders/1JMakrkWgsMfPe-fsEvKyks--iKiN4w3P",
+      "UPDATE 18/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B00. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - BỔ TRỢ ĐẠO HÀM VÀ KHẢO SÁT HÀM SỐ CƠ BẢN",
+      "https://drive.google.com/drive/folders/1wFeXGvo6y82gR6DuCSlDU7zY9avBiO_3",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01.HSA. 2K9.Toán đại 12 (Thầy Thắng). LT - TÍNH ĐƠN ĐIỆU CỦA HÀM SỐ",
+      "https://drive.google.com/drive/folders/16xh0Fq4qPoYFJpcqVsihgirdND9rvT4g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍNH ĐƠN ĐIỆU CỦA HÀM SỐ (TT)",
+      "https://drive.google.com/drive/folders/1C3v8i5A6A7q9rDnIm5mJ9H2hRFoA7LyH",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍNH ĐƠN ĐIỆU CỦA HÀM SỐ (TIẾP 2)",
+      "https://drive.google.com/drive/folders/13jlTwN-4ZZY2ci2bKw0uprBlwUX5TFQR",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - CỰC TRỊ HÀM SỐ",
+      "https://drive.google.com/drive/folders/1HJKXP9zboc6X9qeQ_c3ixY4nzk9UPZSy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - CỰC TRỊ HÀM SỐ (TIẾP)",
+      "https://drive.google.com/drive/folders/15_4SoqgxTmJgNn3hFUhCMYi3IqQIUn9U",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - CỰC TRỊ HÀM SỐ (TIẾP 2)",
+      "https://drive.google.com/drive/folders/13FXQWeSeT0KG886iO2jOp-r7iIzzHvFz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - GTLN-GTNN",
+      "https://drive.google.com/drive/folders/1RGdCmEfAou75QSaEQNFbUw4VpHW_bdRl",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - GTLN-GTNN (TIẾP)",
+      "https://drive.google.com/drive/folders/1IizPUp7NjyELANabJFYEBAYzxHsUSiBz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TƯƠNG GIAO ĐỒ THỊ HÀM SỐ",
+      "https://drive.google.com/drive/folders/1ySQQMVLahZ_Qdp5bFUmAXkVxdMH1Fhxo",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TƯƠNG GIAO ĐỒ THỊ HÀM SỐ (TIẾP)",
+      "https://drive.google.com/drive/folders/1EvqQxshxNmkkwyIfvgGvbLjDKynnzz6k",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TIỆM CẬN",
+      "https://drive.google.com/drive/folders/1UyHqCiDY-4UsXOn0yzH0WLG2AIxgvTYS",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TIỆM CẬN (TT)",
+      "https://drive.google.com/drive/folders/11N0Ucmp1aV71PUe8nLAAecTDH0-QF3bC",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG HÀM SỐ VÀO BÀI TOÁN THỰC TẾ",
+      "https://drive.google.com/drive/folders/1K_md8bvlAb4Ci2MT4DrX6r2RBqQwQR4Q",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - NGUYÊN HÀM HÀM SỐ CƠ BẢN",
+      "https://drive.google.com/drive/folders/138uZ1egwQryWJGMdenwKyhM4RnIYeSiV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍCH PHÂN",
+      "https://drive.google.com/drive/folders/1a0L5EGu0OgfF7hEQHODXsjVtfmEiFUUn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B16. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - TÍCH PHÂN HÀM CHO BỞI NHIỀU CÔNG THỨC",
+      "https://drive.google.com/drive/folders/1w-OpyJ-ShhSxC9_v_CbYq-BNf0orEJYa",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B17. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TÍNH DIỆN TÍCH HÌNH PHẲNG",
+      "https://drive.google.com/drive/folders/1o19xSG_sYmAV6NhRpixvEvFIPouC4awp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B18. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TÍNH THỂ TÍCH",
+      "https://drive.google.com/drive/folders/1KZeWaBE1PbcAJaLpBRynATN7qRjdlLHr",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B19. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TRONG BÀI TOÁN CHUYỂN ĐỘNG",
+      "https://drive.google.com/drive/folders/1cHBBnc7pxjnNUlgWQgicZ_iRTpaI1dc7",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B20. HSA. 2K9. Toán đại 12 (Thầy Thắng). LT - ỨNG DỤNG TÍCH PHÂN TRONG CÁC BÀI TOÁN THỰC TẾ",
+      "https://drive.google.com/drive/folders/1rnnaajxdVlPaMYYpjDTmqJ2rLYm2Sg5p",
+      "CHƯA CÓ BÀI GIẢNG",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.5 TOÁN HÌNH LỚP 12_HỌC ZOOM",
+      "https://drive.google.com/drive/folders/1j2IhQI7y7qZ1aPqLDPI1JI-dYwgUIaO6",
+      "UPDATE 14/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 1. HSA. TOÁN HÌNH (CÔ TRINH) - LT - VÉC TƠ VÀ CÁC PHÉP TOÁN",
+      "https://drive.google.com/drive/folders/12n9OTQ9IAstiVR-akAeLzk9zX43ylM8c",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 2. HSA. TOÁN HÌNH (CÔ TRINH) - LT - VÉC TƠ VÀ CÁC PHÉP TOÁN TRONG KHÔNG GIAN PHẦN 2",
+      "https://drive.google.com/drive/folders/1-JsRWiDb1eY9EIGWPCT4lUB9LL_JAF7c",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 3. HSA. TOÁN HÌNH (CÔ TRINH) - LT - HỆ TRỤC TỌA ĐỘ OXYZ",
+      "https://drive.google.com/drive/folders/1NVmKS3_aeQ2txlKvZG-eqhLMcS6bkK_c",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 4. HSA. TOÁN HÌNH (CÔ TRINH) - LT - TỌA ĐỘ CỦA CÁC PHÉP TOÁN VÉC TƠ PHẦN I",
+      "https://drive.google.com/drive/folders/17RVFD2allVjXCYfhk6xBUBtnVwAw_jLy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 5. HSA. TOÁN HÌNH (CÔ TRINH) - LT - TỌA ĐỘ CỦA CÁC PHÉP TOÁN VÉC TƠ TRONG KHÔNG GIAN PHẦN II",
+      "https://drive.google.com/drive/folders/11k2x6puYjgcry6xx-qRSdtVqU9jwjN6F",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 6. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT PHẲNG PHẦN 1",
+      "https://drive.google.com/drive/folders/1JXoTRTWxnCDhrjJhl44_GY6Y06RJwBcH",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 7. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT PHẲNG PHẦN 2",
+      "https://drive.google.com/drive/folders/1tpbf9xwM5n3zBo-nZSLB18UBu2XeptCs",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 8. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH ĐƯỜNG THẲNG (P1)",
+      "https://drive.google.com/drive/folders/1-hasSi8sV-TlwwN6RbxDYuJDXxc6QoZe",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 9. HSA.TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH ĐƯỜNG THẲNG (P2)",
+      "https://drive.google.com/drive/folders/1xFNpbgVAYmJGFKDpLZnbeEMu-pllp7lq",
+      "2 buổi",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 10. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH ĐƯỜNG THẲNG (P3)",
+      "https://drive.google.com/drive/folders/1PNFKb8YivLPKu0zu6beABOtb-zqrTgnu",
+      "4 buổi",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 11. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT CẦU PHẦN 1",
+      "https://drive.google.com/drive/folders/13MW8l_LUXcGyVm5Tk_PbmkdM8wOGmtbO",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 12. HSA. TOÁN HÌNH (CÔ TRINH) - LT - PHƯƠNG TRÌNH MẶT CẦU PHẦN 2",
+      "https://drive.google.com/drive/folders/1z_-rTGPpysY_kHgcFZsYYW0vTwWW07Tc",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 13. HSA. TOÁN HÌNH (CÔ TRINH) - LT - CÁC BÀI TOÁN CÓ YẾU TỐ THỰC TẾ LIÊN QUAN ĐẾN ĐT, MP, MC",
+      "https://drive.google.com/drive/folders/1nAFn1NqGuN6ReqKgMUk9Cr4A9GwRNEzL",
+      "2 buổi",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 14. HSA TOÁN HÌNH (CÔ TRINH) - LT - CỰC TRỊ OXYZ",
+      "https://drive.google.com/drive/folders/1UZoncefqjMcsNqVC2Xc9cVuyPADowpvc",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 15. HSA. TOÁN HÌNH (CÔ TRINH) - LT - CỰC TRỊ OXYZ P2",
+      "https://drive.google.com/drive/folders/1x2nATElaPisRwfxY0xXi00YEW4i4Pxti",
+      "2 buổi",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "PHẦN 2. NGỮ VĂN - TƯ DUY ĐỊNH TÍNH",
+      "https://drive.google.com/drive/folders/1WB3_q-wIrFCkiOdUfbyjWg2lzTobYKNR",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.1 KIẾN THỨC VĂN HỌC - NGÔN NGỮ 11",
+      "https://drive.google.com/drive/folders/1ONtOdE1fv5Hzpt6o7x4DzsrrZRzpM5pF",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. VĂN HỌC (THẦY LINH).LT - ĐỀ THI MINH HOẠ HSA 2025",
+      "https://drive.google.com/drive/folders/1VdGRrKwYmMxjusd5Y15c5Tbekb7GRwXK",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 1. THƠ",
+      "https://drive.google.com/drive/folders/1lsL473W_0AXc0i5WIcclr4DVsQIyfbOQ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K8. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 1. THƠ (TIẾP)",
+      "https://drive.google.com/drive/folders/1o5ev8HpsjzmbraC9KhdOiT0smMYRbHep",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). LĐ - LUYỆN ĐỀ 01",
+      "https://drive.google.com/drive/folders/1lkgZHyeO4WhhL7fFA4yVWIb5octO5mUY",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 2. TRUYỆN VÀ TIỂU THUYẾT",
+      "https://drive.google.com/drive/folders/1ow8DGIdMkX-PruH_dAJNYrkBFTUsGpSG",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 2. TRUYỆN VÀ TIỂU THUYẾT (TIẾP)",
+      "https://drive.google.com/drive/folders/1TI0ryh7W1SkGLYHJ9xniiigNPeqNH9Py",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 2. TRUYỆN VÀ TIỂU THUYẾT (p3)",
+      "https://drive.google.com/drive/folders/1SFJSni0cHXYkXsyAXJ663l2y2dajGKZJ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). LĐ - THI THỬ 1",
+      "https://drive.google.com/drive/folders/1hFoO9w-vLWM91yAL3botHHdDBSZDTzDv",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 3. KÝ VÀ TRUYỆN KÝ",
+      "https://drive.google.com/drive/folders/1NY6k3tcUOb3OFN7a1OQ0C1LunEHVBGsi",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 3. KÝ VÀ TRUYỆN KÝ (TIẾP)",
+      "https://drive.google.com/drive/folders/1Nt9e4T9GaBW-2emwIJh1f5qwPNblmYcx",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 4. SÂN KHẤU DÂN GIAN VÀ KỊCH",
+      "https://drive.google.com/drive/folders/1EosRJM0A186DqTX7pE4Mvjb9rrcdtUmQ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 4. SÂN KHẤU DÂN GIAN VÀ KỊCH (P2)",
+      "https://drive.google.com/drive/folders/1xV9ZmSvHRIF8V3a4s_s4kHPwhRc97F5r",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). LĐ - THI THỬ 02",
+      "https://drive.google.com/drive/folders/1JOcT5NJhzTro2JaTrkZqjuvZYKHW5wjp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHỮA THI THỬ + CHUYÊN ĐỀ 5. VĂN BẢN THÔNG TIN",
+      "https://drive.google.com/drive/folders/1XYxqCs3jlvPMNianvfECxXI69EMvn-o_",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 5. VĂN BẢN THÔNG TIN (P2)",
+      "https://drive.google.com/drive/folders/11m2HrXHp41-xujZ1ZOuyXLnFfrL-CKPX",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B16.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 5. VĂN BẢN THÔNG TIN (LUYỆN TẬP ĐỌC HIỂU)",
+      "https://drive.google.com/drive/folders/1YXR_LL_qM18aXx4y5xVQRYajtlIOVpNm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B17.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 6. VĂN BẢN NGHỊ LUẬN",
+      "https://drive.google.com/drive/folders/140D0nG7VAscVj0yVYmlKczcsqaMVZPkm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B18.NT01.HSA.2K9.VĂN HỌC (THẦY LINH).LĐ - THI THỬ 03",
+      "https://drive.google.com/drive/folders/1sMs3v8zoh8G3wvMOVEXnoSe2I0mkwiVV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B19.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 6. VĂN BẢN NGHỊ LUẬN (TIẾP)",
+      "https://drive.google.com/drive/folders/1roiyyjBUHCsXYiEobs7wvi-J4uL8CeKs",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B20.NT01.HSA.2K9. VĂN HỌC (THẦY LINH). CHUYÊN ĐỀ 6. VĂN BẢN NGHỊ LUẬN (TIẾP)",
+      "https://drive.google.com/drive/folders/13b-l9CcUl19p_xLuJ3wDAoXZOl53y42f",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B21.NT01.HSA.2K9.VĂN HỌC (THẦY LINH).LUYỆN TẬP VĂN BẢN NGHỊ LUẬN",
+      "https://drive.google.com/drive/folders/11b7K5tTyZxvFWKx09Thu0-PrWSDCKv9w",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B22.NT01.HSA.2K9.VĂN HỌC (THẦY LINH). LT. THI THỬ ĐỊNH KÌ CÁC CHUYÊN ĐỀ P1",
+      "https://drive.google.com/drive/folders/1hYdjg6SdmEx15qtYniNF7_fBzqJJNLBi",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B23.NT01.HSA.2K9.VĂN HỌC (THẦY LINH). LT.THI THỬ CHUYÊN ĐỀ P2",
+      "https://drive.google.com/drive/folders/1Zvp6zT-BXFhdPOr710q-V-EdukwigoiA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B24.NT01.HSA.2K9.VĂN HỌC (THẦY LINH). HỌC PHẦN TIẾNG VIỆT (BPTT)",
+      "https://drive.google.com/drive/folders/1NxDmfvSzT3H50nA_cYF-el0pLOKd7Dhf",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B25.NT01. HSA.2K9.VĂN HỌC (THẦY LINH). ĐỀ LUYỆN THÁNG 3",
+      "https://drive.google.com/drive/folders/1A5pCFbPTJSjWKZ0znzZ319tgg7Wozv0m",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.2 LÝ THUYẾT TƯ DUY ĐỊNH TÍNH_HỌC ZOOM",
+      "https://drive.google.com/drive/folders/1PpItLHMzpvzz2QHn5UhH4Elbs-RoVfLz",
+      "UPDATE 11/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B1-HSA.2K9. Tư duy định tính (Thầy Linh) LT - Chữa đề minh họa, đề thi thử 2025",
+      "https://drive.google.com/drive/folders/1ZZgZ1l6RFLQjsibGQlHSioThJqvmrQ9f",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B2-6.HSA.2K9. Tư duy định tính (Thầy Linh) Chuyên đề Thơ",
+      "https://drive.google.com/drive/folders/1OUuUIdYM8rhrYai8Utk-6xPYRrikj378",
+      "5 BUỔI",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B7-9.HSA.2K9. Tư duy định tính (Thầy Linh) Chuyên đề Truyện",
+      "https://drive.google.com/drive/folders/1Iy_XIHA6zd251okxNmHkTYBgqAKH8d_D",
+      "3 BUỔI",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10-HSA.2K9. Tư duy định tính (Thầy Linh) Đề kiểm tra định kì",
+      "https://drive.google.com/drive/folders/1c-OW1fw-gNxCwvTsmFVxLPICX_GMUIAp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11-12.HSA.2K9. Tư duy định tính (Thầy Linh) Chuyên đề Kí",
+      "https://drive.google.com/drive/folders/1r0s_zHScRHwRh4lKqi-qjadcuxaMiKsK",
+      "2 BUỔI",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13.HSA.2K9. Tư duy định tính (Thầy Linh) Luyện tập từ vựng",
+      "https://drive.google.com/drive/folders/1J_j3luVHbYGVRVbPgDk4YdLVCMtCp-m8",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14-16.HSA.2K9. Tư duy định tính (Thầy Linh) Văn bản thông tin",
+      "https://drive.google.com/drive/folders/1mt8M_kugDurarHeFAv_jTbWyKf4aeEp1",
+      "3 BUỔI",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B17-18.HSA.2K9. Tư duy định tính (Thầy Linh). Văn bản nghị luận",
+      "https://drive.google.com/drive/folders/1tISKKj6sVozR7ey6yaIgmXbERliPoqhf",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "PHẦN 3. TIẾNG ANH",
+      "https://drive.google.com/drive/folders/1PhrRZOOeYc_ChJ0KR5zU0Abx7xXlgl__",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.1 BỔ TRỢ TIẾNG ANH LỚP 11",
+      "https://drive.google.com/drive/folders/1VkDpdkd2VphWdYIDTERBZ4IFftO8XGZp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - ĐỀ THI MINH HOẠ HSA + TỪ VỰNG",
+      "https://drive.google.com/drive/folders/17HXoPgFmUv_7O5d_OCdAcW5JK9-8ztDj",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG +THÌ ĐỘNG TỪ (P1)",
+      "https://drive.google.com/drive/folders/1AnmoL7w-PYGbbXIvsGLqq0o9_yITR6sD",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 1 + THÌ ĐỘNG TỪ (P2)",
+      "https://drive.google.com/drive/folders/1zcEHjwF5xX9fzYz0G23VKTXnzp9Yryff",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 1 + THÌ ĐỘNG TỪ (P3)",
+      "https://drive.google.com/drive/folders/19vsvWE9e58UABhe6cPR6FplVAyLzvqB7",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 1 + THÌ ĐỘNG TỪ (P4)",
+      "https://drive.google.com/drive/folders/1QjlewgqYpUaGL7D9v4kbxMP-hwcGoY8d",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + CÂU TƯỜNG THUẬT",
+      "https://drive.google.com/drive/folders/1buVRXruReu4SCZb7b3Pe_8IuOHHPuMNA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + CÂU TƯỜNG THUẬT (P2)",
+      "https://drive.google.com/drive/folders/1HJI3RRfi6oa6d7h3-wezVVjKq1PzrUCt",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + CÂU TƯỜNG THUẬT (P3)",
+      "https://drive.google.com/drive/folders/1a6gbUQbhmOCL2X_y0K_sg-rLa2KePMTP",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + DANH ĐỘNG TỪ/ĐỘNG TỪ NGUYÊN MẪU",
+      "https://drive.google.com/drive/folders/1WdJICi-977Bc1ew_vlQPUxwfVIU4SExm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 2 + DANH ĐỘNG TỪ/ĐỘNG TỪ NGUYÊN MẪU (P2)",
+      "https://drive.google.com/drive/folders/1SgyhEQ_oJD4EWECeLsKxgs8aS3s6BPWT",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 +CÂU ĐIỀU KIỆN",
+      "https://drive.google.com/drive/folders/15H64An3zH-tItY-JCK1fuPb0tS_LCQGl",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 + CÂU ĐIỀU KIỆN (P2)",
+      "https://drive.google.com/drive/folders/1b2eI99b6pPdn9U2CeVIUqktWVrydhCVp",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 + CÂU GIẢ ĐỊNH",
+      "https://drive.google.com/drive/folders/1PTwyvC2ZyRf0UykyCEsqDMtPe-c4GmDn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 - THỂ BỊ ĐỘNG",
+      "https://drive.google.com/drive/folders/1u20O9fp1JLJo64tx4en8iz9pv9kVcgHn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15 - NT01.HSA.2K9. TIẾNG ANH (THẦY ĐỨC).LT - TỪ VỰNG UNIT 3 - THỂ SAI KHIẾN",
+      "https://drive.google.com/drive/folders/1iqLOHdem-xbLrxmCjRTcWYgWX88eKoHy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B16 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - MỆNH ĐỀ QUAN HỆ",
+      "https://drive.google.com/drive/folders/19zzA1EYdT9lkVJv6U7upF2l7g1jOIcd1",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B17 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - MỆNH ĐỀ QUAN HỆ",
+      "https://drive.google.com/drive/folders/1j28R8asLEbr2Xgn7DZCHZKqeh1gFjCQ8",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B18 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - MỆNH ĐỀ QUAN HỆ",
+      "https://drive.google.com/drive/folders/1pRJspKfVpBzT0otZQWMKBobePkhq8qM9",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B19 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). LT - UNIT4 + Mệnh đề trang ngữ",
+      "https://drive.google.com/drive/folders/1Fz8xx8PKKv0HxOmhJR-BpYuDB7NP95Tj",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B20 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U4 + MỆNH ĐỀ TRẠNG NGỮ",
+      "https://drive.google.com/drive/folders/1fsLvvESjd0p8ikvnQYXYY-Ll_tL1PPx9",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B21 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + MỆNH ĐỀ TRẠNG NGỮ",
+      "https://drive.google.com/drive/folders/1C_B-djSNhViZgizSKRy9sqoR1AVAjBdn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B22 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + MỆNH ĐỀ TRẠNG NGỮ",
+      "https://drive.google.com/drive/folders/1l_1iXfx8iw0YOt2sYjaI6E4Ya75sr3SQ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B23 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + MỆNH ĐỀ TRẠNG NGỮ",
+      "https://drive.google.com/drive/folders/1_VhwCI0j46YgR87-iMNI28DgprKmomOz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B24 - NT01.HSA.2K9.TIẾNG ANH(THẦY ĐỨC). U5 + Trật tự từ và Cấu tạo từ",
+      "https://drive.google.com/drive/folders/1yJRTcYG4dJraYiWAcsbWI65bKs_qoo6N",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1.2 TIẾNG ANH LỚP 12_HỌC ZOOM",
+      "https://drive.google.com/drive/folders/1JxbH-9KAFf32yXmtJoomL7wGK2ygPtOO",
+      "UPDATE 14/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HSA.2K9. Tiếng Anh (Thầy Đức) LT - Chữa đề minh họa, đề thi thử 2025",
+      "https://drive.google.com/drive/folders/1fLP9WQg0goPverHinuLMXa7HMdrnw50o",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 2 - SEQUENCE OF TENSES",
+      "https://drive.google.com/drive/folders/1H7Ix1-TjR80lRPvuIg5pEfiHaIkoHMXv",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 3 - SEQUENCE OF TENSES (TIẾP)",
+      "https://drive.google.com/drive/folders/1sgDzwaFhZfkTOIst9Aw8p3qjEqDnJApm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 4 - Chữa Homework Buổi 3",
+      "https://drive.google.com/drive/folders/1ndLzeoaWGF6KezV32oErWHt3VhUJz8Co",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 5 - Chữa homework Buổi 4",
+      "https://drive.google.com/drive/folders/1Day-dNRBdSIjZw9OH9ETY-cFKvNqNp8l",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 6 - Chữa homework Buổi 5",
+      "https://drive.google.com/drive/folders/17mJ3JqeGyn-Te_QioGW1fClYhvaklP4F",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 7 - Chữa homework Buổi 6",
+      "https://drive.google.com/drive/folders/1KMUO8OWMyIWLdk5ZkvnYUgYHl_L4_M_i",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 8 - Chữa homework Buổi 7 - CÂU BỊ ĐỘNG (TIẾP)",
+      "https://drive.google.com/drive/folders/1VtSm5Of7FdVNcDtD0qexf7m7tfpFsieG",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 9 - Chữa homework Buổi 8 - CÂU ĐIỀU KIỆN",
+      "https://drive.google.com/drive/folders/19Av4yvt3cCulYGWs_E96_dqEt4QPPjuq",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 10 - Chữa homework Buổi 9 - MỆNH ĐỀ QUAN HỆ",
+      "https://drive.google.com/drive/folders/1dz8FrTFNDtt_-JnFxGs499Oh7FD9_nFP",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 11 - MỆNH ĐỀ QUAN HỆ (TIẾP)",
+      "https://drive.google.com/drive/folders/1VZ0wwbNlHZNzzd_Rh3IEbDwbqp5MtVcw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 12 - MỆNH ĐỀ QUAN HỆ (TIẾP)",
+      "https://drive.google.com/drive/folders/1A1VmQOOG4F9-8_pHB2V4jyw6zuWEN1aI",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 13: MỆNH ĐỀ TRẠNG NGỮ",
+      "https://drive.google.com/drive/folders/1wxqEMpQQLBhbk_zhQST61uMT10i23WPA",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 14 - MỆNH ĐỀ TRẠNG NGỮ (TIẾP )",
+      "https://drive.google.com/drive/folders/1s3uuwP5SmO6zu5OuvE95T0Kf_v_FM7v2",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 15 - MỆNH ĐỀ TRẠNG NGỮ (TIẾP 2) & CÂU TƯỜNG THUẬT",
+      "https://drive.google.com/drive/folders/1hAuQF1pb8dw98fJsLtuGR3iTJS2nWP3U",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 16 - CÂU TƯỜNG THUẬT (TIẾP)",
+      "https://drive.google.com/drive/folders/1UKre5nJewu8pVqeEaI_FRcra5XnhGBea",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "Buổi 17 - CÂU TƯỜNG THUẬT (TIẾP 2)",
+      "https://drive.google.com/drive/folders/1fQDhXHTrmkJuWpzUqbKnRhP2TpEhHTrB",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "BUỔI 18 - ĐẢO NGỮ",
+      "https://drive.google.com/drive/folders/1am6ABjW-ythmLqHjaQULE3KR2iXKKfef",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B19. 2K9. Tiếng Anh (Thầy Đức) LT - Chữa đề thi thử 01",
+      "https://drive.google.com/drive/folders/1F6xBSlph4j847uePgnTPyQVcTdQ3hZZd",
+      "CHƯA CÓ TL",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "PHẦN 4. TỔ HỢP KHOA HỌC",
+      "https://drive.google.com/drive/folders/1PXl45lPaAXnrhcOHC2hGt2-tqv775pUn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "01. VẬT LÝ",
+      "https://drive.google.com/drive/folders/1K4yEKc9Ga87FEEeuhpmBuXTIpPex8wvy",
+      "UPDATE 18/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "https://drive.google.com/drive/folders/11iml4Z5uBSNXgrX8h3p0kvhLFeg7cNr9",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG 1,2 LÝ 11",
+      "https://drive.google.com/drive/folders/1eGsnoVKNJ_xOu8Rjat-1vd29KRasedOw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG 1,2 LÝ 11 (P2)",
+      "https://drive.google.com/drive/folders/17PenGz1d-SMlDIxfeQiiAac1Woy-16zw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG 3 LÝ 11 (P3)",
+      "https://drive.google.com/drive/folders/1qG6tlp1e3HCJe_QIomnCPAn_CUPEpGk3",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04 - NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - LỰC TƯƠNG TÁC GIỮA CÁC ĐIỆN TÍCH",
+      "https://drive.google.com/drive/folders/1Mn5H6Ca_A9A23JaCXcWJORwOJw_4u4GP",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05 - NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ĐIỆN TRƯỜNG",
+      "https://drive.google.com/drive/folders/136gmH6_aLB2xUlVXYPPza4ocdKnjM29L",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06 - NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ÔN TẬP ĐIỆN TRƯỜNG",
+      "https://drive.google.com/drive/folders/1coOqugWZMzZUJ-0G5SpYyv4Hy_262t0J",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07-NT01.HSA.2K9. VẬT LÝ 11(THẦY ĐƯỢC) - ÔN TẬP CHƯƠNG ĐIỆN TÍCH",
+      "https://drive.google.com/drive/folders/13Ix5ZkLy1Aw5-_Et_IXoyBPoK0g9IFCX",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - BUỔI 4. THẾ NĂNG ĐIỆN & BÀI 5. ĐIỆN THẾ (P1)",
+      "https://drive.google.com/drive/folders/1y9XSLo8M0PHccWEI1-4m1cOQirxeDg0m",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ĐIỆN THẾ & ĐỀ GIỮA KỲ II",
+      "https://drive.google.com/drive/folders/15VUFUXNp97FZibq3Jmt5CYrgWEmOHW5I",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - TỤ ĐIỆN & ĐỀ GIỮA KỲ II",
+      "https://drive.google.com/drive/folders/1SaHhCxjUB8qS_RCo3GSaIqkQX36PGuzv",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - CHƯƠNG 4: CƯỜNG ĐỘ DÒNG ĐIỆN",
+      "https://drive.google.com/drive/folders/1h0Itu4V_4YCV1h2-cNfd20hWkcnJKZmg",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ĐIỆN TRỞ, ĐỊNH LUẬT OHM",
+      "https://drive.google.com/drive/folders/1YIDC4C69h7SEHV9mD4ekSqQP7rvaxBcC",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - NGUỒN ĐIỆN",
+      "https://drive.google.com/drive/folders/1Tqn40TRNvS4DxBTzHlUkf1iuCrR5aHjX",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ÔN TẬP HK2",
+      "https://drive.google.com/drive/folders/1Fj-4tAgdrbMEFQpYsJ5LYVsZE7EFKbXm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15-NT01.HSA.2K9. VẬT LÝ 11 (THẦY ĐƯỢC) - ÔN TẬP HK2 (TIẾP)",
+      "https://drive.google.com/drive/folders/1vPEjmmQO8XixWWYAFd6BUjBKwURxD_Zg",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "2. Chuyên đề vật lý 12",
+      "https://drive.google.com/drive/folders/1p2N9f8RzFLyJSC1iGcuOzBxN-tZODMlm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01 - HSA.2K9.VẬT LÝ 12 (CÔ YẾN) - ĐỀ MINH HỌA 2025",
+      "https://drive.google.com/drive/folders/1LKkBH389BgfJY3askiSfZABJCsPjZqmf",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02 - HSA.2K9.VẬT LÝ 12 (CÔ YẾN) - CHUONG 1 VAT LY NHIET",
+      "https://drive.google.com/drive/folders/1VL4n_B-qkyhpROtQY6QwueA64bTHO8Ap",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "02. HÓA HỌC",
+      "https://drive.google.com/drive/folders/1dDk32Ho0E2ZN-gbmUbuChYOenRNQMycG",
+      "UPDATE 10/7",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "https://drive.google.com/drive/folders/1TPlNAHxcjSupVHkQSXNArgxheKJKzPNN",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG).LĐ - TỔNG ÔN KIẾN THỰC HK1",
+      "https://drive.google.com/drive/folders/1YFTJ6WXZ3SfOwxof1F9HOctqMbzsKd5n",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG).LĐ - KIẾN THỨC NỀN TẢNG HÓA HỌC",
+      "https://drive.google.com/drive/folders/1WNgYIqT4kUVo1QFfy2fPUjrWsG6R4OGV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG).LĐ - NĂNG LƯỢNG HÓA HỌC",
+      "https://drive.google.com/drive/folders/11XwLZh-RC3-So5tfsMS1Yc1HJv7wI_jy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - OXI HÓA KHỬ",
+      "https://drive.google.com/drive/folders/1fXQiS6IiF5PMx0IF-sFA4UBhClxWZ9zB",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - LIÊN KẾT HÓA HỌC",
+      "https://drive.google.com/drive/folders/1lYIA_qrhYXGhLNuD-CCD392i-XEa_Vmr",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HYDROCARBON NO VÀ KHÔNG NO (P1)",
+      "https://drive.google.com/drive/folders/1iIqzY5hsV1L_4VboK13PXR38a4MgwWzt",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HYDROCARBON NO VÀ KHÔNG NO (P2)",
+      "https://drive.google.com/drive/folders/1D6v_dRbIa33xjZA3YeffkKlS9JfXOYTw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỐC ĐỘ PHẢN ỨNG",
+      "https://drive.google.com/drive/folders/1JLDCfh_6gGzVviXHIC40X9pznbmTGKMO",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HẰNG SỐ CÂN BẰNG",
+      "https://drive.google.com/drive/folders/1BEpn-sxHWKVDEk4ZG9A1ZItekjrk2mSV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - HẰNG SỐ CÂN BẰNG (TIẾP)",
+      "https://drive.google.com/drive/folders/1ibNtiKjJK-Dvj3D0tGvNtxcwGNYymMKG",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỔNG ÔN ALCOHOL PHENOL",
+      "https://drive.google.com/drive/folders/1rTGezdCdNBQIg8C2lnj4ceMh63U9QRZK",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỔNG ÔN ALCOHOL PHENOL (TIẾP)",
+      "https://drive.google.com/drive/folders/1mN8LGK4DuVQ_hyI8cnIgJEMyTwC-7fCf",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - BÀI THỰC TẾ ALCOHOL",
+      "https://drive.google.com/drive/folders/11McG5WW3sK4YwG_7Hcj2KZ9TGHt3b9b0",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - TỔNG ÔN ACID, ALDEHYDE, KETONE",
+      "https://drive.google.com/drive/folders/1gwyjg8S4MOmX7QNsmlTEWU6fu7sY4-SH",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9. HÓA HỌC (THẦY THẮNG) - DẠNG BÀI HỮU CƠ HAY GẶP",
+      "https://drive.google.com/drive/folders/1RMOJAsvsX9W-XOc_XmvZR-uf7QJl7IEB",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "03. SINH HỌC",
+      "https://drive.google.com/drive/folders/1yn6bX_o_JL5HADej-qTPl4UYy9BCEA59",
+      "UPDATE 14/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "https://drive.google.com/drive/folders/1t76aHCsb4SJnyFrBcc4n52EZ298RKqUX",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01-NT01.HSA.2K9.SINH HỌC 11(Thầy Lộc) - Trao đổi nước và khoáng",
+      "https://drive.google.com/drive/folders/1-TxeqzjxBtBOtS_toDfIpX-BbqTzGcrq",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Quang hợp",
+      "https://drive.google.com/drive/folders/1fyG-qRpaNVDxBQVSlO5aNE9Nsj1btsoM",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hô hấp ở thực vật",
+      "https://drive.google.com/drive/folders/1nVurUAkxBLzrV36fh8pt5CBITOJTE7DD",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ tiêu hóa động vật",
+      "https://drive.google.com/drive/folders/1EEjolfYvsx0y1JQgVBe5-8n9E2XNmNCF",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ hô hấp ở động vật",
+      "https://drive.google.com/drive/folders/1lx2k8qS0f-8_fhqNZ_HrgRpFMgrdeQAJ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ tuần hoàn động vật",
+      "https://drive.google.com/drive/folders/1r23EdiJ6KaaVgxoX6EinAk6929IN-7r-",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Hệ miễn dịch",
+      "https://drive.google.com/drive/folders/16mdAk8jWpGtJ7S1iriZelALrI7XWKs2e",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Bài tiết và cân bằng nội môi",
+      "https://drive.google.com/drive/folders/1G7yqC8y2a49H0j-uBMvQyMpcAXKrdVLn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-KHÁI QUÁ CẢM ỨNG VÀ CẢM ỨNG Ở THỰC VẬT",
+      "https://drive.google.com/drive/folders/13980UlL_5495ygGLpEM_bCE2N3vjqbWi",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Cảm ứng ở động vật",
+      "https://drive.google.com/drive/folders/1BH0Th-MU2abiVbKTbN0qq8lH9SUwdgBU",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Tập tính ở động vật",
+      "https://drive.google.com/drive/folders/1NOG9UIB40vZVtZs7tzIHUv73nAAXPjaX",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh trưởng và phát triển ở thực vật",
+      "https://drive.google.com/drive/folders/1K8Rzhm9DaY8ksqp1WntPbFGRaA997uMs",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh trưởng và phát triển ở động vật",
+      "https://drive.google.com/drive/folders/1DEjz3QvuVqFOY8IopQx-4mnFHzc8OlA1",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh sản ở thực vật",
+      "https://drive.google.com/drive/folders/1muv5qjSaU28QvxpK62M2bVeQ17hplrPV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Sinh sản ở động vật",
+      "https://drive.google.com/drive/folders/1cpgim8aU0CZXCElDXKNF_NYln95oARAV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B16-NT01.HSA.2K9.SINHHOC11(Thầy Lộc)-Thực hành thí nghiệm",
+      "https://drive.google.com/drive/folders/1hpiI5fEiDrkOFR3FVr2YLaW_fBF7g62R",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "04. LỊCH SỬ",
+      "https://drive.google.com/drive/folders/1YaxfW1r49cl3dsfBYelBpqyX2r3b0Xm1",
+      "UPDATE 10/7",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "https://drive.google.com/drive/folders/1V7yXeIvKMuSt8aGOeUnpzg-qMuDH_1lc",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT- CHỦ ĐỀ 1: CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN - BÀI 1: MỘT SỐ VẤN ĐỀ CHUNG VỀ CÁCH MẠNG TƯ SẢN",
+      "https://drive.google.com/drive/folders/1rOPD3EGKDeYSA8UJm3UWmDAJOily4DqC",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT. CHỦ ĐỀ 1: CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN - BÀI 2 CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN",
+      "https://drive.google.com/drive/folders/1PdG36XMrnrPI7BR1l4KvUZNfzYMSNGSk",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT-CHỦ ĐỀ 1: CÁCH MẠNG TƯ SẢN VÀ SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA TƯ BẢN - BÀI 3: CÁCH MẠNG TƯ SẢN VÀ SỰ HÌNH THÀNH LIÊN BANG CỘNG HOÀ XÃ HỘI CHỦ NGHĨA XÔ VIẾT LIÊN XÔ",
+      "https://drive.google.com/drive/folders/1Xxfo9Uf98daxN8E9F9hAW9QiJdn0DRHJ",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 2. CNXH TỪ 1917 ĐẾN NAY - SỰ PHÁT TRIỂN CỦA CHỦ NGHĨA XÃ HỘI",
+      "https://drive.google.com/drive/folders/1RHS6OwqkaHwFn-GihfP6p3CBBNtEViRE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 3: QUÁ TRÌNH GIÀNH ĐỘC LẬP CỦA CÁC QUỐC GIA ĐÔNG NAM Á",
+      "https://drive.google.com/drive/folders/1wVXeye7t-yLAmwRY8I20wFCeId71mcgm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 3: QUÁ TRÌNH GIÀNH ĐỘC LẬP CỦA CÁC QUỐC GIA ĐÔNG NAM Á(TIẾP)",
+      "https://drive.google.com/drive/folders/18SJY4v66TAOyeh7iLPJKWSHBG7X7bcDz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 4: CHIẾN TRANH BẢO VỆ TỔ QUỐC VÀ GIẢI PHÓNG DÂN TỘC TRONG LỊCH SỬ VIỆT NAM (TRƯỚC 1945)",
+      "https://drive.google.com/drive/folders/11QHsd05ZVLkZM2heY1npvXqWHbTFlGak",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 4: CHIẾN TRANH BẢO VỆ TỔ QUỐC VÀ GIẢI PHÓNG DÂN TỘC TRONG LỊCH SỬ VIỆT NAM (TRƯỚC 1945) (tiếp)",
+      "https://drive.google.com/drive/folders/1cVFUsS2bZx2WentvZIZP72Hj3lt__172",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 5: MỘT SỐ CUỘC CẢI CÁCH LỚN TRONG LỊCH SỬ VIỆT NAM (trước năm 1858)",
+      "https://drive.google.com/drive/folders/1RdsbeER7EJEvNEKT_bmOTO0-ygUikFPo",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10- NT01.HSA.2K9. LỊCH SỬ 11 (THẦY XUÂN).LT - CHỦ ĐỀ 5: MỘT SỐ CUỘC CẢI CÁCH LỚN TRONG LỊCH SỬ VIỆT NAM (trước năm 1858) (tiếp)",
+      "https://drive.google.com/drive/folders/1Ft9eByKixnP9hMWjyLuKXsIeiNph1dgx",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "05. ĐỊA LÝ",
+      "https://drive.google.com/drive/folders/1dRFkivtwcQLoDgDmHZrAq0Ey8ZylubCl",
+      "UPDATE 10/7",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "1. CHUYÊN ĐỀ LÝ THUYẾT 11",
+      "https://drive.google.com/drive/folders/1hAJQU1aJnqwzr0BRWNA1FhKCwd4qg8-F",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B01. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- VỊ TRÍ ĐỊA LÍ, ĐIỀU KIỆN TỰ NHIÊN, DÂN CƯ, XÃ HỘI KHU VỰC ĐÔNG NAM Á",
+      "https://drive.google.com/drive/folders/1hhljgvVnTJCyAumleVNcILsvAtqgw6Ja",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B02. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- KINH TẾ ĐÔNG NAM Á",
+      "https://drive.google.com/drive/folders/1JKNFHmU5qkOHXr-g58AdUjUEmtXCh43l",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B03. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- VỊ TRÍ ĐỊA LÍ, ĐIỀU KIỆN TỰ NHIÊN, DÂN CƯ, XÃ HỘI VÀ KINH TẾ CỦA KHU VỰC TÂY NAM Á",
+      "https://drive.google.com/drive/folders/1Dvmq1G14bpFrCvteef95KugHiBrsIjyD",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B04. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- ĐỊA LÝ TỰ NHIÊN, DÂN CƯ HOA KÌ",
+      "https://drive.google.com/drive/folders/1vcp2N6uTKsuG7XztBsUsBuOym3qAcgJn",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B05. NT01. HSA. 2K9. ĐỊA LÝ (CÔ DUNG)- KINH TẾ HOA KÌ",
+      "https://drive.google.com/drive/folders/1UuQ3RX5AmpWXvWOXQZ1wjqra1Z_WwrdM",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B06.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - TỰ NHIÊN, DÂN CƯ LIÊN BANG NGA",
+      "https://drive.google.com/drive/folders/1Hj-5wkzWSnobfuWsLpdHAUpFPOz0-_Jq",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B07.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KINH TẾ LIÊN BANG NGA",
+      "https://drive.google.com/drive/folders/161070SWvKB_4VtSoqCn6fc_uO42MPwJz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B08.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - TỰ NHIÊN, DÂN CƯ NHẬT BẢN",
+      "https://drive.google.com/drive/folders/15P-1O-Bk4EFxGtVokM4lg1x6DNTnvePq",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B09.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KINH TẾ NHẬT BẢN",
+      "https://drive.google.com/drive/folders/1ZKhQbPK_K4jra0H36Ut0BYCfqEXUfA0e",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B10.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - TỰ NHIÊN, DÂN CƯ VÀ XÃ HỘI TRUNG QUỐC",
+      "https://drive.google.com/drive/folders/1vN2MBzuCrota3_Mur3fkoOD1L6QcCrpU",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B11.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KINH TẾ TRUNG QUỐC",
+      "https://drive.google.com/drive/folders/115bFPg8u4SYgfAaIk4N-u2U95RVoMfGc",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B12.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - CỘNG HÒA NAM PHI",
+      "https://drive.google.com/drive/folders/1qn2w60k-N7mnsmQXIZEvx9H41vo0oWo-",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B13.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - MỘT SỐ VẤN ĐỀ KT - XH",
+      "https://drive.google.com/drive/folders/1q3wAYCugxjIpgJtPAUEOV6IPqauQoVpF",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B14.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - KHU VỰC MỸ LATINH",
+      "https://drive.google.com/drive/folders/1ND5yAsxij3IdmmLinYLZ7EqYlFNkk3r0",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "B15.NT01.HSA.2K9_ĐỊA LÝ (CÔ DUNG) - LIÊN MINH CHÂU ÂU",
+      "https://drive.google.com/drive/folders/14ovus5amSgpBHULNdTcNnO_ltlIMl-Cm",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HỌP PHỤ HUYNH VÀ KHAI GIẢNG HS",
+      "https://drive.google.com/drive/folders/1J-P7gvDCoGT_59X4pjlNPbyi9hDi6FQz",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HỌP PHỤ HUYNH (30/3)",
+      "https://drive.google.com/drive/folders/1q7_IifrR4uDAOz5-3KroWklUFyd37rCy",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "KHAI GIẢNG ĐẦU KHOÁ (1/4)",
+      "https://drive.google.com/drive/folders/1N4JlVrSizAD2KdwI8-fW49AkzPVkl8r9",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "TÀI LIỆU SÁCH TỔNG ÔN LTHUYET TRỌNG TÂM",
+      "https://drive.google.com/drive/folders/1uim6_uhvDsWIZHWqOhV2S17UkAn_Dl-i",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LIVE BỔ TRỢ TOÁN LẤY GỐC - THẦY HẬU",
+      "https://drive.google.com/drive/folders/1KwoAxDkrMEkxsw8HAbzzBD52xErLgdHT",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "ĐẠI SỐ",
+      "https://drive.google.com/drive/folders/1DoRazxLt6gpOWi3Dp5_ClF_WlIahFcb9",
+      "UPDATE 7/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 1",
+      "https://drive.google.com/drive/folders/1ck3hVeZqBkShl1QeYtajp3_Z9viHEKd9",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 2",
+      "https://drive.google.com/drive/folders/1RB_9N9gQKI-GtLqi5OID06MtDdCdBh6R",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 3",
+      "https://drive.google.com/drive/folders/1dWIPPjFzRR75Klf5S1k2jGOIdw3MoavK",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 4: CỰC TRỊ HÀM HỢP KHÔNG CHỨA M",
+      "https://drive.google.com/drive/folders/1VCjEba-OF4VAQ4fSBQZmFyMxdXj7R-6b",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 4: CỰC TRỊ HÀM HỢP KHÔNG CHƯA THAM SỐ M - CHỮA LẠI CÂU 4",
+      "https://drive.google.com/drive/folders/1lZIMhD4JyJMbT8e23SO6J7mQA-A_g0JM",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 5: CỰC TRỊ HÀM CHƯA THAM SỐ M",
+      "https://drive.google.com/drive/folders/1rzRe60BEMWA-9HWhDj839xvSARDq6JUw",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 6: TOÁN THỰC TẾ (P1)",
+      "https://drive.google.com/drive/folders/1fQxjZ0yYyiqfr5ljWi0Jq5SgQ0WCF-nC",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "HÌNH HỌC",
+      "https://drive.google.com/drive/folders/1Y0E2HY2Nzo_N96aYzDLrve08jDD5oqz4",
+      "UPDATE 7/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 1",
+      "https://drive.google.com/drive/folders/12t3geUWjNJpM-fT8gJ7AzWvUVOziQ2xq",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 2",
+      "https://drive.google.com/drive/folders/1KpVqurKlIpMJ7YAN6O_mMdhhulym0QcP",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 3",
+      "https://drive.google.com/drive/folders/1VlDPNwXHOwebec5FYmaOBDiZMZjAh9Ex",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 4",
+      "https://drive.google.com/drive/folders/1VXJzfYKOdpeSvkQLb0Vg7u18jyRaRSS1",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LẤY GỐC - TOÁN - THẦY HẬU - BUỔI 5",
+      "https://drive.google.com/drive/folders/1DynaziEnkZ6BLSgH9064KmyKbcVTp3kH",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "LIVE BỔ TRỢ CASIO - THẦY ĐẠT",
+      "https://drive.google.com/drive/folders/1HE_TaK3znEFVRm7NHzxYo_2Qz6Q6nSTu",
+      "UPDATE 7/8",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 1",
+      "https://drive.google.com/drive/folders/15bN2m1UbdKibH7W5CqTno7qpLfIe8cuV",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 2",
+      "https://drive.google.com/drive/folders/1GHOfAdWz2bAn7CAX3zmpMQrsgmzWh3D_",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 3",
+      "https://drive.google.com/drive/folders/1eQ1YdIm_uSGkxVGuUJm1c0KoTJiUfzwG",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 4",
+      "https://drive.google.com/drive/folders/1ERSYviFpBd-na-ysDQOMqFhjNPMd4czj",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 5",
+      "https://drive.google.com/drive/folders/1WgX_9YZC2IAaR8KXgwngcAiWgXSgRHF-",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 6",
+      "https://drive.google.com/drive/folders/1r9zJ351Jk6IR3BIIvHjqERXixgvRd6Zu",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "CASIO - TOÁN - THẦY ĐẠT - BUỔI 7",
+      "https://drive.google.com/drive/folders/1n7Thf8J7WQogrzdi07HtGbxgyP7AClgg",
+      "MỚI UP, KH CÓ FILE TÀI LIỆU",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      ""
+    ]
+  ]
+}
