@@ -6,9 +6,12 @@
 
   const APP = {
     activeTab: 'home',
-    gradeFilter: '2K9', // '2K9' | '2K11' | '2K12' | 'ALL'
-    activeCourseId: 'math12',
-    activeTopicId: 'M12-1.1',
+    gradeFilter: '2K9', // '2K9' | '2K8' | 'DGNL' | '2K11' | '2K12' | 'ALL'
+    active2k9Subject: 'Toán',
+    activeCourseId: '2k9-toan-thay-do-van-duc',
+    activeTopicId: '',
+    showTeacherPdfDrawer: false,
+    teacherPdfSearch: '',
     studySubtab: 'theory', // 'theory' | 'types' | 'quiz' | 'notes'
     theaterMode: false,
     lectureSearch: '',
@@ -139,13 +142,107 @@
     } catch {}
   }
 
+  const LOADED_2K9_BUNDLES = {};
+  const LOADING_2K9_BUNDLES = {};
+
   function getCatalog() {
     return Array.isArray(window.PK9_CATALOG) ? window.PK9_CATALOG : [];
   }
 
+  function expandCompact2k9Chapters(course, compactChapters) {
+    return (compactChapters || []).map(ch => ({
+      id: ch.id,
+      title: ch.title,
+      topics: (ch.topics || []).map((t, idx) => {
+        const isPdfOnly = t.k === 'pdf' || (!t.v && !t.dv && Boolean(t.p));
+        const pdfList = [];
+        if (t.p) pdfList.push(t.p);
+        if (t.sp) pdfList.push(t.sp);
+        if (Array.isArray(t.ep)) t.ep.forEach(x => { if (x?.url) pdfList.push(x.url); });
+        return {
+          id: t.id,
+          code: `${idx + 1}`,
+          title: t.title,
+          teacher: course.teacher,
+          duration: isPdfOnly ? 'Tài liệu PDF' : '1 tiếng 20 phút',
+          kind: isPdfOnly ? 'pdf' : 'video',
+          videoId: t.v || undefined,
+          videoUrl: t.v ? `https://www.youtube.com/watch?v=${t.v}` : (t.dv || t.p || ''),
+          driveVideoUrl: t.dv || undefined,
+          pdfUrl: t.p || undefined,
+          solutionPdfUrl: t.sp || undefined,
+          pdfs: Array.isArray(t.ep) ? t.ep.map(x => ({ label: x.label || 'Tài liệu PDF', icon: '📄', url: x.url })) : undefined,
+          desc: `${t.s ? t.s + ' — ' : ''}${course.teacher} (${course.subject} 12).${pdfList.length ? ` Kèm ${pdfList.length} file PDF.` : ''}`,
+          theory: `<div class="space-y-2"><p><strong>${esc(course.subject)} 12 — ${esc(course.teacher)}:</strong> ${esc(t.title)}</p><ul class="list-disc list-inside space-y-1"><li><strong>Chuyên mục / Giai đoạn:</strong> ${esc(ch.title)}</li>${t.s ? `<li><strong>Phân mục:</strong> ${esc(t.s)}</li>` : ''}<li><strong>Học liệu:</strong> ${isPdfOnly ? 'Tài liệu PDF đầy đủ (đọc trực tiếp hoặc tải Drive).' : 'Video bài giảng chi tiết'}${pdfList.length ? ` kèm ${pdfList.length} file PDF ngay phía dưới.` : '.'}</li></ul></div>`,
+          problemTypes: [
+            {
+              title: `Phương pháp học hiệu quả cùng ${course.teacher}`,
+              method: 'Bước 1: Mở tài liệu PDF đề/lý thuyết ngay bên dưới để nắm khung câu hỏi trước khi học.\nBước 2: Ghi chú công thức giải nhanh & lỗi sai hay gặp vào Sổ tay.\nBước 3: Đánh dấu hoàn thành (+25 XP) để theo dõi tiến độ từng chương của thầy/cô.'
+            }
+          ],
+          exercises: []
+        };
+      })
+    }));
+  }
+
+  async function ensure2k9CourseLoaded(course) {
+    if (!course || course.grade !== '2K9' || !course.dataFile) return true;
+    if (Array.isArray(course.chapters) && course.chapters.length > 0) return true;
+
+    const url = course.dataFile;
+    if (LOADED_2K9_BUNDLES[url]) {
+      const bundle = LOADED_2K9_BUNDLES[url];
+      for (const c of getCatalog()) {
+        if (c.grade === '2K9' && c.dataFile === url && (!c.chapters || !c.chapters.length) && bundle[c.id]) {
+          c.chapters = expandCompact2k9Chapters(c, bundle[c.id]);
+        }
+      }
+      return true;
+    }
+
+    if (LOADING_2K9_BUNDLES[url]) return false;
+    LOADING_2K9_BUNDLES[url] = true;
+    try {
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const bundle = await resp.json();
+        LOADED_2K9_BUNDLES[url] = bundle;
+        for (const c of getCatalog()) {
+          if (c.grade === '2K9' && c.dataFile === url && bundle[c.id]) {
+            c.chapters = expandCompact2k9Chapters(c, bundle[c.id]);
+          }
+        }
+      }
+    } catch {}
+    LOADING_2K9_BUNDLES[url] = false;
+    if (APP.activeTab === 'lectures') renderLecturesTab();
+    return Boolean(course.chapters && course.chapters.length);
+  }
+
   function getCourseById(courseId) {
     const list = getCatalog();
-    return list.find(c => c.id === courseId) || list[0] || null;
+    const aliasMap = {
+      math12: 'Toán',
+      physics12: 'Vật Lí',
+      chemistry12: 'Hóa Học',
+      biology12: 'Sinh Học',
+      english12: 'Tiếng Anh'
+    };
+    const found = list.find(c => c.id === courseId);
+    if (found) return found;
+    if (aliasMap[courseId]) {
+      const aliased = list.find(c => c.grade === '2K9' && c.subject === aliasMap[courseId]);
+      if (aliased) return aliased;
+    }
+    return list[0] || null;
+  }
+
+  function getCourseTopicCount(course) {
+    if (Array.isArray(course?.chapters) && course.chapters.length > 0) {
+      return course.chapters.reduce((s, ch) => s + (ch.topics || []).length, 0);
+    }
+    return Number(course?.topicCount || 0);
   }
 
   function findTopicInCourse(course, topicId) {
@@ -162,10 +259,20 @@
 
   function countCourseProgress(course) {
     let total = 0, done = 0;
-    for (const ch of course?.chapters || []) {
-      for (const t of ch.topics || []) {
-        total++;
-        if (APP.doneMap[t.id]) done++;
+    if (Array.isArray(course?.chapters) && course.chapters.length > 0) {
+      for (const ch of course.chapters) {
+        for (const t of ch.topics || []) {
+          total++;
+          if (APP.doneMap[t.id]) done++;
+        }
+      }
+    } else {
+      total = Number(course?.topicCount || 0);
+      const prefix = `${String(course?.id || '').toUpperCase()}-`;
+      if (prefix.length > 1) {
+        for (const [k, v] of Object.entries(APP.doneMap)) {
+          if (v && k.startsWith(prefix)) done++;
+        }
       }
     }
     return { total, done, percent: total ? Math.round((done / total) * 100) : 0 };
@@ -383,10 +490,24 @@
       ? catalog
       : catalog.filter(c => c.grade === APP.gradeFilter);
 
-    const totalTopics = catalog.reduce((s, c) => s + c.chapters.reduce((a, ch) => a + ch.topics.length, 0), 0);
+    const totalTopics = catalog.reduce((s, c) => s + getCourseTopicCount(c), 0);
     const doneTotal = Object.values(APP.doneMap).filter(Boolean).length;
     const seedExams = (Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS : []).slice(0, 4);
     const topWeekly = (APP.lbData.weekly_leaderboard || []).slice(0, 3);
+    const total2k9Pdfs = catalog.filter(c => c.grade === '2K9').reduce((s, c) => s + Number(c.pdfFileCount || 0), 0);
+    const subjects2k9Map = new Map();
+    for (const c of catalog) {
+      if (c.grade !== '2K9') continue;
+      if (!subjects2k9Map.has(c.subject)) {
+        subjects2k9Map.set(c.subject, { subject: c.subject, icon: c.icon, teachers: [], videos: 0, topics: 0, pdfs: 0 });
+      }
+      const entry = subjects2k9Map.get(c.subject);
+      entry.teachers.push(c);
+      entry.videos += Number(c.videoCount || 0);
+      entry.topics += getCourseTopicCount(c);
+      entry.pdfs += Number(c.pdfFileCount || 0);
+    }
+    const subjects2k9List = [...subjects2k9Map.values()];
 
     root.innerHTML = `
       <section class="pk9-hero">
@@ -487,16 +608,43 @@
           <p>Chọn môn học để xem video bài giảng, lý thuyết công thức, các dạng toán và làm bài tập tự luyện có chấm điểm.</p>
         </div>
         <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-          ${['2K9', '2K11', '2K12', 'ALL'].map(g => `
+          ${['2K9', '2K8', 'DGNL', '2K11', '2K12', 'ALL'].map(g => `
             <button type="button" class="pk9-exam-chip ${APP.gradeFilter === g ? 'active' : ''}" data-set-grade="${g}">
-              ${g === '2K9' ? '🎓 Lớp 12 (2K9)' : g === '2K11' ? '📘 Lớp 10 Mới (2K11)' : g === '2K12' ? '🎯 Ôn Vào 10 (2K12)' : '🌐 Tất cả (16 khóa)'}
+              ${g === '2K9' ? '🎓 2K9 Theo Giáo Viên (8 Môn)' : g === '2K8' ? '🔥 Tuyển Chọn 2K8' : g === 'DGNL' ? '🏛️ ĐGNL & ĐGTD' : g === '2K11' ? '📘 Lớp 10 Mới (2K11)' : g === '2K12' ? '🎯 Ôn Vào 10 (2K12)' : `🌐 Tất cả (${catalog.length} khóa)`}
             </button>
           `).join('')}
         </div>
       </div>
 
+      ${APP.gradeFilter === '2K9' && subjects2k9List.length ? `
+        <div class="pk9-grid-4">
+          ${subjects2k9List.map(sub => {
+            const firstTeacher = sub.teachers[0];
+            return `
+              <article class="pk9-card" style="display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.65rem;">
+                    <span style="font-size:1.7rem;">${sub.icon || '📘'}</span>
+                    <span class="pk9-badge pk9-badge-subj">${sub.teachers.length} Thầy/Cô • ${sub.topics} mục</span>
+                  </div>
+                  <h3 style="margin:0 0 0.35rem;font-size:1.05rem;font-weight:900;">${esc(sub.subject)} 12 — Kho Full Giáo Viên</h3>
+                  <div style="font-size:0.78rem;color:var(--pk9-text-muted);line-height:1.5;margin-bottom:0.8rem;">
+                    <b>${sub.videos} video</b> + <b>${sub.pdfs} file PDF</b> từ: ${esc(sub.teachers.slice(0, 4).map(t => t.teacher).join(', '))}${sub.teachers.length > 4 ? ` & ${sub.teachers.length - 4} thầy/cô khác` : ''}.
+                  </div>
+                </div>
+                <button type="button" class="pk9-btn-exam-primary" data-open-lecture-course="${esc(firstTeacher.id)}" style="width:100%;">
+                  👨‍🏫 Chọn Giáo Viên Môn ${esc(sub.subject)} →
+                </button>
+              </article>
+            `;
+          }).join('')}
+        </div>
+        <div style="margin-top:0.75rem;font-size:0.82rem;color:var(--pk9-text-muted);text-align:center;">
+          💡 Đang có sẵn <b>${catalog.filter(c => c.grade === '2K9').length} giáo viên</b> trên 8 môn với tổng <b>${total2k9Pdfs} file PDF</b> đề thi & bản viết tay. Vào tab <b>Video Bài Giảng</b> để chọn đúng Thầy/Cô bạn đang học!
+        </div>
+      ` : `
       <div class="pk9-grid-3">
-        ${filteredCourses.map(course => {
+        ${(APP.gradeFilter === 'ALL' ? filteredCourses.slice(0, 18) : filteredCourses).map(course => {
           const prog = countCourseProgress(course);
           return `
             <article class="pk9-card" style="display:flex;flex-direction:column;justify-content:space-between;">
@@ -529,6 +677,7 @@
           `;
         }).join('')}
       </div>
+      `}
 
       <div class="pk9-sec-head">
         <div>
@@ -716,7 +865,7 @@
     if (!root) return;
 
     const catalog = getCatalog();
-    const totalAllTopics = catalog.reduce((s, c) => s + (c.chapters || []).reduce((a, ch) => a + (ch.topics || []).length, 0), 0);
+    const totalAllTopics = catalog.reduce((s, c) => s + getCourseTopicCount(c), 0);
     const navCountEl = document.getElementById('pk9-nav-lectures-count');
     if (navCountEl && totalAllTopics) navCountEl.textContent = `${totalAllTopics} bài`;
 
@@ -724,13 +873,41 @@
     if (!course) return;
 
     const activeGrade = course.grade || '2K9';
+    if (activeGrade === '2K9' && course.subject) {
+      APP.active2k9Subject = course.subject;
+    }
+
+    const isWaitingBundle = course.grade === '2K9' && course.dataFile && (!Array.isArray(course.chapters) || course.chapters.length === 0);
+    if (isWaitingBundle) {
+      ensure2k9CourseLoaded(course);
+    }
+
     const gradeMeta = [
-      { code: '2K9', icon: '🎓', label: 'Khối 12 — Luyện Thi THPT Quốc Gia (2K9)', sub: '5 Môn thi THPT: Toán 12, Vật Lí 12, Hóa Học 12, Sinh Học 12, Tiếng Anh 12' },
-      { code: '2K8', icon: '🔥', label: 'Khối 12 Tuyển Chọn 2K8 — Chuyên Đề + PDF', sub: 'Chuyên đề hay nhất đủ môn (Toán, Lí, Hóa, Sinh, Anh, Văn, Sử, Địa) kèm PDF dưới video' },
+      { code: '2K9', icon: '🎓', label: 'Khối 12 (2K9) — Full Bài Giảng & PDF Theo Từng Giáo Viên', sub: 'Chọn Môn (8 môn) → Chọn Tên Thầy/Cô để vào Full Video & Tất Cả PDF' },
+      { code: '2K8', icon: '🔥', label: 'Khối 12 Tuyển Chọn 2K8 — Chuyên Đề + PDF', sub: 'Chuyên đề hay nhất đủ môn (Toán, Lí, Hóa, Sinh, Anh, Văn, Địa) kèm PDF dưới video' },
+      { code: 'DGNL', icon: '🏛️', label: 'Luyện Thi ĐGNL & ĐGTD — V-ACT (Empire) • HSA • TSA • SP/BCA', sub: 'Chuyên đề ĐGNL ĐHQG-HCM (ưu tiên Empire), ĐHQG-HN (HSA), Bách Khoa (TSA) & Sư Phạm/BCA' },
       { code: '2K11', icon: '📘', label: 'Khối 10 — Chương Trình Mới GDPT 2018 (2K11)', sub: '5 Môn nền tảng: Toán 10, Vật Lí 10, Hóa Học 10, Sinh Học 10, Tiếng Anh 10' },
       { code: '2K12', icon: '🎯', label: 'Khối 9 — Ôn Thi Tuyển Sinh Vào Lớp 10 (2K12)', sub: '5 Môn vào 10: Toán 9, Vật Lí 9, Hóa Học 9, Sinh Học 9, Tiếng Anh 9' }
     ];
     const coursesInActiveGrade = catalog.filter(c => c.grade === activeGrade);
+
+    // Group 2K9 by 8 subjects + list all teachers in the selected subject
+    const subjects2k9 = [];
+    if (activeGrade === '2K9') {
+      const sMap = new Map();
+      for (const c of coursesInActiveGrade) {
+        if (!sMap.has(c.subject)) {
+          sMap.set(c.subject, { subject: c.subject, icon: c.icon, teachers: [], topics: 0, pdfs: 0 });
+        }
+        const entry = sMap.get(c.subject);
+        entry.teachers.push(c);
+        entry.topics += getCourseTopicCount(c);
+        entry.pdfs += Number(c.pdfFileCount || 0);
+      }
+      subjects2k9.push(...sMap.values());
+    }
+    const current2k9Subj = subjects2k9.find(s => s.subject === APP.active2k9Subject) || subjects2k9[0] || null;
+    const teachersIn2k9Subj = current2k9Subj ? current2k9Subj.teachers : [];
 
     const found = findTopicInCourse(course, APP.activeTopicId);
     const activeChapter = found?.chapter;
@@ -747,10 +924,22 @@
       saveLocalProgress();
     }
 
-    // Flatten topics in course for Prev / Next buttons
+    // Flatten topics & collect ALL unique PDFs of this selected teacher/course
     const flatTopics = [];
+    const allCoursePdfs = [];
+    const seenCoursePdfUrls = new Set();
     for (const ch of course.chapters || []) {
-      for (const t of ch.topics || []) flatTopics.push(t);
+      for (const t of ch.topics || []) {
+        flatTopics.push(t);
+        const pushPdf = (url, label) => {
+          if (!url || seenCoursePdfUrls.has(url)) return;
+          seenCoursePdfUrls.add(url);
+          allCoursePdfs.push({ url, label: label || 'Tài liệu PDF', topicTitle: t.title, chapterTitle: ch.title, topicId: t.id });
+        };
+        if (t.pdfUrl) pushPdf(t.pdfUrl, 'Tài liệu / Đề PDF');
+        if (t.solutionPdfUrl) pushPdf(t.solutionPdfUrl, 'Đáp án / Viết tay PDF');
+        if (Array.isArray(t.pdfs)) t.pdfs.forEach(p => pushPdf(p?.url, p?.label));
+      }
     }
     const curIdx = flatTopics.findIndex(t => t.id === activeTopic?.id);
     const prevTopic = curIdx > 0 ? flatTopics[curIdx - 1] : null;
@@ -759,12 +948,15 @@
     const isDone = Boolean(activeTopic && APP.doneMap[activeTopic.id]);
     const prog = countCourseProgress(course);
     const qFilter = APP.lectureSearch.trim().toLowerCase();
+    const pdfQuery = APP.teacherPdfSearch.trim().toLowerCase();
+    const filteredCoursePdfs = pdfQuery
+      ? allCoursePdfs.filter(p => `${p.topicTitle} ${p.chapterTitle} ${p.label}`.toLowerCase().includes(pdfQuery))
+      : allCoursePdfs;
     const ytSearchUrl = activeTopic?.youtubeSearchUrl
       || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${course.shortName || course.name} ${activeTopic?.title || ''}`)}`;
 
     root.innerHTML = `
-      <!-- 2-TIER COURSE SELECTOR: BƯỚC 1 (CHỌN KHỐI LỚP) -> BƯỚC 2 (CHỌN MÔN HỌC) -->
-      <section class="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp và Môn học">
+      <section class="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
         <div class="pk9-tier-label">
           <span>📚 BƯỚC 1: CHỌN KHỐI LỚP HỌC TẬP</span>
           <button type="button" class="pk9-btn-exam-ghost" data-toggle-theater="1" style="padding:0.35rem 0.75rem;font-size:0.76rem;">
@@ -775,7 +967,7 @@
         <div class="pk9-grade-tier-grid">
           ${gradeMeta.map(gm => {
             const gCourses = catalog.filter(c => c.grade === gm.code);
-            const gTopicsCount = gCourses.reduce((s, c) => s + c.chapters.reduce((a, ch) => a + ch.topics.length, 0), 0);
+            const gTopicsCount = gCourses.reduce((s, c) => s + getCourseTopicCount(c), 0);
             const isAct = gm.code === activeGrade;
             return `
               <button type="button" class="pk9-grade-tier-card ${isAct ? 'active' : ''}" data-select-lecture-grade="${gm.code}">
@@ -783,7 +975,7 @@
                 <div style="min-width:0;flex:1;">
                   <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(gm.label)}</div>
                   <div style="font-size:0.73rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
-                    ${gCourses.length} môn học • <b>${gTopicsCount} video bài giảng</b>
+                    ${gm.code === '2K9' ? `${gCourses.length} giáo viên (8 môn)` : `${gCourses.length} môn học`} • <b>${gTopicsCount} bài giảng & PDF</b>
                   </div>
                 </div>
               </button>
@@ -791,34 +983,143 @@
           }).join('')}
         </div>
 
-        <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
-          <span>🎯 BƯỚC 2: CHỌN MÔN HỌC THUỘC KHỐI ${esc(activeGrade)} (${coursesInActiveGrade.length} MÔN)</span>
-          <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
-            Đang học: <b>${esc(course.name)}</b>
-          </span>
-        </div>
+        ${activeGrade === '2K9' && subjects2k9.length ? `
+          <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
+            <span>🎯 BƯỚC 2: CHỌN MÔN HỌC KHỐI 2K9 (${subjects2k9.length} MÔN)</span>
+            <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
+              Đang chọn: <b>${esc(current2k9Subj?.subject || '')}</b> (${teachersIn2k9Subj.length} Thầy/Cô)
+            </span>
+          </div>
 
-        <div class="pk9-subject-tier-grid">
-          ${coursesInActiveGrade.map(c => {
-            const cp = countCourseProgress(c);
-            const isAct = c.id === course.id;
-            return `
-              <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(c.id)}">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;width:100%;">
-                  <span style="font-size:1.35rem;">${c.icon || '📘'}</span>
-                  <span class="pk9-subj-meta">${cp.done}/${cp.total} bài (${cp.percent}%)</span>
-                </div>
-                <div>
-                  <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(c.shortName || c.name)}</div>
-                  <div class="pk9-subj-meta" style="margin-top:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    👨‍🏫 ${esc(c.teacher)}
+          <div class="pk9-subject-tier-grid" style="margin-bottom:1.05rem;">
+            ${subjects2k9.map(sub => {
+              const isAct = sub.subject === current2k9Subj?.subject;
+              return `
+                <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-2k9-subject="${esc(sub.subject)}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;width:100%;">
+                    <span style="font-size:1.35rem;">${sub.icon || '📘'}</span>
+                    <span class="pk9-subj-meta">${sub.teachers.length} GV • ${sub.topics} mục</span>
                   </div>
-                </div>
-              </button>
-            `;
-          }).join('')}
-        </div>
+                  <div>
+                    <div style="font-weight:900;font-size:0.92rem;line-height:1.25;">Môn ${esc(sub.subject)}</div>
+                    <div class="pk9-subj-meta" style="margin-top:0.15rem;">
+                      📄 ${sub.pdfs} file PDF & Đề
+                    </div>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
+            <span>👨‍🏫 BƯỚC 3: CHỌN TÊN GIÁO VIÊN DẠY MÔN ${esc((current2k9Subj?.subject || '').toUpperCase())} (${teachersIn2k9Subj.length} THẦY/CÔ)</span>
+            <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
+              Đang học: <b>${esc(course.teacher)}</b> • Ấn chọn giáo viên để mở Full bài giảng & tất cả PDF
+            </span>
+          </div>
+
+          <div class="pk9-teacher-tier-grid">
+            ${teachersIn2k9Subj.map(tc => {
+              const cp = countCourseProgress(tc);
+              const isAct = tc.id === course.id;
+              return `
+                <button type="button" class="pk9-teacher-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(tc.id)}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;">
+                    <span style="font-weight:900;font-size:0.89rem;color:${isAct ? 'var(--pk9-primary)' : 'inherit'};">👨‍🏫 ${esc(tc.teacher)}</span>
+                    ${isAct ? '<span class="pk9-badge pk9-badge-verified" style="font-size:0.65rem;">ĐANG HỌC</span>' : ''}
+                  </div>
+                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);line-height:1.35;">
+                    ${esc(tc.courseTag || tc.desc)}
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:0.4rem;font-size:0.72rem;font-weight:800;margin-top:0.15rem;">
+                    <span>🎬 ${Number(tc.videoCount || 0)} video</span>
+                    <span>•</span>
+                    <span>📄 ${Number(tc.pdfFileCount || 0)} PDF</span>
+                    ${cp.done > 0 ? `<span>• <b style="color:#10b981;">✓ ${cp.done}/${cp.total}</b></span>` : ''}
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
+            <span>🎯 BƯỚC 2: CHỌN MÔN HỌC THUỘC KHỐI ${esc(activeGrade)} (${coursesInActiveGrade.length} MÔN)</span>
+            <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
+              Đang học: <b>${esc(course.name)}</b>
+            </span>
+          </div>
+
+          <div class="pk9-subject-tier-grid">
+            ${coursesInActiveGrade.map(c => {
+              const cp = countCourseProgress(c);
+              const isAct = c.id === course.id;
+              return `
+                <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(c.id)}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;width:100%;">
+                    <span style="font-size:1.35rem;">${c.icon || '📘'}</span>
+                    <span class="pk9-subj-meta">${cp.done}/${cp.total} bài (${cp.percent}%)</span>
+                  </div>
+                  <div>
+                    <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(c.shortName || c.name)}</div>
+                    <div class="pk9-subj-meta" style="margin-top:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      👨‍🏫 ${esc(c.teacher)}
+                    </div>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        `}
       </section>
+
+      ${isWaitingBundle ? `
+        <div class="pk9-card" style="text-align:center;padding:2.5rem 1.5rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">⏳</div>
+          <div style="font-weight:900;font-size:1.05rem;">Đang tải toàn bộ bài giảng & file PDF của ${esc(course.teacher)}...</div>
+          <p style="margin:0.35rem 0 0;font-size:0.84rem;color:var(--pk9-text-muted);">Hệ thống chỉ tải gói môn ${esc(course.subject)} một lần để chạy siêu mượt.</p>
+        </div>
+      ` : `
+      ${allCoursePdfs.length ? `
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.65rem;margin-bottom:0.85rem;padding:0.75rem 1rem;border-radius:1rem;background:var(--pk9-surface);border:1.5px solid var(--pk9-border);">
+          <div style="font-size:0.85rem;font-weight:800;">
+            📚 <b>${esc(course.name)}</b>: ${flatTopics.length} mục bài học • <span style="color:var(--pk9-primary);">${allCoursePdfs.length} file PDF</span> (Đề + Bản viết tay / Đáp án)
+          </div>
+          <button type="button" class="pk9-btn-exam-primary" data-toggle-teacher-pdfs="1" style="padding:0.45rem 0.9rem;font-size:0.8rem;">
+            ${APP.showTeacherPdfDrawer ? '🔽 Thu gọn Kho PDF' : `📄 Mở Kho Tất Cả PDF (${allCoursePdfs.length} file)`}
+          </button>
+        </div>
+      ` : ''}
+
+      ${APP.showTeacherPdfDrawer && allCoursePdfs.length ? `
+        <section class="pk9-teacher-pdf-drawer" aria-label="Kho tất cả file PDF của giáo viên">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.65rem;">
+            <strong style="font-size:0.95rem;">📂 Tất cả File PDF của ${esc(course.teacher)} (${filteredCoursePdfs.length}/${allCoursePdfs.length})</strong>
+            <input type="search" id="pk9-teacher-pdf-search" class="pk9-input" placeholder="🔍 Lọc tên đề / chuyên đề PDF..." value="${esc(APP.teacherPdfSearch)}" style="max-width:320px;margin:0;" />
+          </div>
+          <div class="pk9-teacher-pdf-list">
+            ${filteredCoursePdfs.slice(0, 120).map(p => `
+              <div class="pk9-teacher-pdf-row">
+                <div>
+                  <div style="font-size:0.79rem;font-weight:800;line-height:1.3;">${esc(p.topicTitle)}</div>
+                  <div style="font-size:0.7rem;color:var(--pk9-text-muted);margin-top:0.1rem;">${esc(p.chapterTitle)} • <b>${esc(p.label)}</b></div>
+                </div>
+                <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                  <button type="button" class="pk9-pdf-action-btn primary" data-open-inapp-url="${esc(p.url)}" data-open-inapp-title="${esc(`${p.topicTitle} — ${p.label}`)}" data-open-inapp-sub="${esc(course.teacher)} • Kho PDF 2K9">
+                    📖 Đọc ngay
+                  </button>
+                  <button type="button" class="pk9-pdf-action-btn" data-select-topic="${esc(p.topicId)}">
+                    🎯 Tới bài
+                  </button>
+                  <a href="${esc(p.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
+                    ↗️ Drive
+                  </a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          ${filteredCoursePdfs.length > 120 ? `<div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.45rem;">Đang hiển thị 120/${filteredCoursePdfs.length} file đầu tiên — nhập từ khóa ở ô lọc bên trên để tìm nhanh file cụ thể.</div>` : ''}
+        </section>
+      ` : ''}
 
       <div class="pk9-lecture-studio ${APP.theaterMode ? 'theater' : ''}">
         <aside class="pk9-course-sidebar">
@@ -829,7 +1130,7 @@
           <div class="pk9-topic-track" style="margin-bottom:0.75rem;">
             <div class="pk9-topic-fill" style="width:${Math.max(4, prog.percent)}%;"></div>
           </div>
-          <input type="search" id="pk9-lecture-search-input" class="pk9-input" placeholder="🔍 Tìm bài giảng trong môn ${esc(course.shortName || course.name)}..." value="${esc(APP.lectureSearch)}" style="margin-top:0;margin-bottom:0.5rem;" />
+          <input type="search" id="pk9-lecture-search-input" class="pk9-input" placeholder="🔍 Tìm bài giảng / chuyên đề..." value="${esc(APP.lectureSearch)}" style="margin-top:0;margin-bottom:0.5rem;" />
 
           <div>
             ${(course.chapters || []).map(ch => {
@@ -849,9 +1150,10 @@
                       const done = Boolean(APP.doneMap[t.id]);
                       const act = t.id === activeTopic?.id;
                       const hasPdf = Boolean(t.pdfUrl || t.solutionPdfUrl || (Array.isArray(t.pdfs) && t.pdfs.length));
+                      const isPdfOnly = t.kind === 'pdf' || (!t.videoId && !t.driveVideoUrl && Boolean(t.pdfUrl));
                       return `
                         <button type="button" class="pk9-topic-btn ${act ? 'active' : ''}" data-select-topic="${esc(t.id)}">
-                          <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
+                          <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${isPdfOnly ? '📄 ' : ''}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
                           <span style="font-size:0.78rem;color:${done ? '#10b981' : 'var(--pk9-text-soft)'};flex-shrink:0;">
                             ${done ? '✓ Đã học' : esc(t.duration || '45p')}
                           </span>
@@ -867,16 +1169,21 @@
 
         ${activeTopic ? (() => {
           const vid = getTopicVideoEmbed(activeTopic);
+          const frameSrc = vid.kind !== 'none'
+            ? vid.embedUrl
+            : (activeTopic.pdfUrl ? toDrivePreviewUrl(activeTopic.pdfUrl) : '');
           return `
           <div class="pk9-video-stage">
-            <div class="pk9-video-frame-wrap">
-              <iframe
-                src="${esc(vid.embedUrl)}"
-                title="${esc(activeTopic.title)}"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-              ></iframe>
-            </div>
+            ${frameSrc ? `
+              <div class="pk9-video-frame-wrap">
+                <iframe
+                  src="${esc(frameSrc)}"
+                  title="${esc(activeTopic.title)}"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            ` : ''}
 
             ${renderTopicPdfAttachments(activeTopic)}
 
@@ -904,7 +1211,7 @@
                 </button>
                 ${vid.externalUrl ? `
                   <a href="${esc(vid.externalUrl)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
-                    ${vid.kind === 'drive' ? '🎬 Mở Video Drive ↗' : '▶️ Mở YouTube ↗'}
+                    ${vid.kind === 'none' ? '📄 Mở Tài Liệu Drive ↗' : (vid.kind === 'drive' ? '🎬 Mở Video Drive ↗' : '▶️ Mở YouTube ↗')}
                   </a>
                 ` : ''}
                 <a href="${esc(ytSearchUrl)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tìm thêm bài giảng cùng chủ đề trên YouTube">
@@ -938,6 +1245,7 @@
           `;
         })() : ''}
       </div>
+      `}
     `;
     typeset(root);
   }
@@ -2811,12 +3119,38 @@
         return;
       }
 
+      const sel2k9Subj = e.target.closest('[data-select-2k9-subject]');
+      if (sel2k9Subj) {
+        const subj = sel2k9Subj.getAttribute('data-select-2k9-subject') || 'Toán';
+        APP.active2k9Subject = subj;
+        const firstTeacherCourse = getCatalog().find(c => c.grade === '2K9' && c.subject === subj);
+        if (firstTeacherCourse) {
+          APP.activeCourseId = firstTeacherCourse.id;
+          APP.activeTopicId = firstTeacherCourse.chapters?.[0]?.topics?.[0]?.id || '';
+        }
+        APP.inlinePdfUrl = '';
+        APP.showTeacherPdfDrawer = false;
+        APP.teacherPdfSearch = '';
+        renderLecturesTab();
+        return;
+      }
+
+      const togglePdfDrawer = e.target.closest('[data-toggle-teacher-pdfs]');
+      if (togglePdfDrawer) {
+        APP.showTeacherPdfDrawer = !APP.showTeacherPdfDrawer;
+        renderLecturesTab();
+        return;
+      }
+
       const selCourse = e.target.closest('[data-select-course]');
       if (selCourse) {
         APP.activeCourseId = selCourse.getAttribute('data-select-course');
         const c = getCourseById(APP.activeCourseId);
+        if (c?.subject) APP.active2k9Subject = c.subject;
         APP.activeTopicId = c?.chapters?.[0]?.topics?.[0]?.id || '';
         APP.inlinePdfUrl = '';
+        APP.showTeacherPdfDrawer = false;
+        APP.teacherPdfSearch = '';
         renderLecturesTab();
         return;
       }
@@ -3277,6 +3611,11 @@
         APP.lectureSearch = e.target.value || '';
         renderLecturesTab();
         const el = document.getElementById('pk9-lecture-search-input');
+        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+      } else if (e.target.id === 'pk9-teacher-pdf-search') {
+        APP.teacherPdfSearch = e.target.value || '';
+        renderLecturesTab();
+        const el = document.getElementById('pk9-teacher-pdf-search');
         if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
       } else if (e.target.id === 'pk9-lb-search-input') {
         APP.lbSearch = e.target.value || '';
