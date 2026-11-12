@@ -37,6 +37,8 @@
     doneMap: {},
     notesMap: {},
     resumeItem: null,
+    inlinePdfUrl: '',
+    inlinePdfTitle: '',
     communityItems: [],
     // Khóa Chui Tham Khảo In-Web State
     kcMode: 'htmlview', // 'htmlview' | 'htmlembed' | 'split'
@@ -613,19 +615,120 @@
   // ==========================================================================
   // TAB 2: MULTI-SUBJECT VIDEO LECTURE STUDIO (2-TIER: GRADE -> SUBJECT)
   // ==========================================================================
+  function toDrivePreviewUrl(rawUrl) {
+    const raw = String(rawUrl || '').trim();
+    const m = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);
+    return m ? `https://drive.google.com/file/d/${m[1]}/preview` : raw;
+  }
+
+  function getTopicVideoEmbed(topic) {
+    if (!topic) return { kind: 'none', embedUrl: '', externalUrl: '', codeLabel: '' };
+    if (topic.videoId) {
+      return {
+        kind: 'youtube',
+        embedUrl: `https://www.youtube-nocookie.com/embed/${topic.videoId}?rel=0&modestbranding=1`,
+        externalUrl: `https://www.youtube.com/watch?v=${topic.videoId}`,
+        codeLabel: topic.videoId
+      };
+    }
+    const raw = String(topic.driveVideoUrl || topic.videoUrl || '').trim();
+    const yt = raw.match(/(?:youtube\.com\/(?:watch\?v=|live\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (yt) {
+      return {
+        kind: 'youtube',
+        embedUrl: `https://www.youtube-nocookie.com/embed/${yt[1]}?rel=0&modestbranding=1`,
+        externalUrl: `https://www.youtube.com/watch?v=${yt[1]}`,
+        codeLabel: yt[1]
+      };
+    }
+    const dm = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);
+    if (dm) {
+      return {
+        kind: 'drive',
+        embedUrl: `https://drive.google.com/file/d/${dm[1]}/preview`,
+        externalUrl: raw,
+        codeLabel: `Drive:${dm[1].slice(0, 8)}`
+      };
+    }
+    return { kind: 'none', embedUrl: raw, externalUrl: raw, codeLabel: 'Video' };
+  }
+
+  function renderTopicPdfAttachments(topic) {
+    if (!topic) return '';
+    const items = [];
+    if (topic.pdfUrl) items.push({ label: 'Tài liệu / Đề bài giảng PDF', icon: '📄', url: topic.pdfUrl });
+    if (topic.solutionPdfUrl) items.push({ label: 'Đáp án / Bản viết tay PDF', icon: '✍️', url: topic.solutionPdfUrl });
+    if (Array.isArray(topic.pdfs)) {
+      for (const p of topic.pdfs) {
+        if (p && p.url) items.push({ label: p.label || 'Tài liệu PDF kèm theo', icon: p.icon || '📄', url: p.url });
+      }
+    }
+    if (!items.length) return '';
+
+    const activePreviewUrl = items.some(it => it.url === APP.inlinePdfUrl) ? APP.inlinePdfUrl : '';
+
+    return `
+      <div class="pk9-video-pdf-bar">
+        <div class="pk9-pdf-bar-head">
+          <span>📚 TÀI LIỆU PDF BÀI GIẢNG KÈM DƯỚI VIDEO (${items.length} file)</span>
+          <span style="font-weight:700;color:var(--pk9-text-muted);font-size:0.73rem;">Đọc ngay dưới video hoặc phóng to toàn màn hình</span>
+        </div>
+        <div class="pk9-pdf-chip-row">
+          ${items.map((it, idx) => {
+            const isOpen = activePreviewUrl === it.url;
+            return `
+              <button type="button"
+                class="pk9-pdf-action-btn ${isOpen ? 'primary' : ''}"
+                data-toggle-inline-pdf="${esc(it.url)}"
+                data-inline-pdf-title="${esc(`${topic.title} — ${it.label}`)}"
+              >
+                ${it.icon} ${isOpen ? `🔽 Đang mở: ${esc(it.label)}` : `📖 Đọc tại chỗ: ${esc(it.label)}`}
+              </button>
+              <button type="button"
+                class="pk9-pdf-action-btn"
+                data-open-inapp-url="${esc(it.url)}"
+                data-open-inapp-title="${esc(`${topic.title} — ${it.label}`)}"
+                data-open-inapp-sub="Tài liệu PDF kèm video • Học Cùng Phúc K9"
+              >
+                🔍 Phóng to #${idx + 1}
+              </button>
+              <a href="${esc(it.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
+                ↗️ Tải / Mở Drive
+              </a>
+            `;
+          }).join('')}
+        </div>
+        ${activePreviewUrl ? `
+          <div class="pk9-inline-pdf-wrap">
+            <iframe
+              src="${esc(toDrivePreviewUrl(activePreviewUrl))}"
+              title="${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}"
+              allow="autoplay"
+            ></iframe>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   function renderLecturesTab() {
     const root = document.getElementById('tab-lectures');
     if (!root) return;
 
     const catalog = getCatalog();
+    const totalAllTopics = catalog.reduce((s, c) => s + (c.chapters || []).reduce((a, ch) => a + (ch.topics || []).length, 0), 0);
+    const navCountEl = document.getElementById('pk9-nav-lectures-count');
+    if (navCountEl && totalAllTopics) navCountEl.textContent = `${totalAllTopics} bài`;
+
     const course = getCourseById(APP.activeCourseId);
     if (!course) return;
 
     const activeGrade = course.grade || '2K9';
     const gradeMeta = [
       { code: '2K9', icon: '🎓', label: 'Khối 12 — Luyện Thi THPT Quốc Gia (2K9)', sub: '5 Môn thi THPT: Toán 12, Vật Lí 12, Hóa Học 12, Sinh Học 12, Tiếng Anh 12' },
+      { code: '2K8', icon: '🔥', label: 'Khối 12 Tuyển Chọn 2K8 — Chuyên Đề + PDF', sub: 'Chuyên đề hay nhất đủ môn (Toán, Lí, Hóa, Sinh, Anh, Văn, Sử, Địa) kèm PDF dưới video' },
       { code: '2K11', icon: '📘', label: 'Khối 10 — Chương Trình Mới GDPT 2018 (2K11)', sub: '5 Môn nền tảng: Toán 10, Vật Lí 10, Hóa Học 10, Sinh Học 10, Tiếng Anh 10' },
-      { code: '2K12', icon: '🎯', label: 'Khối 9 — Ôn Thi Tuyển Sinh Vào Lớp 10 (2K12)', sub: '5 Môn vào 10: Toán 9, Ngữ Văn 9, Tiếng Anh 9, KHTN 9, Lịch Sử & Địa Lí 9' }
+      { code: '2K12', icon: '🎯', label: 'Khối 9 — Ôn Thi Tuyển Sinh Vào Lớp 10 (2K12)', sub: '5 Môn vào 10: Toán 9, Vật Lí 9, Hóa Học 9, Sinh Học 9, Tiếng Anh 9' }
     ];
     const coursesInActiveGrade = catalog.filter(c => c.grade === activeGrade);
 
@@ -745,9 +848,10 @@
                     ${topics.map(t => {
                       const done = Boolean(APP.doneMap[t.id]);
                       const act = t.id === activeTopic?.id;
+                      const hasPdf = Boolean(t.pdfUrl || t.solutionPdfUrl || (Array.isArray(t.pdfs) && t.pdfs.length));
                       return `
                         <button type="button" class="pk9-topic-btn ${act ? 'active' : ''}" data-select-topic="${esc(t.id)}">
-                          <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${esc(t.title)}</span>
+                          <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
                           <span style="font-size:0.78rem;color:${done ? '#10b981' : 'var(--pk9-text-soft)'};flex-shrink:0;">
                             ${done ? '✓ Đã học' : esc(t.duration || '45p')}
                           </span>
@@ -761,16 +865,20 @@
           </div>
         </aside>
 
-        ${activeTopic ? `
+        ${activeTopic ? (() => {
+          const vid = getTopicVideoEmbed(activeTopic);
+          return `
           <div class="pk9-video-stage">
             <div class="pk9-video-frame-wrap">
               <iframe
-                src="https://www.youtube-nocookie.com/embed/${esc(activeTopic.videoId)}?rel=0&modestbranding=1"
+                src="${esc(vid.embedUrl)}"
                 title="${esc(activeTopic.title)}"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen
               ></iframe>
             </div>
+
+            ${renderTopicPdfAttachments(activeTopic)}
 
             <div class="pk9-video-info-bar">
               <div style="flex:1;min-width:220px;">
@@ -783,7 +891,7 @@
                 <div style="font-size:0.81rem;color:var(--pk9-text-muted);display:flex;flex-wrap:wrap;gap:0.75rem;">
                   <span>👨‍🏫 <b>Giảng viên:</b> ${esc(activeTopic.teacher)}</span>
                   <span>⏱ <b>Thời lượng:</b> ${esc(activeTopic.duration || '50 phút')}</span>
-                  <span>🎞️ <b>Mã Video:</b> <code>${esc(activeTopic.videoId)}</code></span>
+                  <span>🎞️ <b>Mã Video:</b> <code>${esc(vid.codeLabel)}</code></span>
                 </div>
               </div>
 
@@ -794,9 +902,11 @@
                 <button type="button" class="pk9-btn-exam-primary" data-toggle-done-topic="${esc(activeTopic.id)}" style="${isDone ? 'background:#10b981;' : ''}">
                   ${isDone ? '✓ Đã hoàn thành (+25 XP)' : '✅ Đánh dấu hoàn thành (+25 XP)'}
                 </button>
-                <a href="https://www.youtube.com/watch?v=${esc(activeTopic.videoId)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
-                  ▶️ Mở YouTube ↗
-                </a>
+                ${vid.externalUrl ? `
+                  <a href="${esc(vid.externalUrl)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
+                    ${vid.kind === 'drive' ? '🎬 Mở Video Drive ↗' : '▶️ Mở YouTube ↗'}
+                  </a>
+                ` : ''}
                 <a href="${esc(ytSearchUrl)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tìm thêm bài giảng cùng chủ đề trên YouTube">
                   🔎 Tìm thêm trên YouTube ↗
                 </a>
@@ -825,7 +935,8 @@
               ${renderTopicSubtabContent(activeTopic)}
             </div>
           </div>
-        ` : ''}
+          `;
+        })() : ''}
       </div>
     `;
     typeset(root);
@@ -2695,6 +2806,7 @@
           APP.activeCourseId = firstCourse.id;
           APP.activeTopicId = firstCourse.chapters?.[0]?.topics?.[0]?.id || '';
         }
+        APP.inlinePdfUrl = '';
         renderLecturesTab();
         return;
       }
@@ -2704,6 +2816,7 @@
         APP.activeCourseId = selCourse.getAttribute('data-select-course');
         const c = getCourseById(APP.activeCourseId);
         APP.activeTopicId = c?.chapters?.[0]?.topics?.[0]?.id || '';
+        APP.inlinePdfUrl = '';
         renderLecturesTab();
         return;
       }
@@ -2711,6 +2824,22 @@
       const selTopic = e.target.closest('[data-select-topic]');
       if (selTopic) {
         APP.activeTopicId = selTopic.getAttribute('data-select-topic');
+        APP.inlinePdfUrl = '';
+        renderLecturesTab();
+        return;
+      }
+
+      const inlinePdfBtn = e.target.closest('[data-toggle-inline-pdf]');
+      if (inlinePdfBtn) {
+        const url = inlinePdfBtn.getAttribute('data-toggle-inline-pdf') || '';
+        const title = inlinePdfBtn.getAttribute('data-inline-pdf-title') || 'Tài liệu PDF';
+        if (APP.inlinePdfUrl === url) {
+          APP.inlinePdfUrl = '';
+          APP.inlinePdfTitle = '';
+        } else {
+          APP.inlinePdfUrl = url;
+          APP.inlinePdfTitle = title;
+        }
         renderLecturesTab();
         return;
       }

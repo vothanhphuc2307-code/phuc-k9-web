@@ -693,7 +693,7 @@ html.dark .pk9-xp-chip {
 
 .pk9-grade-tier-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   margin-bottom: 1.1rem;
 }
@@ -738,7 +738,7 @@ html.dark .pk9-xp-chip {
 
 .pk9-subject-tier-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 0.65rem;
 }
 
@@ -895,6 +895,96 @@ html.dark .pk9-topic-btn.active {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.pk9-video-pdf-bar {
+  padding: 0.95rem 1.35rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(16, 185, 129, 0.08));
+  border-bottom: 1px solid var(--pk9-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pk9-pdf-bar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--pk9-primary);
+  letter-spacing: 0.02em;
+}
+
+.pk9-pdf-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.pk9-pdf-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--pk9-border);
+  background: var(--pk9-surface);
+  color: var(--pk9-text);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pk9-pdf-action-btn:hover {
+  border-color: var(--pk9-primary);
+  color: var(--pk9-primary);
+  transform: translateY(-1px);
+}
+
+.pk9-pdf-action-btn.primary {
+  background: linear-gradient(135deg, #2563eb, #0d9488);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.pk9-pdf-action-btn.primary:hover {
+  color: #ffffff;
+  box-shadow: 0 8px 20px -8px rgba(37, 99, 235, 0.55);
+}
+
+.pk9-inline-pdf-wrap {
+  width: 100%;
+  height: 540px;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  border: 1.5px solid var(--pk9-border);
+  background: #ffffff;
+  margin-top: 0.35rem;
+}
+
+.pk9-inline-pdf-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.pk9-topic-pdf-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.38rem;
+  border-radius: 0.4rem;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  font-size: 0.66rem;
+  font-weight: 800;
+  margin-left: 0.35rem;
+  vertical-align: middle;
 }
 
 .pk9-study-subtabs {
