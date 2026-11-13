@@ -451,15 +451,16 @@
 
     if (xpChip) {
       xpChip.innerHTML = APP.isAdmin
-        ? `<span class="hide-xs">🛡️ Quản trị viên • </span>🔥 <b>Chuỗi ${streakVal} ngày</b> <span class="hide-xs">(Ngoài BXH)</span>`
-        : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b> <span class="hide-xs">(Lv.${levelVal})</span>`;
+        ? `<span class="hide-xs">🛡️ Quản trị viên • Chuỗi </span>🔥 <b>${streakVal}d</b><span class="hide-xs"> (Ngoài BXH)</span>`
+        : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b><span class="hide-xs"> (Lv.${levelVal})</span>`;
     }
 
     if (authBtn) {
       if (APP.user) {
-        authBtn.innerHTML = `${APP.isAdmin ? '🛡️' : '👤'} ${esc(APP.user.display_name || APP.user.username)}`;
+        const displayName = esc(APP.user.display_name || APP.user.username);
+        authBtn.innerHTML = `<span>${APP.isAdmin ? '🛡️' : '👤'}</span><span class="pk9-auth-name">${displayName}</span>`;
       } else {
-        authBtn.innerHTML = `🚀 Đăng ký <span class="hide-xs">/ Đăng nhập (+100 XP)</span>`;
+        authBtn.innerHTML = `<span>🚀</span><span class="pk9-auth-name">Đăng nhập</span><span class="hide-xs"> / Đăng ký (+100 XP)</span>`;
       }
     }
 
@@ -547,7 +548,7 @@
                 <img src="/assets/logo-phuc-k9.png?v=2026" alt="Logo Học Cùng Phúc K9" width="52" height="52" />
               </div>
               <div class="pk9-hero-badge">
-                <span>⚡ HỆ SINH THÁI GIÁO DỤC TOÀN DIỆN • HỌC CÙNG PHÚC K9</span>
+                <span>⚡ <span class="pk9-hide-mob-xs">HỆ SINH THÁI GIÁO DỤC TOÀN DIỆN • </span>HỌC CÙNG PHÚC K9</span>
               </div>
             </div>
             <h1>
@@ -555,20 +556,20 @@
               <span>HỌC CÙNG PHÚC K9</span>
             </h1>
             <p>
-              Nền tảng học tập thế hệ mới tích hợp <b>${totalTopics}+ Video bài giảng đa môn</b> (Toán, Lí, Hóa, Sinh, Anh, Khối 10 & Ôn vào 10), <b>Phòng luyện đề nguồn gốc thật Sở/Bộ chấm điểm tự động</b> và <b>Bảng xếp hạng Hàng Tuần & Top Học Viên</b>.
+              Nền tảng học tập thế hệ mới tích hợp <b>${totalTopics}+ Video bài giảng đa môn</b><span class="pk9-hide-mob-xs"> (Toán, Lí, Hóa, Sinh, Anh, Khối 10 & Ôn vào 10)</span>, <b>Phòng luyện đề nguồn<span class="pk9-hide-mob-xs"> gốc</span> thật Sở/Bộ chấm điểm tự động</b> và <b>BXH<span class="pk9-hide-mob-xs"> Hàng Tuần & Top Học Viên</span></b>.
             </p>
             <div class="pk9-hero-ctas">
               <button type="button" class="pk9-btn-hero-main" data-nav-tab="lectures">
-                🎬 Vào Phòng Học Video (${totalTopics} bài)
+                🎬 <span class="pk9-hide-mob-xs">Vào Phòng Học Video (${totalTopics} bài)</span><span class="pk9-show-mob-xs">Học Video (${totalTopics})</span>
               </button>
               <button type="button" class="pk9-btn-hero-sec" data-nav-tab="khoa-chui" style="background:linear-gradient(135deg,rgba(16,185,129,0.28),rgba(37,99,235,0.28));border-color:rgba(52,211,153,0.6);">
-                💎 Khóa Chui Tham Khảo (Xem Trực Tiếp)
+                💎 <span class="pk9-hide-mob-xs">Khóa Chui Tham Khảo (Xem Trực Tiếp)</span><span class="pk9-show-mob-xs">Khóa Chui</span>
               </button>
               <button type="button" class="pk9-btn-hero-sec" data-nav-tab="exams">
-                🏛️ Luyện Đề Nguồn Thật & Chấm Điểm
+                🏛️ <span class="pk9-hide-mob-xs">Luyện Đề Nguồn Thật & Chấm Điểm</span><span class="pk9-show-mob-xs">Luyện Đề</span>
               </button>
               <button type="button" class="pk9-btn-hero-sec" data-nav-tab="leaderboard">
-                🏆 BXH Tuần & BXH Top Học Viên
+                🏆 <span class="pk9-hide-mob-xs">BXH Tuần & BXH Top Học Viên</span><span class="pk9-show-mob-xs">BXH Top</span>
               </button>
             </div>
           </div>
@@ -592,6 +593,18 @@
           </div>
         </div>
       </section>
+
+      <div class="pk9-mob-shortcut-strip" aria-label="Công cụ nhanh trên di động">
+        <button type="button" class="pk9-mob-tool-pill" data-open-cmd="1">🔍 Tìm bài / đề</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="docs">📚 Thư viện PDF</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="flashcards">🃏 Flashcards 3D</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="archive">🗂️ Tổng ôn 2K8</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="planner">⏱️ Pomodoro 9+</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="ai">🤖 Trợ lý AI</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="community">🤝 Cộng đồng</button>
+        <button type="button" class="pk9-mob-tool-pill" data-open-auth="profile">👤 Tài khoản</button>
+        ${APP.isAdmin ? '<button type="button" class="pk9-mob-tool-pill" data-nav-tab="admin" style="color:#e11d48;border-color:rgba(225,29,72,0.35);">🛡️ Admin Pro</button>' : ''}
+      </div>
 
       ${!APP.isStandalone ? `
         <div class="pk9-mob-app-banner">
@@ -4084,13 +4097,13 @@
     if (btn) {
       btn.classList.toggle('installed', standalone);
       if (standalone) {
-        btn.textContent = '✓ Đã cài App';
+        btn.innerHTML = '✓ <span class="pk9-hide-mob-xs">Đã cài App</span><span class="pk9-show-mob-xs">App</span>';
         btn.title = 'Đang chạy ở chế độ ứng dụng độc lập';
       } else if (APP.deferredInstallPrompt) {
-        btn.textContent = '📲 Cài App Ngay';
+        btn.innerHTML = '📲 <span class="pk9-hide-mob-xs">Cài App Ngay</span><span class="pk9-show-mob-xs">App</span>';
         btn.title = 'Cài đặt web thành ứng dụng trên điện thoại';
       } else {
-        btn.textContent = '📲 Tải App';
+        btn.innerHTML = '📲 <span class="pk9-hide-mob-xs">Tải App</span><span class="pk9-show-mob-xs">App</span>';
         btn.title = 'Hướng dẫn cài ứng dụng lên màn hình chính';
       }
     }
