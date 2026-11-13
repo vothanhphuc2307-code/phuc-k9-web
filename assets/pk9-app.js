@@ -423,13 +423,19 @@
     if (topAdminBtn) topAdminBtn.style.display = APP.isAdmin ? 'inline-flex' : 'none';
 
     const doneCount = Object.values(APP.doneMap).filter(Boolean).length;
-    const xpVal = APP.user ? Math.max(100, Number(APP.user.xp || 100)) : doneCount * 20;
-    const wkXpVal = APP.user ? Math.max(50, Number(APP.user.weekly_xp || 50)) : doneCount * 20;
+    const xpVal = APP.user
+      ? (APP.isAdmin ? Number(APP.user.xp || 0) : Math.max(100, Number(APP.user.xp || 100)))
+      : doneCount * 20;
+    const wkXpVal = APP.user
+      ? (APP.isAdmin ? Number(APP.user.weekly_xp || 0) : Math.max(50, Number(APP.user.weekly_xp || 50)))
+      : doneCount * 20;
     const levelVal = Math.floor(xpVal / 100) + 1;
     const streakVal = APP.user ? Math.max(1, Number(APP.user.streak || 1)) : 1;
 
     if (xpChip) {
-      xpChip.innerHTML = `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b> <span class="hide-xs">(Lv.${levelVal})</span>`;
+      xpChip.innerHTML = APP.isAdmin
+        ? `<span class="hide-xs">🛡️ Quản trị viên • </span>🔥 <b>Chuỗi ${streakVal} ngày</b> <span class="hide-xs">(Ngoài BXH)</span>`
+        : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b> <span class="hide-xs">(Lv.${levelVal})</span>`;
     }
 
     if (authBtn) {
@@ -452,12 +458,15 @@
               <div style="font-weight:800;font-size:0.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 ${esc(APP.user.display_name)} ${APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
               </div>
-              <div style="font-size:0.72rem;color:var(--pk9-text-muted);">Lv.${levelVal} • ${xpVal} XP • Tuần: ${wkXpVal} XP</div>
+              <div style="font-size:0.72rem;color:var(--pk9-text-muted);">
+                ${APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • Tuần: ${wkXpVal} XP`}
+              </div>
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:0.74rem;font-weight:700;padding-top:0.45rem;border-top:1px dashed var(--pk9-border);">
-            <span>🏆 Top Tuần: <b>#${myRank?.weeklyRank || '—'}</b></span>
-            <span>🌟 Top Tổng: <b>#${myRank?.topRank || '—'}</b></span>
+            ${APP.isAdmin
+              ? `<span style="color:#e11d48;">🚫 Không tính leo Top BXH</span>`
+              : `<span>🏆 Top Tuần: <b>#${myRank?.weeklyRank || '—'}</b></span><span>🌟 Top Tổng: <b>#${myRank?.topRank || '—'}</b></span>`}
           </div>
           ${APP.isAdmin ? `
             <button type="button" class="pk9-auth-btn" data-nav-tab="admin" style="width:100%;justify-content:center;padding:0.45rem;margin-top:0.55rem;background:linear-gradient(135deg,#e11d48,#d97706);">
@@ -494,7 +503,7 @@
     const totalTopics = catalog.reduce((s, c) => s + getCourseTopicCount(c), 0);
     const doneTotal = Object.values(APP.doneMap).filter(Boolean).length;
     const seedExams = (Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS : []).slice(0, 4);
-    const topWeekly = (APP.lbData.weekly_leaderboard || []).slice(0, 3);
+    const topWeekly = (APP.lbData.weekly_leaderboard || []).filter(r => !r.is_admin && r.role !== 'admin').slice(0, 3);
     const total2k9Pdfs = catalog.filter(c => c.grade === '2K9').reduce((s, c) => s + Number(c.pdfFileCount || 0), 0);
     const subjects2k9Map = new Map();
     for (const c of catalog) {
@@ -1384,21 +1393,27 @@
     const root = document.getElementById('tab-leaderboard');
     if (!root) return;
 
+    const onlyStudents = rows => (rows || []).filter(r => !r.is_admin && r.role !== 'admin');
+    const weeklyRows = onlyStudents(APP.lbData.weekly_leaderboard);
+    const topRows = onlyStudents(APP.lbData.leaderboard);
+    const examRows = onlyStudents(APP.lbData.exam_leaderboard);
+
     const list = APP.lbMode === 'weekly'
-      ? APP.lbData.weekly_leaderboard
+      ? weeklyRows
       : APP.lbMode === 'exam'
-      ? APP.lbData.exam_leaderboard
-      : APP.lbData.leaderboard;
+      ? examRows
+      : topRows;
 
     const q = APP.lbSearch.trim().toLowerCase();
-    const filtered = (list || []).filter(r => {
+    const filtered = list.filter(r => {
       if (!q) return true;
       return `${r.display_name} ${r.username} ${r.school || ''} ${r.grade || ''}`.toLowerCase().includes(q);
     });
 
-    const top3 = (list || []).slice(0, 3);
+    const top3 = list.slice(0, 3);
     const myRank = APP.lbData.my_rank;
-    const maxMetric = Math.max(100, ...(list || []).map(x => Number(APP.lbMode === 'weekly' ? x.weeklyXp : x.xp) || 100));
+    const isExcludedAdmin = APP.isAdmin || Boolean(myRank?.excluded_from_leaderboard);
+    const maxMetric = Math.max(100, ...list.map(x => Number(APP.lbMode === 'weekly' ? x.weeklyXp : x.xp) || 100));
     const podiumSlots = [
       { rank: 2, row: top3.find(x => x.rank === 2) || null, crown: '🥈', title: 'Á Quân #2' },
       { rank: 1, row: top3.find(x => x.rank === 1) || null, crown: '👑', title: 'Thủ Khoa #1' },
@@ -1416,7 +1431,7 @@
                 </div>
                 <div class="pk9-lb-live-pill">
                   <span class="pk9-live-dot"></span>
-                  <span>100% Dữ liệu thật từ Học viên đăng ký</span>
+                  <span>100% Học viên thật • Quản trị viên không tính đua Top</span>
                 </div>
               </div>
               <h2 style="font-size:1.65rem;font-weight:900;margin:0 0 0.5rem;">
@@ -1427,7 +1442,18 @@
               </p>
             </div>
             <div>
-              ${APP.user ? `
+              ${APP.user && isExcludedAdmin ? `
+                <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.22);border-radius:1.25rem;padding:1.2rem;">
+                  <div style="font-size:0.76rem;font-weight:800;color:#fda4af;text-transform:uppercase;">🛡️ CHẾ ĐỘ QUẢN TRỊ VIÊN • NGOÀI BXH</div>
+                  <div style="font-size:1.15rem;font-weight:900;margin:0.25rem 0 0.45rem;">🛡️ ${esc(APP.user.display_name)} (@${esc(APP.user.username)})</div>
+                  <p style="margin:0 0 0.85rem;font-size:0.82rem;color:rgba(255,255,255,0.9);line-height:1.5;">
+                    Tài khoản Quản trị viên được loại khỏi Bảng Xếp Hạng để đảm bảo công bằng tuyệt đối và giữ động lực leo Top cho học viên.
+                  </p>
+                  <button type="button" class="pk9-btn-hero-main" data-nav-tab="admin" style="width:100%;justify-content:center;padding:0.55rem 0.9rem;font-size:0.84rem;">
+                    🛡️ Mở Admin Dashboard
+                  </button>
+                </div>
+              ` : APP.user ? `
                 <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.22);border-radius:1.25rem;padding:1.2rem;">
                   <div style="font-size:0.76rem;font-weight:800;color:#fde047;text-transform:uppercase;">🌟 THỨ HẠNG THẬT CỦA BẠN</div>
                   <div style="font-size:1.15rem;font-weight:900;margin:0.25rem 0 0.75rem;">👤 ${esc(APP.user.display_name)} (@${esc(APP.user.username)})</div>
@@ -1441,7 +1467,7 @@
                       <span style="font-size:0.72rem;">BXH Top</span>
                     </div>
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
-                      <strong style="display:block;font-size:1.2rem;color:#fbbf24;">${APP.user.xp || 100} XP</strong>
+                      <strong style="display:block;font-size:1.2rem;color:#fbbf24;">${APP.user.xp ?? 100} XP</strong>
                       <span style="font-size:0.72rem;">Tổng XP</span>
                     </div>
                   </div>
@@ -1464,13 +1490,13 @@
         <div class="pk9-exam-toolbar">
           <div class="pk9-exam-tabs">
             <button type="button" class="pk9-exam-chip ${APP.lbMode === 'weekly' ? 'active' : ''}" data-lb-mode="weekly">
-              🔥 BXH Hàng Tuần (${(APP.lbData.weekly_leaderboard || []).length} học viên)
+              🔥 BXH Hàng Tuần (${weeklyRows.length} học viên)
             </button>
             <button type="button" class="pk9-exam-chip ${APP.lbMode === 'top' ? 'active' : ''}" data-lb-mode="top">
-              🏆 BXH Top Học Viên (${(APP.lbData.leaderboard || []).length} học viên)
+              🏆 BXH Top Học Viên (${topRows.length} học viên)
             </button>
             <button type="button" class="pk9-exam-chip ${APP.lbMode === 'exam' ? 'active' : ''}" data-lb-mode="exam">
-              🎯 BXH Cao Thủ Luyện Đề (${(APP.lbData.exam_leaderboard || []).length})
+              🎯 BXH Cao Thủ Luyện Đề (${examRows.length})
             </button>
           </div>
           <div class="pk9-exam-search">
@@ -1535,7 +1561,7 @@
           ${filtered.length ? filtered.map((row, idx) => {
             const isMe = APP.user && row.username === APP.user.username;
             const rankBadge = row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`;
-            const curVal = Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 100;
+            const curVal = Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 0;
             const pct = Math.min(100, Math.max(12, Math.round((curVal / maxMetric) * 100)));
             return `
               <div class="pk9-lb-row ${isMe ? 'me' : ''}" style="animation-delay:${Math.min(idx * 0.05, 0.4)}s;">
@@ -2230,7 +2256,7 @@
       avg_exam_score: 0,
       total_lessons_done: Object.values(APP.doneMap).filter(Boolean).length,
       total_notes_saved: Object.keys(APP.notesMap).length,
-      total_xp_system: APP.user?.xp || 9999
+      total_xp_system: APP.user?.xp || 0
     };
 
     const catalog = getCatalog();
