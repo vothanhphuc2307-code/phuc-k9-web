@@ -88,60 +88,275 @@ function isWithinCurrentWeek(isoStr, now = new Date()) {
   if (Number.isNaN(d.getTime())) return false;
   return vnWeekKey(d) === vnWeekKey(now);
 }
-function visitorCookieOptions(maxAge = 60 * 60 * 24 * 365) {
-  return { httpOnly: false, maxAge, sameSite: 'lax', secure: true, path: '/' };
+function visitorCookieOptions(req, maxAge = 60 * 60 * 24 * 365) {
+  const isHttps = Boolean(
+    process.env.VERCEL
+    || String(req?.headers?.['x-forwarded-proto'] || '').includes('https')
+  );
+  return { httpOnly: false, maxAge, sameSite: 'lax', secure: isHttps, path: '/' };
 }
 function validVisitorId(v) {
-  return /^[a-f0-9-]{24,80}$/i.test(String(v || ''));
+  const s = String(v || '').trim();
+  return /^[a-f0-9-]{20,80}$/i.test(s) || /^v_[a-z0-9_-]{8,60}$/i.test(s);
+}
+function safeParseObj(val) {
+  if (!val) return null;
+  if (typeof val === 'object') return val;
+  try { return JSON.parse(String(val)); } catch { return null; }
+}
+function parseZrangePairs(raw) {
+  if (!Array.isArray(raw) || !raw.length) return [];
+  const out = [];
+  if (typeof raw[0] === 'object' && raw[0] !== null && 'member' in raw[0]) {
+    for (const item of raw) {
+      out.push({ name: String(item.member || ''), count: Number(item.score || 0) });
+    }
+  } else {
+    for (let i = 0; i < raw.length; i += 2) {
+      const name = String(raw[i] ?? '');
+      const count = Number(raw[i + 1] ?? 0);
+      if (name) out.push({ name, count });
+    }
+  }
+  return out;
+}
+function parseClientAgent(req, body = {}) {
+  const ua = String(req?.headers?.['user-agent'] || '');
+  const isBot = /(bot|crawl|spider|slurp|headless|lighthouse|pingdom|uptimerobot|vercel-screenshot|facebookexternalhit|facebot|twitterbot|telegrambot|discordbot|curl\/|wget\/|python-requests|go-http-client)/i.test(ua);
+  const mobileHint = Boolean(body?.mobile);
+  const platformHint = String(body?.platform_hint || '');
+  const touchPoints = Number(body?.touch_points || 0);
+  const screenStr = clean(body?.screen || '', 24);
+  const screenWidth = Number((screenStr.split('x')[0]) || 0);
+  const pwa = Boolean(body?.pwa);
+
+  let device_type = 'desktop';
+  if (/iPad|Tablet|PlayBook|Silk/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) {
+    device_type = 'tablet';
+  } else if (/Mobi|iPhone|iPod|Android.*Mobile|Windows Phone|BlackBerry/i.test(ua) || mobileHint || (platformHint === 'MacIntel' && touchPoints > 1 && screenWidth > 0 && screenWidth <= 1024)) {
+    device_type = 'mobile';
+  }
+
+  let os = 'Khác';
+  if (/iPhone|iPad|iPod/i.test(ua) || (platformHint === 'MacIntel' && touchPoints > 1)) os = 'iOS';
+  else if (/Android/i.test(ua)) os = 'Android';
+  else if (/Windows/i.test(ua)) os = 'Windows';
+  else if (/Macintosh|Mac OS X/i.test(ua)) os = 'macOS';
+  else if (/Linux|X11|CrOS/i.test(ua)) os = 'Linux';
+
+  let browser = 'Khác';
+  if (pwa) browser = 'PWA App';
+  else if (/Zalo/i.test(ua)) browser = 'Zalo';
+  else if (/Barcelona|Threads|Instagram/i.test(ua)) browser = 'Threads / IG';
+  else if (/FBAN|FBAV|FB_IAB|Messenger/i.test(ua)) browser = 'Facebook / Messenger';
+  else if (/TikTok|BytedanceWebview|Musical_ly/i.test(ua)) browser = 'TikTok';
+  else if (/coc_coc_browser/i.test(ua)) browser = 'Cốc Cốc';
+  else if (/Edg\//i.test(ua)) browser = 'Edge';
+  else if (/SamsungBrowser/i.test(ua)) browser = 'Samsung Internet';
+  else if (/Chrome|CriOS/i.test(ua)) browser = 'Chrome';
+  else if (/Safari/i.test(ua)) browser = 'Safari';
+  else if (/Firefox|FxiOS/i.test(ua)) browser = 'Firefox';
+
+  const rawRef = clean(body?.ref || '', 240);
+  let refHost = 'direct';
+  if (rawRef && /^https?:\/\//i.test(rawRef)) {
+    try {
+      const u = new URL(rawRef);
+      const reqHost = String(req?.headers?.host || '').split(':')[0].toLowerCase();
+      const h = u.hostname.replace(/^www\./i, '').toLowerCase();
+      if (h && h !== reqHost) refHost = h;
+    } catch {}
+  } else if (rawRef && !rawRef.includes('/')) {
+    refHost = rawRef;
+  }
+
+  const country = clean(req?.headers?.['x-vercel-ip-country'] || '', 12) || 'VN';
+  let city = '';
+  try {
+    city = clean(decodeURIComponent(String(req?.headers?.['x-vercel-ip-city'] || '')), 60);
+  } catch {
+    city = clean(req?.headers?.['x-vercel-ip-city'] || '', 60);
+  }
+
+  return { isBot, device_type, os, browser, pwa, screen: screenStr, refHost, country, city };
 }
 
-async function trackVisitor(req, res, redis) {
-  const cookies = parseCookies(req);
-  let vid = String(cookies.phuc_visitor || '');
-  if (!validVisitorId(vid)) {
-    vid = crypto.randomUUID();
-    setCookie(res, 'phuc_visitor', vid, visitorCookieOptions());
+async function scanKeys(redis, matchPattern, cap = 600) {
+  const keys = [];
+  let cursor = 0;
+  try {
+    do {
+      const scan = await redis.scan(cursor, { match: matchPattern, count: 150 });
+      cursor = Number(scan?.[0] ?? 0);
+      const batch = Array.isArray(scan?.[1]) ? scan[1] : [];
+      for (const k of batch) {
+        keys.push(k);
+        if (keys.length >= cap) return keys;
+      }
+    } while (cursor !== 0);
+  } catch {}
+  return keys;
+}
+
+async function collectOnlineSessions(redis) {
+  const keys = await scanKeys(redis, 'phuc:visitors:online:*', 400);
+  if (!keys.length) return [];
+  const rawList = await Promise.all(keys.map(k => redis.get(k).catch(() => null)));
+  const nowMs = Date.now();
+  const out = [];
+  for (let i = 0; i < keys.length; i++) {
+    const obj = safeParseObj(rawList[i]);
+    if (obj && Number(obj.ts || 0) > nowMs - 130 * 1000) {
+      out.push(obj);
+    } else if (rawList[i] && !obj) {
+      out.push({
+        vid_short: String(keys[i]).split(':').pop().slice(0, 8),
+        device_type: 'desktop',
+        os: 'Khác',
+        browser: 'Khác',
+        active_tab: 'home',
+        ts: Number(rawList[i]) || nowMs
+      });
+    }
   }
-  const day = vnDayKey();
-  const month = day.slice(0, 7);
+  return out.sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+}
+
+async function trackVisitor(req, res, redis, session = null) {
   let body = req.body || {};
   if (typeof body === 'string') {
     try { body = JSON.parse(body || '{}'); } catch { body = {}; }
   }
-  const event = String(body?.event || 'pageview').toLowerCase() === 'heartbeat' ? 'heartbeat' : 'pageview';
+  const agent = parseClientAgent(req, body);
+  if (agent.isBot) {
+    return { ignored: true, reason: 'bot' };
+  }
+
+  const cookies = parseCookies(req);
+  const cookieVid = String(cookies.phuc_visitor || '').trim();
+  const bodyVid = String(body?.visitor_id || '').trim();
+  let vid = validVisitorId(cookieVid) ? cookieVid : (validVisitorId(bodyVid) ? bodyVid : '');
+  if (!vid) {
+    vid = crypto.randomUUID();
+  }
+  if (cookieVid !== vid) {
+    setCookie(res, 'phuc_visitor', vid, visitorCookieOptions(req));
+  }
+
+  const rawIp = String(req?.headers?.['x-forwarded-for'] || req?.socket?.remoteAddress || '0.0.0.0').split(',')[0].trim();
+  const fpSource = session?.username
+    ? `user:${session.username}`
+    : `${rawIp}|${agent.os}|${agent.device_type}|${agent.screen || 'na'}`;
+  const fpId = crypto.createHash('sha256').update(fpSource).digest('hex').slice(0, 24);
+
+  const day = vnDayKey();
+  const month = day.slice(0, 7);
+  const nowIso = new Date().toISOString();
+  const rawEv = String(body?.event || 'pageview').toLowerCase();
+  const event = rawEv === 'heartbeat' ? 'heartbeat' : rawEv === 'tab' ? 'tab' : 'pageview';
+  const activeTab = clean(body?.tab || 'home', 40) || 'home';
+  const pathName = clean(body?.path || '/', 220) || '/';
+  const sessionId = clean(body?.session_id || '', 64);
+
   try {
     await redis.sadd('phuc:visitors:all', vid);
     await redis.sadd(`phuc:visitors:day:${day}`, vid);
-    await redis.expire?.(`phuc:visitors:day:${day}`, 60 * 60 * 24 * 90);
+    await redis.expire?.(`phuc:visitors:day:${day}`, 60 * 60 * 24 * 120);
     await redis.sadd(`phuc:visitors:month:${month}`, vid);
     await redis.expire?.(`phuc:visitors:month:${month}`, 60 * 60 * 24 * 400);
-    if (event === 'pageview') {
+
+    await redis.sadd('phuc:visitors:fp:all', fpId);
+    await redis.sadd(`phuc:visitors:fp:day:${day}`, fpId);
+    await redis.expire?.(`phuc:visitors:fp:day:${day}`, 60 * 60 * 24 * 120);
+
+    await redis.sadd(`phuc:visitors:devall:${agent.device_type}`, vid);
+    await redis.sadd(`phuc:visitors:devday:${day}:${agent.device_type}`, vid);
+    await redis.expire?.(`phuc:visitors:devday:${day}:${agent.device_type}`, 60 * 60 * 24 * 120);
+    await redis.sadd(`phuc:visitors:osall:${agent.os}`, vid);
+    await redis.sadd(`phuc:visitors:browserall:${agent.browser}`, vid);
+    if (agent.pwa) await redis.sadd('phuc:visitors:pwa', vid);
+
+    if (sessionId.length >= 8 && event !== 'heartbeat') {
+      await redis.sadd(`phuc:sessions:day:${day}`, sessionId);
+      await redis.expire?.(`phuc:sessions:day:${day}`, 60 * 60 * 24 * 120);
+    }
+
+    if (event === 'pageview' || event === 'tab') {
       try { await redis.incr('phuc:pageviews:all'); } catch {}
       try { await redis.incr(`phuc:pageviews:day:${day}`); } catch {}
-      try { await redis.expire?.(`phuc:pageviews:day:${day}`, 60 * 60 * 24 * 90); } catch {}
-      const path = clean(body?.path || '/', 220) || '/';
-      const source = clean(body?.ref || '', 220) || 'direct';
-      const device = body?.mobile ? 'mobile' : 'desktop';
-      try { await redis.zincrby(`phuc:analytics:path:${day}`, 1, path); } catch {}
-      try { await redis.zincrby(`phuc:analytics:ref:${day}`, 1, source); } catch {}
-      try { await redis.zincrby(`phuc:analytics:device:${day}`, 1, device); } catch {}
-      try { await redis.expire?.(`phuc:analytics:path:${day}`, 60 * 60 * 24 * 90); } catch {}
-      try { await redis.expire?.(`phuc:analytics:ref:${day}`, 60 * 60 * 24 * 90); } catch {}
-      try { await redis.expire?.(`phuc:analytics:device:${day}`, 60 * 60 * 24 * 90); } catch {}
+      try { await redis.expire?.(`phuc:pageviews:day:${day}`, 60 * 60 * 24 * 120); } catch {}
+      try { await redis.zincrby('phuc:analytics:tab:all', 1, activeTab); } catch {}
+      try { await redis.zincrby(`phuc:analytics:tab:${day}`, 1, activeTab); } catch {}
+      try { await redis.zincrby(`phuc:analytics:path:${day}`, 1, pathName); } catch {}
+      try { await redis.expire?.(`phuc:analytics:tab:${day}`, 60 * 60 * 24 * 120); } catch {}
+      try { await redis.expire?.(`phuc:analytics:path:${day}`, 60 * 60 * 24 * 120); } catch {}
     }
-    try { await redis.set(`phuc:visitors:online:${vid}`, String(Date.now()), { ex: 60 * 5 }); } catch {}
+
+    if (event === 'pageview') {
+      try { await redis.zincrby('phuc:analytics:ref:all', 1, agent.refHost); } catch {}
+      try { await redis.zincrby(`phuc:analytics:ref:${day}`, 1, agent.refHost); } catch {}
+      try { await redis.zincrby(`phuc:analytics:device:${day}`, 1, agent.device_type); } catch {}
+      try { await redis.zincrby(`phuc:analytics:os:${day}`, 1, agent.os); } catch {}
+      try { await redis.zincrby(`phuc:analytics:browser:${day}`, 1, agent.browser); } catch {}
+      try { await redis.expire?.(`phuc:analytics:ref:${day}`, 60 * 60 * 24 * 120); } catch {}
+      try { await redis.expire?.(`phuc:analytics:device:${day}`, 60 * 60 * 24 * 120); } catch {}
+      try { await redis.expire?.(`phuc:analytics:os:${day}`, 60 * 60 * 24 * 120); } catch {}
+      try { await redis.expire?.(`phuc:analytics:browser:${day}`, 60 * 60 * 24 * 120); } catch {}
+    }
+
+    const metaKey = `phuc:visitors:meta:${vid}`;
+    const prevMeta = safeParseObj(await redis.get(metaKey).catch(() => null)) || {};
+    const updatedMeta = {
+      vid_short: vid.slice(0, 8),
+      device_type: agent.device_type,
+      os: agent.os,
+      browser: agent.browser,
+      screen: agent.screen || prevMeta.screen || '',
+      pwa: agent.pwa || Boolean(prevMeta.pwa),
+      country: agent.country || prevMeta.country || 'VN',
+      city: agent.city || prevMeta.city || '',
+      username: session?.username || prevMeta.username || null,
+      active_tab: activeTab,
+      last_ref: agent.refHost !== 'direct' ? agent.refHost : (prevMeta.last_ref || 'direct'),
+      visits: Number(prevMeta.visits || 0) + (event === 'pageview' ? 1 : 0),
+      pageviews: Number(prevMeta.pageviews || 0) + (event === 'heartbeat' ? 0 : 1),
+      first_seen: prevMeta.first_seen || nowIso,
+      last_seen: nowIso
+    };
+    try { await redis.set(metaKey, updatedMeta, { ex: 60 * 60 * 24 * 180 }); } catch {}
+
+    if (event === 'pageview') {
+      try {
+        await redis.lpush('phuc:visitors:recent_ids', vid);
+        await redis.ltrim('phuc:visitors:recent_ids', 0, 299);
+      } catch {}
+    }
+
+    const onlinePayload = {
+      vid_short: vid.slice(0, 8),
+      device_type: agent.device_type,
+      os: agent.os,
+      browser: agent.browser,
+      screen: agent.screen || '',
+      pwa: agent.pwa,
+      active_tab: activeTab,
+      username: session?.username || null,
+      country: agent.country || 'VN',
+      ts: Date.now()
+    };
+    try { await redis.set(`phuc:visitors:online:${vid}`, onlinePayload, { ex: 120 }); } catch {}
   } catch (e) {
     console.error('visitor-track', e);
   }
-  return vid;
+  return { vid, agent };
 }
 
-async function uniqueWindow(redis, days) {
+async function uniqueWindow(redis, days, keyPrefix = 'phuc:visitors:day:') {
   const ids = new Set();
   const now = new Date();
   for (let i = 0; i < days; i++) {
     const d = new Date(now.getTime() - i * 86400000);
-    const key = `phuc:visitors:day:${vnDayKey(d)}`;
+    const key = `${keyPrefix}${vnDayKey(d)}`;
     try {
       const vals = await redis.smembers(key);
       if (Array.isArray(vals)) for (const v of vals) ids.add(String(v));
@@ -152,6 +367,140 @@ async function uniqueWindow(redis, days) {
   return ids.size;
 }
 
+async function collectTrafficSnapshot(redis, { detailed = false } = {}) {
+  const nowDay = vnDayKey();
+  const safeScard = k => redis.scard(k).then(v => Number(v) || 0).catch(() => 0);
+  const safeGetNum = k => redis.get(k).then(v => Number(v) || 0).catch(() => 0);
+
+  const [
+    visitorsAll, visitorsToday, visitors7d, visitors30d,
+    pageviewsAll, pageviewsToday,
+    estimatedPeople, estimatedPeopleToday, sessionsToday,
+    devMobileAll, devTabletAll, devDesktopAll, pwaAll,
+    devMobileToday, devTabletToday, devDesktopToday,
+    onlineSessions
+  ] = await Promise.all([
+    safeScard('phuc:visitors:all'),
+    safeScard(`phuc:visitors:day:${nowDay}`),
+    uniqueWindow(redis, 7),
+    uniqueWindow(redis, 30),
+    safeGetNum('phuc:pageviews:all'),
+    safeGetNum(`phuc:pageviews:day:${nowDay}`),
+    safeScard('phuc:visitors:fp:all'),
+    safeScard(`phuc:visitors:fp:day:${nowDay}`),
+    safeScard(`phuc:sessions:day:${nowDay}`),
+    safeScard('phuc:visitors:devall:mobile'),
+    safeScard('phuc:visitors:devall:tablet'),
+    safeScard('phuc:visitors:devall:desktop'),
+    safeScard('phuc:visitors:pwa'),
+    safeScard(`phuc:visitors:devday:${nowDay}:mobile`),
+    safeScard(`phuc:visitors:devday:${nowDay}:tablet`),
+    safeScard(`phuc:visitors:devday:${nowDay}:desktop`),
+    collectOnlineSessions(redis)
+  ]);
+
+  let returningToday = 0, newToday = 0;
+  try {
+    const todayIds = new Set((await redis.smembers(`phuc:visitors:day:${nowDay}`) || []).map(String));
+    if (todayIds.size > 0) {
+      const olderSets = await Promise.all(
+        Array.from({ length: 60 }, (_, idx) => {
+          const d = new Date(Date.now() - (idx + 1) * 86400000);
+          return redis.smembers(`phuc:visitors:day:${vnDayKey(d)}`).catch(() => []);
+        })
+      );
+      const older = new Set();
+      for (const vals of olderSets) {
+        if (Array.isArray(vals)) for (const v of vals) older.add(String(v));
+      }
+      for (const id of todayIds) {
+        if (older.has(id)) returningToday++; else newToday++;
+      }
+    }
+  } catch {}
+  const returnRate = visitorsToday ? Math.round((returningToday / visitorsToday) * 100) : 0;
+
+  const onlineByDevice = { mobile: 0, tablet: 0, desktop: 0 };
+  for (const s of onlineSessions) {
+    const dt = s?.device_type === 'tablet' ? 'tablet' : s?.device_type === 'mobile' ? 'mobile' : 'desktop';
+    onlineByDevice[dt]++;
+  }
+
+  const out = {
+    visitorsAll,
+    visitorsToday,
+    visitors7d,
+    visitors30d,
+    pageviewsAll,
+    pageviewsToday,
+    estimatedPeople: estimatedPeople || visitorsAll,
+    estimatedPeopleToday: estimatedPeopleToday || visitorsToday,
+    sessionsToday,
+    returningToday,
+    newToday,
+    returnRate,
+    online: onlineSessions.length,
+    onlineByDevice,
+    onlineSessions: detailed ? onlineSessions.slice(0, 60) : [],
+    devices: {
+      mobile: devMobileAll,
+      tablet: devTabletAll,
+      desktop: devDesktopAll,
+      pwa: pwaAll
+    },
+    devicesToday: {
+      mobile: devMobileToday,
+      tablet: devTabletToday,
+      desktop: devDesktopToday
+    }
+  };
+
+  if (!detailed) return out;
+
+  async function countSetPrefix(prefix) {
+    const keys = await scanKeys(redis, `${prefix}*`, 50);
+    if (!keys.length) return [];
+    const counts = await Promise.all(keys.map(k => safeScard(k)));
+    return keys
+      .map((k, idx) => ({ name: k.slice(prefix.length), count: counts[idx] }))
+      .filter(x => x.name && x.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }
+
+  const [osBreakdown, browserBreakdown, rawTabs, rawRefs, recentRawIds] = await Promise.all([
+    countSetPrefix('phuc:visitors:osall:'),
+    countSetPrefix('phuc:visitors:browserall:'),
+    redis.zrange('phuc:analytics:tab:all', 0, 14, { rev: true, withScores: true }).catch(() => []),
+    redis.zrange('phuc:analytics:ref:all', 0, 14, { rev: true, withScores: true }).catch(() => []),
+    redis.lrange('phuc:visitors:recent_ids', 0, 140).catch(() => [])
+  ]);
+
+  const seenRecent = new Set();
+  const uniqueRecentIds = [];
+  for (const rawId of (recentRawIds || [])) {
+    const id = String(rawId || '').trim();
+    if (!id || seenRecent.has(id)) continue;
+    seenRecent.add(id);
+    uniqueRecentIds.push(id);
+    if (uniqueRecentIds.length >= 40) break;
+  }
+
+  let recentDevices = [];
+  if (uniqueRecentIds.length) {
+    const metas = await Promise.all(uniqueRecentIds.map(id => redis.get(`phuc:visitors:meta:${id}`).catch(() => null)));
+    recentDevices = metas.map(m => safeParseObj(m)).filter(Boolean);
+  }
+
+  return {
+    ...out,
+    osBreakdown,
+    browserBreakdown,
+    topTabs: parseZrangePairs(rawTabs),
+    topReferrers: parseZrangePairs(rawRefs),
+    recentDevices
+  };
+}
+
 async function listAttempts(redis) {
   let raw = [];
   try { raw = await redis.lrange(ATTEMPTS_KEY, 0, MAX_ATTEMPTS - 1); } catch { raw = []; }
@@ -160,20 +509,14 @@ async function listAttempts(redis) {
 
 async function collectAllUsers(redis) {
   const map = new Map();
-  let cursor = 0;
-  try {
-    do {
-      const scan = await redis.scan(cursor, { match: `${USER_PREFIX}*`, count: 100 });
-      cursor = Number(scan?.[0] ?? 0);
-      const keys = Array.isArray(scan?.[1]) ? scan[1] : [];
-      if (keys.length) {
-        const vals = await Promise.all(keys.map(k => redis.get(k).catch(() => null)));
-        for (const u of vals) {
-          if (u && u.username) map.set(u.username, u);
-        }
-      }
-    } while (cursor !== 0);
-  } catch {}
+  const keys = await scanKeys(redis, `${USER_PREFIX}*`, 1500);
+  if (keys.length) {
+    const vals = await Promise.all(keys.map(k => redis.get(k).catch(() => null)));
+    for (const u of vals) {
+      const obj = safeParseObj(u);
+      if (obj && obj.username) map.set(obj.username, obj);
+    }
+  }
   try {
     const indexed = await redis.smembers('phuc:users:index');
     if (Array.isArray(indexed)) {
@@ -181,7 +524,8 @@ async function collectAllUsers(redis) {
       if (missing.length) {
         const vals = await Promise.all(missing.map(uname => redis.get(`${USER_PREFIX}${uname}`).catch(() => null)));
         for (const u of vals) {
-          if (u && u.username) map.set(u.username, u);
+          const obj = safeParseObj(u);
+          if (obj && obj.username) map.set(obj.username, obj);
         }
       }
     }
@@ -196,8 +540,17 @@ module.exports = async function handler(req, res) {
     const session = await getSession(req);
 
     if (action === 'track-visitor' && (req.method === 'POST' || req.method === 'GET')) {
-      await trackVisitor(req, res, redis);
-      return sendJson(res, 204, { ok: true });
+      const tracked = await trackVisitor(req, res, redis, session);
+      if (tracked?.ignored) {
+        return sendJson(res, 200, { ok: true, ignored: true, reason: tracked.reason });
+      }
+      return sendJson(res, 200, {
+        ok: true,
+        visitor_id: tracked?.vid || '',
+        device_type: tracked?.agent?.device_type || 'desktop',
+        os: tracked?.agent?.os || 'Khác',
+        browser: tracked?.agent?.browser || 'Khác'
+      });
     }
 
     if (action === 'leaderboard' && req.method === 'GET') {
@@ -544,28 +897,10 @@ module.exports = async function handler(req, res) {
       const activeToday = allUsers.filter(u => u?.last_active && new Date(u.last_active).getTime() >= start).length;
       let uploads = 0;
       try { uploads = Number(await redis.llen('phuc:student-library')) || 0; } catch {}
-      const attempts = await listAttempts(redis);
-      let visitorsAll = 0, visitorsToday = 0, visitors7d = 0, visitors30d = 0, pageviewsAll = 0, pageviewsToday = 0, online = 0;
-      try { visitorsAll = Number(await redis.scard('phuc:visitors:all')) || 0; } catch {}
-      try { visitorsToday = Number(await redis.scard(`phuc:visitors:day:${vnDayKey()}`)) || 0; } catch {}
-      try { visitors7d = await uniqueWindow(redis, 7); } catch {}
-      try { visitors30d = await uniqueWindow(redis, 30); } catch {}
-      try { pageviewsAll = Number(await redis.get('phuc:pageviews:all')) || 0; } catch {}
-      try { pageviewsToday = Number(await redis.get(`phuc:pageviews:day:${vnDayKey()}`)) || 0; } catch {}
-      try { const scan = await redis.scan(0, { match: 'phuc:visitors:online:*', count: 200 }); online = Array.isArray(scan?.[1]) ? scan[1].length : 0; } catch {}
-      const nowDay = vnDayKey();
-      let returningToday = 0, newToday = 0;
-      try {
-        const todayIds = new Set((await redis.smembers(`phuc:visitors:day:${nowDay}`) || []).map(String));
-        const older = new Set();
-        for (let i = 1; i < 90; i++) {
-          const d = new Date(Date.now() - i * 86400000);
-          const vals = await redis.smembers(`phuc:visitors:day:${vnDayKey(d)}`);
-          if (Array.isArray(vals)) for (const v of vals) older.add(String(v));
-        }
-        for (const id of todayIds) { if (older.has(id)) returningToday++; else newToday++; }
-      } catch {}
-      const returnRate = visitorsToday ? Math.round((returningToday / visitorsToday) * 100) : 0;
+      const [attempts, snap] = await Promise.all([
+        listAttempts(redis),
+        collectTrafficSnapshot(redis, { detailed: false })
+      ]);
       return sendJson(res, 200, {
         ok: true,
         stats: {
@@ -573,16 +908,21 @@ module.exports = async function handler(req, res) {
           uploads,
           exam_attempts: attempts.length,
           today: activeToday,
-          unique_visitors: visitorsAll,
-          unique_today: visitorsToday,
-          unique_7d: visitors7d,
-          unique_30d: visitors30d,
-          pageviews_all: pageviewsAll,
-          pageviews_today: pageviewsToday,
-          online,
-          returning_today: returningToday,
-          new_today: newToday,
-          return_rate: returnRate
+          unique_visitors: snap.visitorsAll,
+          estimated_people: snap.estimatedPeople,
+          unique_today: snap.visitorsToday,
+          unique_7d: snap.visitors7d,
+          unique_30d: snap.visitors30d,
+          pageviews_all: snap.pageviewsAll,
+          pageviews_today: snap.pageviewsToday,
+          sessions_today: snap.sessionsToday,
+          online: snap.online,
+          online_by_device: snap.onlineByDevice,
+          devices: snap.devices,
+          devices_today: snap.devicesToday,
+          returning_today: snap.returningToday,
+          new_today: snap.newToday,
+          return_rate: snap.returnRate
         }
       });
     }
@@ -591,30 +931,39 @@ module.exports = async function handler(req, res) {
       if (!session || !(await isSessionAdmin(redis, session))) {
         return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản Quản Trị Viên (Admin) mới có quyền truy cập Trung tâm điều hành.' });
       }
-      const allUsers = await collectAllUsers(redis);
-      const attempts = await listAttempts(redis);
+      const [allUsers, attempts, snap] = await Promise.all([
+        collectAllUsers(redis),
+        listAttempts(redis),
+        collectTrafficSnapshot(redis, { detailed: true })
+      ]);
       const start = todayStart();
       const now = new Date();
       const currentWeek = vnWeekKey(now);
 
-      const dailySeries = [];
-      for (let i = 13; i >= 0; i--) {
-        const d = new Date(now.getTime() - i * 86400000);
-        const dKey = vnDayKey(d);
-        let vis = 0, pv = 0;
-        try { vis = Number(await redis.scard(`phuc:visitors:day:${dKey}`)) || 0; } catch {}
-        try { pv = Number(await redis.get(`phuc:pageviews:day:${dKey}`)) || 0; } catch {}
-        const dayAttempts = attempts.filter(a => String(a.created_at || '').startsWith(dKey)).length;
-        const daySignups = allUsers.filter(u => String(u.created_at || '').startsWith(dKey)).length;
-        dailySeries.push({
-          date: dKey,
-          label: dKey.slice(5).replace('-', '/'),
-          visitors: vis,
-          pageviews: pv,
-          attempts: dayAttempts,
-          signups: daySignups
-        });
-      }
+      const dailySeries = await Promise.all(
+        Array.from({ length: 14 }, (_, idx) => {
+          const i = 13 - idx;
+          const d = new Date(now.getTime() - i * 86400000);
+          const dKey = vnDayKey(d);
+          return Promise.all([
+            redis.scard(`phuc:visitors:day:${dKey}`).catch(() => 0),
+            redis.get(`phuc:pageviews:day:${dKey}`).catch(() => 0),
+            redis.scard(`phuc:visitors:devday:${dKey}:mobile`).catch(() => 0),
+            redis.scard(`phuc:visitors:devday:${dKey}:desktop`).catch(() => 0),
+            redis.scard(`phuc:visitors:devday:${dKey}:tablet`).catch(() => 0)
+          ]).then(([vis, pv, mob, desk, tab]) => ({
+            date: dKey,
+            label: dKey.slice(5).replace('-', '/'),
+            visitors: Number(vis) || 0,
+            pageviews: Number(pv) || 0,
+            mobile_visitors: Number(mob) || 0,
+            desktop_visitors: Number(desk) || 0,
+            tablet_visitors: Number(tab) || 0,
+            attempts: attempts.filter(a => String(a.created_at || '').startsWith(dKey)).length,
+            signups: allUsers.filter(u => String(u.created_at || '').startsWith(dKey)).length
+          }));
+        })
+      );
 
       const attemptStatsByUser = new Map();
       const subjectDistribution = {};
@@ -646,7 +995,7 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      const gradeDistribution = { '2K9': 0, '2K11': 0, '2K12': 0 };
+      const gradeDistribution = { '2K9': 0, '2K8': 0, 'DGNL': 0, '2K11': 0, '2K12': 0 };
       let totalLessonsCompleted = 0;
       let totalNotesSaved = 0;
       let totalXpSystem = 0;
@@ -656,7 +1005,7 @@ module.exports = async function handler(req, res) {
         const notesMap = u.progress?.notes && typeof u.progress.notes === 'object' ? u.progress.notes : {};
         const doneCount = Object.values(doneMap).filter(Boolean).length;
         const notesCount = Object.values(notesMap).filter(v => String(v || '').trim().length > 0).length;
-        const g = u.settings?.preferred_grade || '2K9';
+        const g = String(u.settings?.preferred_grade || '2K9').toUpperCase();
         if (gradeDistribution[g] !== undefined) gradeDistribution[g]++;
         else gradeDistribution['2K9']++;
 
@@ -690,31 +1039,21 @@ module.exports = async function handler(req, res) {
         };
       }).sort((a, b) => String(b.last_active || '').localeCompare(String(a.last_active || '')) || b.xp - a.xp);
 
-      let visitorsAll = 0, visitorsToday = 0, visitors7d = 0, visitors30d = 0, pageviewsAll = 0, pageviewsToday = 0, online = 0;
-      try { visitorsAll = Number(await redis.scard('phuc:visitors:all')) || 0; } catch {}
-      try { visitorsToday = Number(await redis.scard(`phuc:visitors:day:${vnDayKey()}`)) || 0; } catch {}
-      try { visitors7d = await uniqueWindow(redis, 7); } catch {}
-      try { visitors30d = await uniqueWindow(redis, 30); } catch {}
-      try { pageviewsAll = Number(await redis.get('phuc:pageviews:all')) || 0; } catch {}
-      try { pageviewsToday = Number(await redis.get(`phuc:pageviews:day:${vnDayKey()}`)) || 0; } catch {}
-      try { const scan = await redis.scan(0, { match: 'phuc:visitors:online:*', count: 200 }); online = Array.isArray(scan?.[1]) ? scan[1].length : 0; } catch {}
-
       let announcement = null;
       try {
-        announcement = await redis.get('phuc:system:announcement');
-        if (typeof announcement === 'string') announcement = JSON.parse(announcement);
+        announcement = safeParseObj(await redis.get('phuc:system:announcement'));
       } catch { announcement = null; }
 
       let customKhoaChui = [];
       try {
         const rawKc = await redis.lrange('phuc:khoa-chui:items', 0, 199);
-        customKhoaChui = (rawKc || []).map(x => typeof x === 'string' ? JSON.parse(x) : x).filter(Boolean);
+        customKhoaChui = (rawKc || []).map(safeParseObj).filter(Boolean);
       } catch { customKhoaChui = []; }
 
       let auditLogs = [];
       try {
         const rawLogs = await redis.lrange('phuc:admin:audit', 0, 99);
-        auditLogs = (rawLogs || []).map(x => typeof x === 'string' ? JSON.parse(x) : x).filter(Boolean);
+        auditLogs = (rawLogs || []).map(safeParseObj).filter(Boolean);
       } catch { auditLogs = []; }
 
       const activeTodayCount = allUsers.filter(u => u?.last_active && new Date(u.last_active).getTime() >= start).length;
@@ -728,18 +1067,36 @@ module.exports = async function handler(req, res) {
         kpis: {
           total_users: allUsers.length,
           active_today: activeTodayCount,
-          online_now: Math.max(1, online),
-          unique_visitors: Math.max(allUsers.length, visitorsAll),
-          visitors_today: Math.max(activeTodayCount, visitorsToday),
-          visitors_7d: Math.max(allUsers.length, visitors7d),
-          visitors_30d: Math.max(allUsers.length, visitors30d),
-          pageviews_all: Math.max(attempts.length * 3 + allUsers.length * 5, pageviewsAll),
-          pageviews_today: Math.max(activeTodayCount * 4, pageviewsToday),
+          online_now: snap.online,
+          unique_visitors: snap.visitorsAll,
+          estimated_people: snap.estimatedPeople,
+          estimated_people_today: snap.estimatedPeopleToday,
+          visitors_today: snap.visitorsToday,
+          visitors_7d: snap.visitors7d,
+          visitors_30d: snap.visitors30d,
+          pageviews_all: snap.pageviewsAll,
+          pageviews_today: snap.pageviewsToday,
+          sessions_today: snap.sessionsToday,
+          returning_today: snap.returningToday,
+          new_today: snap.newToday,
+          return_rate: snap.returnRate,
           total_attempts: attempts.length,
           avg_exam_score: avgExamScore,
           total_lessons_done: totalLessonsCompleted,
           total_notes_saved: totalNotesSaved,
           total_xp_system: totalXpSystem
+        },
+        traffic: {
+          online_now: snap.online,
+          online_by_device: snap.onlineByDevice,
+          online_sessions: snap.onlineSessions,
+          devices: snap.devices,
+          devices_today: snap.devicesToday,
+          os_breakdown: snap.osBreakdown,
+          browser_breakdown: snap.browserBreakdown,
+          top_tabs: snap.topTabs,
+          top_referrers: snap.topReferrers,
+          recent_devices: snap.recentDevices
         },
         distributions: {
           grades: gradeDistribution,
@@ -832,7 +1189,7 @@ module.exports = async function handler(req, res) {
         const uname = targetUsername.replace(/[^a-z0-9._-]/g, '');
         const disp = clean(body.display_name || uname, 80);
         const pass = String(body.password || '123456');
-        const grade = ['2K9', '2K11', '2K12'].includes(String(body.grade || '').toUpperCase()) ? String(body.grade).toUpperCase() : '2K9';
+        const grade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(body.grade || '').toUpperCase()) ? String(body.grade).toUpperCase() : '2K9';
         const school = clean(body.school || 'THPT Chuyên Phúc K9', 80);
         const role = String(body.role || 'student').toLowerCase();
         const xp = role === 'admin' ? Math.max(0, Number(body.xp ?? 0)) : Math.max(100, Number(body.xp || 200));
@@ -905,6 +1262,23 @@ module.exports = async function handler(req, res) {
         await redis.lpush('phuc:khoa-chui:items', JSON.stringify(item));
         await logAdminAudit('Thêm Khóa Chui Tham Khảo', `${title} (${subject})`);
         return sendJson(res, 200, { ok: true, message: 'Đã thêm khóa học mới vào mục Khóa Chui Tham Khảo!', item });
+      }
+
+      if (subAction === 'delete-khoa-chui') {
+        const targetId = clean(body.id || '', 80);
+        if (!targetId) return sendJson(res, 422, { ok: false, message: 'Thiếu ID khóa học cần xóa.' });
+        const rawKc = await redis.lrange('phuc:khoa-chui:items', 0, 299).catch(() => []);
+        const items = (rawKc || []).map(safeParseObj).filter(Boolean);
+        const kept = items.filter(it => String(it.id || '') !== targetId);
+        if (kept.length === items.length) {
+          return sendJson(res, 404, { ok: false, message: 'Không tìm thấy khóa học tùy chỉnh này.' });
+        }
+        await redis.del('phuc:khoa-chui:items');
+        for (let idx = kept.length - 1; idx >= 0; idx--) {
+          await redis.lpush('phuc:khoa-chui:items', JSON.stringify(kept[idx]));
+        }
+        await logAdminAudit('Xóa Khóa Chui Tùy Chỉnh', `ID ${targetId}`);
+        return sendJson(res, 200, { ok: true, message: 'Đã xóa khóa học khỏi danh sách.', remaining: kept.length });
       }
 
       return sendJson(res, 400, { ok: false, message: 'Sub-action quản trị không hợp lệ.' });
