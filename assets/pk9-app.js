@@ -455,11 +455,21 @@
         : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b><span class="hide-xs"> (Lv.${levelVal})</span>`;
     }
 
+    const rawAvatar = APP.user ? String(APP.user.avatar_data || APP.user.avatar_url || '') : '';
+    const safeAvatar = /^(https?:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(rawAvatar) ? rawAvatar : '';
+
     if (authBtn) {
       if (APP.user) {
         const displayName = esc(APP.user.display_name || APP.user.username);
-        authBtn.innerHTML = `<span>${APP.isAdmin ? '🛡️' : '👤'}</span><span class="pk9-auth-name">${displayName}</span>`;
+        authBtn.setAttribute('data-open-auth', 'profile');
+        authBtn.title = 'Cài đặt tài khoản & hồ sơ cá nhân';
+        const avatarChip = safeAvatar
+          ? `<img src="${esc(safeAvatar)}" alt="" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.6);flex-shrink:0;" />`
+          : `<span>${APP.isAdmin ? '🛡️' : '👤'}</span>`;
+        authBtn.innerHTML = `${avatarChip}<span class="pk9-auth-name">${displayName}</span>`;
       } else {
+        authBtn.setAttribute('data-open-auth', 'register');
+        authBtn.title = 'Đăng ký / Đăng nhập tài khoản';
         authBtn.innerHTML = `<span>🚀</span><span class="pk9-auth-name">Đăng nhập</span><span class="hide-xs"> / Đăng ký (+100 XP)</span>`;
       }
     }
@@ -467,11 +477,12 @@
     if (sideCard) {
       const myRank = APP.lbData.my_rank;
       if (APP.user) {
+        const avatarThumb = safeAvatar
+          ? `<img src="${esc(safeAvatar)}" alt="${esc(APP.user.display_name || '')}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(56,189,248,0.5);" />`
+          : `<div style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}</div>`;
         sideCard.innerHTML = `
           <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.55rem;">
-            <div style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;">
-              ${esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}
-            </div>
+            ${avatarThumb}
             <div style="min-width:0;flex:1;">
               <div style="font-weight:800;font-size:0.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 ${esc(APP.user.display_name)} ${APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
@@ -486,8 +497,11 @@
               ? `<span style="color:#e11d48;">🚫 Không tính leo Top BXH</span>`
               : `<span>🏆 Top Tuần: <b>#${myRank?.weeklyRank || '—'}</b></span><span>🌟 Top Tổng: <b>#${myRank?.topRank || '—'}</b></span>`}
           </div>
+          <button type="button" class="pk9-btn-exam-ghost" data-open-auth="profile" style="width:100%;justify-content:center;padding:0.42rem;margin-top:0.55rem;font-size:0.78rem;">
+            ⚙️ Cài đặt tài khoản
+          </button>
           ${APP.isAdmin ? `
-            <button type="button" class="pk9-auth-btn" data-nav-tab="admin" style="width:100%;justify-content:center;padding:0.45rem;margin-top:0.55rem;background:linear-gradient(135deg,#e11d48,#d97706);">
+            <button type="button" class="pk9-auth-btn" data-nav-tab="admin" style="width:100%;justify-content:center;padding:0.45rem;margin-top:0.42rem;background:linear-gradient(135deg,#e11d48,#d97706);">
               🛡️ Mở Admin Dashboard Chi Tiết
             </button>
           ` : ''}
@@ -3019,11 +3033,97 @@
   // ==========================================================================
   // AUTH MODAL (LOGIN / REGISTER / PROFILE)
   // ==========================================================================
+  function isSafeAvatarUrl(src) {
+    return /^(https?:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(String(src || ''));
+  }
+
+  function renderAvatarInner(avatarSrc, initialChar) {
+    if (isSafeAvatarUrl(avatarSrc)) {
+      return `<img src="${esc(avatarSrc)}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:999px;display:block;" />`;
+    }
+    return `<span>${esc(initialChar)}</span>`;
+  }
+
+  function renderGradeOptionsHtml(selectedGrade = '2K9') {
+    const gradeOptions = [
+      ['2K9', 'Khối 12 — Luyện thi THPT Quốc Gia (2K9)'],
+      ['2K8', 'Ôn thi / Tổng ôn 2K8 Pro'],
+      ['DGNL', 'Luyện thi ĐGNL / ĐGTD'],
+      ['2K11', 'Khối 10 — Chương trình mới (2K11)'],
+      ['2K12', 'Khối 9 — Ôn thi vào lớp 10 (2K12)']
+    ];
+    return gradeOptions
+      .map(([val, label]) => `<option value="${val}" ${selectedGrade === val ? 'selected' : ''}>${label}</option>`)
+      .join('');
+  }
+
+  function resizeAvatarToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !String(file.type || '').startsWith('image/')) {
+        reject(new Error('Vui lòng chọn tệp hình ảnh (PNG, JPG, WebP).'));
+        return;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        reject(new Error('Ảnh quá lớn (tối đa 8MB).'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Không đọc được tệp ảnh.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Tệp ảnh không hợp lệ.'));
+        img.onload = () => {
+          const size = 160;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const minSide = Math.min(img.width || size, img.height || size);
+          const sx = Math.max(0, Math.floor(((img.width || size) - minSide) / 2));
+          const sy = Math.max(0, Math.floor(((img.height || size) - minSide) / 2));
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+          let out = canvas.toDataURL('image/jpeg', 0.84);
+          if (out.length > 240000) out = canvas.toDataURL('image/jpeg', 0.65);
+          if (out.length > 255000) {
+            reject(new Error('Ảnh sau nén vẫn vượt quá giới hạn lưu trữ.'));
+            return;
+          }
+          resolve(out);
+        };
+        img.src = String(reader.result || '');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function openAuthModal(defaultMode = 'register') {
     const modal = document.getElementById('pk9-auth-modal');
     if (!modal) return;
+    APP.pendingAvatarData = undefined;
+    if (!modal.dataset.pk9AvatarBound) {
+      modal.dataset.pk9AvatarBound = '1';
+      modal.addEventListener('change', async (ev) => {
+        const input = ev.target && ev.target.id === 'pk9-avatar-file-input' ? ev.target : null;
+        if (!input || !input.files || !input.files[0]) return;
+        try {
+          const dataUrl = await resizeAvatarToDataUrl(input.files[0]);
+          APP.pendingAvatarData = dataUrl;
+          const preview = document.getElementById('pk9-settings-avatar-preview');
+          if (preview) {
+            const ch = (APP.user?.display_name || APP.user?.username || 'U').trim().charAt(0).toUpperCase() || 'U';
+            preview.innerHTML = renderAvatarInner(dataUrl, ch);
+          }
+          toast('Đã chọn ảnh đại diện mới — bấm "Lưu cài đặt tài khoản" để áp dụng.', 'info');
+        } catch (err) {
+          toast(err?.message || 'Không thể xử lý ảnh này.', 'error');
+        }
+      });
+    }
     modal.classList.add('open');
-    renderAuthModalContent(defaultMode);
+    const resolvedMode = (APP.user && defaultMode !== 'switch-login' && defaultMode !== 'switch-register')
+      ? (defaultMode === 'security' ? 'security' : 'profile')
+      : defaultMode;
+    renderAuthModalContent(resolvedMode);
   }
 
   function closeAuthModal() {
@@ -3035,50 +3135,106 @@
     const box = document.getElementById('pk9-auth-modal-box');
     if (!box) return;
 
-    if (APP.user && mode !== 'login' && mode !== 'register') {
+    if (APP.user && mode !== 'switch-login' && mode !== 'switch-register') {
+      const isSecurity = mode === 'security';
+      const initialChar = (APP.user.display_name || APP.user.username || 'U').trim().charAt(0).toUpperCase() || 'U';
+      const activeAvatar = APP.pendingAvatarData !== undefined
+        ? APP.pendingAvatarData
+        : (APP.user.avatar_data || APP.user.avatar_url || '');
+      const userBio = String(APP.user.settings?.bio || '').trim();
+      const userGrade = APP.user.settings?.preferred_grade || '2K9';
+
       box.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-          <h3 style="margin:0;font-size:1.2rem;font-weight:900;">👤 Hồ Sơ Học Viên Phúc K9</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9rem;">
+          <h3 style="margin:0;font-size:1.18rem;font-weight:900;">⚙️ Cài Đặt Tài Khoản</h3>
           <button type="button" class="pk9-icon-btn" data-close-auth="1">✕</button>
         </div>
-        <div style="padding:1rem;border-radius:1rem;background:var(--pk9-surface-2);margin-bottom:1rem;">
-          <div style="font-weight:900;font-size:1.05rem;">${esc(APP.user.display_name)} (@${esc(APP.user.username)})</div>
-          <div style="font-size:0.83rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
-            ⚡ Tổng XP: <b>${APP.user.xp || 100} XP</b> • 🔥 XP Tuần: <b>${APP.user.weekly_xp || 100} XP</b> • Chuỗi: <b>${APP.user.streak || 1} ngày</b>
+
+        <div style="display:flex;align-items:center;gap:0.85rem;padding:0.9rem 1rem;border-radius:1rem;background:var(--pk9-surface-2);margin-bottom:0.9rem;">
+          <div id="pk9-settings-avatar-preview" style="width:54px;height:54px;flex-shrink:0;border-radius:999px;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:900;font-size:1.25rem;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.6);">
+            ${renderAvatarInner(activeAvatar, initialChar)}
+          </div>
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:900;font-size:1.02rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+              <span>${esc(APP.user.display_name || APP.user.username)}</span>
+              <span style="font-size:0.74rem;font-weight:700;color:var(--pk9-text-muted);">@${esc(APP.user.username)}</span>
+              ${APP.isAdmin ? '<span style="font-size:0.7rem;padding:0.12rem 0.45rem;border-radius:999px;background:rgba(225,29,72,0.12);color:#e11d48;font-weight:800;">🛡️ Quản trị viên</span>' : ''}
+            </div>
+            ${userBio ? `<div style="font-size:0.8rem;color:var(--pk9-text-muted);margin-top:0.15rem;word-break:break-word;">${esc(userBio)}</div>` : ''}
+            <div style="font-size:0.8rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
+              ${APP.isAdmin
+                ? '🛡️ Tài khoản Quản trị viên (Không tính vào BXH top học viên)'
+                : `⚡ Tổng XP: <b>${APP.user.xp || 100} XP</b> • 🔥 XP Tuần: <b>${APP.user.weekly_xp || 100} XP</b> • Chuỗi: <b>${APP.user.streak || 1} ngày</b>`}
+            </div>
           </div>
         </div>
-        <form id="pk9-profile-form" style="display:flex;flex-direction:column;gap:0.75rem;">
-          <div>
-            <label style="font-size:0.82rem;font-weight:700;">Họ và tên hiển thị trên BXH</label>
-            <input type="text" name="display_name" class="pk9-input" value="${esc(APP.user.display_name || '')}" required />
-          </div>
-          <div>
-            <label style="font-size:0.82rem;font-weight:700;">Trường THPT / THCS</label>
-            <input type="text" name="school" class="pk9-input" value="${esc(APP.user.settings?.school || '')}" placeholder="VD: THPT Chuyên Hà Nội - Amsterdam" />
-          </div>
-          <div>
-            <label style="font-size:0.82rem;font-weight:700;">Khối lớp ưu tiên</label>
-            <select name="preferred_grade" class="pk9-input">
-              <option value="2K9" ${APP.user.settings?.preferred_grade === '2K9' ? 'selected' : ''}>Lớp 12 — Luyện thi THPT (2K9)</option>
-              <option value="2K11" ${APP.user.settings?.preferred_grade === '2K11' ? 'selected' : ''}>Lớp 10 Chương trình mới (2K11)</option>
-              <option value="2K12" ${APP.user.settings?.preferred_grade === '2K12' ? 'selected' : ''}>Ôn thi vào lớp 10 (2K12)</option>
-            </select>
-          </div>
-          <div style="display:flex;gap:0.6rem;margin-top:0.5rem;flex-wrap:wrap;">
-            <button type="submit" class="pk9-btn-exam-primary">💾 Lưu hồ sơ</button>
-            ${APP.isAdmin ? `
-              <button type="button" class="pk9-btn-exam-primary" data-nav-tab="admin" data-close-auth="1" style="background:linear-gradient(135deg,#e11d48,#d97706);">
-                🛡️ Mở Admin Dashboard
-              </button>
-            ` : ''}
-            <button type="button" class="pk9-btn-exam-ghost" data-logout-btn="1" style="color:#ef4444;">Đăng xuất</button>
-          </div>
-        </form>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;background:var(--pk9-surface-2);padding:0.3rem;border-radius:0.8rem;margin-bottom:0.95rem;">
+          <button type="button" class="pk9-grade-btn ${!isSecurity ? 'active' : ''}" data-switch-auth-mode="profile">👤 Thông tin &amp; Hồ sơ</button>
+          <button type="button" class="pk9-grade-btn ${isSecurity ? 'active' : ''}" data-switch-auth-mode="security">🔒 Đổi mật khẩu</button>
+        </div>
+
+        ${isSecurity ? `
+          <form id="pk9-password-form" style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Mật khẩu hiện tại</label>
+              <input type="password" name="current_password" class="pk9-input" autocomplete="current-password" placeholder="Nhập mật khẩu đang dùng" required />
+            </div>
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Mật khẩu mới (tối thiểu 6 ký tự)</label>
+              <input type="password" name="new_password" class="pk9-input" minlength="6" maxlength="128" autocomplete="new-password" placeholder="••••••••" required />
+            </div>
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Xác nhận mật khẩu mới</label>
+              <input type="password" name="confirm_password" class="pk9-input" minlength="6" maxlength="128" autocomplete="new-password" placeholder="Nhập lại mật khẩu mới" required />
+            </div>
+            <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.25rem;">🔑 Cập nhật mật khẩu</button>
+          </form>
+        ` : `
+          <form id="pk9-profile-form" style="display:flex;flex-direction:column;gap:0.72rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <label for="pk9-avatar-file-input" class="pk9-btn-exam-ghost" style="cursor:pointer;">📷 Chọn ảnh đại diện</label>
+              <input type="file" id="pk9-avatar-file-input" accept="image/png,image/jpeg,image/webp,image/*" style="display:none;" />
+              <button type="button" class="pk9-btn-exam-ghost" data-clear-avatar="1" style="color:#ef4444;">🗑️ Gỡ ảnh</button>
+            </div>
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Họ và tên hiển thị trên BXH</label>
+              <input type="text" name="display_name" class="pk9-input" maxlength="50" value="${esc(APP.user.display_name || '')}" required />
+            </div>
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Trường THPT / THCS</label>
+              <input type="text" name="school" class="pk9-input" maxlength="80" value="${esc(APP.user.settings?.school || '')}" placeholder="VD: THPT Chuyên Hà Nội - Amsterdam" />
+            </div>
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Giới thiệu ngắn / Mục tiêu điểm số</label>
+              <input type="text" name="bio" class="pk9-input" maxlength="120" value="${esc(APP.user.settings?.bio || '')}" placeholder="VD: Mục tiêu 27+ khối A00 năm 2027" />
+            </div>
+            <div>
+              <label style="font-size:0.82rem;font-weight:700;">Khối lớp ưu tiên</label>
+              <select name="preferred_grade" class="pk9-input">
+                ${renderGradeOptionsHtml(userGrade)}
+              </select>
+            </div>
+            <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.25rem;">💾 Lưu cài đặt tài khoản</button>
+          </form>
+        `}
+
+        <div style="display:flex;gap:0.55rem;margin-top:0.85rem;padding-top:0.8rem;border-top:1px solid var(--pk9-border);flex-wrap:wrap;">
+          ${APP.isAdmin ? `
+            <button type="button" class="pk9-btn-exam-primary" data-nav-tab="admin" data-close-auth="1" style="background:linear-gradient(135deg,#e11d48,#d97706);">
+              🛡️ Mở Admin Dashboard
+            </button>
+          ` : ''}
+          <button type="button" class="pk9-btn-exam-ghost" data-switch-auth-mode="switch-login">🔄 Đổi tài khoản</button>
+          <button type="button" class="pk9-btn-exam-ghost" data-logout-btn="1" style="color:#ef4444;margin-left:auto;">🚪 Đăng xuất</button>
+        </div>
       `;
       return;
     }
 
-    const isReg = mode === 'register';
+    const isReg = mode === 'register' || mode === 'switch-register';
+    const regModeAttr = APP.user ? 'switch-register' : 'register';
+    const loginModeAttr = APP.user ? 'switch-login' : 'login';
     box.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
         <h3 style="margin:0;font-size:1.22rem;font-weight:900;">
@@ -3087,9 +3243,15 @@
         <button type="button" class="pk9-icon-btn" data-close-auth="1">✕</button>
       </div>
 
+      ${APP.user ? `
+        <button type="button" class="pk9-btn-exam-ghost" data-switch-auth-mode="profile" style="width:100%;justify-content:center;margin-bottom:0.75rem;">
+          ← Quay lại Cài đặt tài khoản (${esc(APP.user.display_name || APP.user.username)})
+        </button>
+      ` : ''}
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;background:var(--pk9-surface-2);padding:0.3rem;border-radius:0.8rem;margin-bottom:1rem;">
-        <button type="button" class="pk9-grade-btn ${isReg ? 'active' : ''}" data-switch-auth-mode="register">✨ Đăng ký mới</button>
-        <button type="button" class="pk9-grade-btn ${!isReg ? 'active' : ''}" data-switch-auth-mode="login">🔑 Đăng nhập</button>
+        <button type="button" class="pk9-grade-btn ${isReg ? 'active' : ''}" data-switch-auth-mode="${regModeAttr}">✨ Đăng ký mới</button>
+        <button type="button" class="pk9-grade-btn ${!isReg ? 'active' : ''}" data-switch-auth-mode="${loginModeAttr}">🔑 Đăng nhập</button>
       </div>
 
       <form id="pk9-auth-form" data-mode="${isReg ? 'register' : 'login'}" style="display:flex;flex-direction:column;gap:0.75rem;">
@@ -3109,9 +3271,7 @@
           <div>
             <label style="font-size:0.82rem;font-weight:700;">Khối lớp</label>
             <select name="preferred_grade" class="pk9-input">
-              <option value="2K9">Khối 12 — Luyện thi THPT Quốc Gia (2K9)</option>
-              <option value="2K11">Khối 10 — Chương trình mới (2K11)</option>
-              <option value="2K12">Khối 9 — Ôn thi vào lớp 10 (2K12)</option>
+              ${renderGradeOptionsHtml('2K9')}
             </select>
           </div>
         ` : ''}
@@ -3568,9 +3728,24 @@
           });
         } catch {}
         APP.user = null;
+        APP.isAdmin = false;
+        APP.pendingAvatarData = undefined;
+        updateHeaderAuthUI();
         closeAuthModal();
         toast('Đã đăng xuất tài khoản.', 'info');
         fetchAuthAndLeaderboard();
+        return;
+      }
+
+      const clearAvatarBtn = e.target.closest('[data-clear-avatar]');
+      if (clearAvatarBtn) {
+        APP.pendingAvatarData = '';
+        const preview = document.getElementById('pk9-settings-avatar-preview');
+        const ch = (APP.user?.display_name || APP.user?.username || 'U').trim().charAt(0).toUpperCase() || 'U';
+        if (preview) preview.innerHTML = renderAvatarInner('', ch);
+        const fileInput = document.getElementById('pk9-avatar-file-input');
+        if (fileInput) fileInput.value = '';
+        toast('Đã gỡ ảnh xem trước — bấm "Lưu cài đặt tài khoản" để áp dụng.', 'info');
         return;
       }
 
@@ -3981,6 +4156,9 @@
         e.preventDefault();
         const fd = new FormData(e.target);
         const payload = Object.fromEntries(fd.entries());
+        if (APP.pendingAvatarData !== undefined) {
+          payload.avatar_data = APP.pendingAvatarData;
+        }
         try {
           const resp = await fetch('/api/auth?action=save-profile', {
             method: 'POST',
@@ -3991,8 +4169,10 @@
           const data = await resp.json();
           if (resp.ok && data?.ok) {
             APP.user = data.user;
+            APP.pendingAvatarData = undefined;
+            updateHeaderAuthUI();
             closeAuthModal();
-            toast('Đã cập nhật hồ sơ & trường học trên BXH!', 'success');
+            toast('Đã lưu cài đặt tài khoản thành công!', 'success');
             await fetchAuthAndLeaderboard();
           } else {
             toast(data?.message || 'Không thể lưu hồ sơ.', 'error');
@@ -4000,6 +4180,43 @@
         } catch {
           toast('Lỗi kết nối máy chủ.', 'error');
         }
+        return;
+      }
+
+      if (e.target.id === 'pk9-password-form') {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const current_password = String(fd.get('current_password') || '');
+        const new_password = String(fd.get('new_password') || '');
+        const confirm_password = String(fd.get('confirm_password') || '');
+        if (new_password.length < 6) {
+          toast('Mật khẩu mới phải từ 6 ký tự trở lên.', 'error');
+          return;
+        }
+        if (new_password !== confirm_password) {
+          toast('Xác nhận mật khẩu mới chưa khớp.', 'error');
+          return;
+        }
+        try {
+          const resp = await fetch('/api/auth?action=change-password', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify({ current_password, new_password, confirm_password })
+          });
+          const data = await resp.json();
+          if (resp.ok && data?.ok) {
+            if (data.csrf) APP.csrf = data.csrf;
+            e.target.reset();
+            toast(data.message || 'Đổi mật khẩu thành công!', 'success');
+            renderAuthModalContent('profile');
+          } else {
+            toast(data?.message || 'Không thể đổi mật khẩu.', 'error');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ.', 'error');
+        }
+        return;
       }
 
       if (e.target.id === 'pk9-community-form') {
