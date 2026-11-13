@@ -2,24 +2,23 @@ const { getRedis } = require('../lib/redis');
 const {
   USER_PREFIX, parseCookies, clearCookie, setCookie, sendJson, normalizeUsername,
   validUsername, hashPassword, verifyPassword, safeUser, createSession, getSession,
-  getCsrf, requireCsrf
+  getCsrf, requireCsrf, isAdminUsername, isAdminAccount
 } = require('../lib/auth');
 const crypto = require('crypto');
-
-function adminUser(username) {
-  const defaults = ['admin', 'phuck9', 'thanhphuc', 'phuck9admin'];
-  const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '')
-    .split(',')
-    .map(x => x.trim().toLowerCase())
-    .filter(Boolean);
-  const allAdmins = new Set([...defaults, ...raw]);
-  return allAdmins.has(String(username || '').trim().toLowerCase());
-}
 
 async function ensureDefaultAdmin(redis) {
   try {
     const existing = await redis.get(`${USER_PREFIX}admin`);
-    if (existing) return existing;
+    if (existing) {
+      if (existing.xp === 9999 && existing.weekly_xp === 1200) {
+        existing.xp = 0;
+        existing.weekly_xp = 0;
+        if (existing.streak === 30) existing.streak = 1;
+        existing.badges = ['Quản Trị Viên Tối Cao', 'Sáng Lập Phúc K9'];
+        await redis.set(`${USER_PREFIX}admin`, existing);
+      }
+      return existing;
+    }
     const { salt, hash } = hashPassword(process.env.ADMIN_DEFAULT_PASSWORD || 'admin123');
     const now = new Date();
     const nowIso = now.toISOString();
@@ -33,11 +32,11 @@ async function ensureDefaultAdmin(redis) {
       password_hash: hash,
       created_at: nowIso,
       last_active: nowIso,
-      streak: 30,
-      xp: 9999,
-      weekly_xp: 1200,
+      streak: 1,
+      xp: 0,
+      weekly_xp: 0,
       week_key: wk,
-      badges: ['Quản Trị Viên Tối Cao', 'Sáng Lập Phúc K9', 'Học Bá K9'],
+      badges: ['Quản Trị Viên Tối Cao', 'Sáng Lập Phúc K9'],
       progress: { done: {}, resume: null, notes: {} },
       settings: { preferred_grade: '2K9', school: 'Hệ Sinh Thái Học Cùng Phúc K9' },
       google: { linked: false, email: null },
@@ -104,7 +103,7 @@ async function touchUser(redis, user) {
   }
   if (user.week_key !== wk) {
     user.week_key = wk;
-    user.weekly_xp = Math.max(10, Number(user.weekly_xp || 0));
+    user.weekly_xp = isAdminAccount(user) ? 0 : Math.max(10, Number(user.weekly_xp || 0));
     dirty = true;
   }
   if (dirty) {
@@ -182,7 +181,7 @@ module.exports = async function handler(req, res) {
       const user = await redis.get(`${USER_PREFIX}${session.username}`);
       if (!user) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
       const fresh = await touchUser(redis, user);
-      const isAdm = Boolean(fresh.is_admin || fresh.role === 'admin' || adminUser(session.username));
+      const isAdm = isAdminAccount(fresh);
       return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(fresh), csrf: session.csrf || csrf, is_admin: isAdm });
     }
 
@@ -214,18 +213,20 @@ module.exports = async function handler(req, res) {
       const now = new Date();
       const nowIso = now.toISOString();
       const wk = vnWeekKey(now);
+      const isAdm = isAdminUsername(username);
       const user = {
         username,
         display_name: displayName,
+        ...(isAdm ? { role: 'admin', is_admin: true } : {}),
         salt,
         password_hash: hash,
         created_at: nowIso,
         last_active: nowIso,
         streak: 1,
-        xp: 100,
-        weekly_xp: 100,
+        xp: isAdm ? 0 : 100,
+        weekly_xp: isAdm ? 0 : 100,
         week_key: wk,
-        badges: ['Tân Binh K9'],
+        badges: isAdm ? ['Quản Trị Viên K9'] : ['Tân Binh K9'],
         progress: { done: {}, resume: null, notes: {} },
         settings: { preferred_grade: preferredGrade, school },
         google: { linked: false, email: null },
@@ -241,8 +242,10 @@ module.exports = async function handler(req, res) {
         authenticated: true,
         user: safeUser(user),
         csrf,
-        is_admin: adminUser(username),
-        message: 'Tạo tài khoản thành công! Bạn được tặng +100 XP khởi đầu và đã có mặt trên Bảng Xếp Hạng.'
+        is_admin: isAdm,
+        message: isAdm
+          ? 'Tạo tài khoản Quản trị viên thành công!'
+          : 'Tạo tài khoản thành công! Bạn được tặng +100 XP khởi đầu và đã có mặt trên Bảng Xếp Hạng.'
       });
     }
 
@@ -257,11 +260,11 @@ module.exports = async function handler(req, res) {
       user.streak = updateStreak(user, now);
       user.last_active = now.toISOString();
       ensureWeeklyState(user, now);
-      if (typeof user.xp !== 'number' || user.xp < 50) user.xp = Math.max(50, Number(user.xp || 0));
+      const isAdm = isAdminAccount(user);
+      if (!isAdm && (typeof user.xp !== 'number' || user.xp < 50)) user.xp = Math.max(50, Number(user.xp || 0));
       await redis.set(`${USER_PREFIX}${username}`, user);
       try { await redis.sadd('phuc:users:index', username); } catch {}
       await createSession(res, username, csrf);
-      const isAdm = Boolean(user.is_admin || user.role === 'admin' || adminUser(username));
       return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: isAdm, message: isAdm ? 'Đăng nhập quyền Quản Trị Viên (Admin) thành công!' : 'Đăng nhập thành công.' });
     }
 
@@ -286,7 +289,7 @@ module.exports = async function handler(req, res) {
       user.last_active = new Date().toISOString();
       await redis.set(`${USER_PREFIX}${session.username}`, user);
       try { await redis.sadd('phuc:users:index', session.username); } catch {}
-      return sendJson(res, 200, { ok: true, user: safeUser(user), csrf: session.csrf || csrf, is_admin: adminUser(session.username), message: 'Đã lưu cài đặt tài khoản.' });
+      return sendJson(res, 200, { ok: true, user: safeUser(user), csrf: session.csrf || csrf, is_admin: isAdminAccount(user), message: 'Đã lưu cài đặt tài khoản.' });
     }
 
     if (action === 'save-state') {
@@ -304,7 +307,7 @@ module.exports = async function handler(req, res) {
       for (const [k, v] of Object.entries(nextDone)) {
         if (v && !prevDone[k]) newLessonsCount++;
       }
-      if (newLessonsCount > 0) {
+      if (newLessonsCount > 0 && !isAdminAccount(user)) {
         const gainedXp = newLessonsCount * 20;
         user.xp = Math.max(0, Number(user.xp || 0)) + gainedXp;
         user.weekly_xp = Math.max(0, Number(user.weekly_xp || 0)) + gainedXp;
@@ -318,7 +321,7 @@ module.exports = async function handler(req, res) {
       };
       await redis.set(`${USER_PREFIX}${session.username}`, user);
       try { await redis.sadd('phuc:users:index', session.username); } catch {}
-      return sendJson(res, 200, { ok: true, user: safeUser(user), csrf: session.csrf || csrf, is_admin: adminUser(session.username) });
+      return sendJson(res, 200, { ok: true, user: safeUser(user), csrf: session.csrf || csrf, is_admin: isAdminAccount(user) });
     }
 
     if (action === 'logout') {

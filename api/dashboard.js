@@ -1,27 +1,20 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie, hashPassword, safeUser } = require('../lib/auth');
+const {
+  USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie,
+  hashPassword, safeUser, normalizeUsername, isAdminUsername, isAdminAccount
+} = require('../lib/auth');
 const crypto = require('crypto');
 
 const ATTEMPTS_KEY = 'phuc:exam-attempts';
 const MAX_ATTEMPTS = 5000;
 
-function isAdmin(username) {
-  const defaults = ['admin', 'phuck9', 'thanhphuc', 'phuck9admin'];
-  const raw = String(process.env.ADMIN_USERNAME || process.env.ADMINUSER || '')
-    .split(',')
-    .map(x => x.trim().toLowerCase())
-    .filter(Boolean);
-  const allAdmins = new Set([...defaults, ...raw]);
-  return allAdmins.has(String(username || '').trim().toLowerCase());
-}
-
 async function isSessionAdmin(redis, session) {
   if (!session?.username) return false;
-  if (isAdmin(session.username)) return true;
+  if (isAdminUsername(session.username)) return true;
   try {
     const u = await redis.get(`${USER_PREFIX}${session.username}`);
     const obj = typeof u === 'string' ? JSON.parse(u) : u;
-    return Boolean(obj?.is_admin || obj?.role === 'admin');
+    return isAdminAccount(obj);
   } catch {
     return false;
   }
@@ -246,8 +239,13 @@ module.exports = async function handler(req, res) {
 
       const dbUsers = await collectAllUsers(redis);
       const rowsByUsername = new Map();
+      const excludedUsernames = new Set();
 
       for (const u of dbUsers) {
+        if (isAdminAccount(u)) {
+          excludedUsernames.add(normalizeUsername(u.username));
+          continue;
+        }
         const x = stats.get(u.username) || {
           username: u.username,
           display_name: u.display_name || u.username,
@@ -296,9 +294,10 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Include any real exam attempts from users whose profile wasn't in collectAllUsers
+      // Include any real exam attempts from users whose profile wasn't in collectAllUsers (excluding admins)
       for (const [uname, x] of stats.entries()) {
-        if (rowsByUsername.has(uname)) continue;
+        const normU = normalizeUsername(uname);
+        if (rowsByUsername.has(uname) || excludedUsernames.has(normU) || isAdminUsername(uname)) continue;
         const xp = x.attempts * 60;
         const li = levelInfo(xp);
         rowsByUsername.set(uname, {
@@ -349,15 +348,18 @@ module.exports = async function handler(req, res) {
       let myRank = null;
       if (session?.username) {
         const u = session.username;
-        const topIdx = topLeaderboard.findIndex(r => r.username === u);
-        const wkIdx = weeklyLeaderboard.findIndex(r => r.username === u);
-        const exIdx = examLeaderboard.findIndex(r => r.username === u);
+        const isSessionAdm = excludedUsernames.has(normalizeUsername(u)) || isAdminUsername(u);
+        const topIdx = isSessionAdm ? -1 : topLeaderboard.findIndex(r => r.username === u);
+        const wkIdx = isSessionAdm ? -1 : weeklyLeaderboard.findIndex(r => r.username === u);
+        const exIdx = isSessionAdm ? -1 : examLeaderboard.findIndex(r => r.username === u);
         myRank = {
           username: u,
+          is_admin: isSessionAdm,
+          excluded_from_leaderboard: isSessionAdm,
           topRank: topIdx >= 0 ? topIdx + 1 : null,
           weeklyRank: wkIdx >= 0 ? wkIdx + 1 : null,
           examRank: exIdx >= 0 ? exIdx + 1 : null,
-          entry: rowsByUsername.get(u) || null
+          entry: isSessionAdm ? null : (rowsByUsername.get(u) || null)
         };
       }
 
@@ -436,20 +438,23 @@ module.exports = async function handler(req, res) {
         if (granted) {
           await redis.lpush(ATTEMPTS_KEY, JSON.stringify(attempt));
           try { await redis.ltrim(ATTEMPTS_KEY, 0, MAX_ATTEMPTS - 1); } catch {}
-          xpEarned = examXp(score);
           const u = uProfile || await getUser(redis, session.username);
+          const isAdm = isAdminAccount(u) || isAdminUsername(session.username);
+          xpEarned = isAdm ? 0 : examXp(score);
           if (u) {
-            const wk = vnWeekKey();
-            if (u.week_key !== wk) {
-              u.week_key = wk;
-              u.weekly_xp = 0;
+            if (!isAdm) {
+              const wk = vnWeekKey();
+              if (u.week_key !== wk) {
+                u.week_key = wk;
+                u.weekly_xp = 0;
+              }
+              u.xp = Math.max(100, Number(u.xp || 0)) + xpEarned;
+              u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0)) + xpEarned;
+              u.exam_xp = Math.max(0, Number(u.exam_xp || 0)) + xpEarned;
+              u.streak = Math.max(1, Number(u.streak || 1));
+              u.badges = computeBadges(u, { bestScore: score, attempts: 1 });
             }
-            u.xp = Math.max(100, Number(u.xp || 0)) + xpEarned;
-            u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0)) + xpEarned;
-            u.exam_xp = Math.max(0, Number(u.exam_xp || 0)) + xpEarned;
-            u.streak = Math.max(1, Number(u.streak || 1));
             u.last_active = new Date().toISOString();
-            u.badges = computeBadges(u, { bestScore: score, attempts: 1 });
             await redis.set(`${USER_PREFIX}${session.username}`, u);
             try { await redis.sadd('phuc:users:index', session.username); } catch {}
           }
@@ -491,17 +496,20 @@ module.exports = async function handler(req, res) {
       let xpEarned = 0, duplicate = false;
       const u = await getUser(redis, session.username);
       if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài khoản.' });
+      const isAdm = isAdminAccount(u);
       const granted = !!(await redis.set(key, '1', { nx: true, ex: 60 * 60 * 24 * 180 }));
       if (granted) {
-        xpEarned = xpReward;
-        const wk = vnWeekKey();
-        if (u.week_key !== wk) {
-          u.week_key = wk;
-          u.weekly_xp = 0;
+        xpEarned = isAdm ? 0 : xpReward;
+        if (!isAdm) {
+          const wk = vnWeekKey();
+          if (u.week_key !== wk) {
+            u.week_key = wk;
+            u.weekly_xp = 0;
+          }
+          u.xp = Math.max(100, Number(u.xp || 0)) + xpEarned;
+          u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0)) + xpEarned;
+          u.study_xp = Math.max(0, Number(u.study_xp || 0)) + xpEarned;
         }
-        u.xp = Math.max(100, Number(u.xp || 0)) + xpEarned;
-        u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0)) + xpEarned;
-        u.study_xp = Math.max(0, Number(u.study_xp || 0)) + xpEarned;
         u.last_active = new Date().toISOString();
         await redis.set(`${USER_PREFIX}${session.username}`, u);
         try { await redis.sadd('phuc:users:index', session.username); } catch {}
@@ -662,8 +670,8 @@ module.exports = async function handler(req, res) {
         return {
           username: u.username,
           display_name: u.display_name || u.username,
-          role: (u.is_admin || u.role === 'admin' || isAdmin(u.username)) ? 'admin' : (u.role || 'student'),
-          is_vip: Boolean(u.is_vip || u.role === 'vip' || u.role === 'admin' || isAdmin(u.username)),
+          role: isAdminAccount(u) ? 'admin' : (u.role || 'student'),
+          is_vip: Boolean(u.is_vip || u.role === 'vip' || isAdminAccount(u)),
           school: u.settings?.school || '',
           grade: g,
           xp,
@@ -827,7 +835,7 @@ module.exports = async function handler(req, res) {
         const grade = ['2K9', '2K11', '2K12'].includes(String(body.grade || '').toUpperCase()) ? String(body.grade).toUpperCase() : '2K9';
         const school = clean(body.school || 'THPT Chuyên Phúc K9', 80);
         const role = String(body.role || 'student').toLowerCase();
-        const xp = Math.max(100, Number(body.xp || 200));
+        const xp = role === 'admin' ? Math.max(0, Number(body.xp ?? 0)) : Math.max(100, Number(body.xp || 200));
         if (!uname || uname.length < 3) return sendJson(res, 422, { ok: false, message: 'Username cần ít nhất 3 ký tự.' });
         const existing = await getUser(redis, uname);
         if (existing) return sendJson(res, 409, { ok: false, message: 'Tài khoản này đã tồn tại.' });
