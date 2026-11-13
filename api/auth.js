@@ -185,7 +185,7 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(fresh), csrf: session.csrf || csrf, is_admin: isAdm });
     }
 
-    if (!['register', 'login', 'save-state', 'save-profile', 'logout'].includes(action)) {
+    if (!['register', 'login', 'save-state', 'save-profile', 'change-password', 'logout'].includes(action)) {
       return sendJson(res, 400, { ok: false, message: 'Hành động không hợp lệ.' });
     }
     if (req.method !== 'POST') return sendJson(res, 405, { ok: false, message: 'API này chỉ nhận POST cho action này.' });
@@ -202,7 +202,7 @@ module.exports = async function handler(req, res) {
       const username = normalizeUsername(body.username);
       const displayName = String(body.display_name || '').trim();
       const password = String(body.password || '');
-      const preferredGrade = ['2K9', '2K11', '2K12'].includes(String(body.preferred_grade || '').toUpperCase())
+      const preferredGrade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(body.preferred_grade || '').toUpperCase())
         ? String(body.preferred_grade).toUpperCase()
         : '2K9';
       const school = String(body.school || '').trim().slice(0, 80);
@@ -275,8 +275,9 @@ module.exports = async function handler(req, res) {
       const displayName = String(body.display_name ?? user.display_name ?? '').trim();
       const preferred = String(body.preferred_grade ?? user.settings?.preferred_grade ?? '2K9').toUpperCase();
       const school = String(body.school ?? user.settings?.school ?? '').trim().slice(0, 80);
-      if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Tên hiển thị không hợp lệ.', csrf });
-      if (!['2K9', '2K11', '2K12'].includes(preferred)) return sendJson(res, 422, { ok: false, message: 'Khối ưu tiên không hợp lệ.', csrf });
+      const bio = String(body.bio ?? user.settings?.bio ?? '').trim().slice(0, 120);
+      if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Tên hiển thị cần từ 2 đến 80 ký tự.', csrf });
+      if (!['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(preferred)) return sendJson(res, 422, { ok: false, message: 'Khối ưu tiên không hợp lệ.', csrf });
       if (Object.prototype.hasOwnProperty.call(body, 'avatar_data')) {
         const a = String(body.avatar_data || '');
         if (a && (!/^data:image\/(jpeg|png|webp);base64,/.test(a) || a.length > 260000)) {
@@ -285,11 +286,37 @@ module.exports = async function handler(req, res) {
         user.avatar_data = a || null;
       }
       user.display_name = displayName;
-      user.settings = { ...(user.settings || {}), preferred_grade: preferred, school };
+      user.settings = { ...(user.settings || {}), preferred_grade: preferred, school, bio };
       user.last_active = new Date().toISOString();
       await redis.set(`${USER_PREFIX}${session.username}`, user);
       try { await redis.sadd('phuc:users:index', session.username); } catch {}
       return sendJson(res, 200, { ok: true, user: safeUser(user), csrf: session.csrf || csrf, is_admin: isAdminAccount(user), message: 'Đã lưu cài đặt tài khoản.' });
+    }
+
+    if (action === 'change-password') {
+      if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
+      const user = await redis.get(`${USER_PREFIX}${session.username}`);
+      if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
+      const currentPass = String(body.current_password || '');
+      const newPass = String(body.new_password || '');
+      const confirmPass = Object.prototype.hasOwnProperty.call(body, 'confirm_password')
+        ? String(body.confirm_password || '')
+        : newPass;
+      if (!verifyPassword(currentPass, user)) {
+        return sendJson(res, 401, { ok: false, message: 'Mật khẩu hiện tại không đúng.', csrf });
+      }
+      if (newPass.length < 6 || newPass.length > 128) {
+        return sendJson(res, 422, { ok: false, message: 'Mật khẩu mới cần từ 6 đến 128 ký tự.', csrf });
+      }
+      if (newPass !== confirmPass) {
+        return sendJson(res, 422, { ok: false, message: 'Mật khẩu xác nhận không khớp.', csrf });
+      }
+      const { salt, hash } = hashPassword(newPass);
+      user.salt = salt;
+      user.password_hash = hash;
+      user.last_active = new Date().toISOString();
+      await redis.set(`${USER_PREFIX}${session.username}`, user);
+      return sendJson(res, 200, { ok: true, csrf: session.csrf || csrf, message: 'Đổi mật khẩu thành công!' });
     }
 
     if (action === 'save-state') {
