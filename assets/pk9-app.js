@@ -2113,7 +2113,7 @@
               <button type="button" class="pk9-exam-chip ${APP.pomoMode === 50 ? 'active' : ''}" data-pomo-mode="50">🔥 Luyện đề 50p</button>
               <button type="button" class="pk9-exam-chip ${APP.pomoMode === 5 ? 'active' : ''}" data-pomo-mode="5">☕ Nghỉ 5p</button>
             </div>
-            <div id="pk9-pomo-clock" style="font-size:3.4rem;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--pk9-primary);margin:0.5rem 0 1rem;">
+            <div id="pk9-pomo-clock" style="font-size:3.4rem;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--pk9-font-mono, 'JetBrains Mono', monospace);color:var(--pk9-primary);margin:0.5rem 0 1rem;">
               ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}
             </div>
             <div style="display:flex;justify-content:center;gap:0.6rem;">

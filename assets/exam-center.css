@@ -89,9 +89,9 @@
   background: var(--pk9-surface-2, #f8fafc);
   color: var(--pk9-text-muted, #475569);
   border-radius: 999px;
-  padding: 0.48rem 0.95rem;
-  font-size: 0.83rem;
-  font-weight: 700;
+  padding: 0.5rem 0.98rem;
+  font-size: 0.86rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -180,10 +180,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.24rem 0.65rem;
+  padding: 0.25rem 0.68rem;
   border-radius: 999px;
-  font-size: 0.73rem;
-  font-weight: 800;
+  font-size: 0.76rem;
+  font-weight: 700;
   letter-spacing: 0.01em;
 }
 
@@ -203,18 +203,18 @@
 }
 
 .pk9-exam-card h4 {
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.4;
+  font-size: 1.07rem;
+  font-weight: 700;
+  line-height: 1.45;
   color: var(--pk9-text, #0f172a);
   margin: 0 0 0.5rem;
 }
 
 .pk9-exam-origin {
-  font-size: 0.81rem;
+  font-size: 0.84rem;
   color: var(--pk9-text-muted, #475569);
   margin-bottom: 0.85rem;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .pk9-exam-meta-row {
@@ -225,7 +225,7 @@
   border-top: 1px dashed var(--pk9-border, #e2e8f0);
   border-bottom: 1px dashed var(--pk9-border, #e2e8f0);
   margin-bottom: 1rem;
-  font-size: 0.79rem;
+  font-size: 0.83rem;
   color: var(--pk9-text-muted, #475569);
   font-weight: 600;
 }
@@ -242,13 +242,13 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.68rem 1rem;
+  padding: 0.7rem 1rem;
   border-radius: 0.9rem;
   border: none;
   background: linear-gradient(135deg, #2563eb, #0d9488);
   color: #ffffff;
-  font-weight: 800;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.88rem;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.45);
@@ -264,13 +264,13 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.65rem 0.9rem;
+  padding: 0.68rem 0.95rem;
   border-radius: 0.9rem;
   border: 1px solid var(--pk9-border, #cbd5e1);
   background: var(--pk9-surface-2, #f8fafc);
   color: var(--pk9-text, #0f172a);
-  font-weight: 700;
-  font-size: 0.82rem;
+  font-weight: 600;
+  font-size: 0.85rem;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -446,22 +446,23 @@
   align-items: center;
   gap: 0.45rem;
   font-weight: 800;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   color: #2563eb;
 }
 
 .pk9-q-topic-tag {
-  font-size: 0.73rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
+  font-size: 0.77rem;
+  font-weight: 600;
+  padding: 0.22rem 0.65rem;
   border-radius: 999px;
   background: var(--pk9-surface-2, #f1f5f9);
   color: var(--pk9-text-muted, #475569);
 }
 
 .pk9-q-prompt {
-  font-size: 0.96rem;
-  line-height: 1.65;
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.72;
   color: var(--pk9-text, #0f172a);
   margin-bottom: 1rem;
   white-space: pre-line;
@@ -477,13 +478,14 @@
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  padding: 0.75rem 0.95rem;
+  padding: 0.8rem 1rem;
   border-radius: 0.9rem;
   border: 1px solid var(--pk9-border, #cbd5e1);
   background: var(--pk9-surface-2, #f8fafc);
   cursor: pointer;
   transition: all 0.16s ease;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
+  line-height: 1.55;
   color: var(--pk9-text, #0f172a);
 }
 
@@ -536,8 +538,8 @@
 }
 
 .pk9-tf-text {
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.94rem;
+  line-height: 1.58;
   color: var(--pk9-text, #0f172a);
   flex: 1;
 }
