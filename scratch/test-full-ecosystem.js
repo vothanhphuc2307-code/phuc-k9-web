@@ -82,8 +82,8 @@ const swOriginal = fs.readFileSync(path.join(baseDir, 'sw.original.js'), 'utf8')
 
 if (!indexHtml.includes('pk9-2k9-manifest.js')) throw new Error('index.html missing pk9-2k9-manifest.js');
 if (!indexOriginal.includes('pk9-2k9-manifest.js')) throw new Error('index.original.html missing pk9-2k9-manifest.js');
-if (!swJs.includes('phuc-k9-ecosystem-v38')) throw new Error('sw.js cache version not bumped');
-if (!swOriginal.includes('phuc-k9-ecosystem-v38')) throw new Error('sw.original.js cache version not bumped');
+if (!swJs.includes('phuc-k9-ecosystem-v39')) throw new Error('sw.js cache version not bumped');
+if (!swOriginal.includes('phuc-k9-ecosystem-v39')) throw new Error('sw.original.js cache version not bumped');
 
 console.log('✓ Service workers and HTML versions are fully synced!');
 console.log('\n=== ALL ECOSYSTEM VERIFICATIONS PASSED WITH 100% SUCCESS ===');
