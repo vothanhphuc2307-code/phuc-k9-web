@@ -53,10 +53,13 @@
     customKhoaChui: [],
     systemAnnouncement: null,
     // Super Detailed Admin Dashboard State
-    adminSubtab: 'overview', // 'overview' | 'users' | 'exams' | 'content' | 'system'
+    adminSubtab: 'overview', // 'overview' | 'traffic' | 'users' | 'exams' | 'content' | 'system'
     adminUserSearch: '',
     adminUserRoleFilter: 'ALL',
     adminExamSearch: '',
+    adminDeviceFilter: 'ALL',
+    adminAutoLive: true,
+    adminLiveTimer: null,
     adminDetailData: null,
     adminLoading: false,
     adminSelectedStudent: null,
@@ -299,8 +302,23 @@
   // ==========================================================================
   // NAVIGATION & TAB SWITCHING
   // ==========================================================================
+  function syncAdminLivePolling() {
+    if (APP.adminLiveTimer) {
+      clearInterval(APP.adminLiveTimer);
+      APP.adminLiveTimer = null;
+    }
+    if (APP.activeTab === 'admin' && APP.isAdmin && APP.adminAutoLive) {
+      APP.adminLiveTimer = setInterval(() => {
+        if (APP.activeTab === 'admin' && APP.isAdmin && APP.adminAutoLive && document.visibilityState === 'visible') {
+          fetchAdminDetail({ silent: true });
+        }
+      }, 15000);
+    }
+  }
+
   function switchTab(tabId, options = {}) {
     const validTabs = ['home', 'lectures', 'exams', 'leaderboard', 'docs', 'khoa-chui', 'archive', 'flashcards', 'community', 'planner', 'ai', 'admin'];
+    const prevTab = APP.activeTab;
     const target = validTabs.includes(tabId) ? tabId : 'home';
     APP.activeTab = target;
 
@@ -340,6 +358,11 @@
     if (target === 'admin') {
       renderAdminTab();
       fetchAdminDetail();
+    }
+
+    syncAdminLivePolling();
+    if (prevTab !== target && typeof trackAnalyticsEvent === 'function') {
+      trackAnalyticsEvent('tab', target);
     }
 
     if (!options.keepScroll) {
@@ -451,8 +474,8 @@
 
     if (xpChip) {
       xpChip.innerHTML = APP.isAdmin
-        ? `<span class="hide-xs">🛡️ Quản trị viên • Chuỗi </span>🔥 <b>${streakVal}d</b><span class="hide-xs"> (Ngoài BXH)</span>`
-        : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡ <b>${xpVal} XP</b><span class="hide-xs"> (Lv.${levelVal})</span>`;
+        ? `<span class="hide-xs">🛡️ Quản trị viên • Chuỗi </span>🔥<b>${streakVal}<span class="pk9-hide-mob-430">d</span></b><span class="hide-xs"> (Ngoài BXH)</span>`
+        : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡<b>${xpVal}<span class="pk9-hide-mob-430"> XP</span></b><span class="hide-xs"> (Lv.${levelVal})</span>`;
     }
 
     const rawAvatar = APP.user ? String(APP.user.avatar_data || APP.user.avatar_url || '') : '';
@@ -622,7 +645,7 @@
 
       ${!APP.isStandalone ? `
         <div class="pk9-mob-app-banner">
-          <div style="flex:1;min-width:200px;">
+          <div style="flex:1 1 min(100%, 200px);min-width:0;">
             <div style="font-size:0.74rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">📲 Trải Nghiệm App Trên Điện Thoại</div>
             <div style="font-size:0.96rem;font-weight:800;margin-top:0.12rem;">Cài đặt App Học Cùng Phúc K9 & Tải PDF học offline</div>
             <div style="font-size:0.8rem;color:var(--pk9-text-muted);margin-top:0.15rem;">Mở nhanh toàn màn hình từ Màn hình chính iOS/Android, tải mọi tài liệu PDF bài giảng về máy 1 chạm.</div>
@@ -634,8 +657,8 @@
       ` : ''}
 
       <!-- BANNER TRUY CẬP THẲNG KHÓA CHUI THAM KHẢO TRONG WEB -->
-      <div class="pk9-card" style="margin-bottom:1.5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(37,99,235,0.12));border:1.5px solid rgba(16,185,129,0.38);">
-        <div style="flex:1;min-width:250px;">
+      <div class="pk9-card" style="margin-bottom:1.25rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.85rem;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(37,99,235,0.12));border:1.5px solid rgba(16,185,129,0.38);">
+        <div style="flex:1 1 min(100%, 220px);min-width:0;">
           <div style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.73rem;font-weight:900;color:#0d9488;text-transform:uppercase;margin-bottom:0.2rem;">
             <span class="pk9-live-dot"></span> TÍCH HỢP SẴN TRONG WEB • KHÔNG CẦN CHUYỂN TRANG
           </div>
@@ -1335,7 +1358,7 @@
             ${renderTopicPdfAttachments(activeTopic)}
 
             <div class="pk9-video-info-bar">
-              <div style="flex:1;min-width:220px;">
+              <div style="flex:1 1 min(100%, 200px);min-width:0;">
                 <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">
                   Khối ${esc(course.grade)} • ${esc(course.name)} • ${esc(activeChapter?.title || '')}
                 </div>
@@ -1564,7 +1587,7 @@
                 <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.22);border-radius:1.25rem;padding:1.2rem;">
                   <div style="font-size:0.76rem;font-weight:800;color:#fde047;text-transform:uppercase;">🌟 THỨ HẠNG THẬT CỦA BẠN</div>
                   <div style="font-size:1.15rem;font-weight:900;margin:0.25rem 0 0.75rem;">👤 ${esc(APP.user.display_name)} (@${esc(APP.user.username)})</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem;text-align:center;">
+                  <div class="pk9-lb-myrank-grid" style="text-align:center;">
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
                       <strong style="display:block;font-size:1.2rem;color:#38bdf8;">#${myRank?.weeklyRank || '—'}</strong>
                       <span style="font-size:0.72rem;">BXH Tuần</span>
@@ -2228,15 +2251,15 @@
 
         <div class="pk9-grid-3">
           <div class="pk9-card" style="text-align:center;">
-            <div style="display:flex;justify-content:center;gap:0.4rem;margin-bottom:1rem;">
+            <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.85rem;">
               <button type="button" class="pk9-exam-chip ${APP.pomoMode === 25 ? 'active' : ''}" data-pomo-mode="25">🍅 Học sâu 25p</button>
               <button type="button" class="pk9-exam-chip ${APP.pomoMode === 50 ? 'active' : ''}" data-pomo-mode="50">🔥 Luyện đề 50p</button>
               <button type="button" class="pk9-exam-chip ${APP.pomoMode === 5 ? 'active' : ''}" data-pomo-mode="5">☕ Nghỉ 5p</button>
             </div>
-            <div id="pk9-pomo-clock" style="font-size:3.4rem;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--pk9-font-mono, 'JetBrains Mono', monospace);color:var(--pk9-primary);margin:0.5rem 0 1rem;">
+            <div id="pk9-pomo-clock" class="pk9-pomo-clock">
               ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}
             </div>
-            <div style="display:flex;justify-content:center;gap:0.6rem;">
+            <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:0.55rem;">
               <button type="button" class="pk9-btn-exam-primary" data-pomo-toggle="1">
                 ${APP.pomoRunning ? '⏸ Tạm dừng' : '▶️ Bắt đầu phiên học'}
               </button>
@@ -2279,9 +2302,9 @@
               👋 Xin chào! Mình là <b>Trợ lý AI Học Cùng Phúc K9</b>. Bạn cần giải thích công thức Toán 12, Vật lí 12, Hóa học 12 (IUPAC), Sinh học 12 hay chiến thuật làm đề GDPT 2018? Hãy nhập câu hỏi bên dưới nhé!
             </div>
           </div>
-          <form id="pk9-ai-form" style="display:flex;gap:0.65rem;">
-            <input type="text" id="pk9-ai-input" class="pk9-input" style="margin-top:0;flex:1;" placeholder="Nhập câu hỏi bài tập hoặc công thức cần giải thích..." required />
-            <button type="submit" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0 1.35rem;">Gửi câu hỏi 🚀</button>
+          <form id="pk9-ai-form" class="pk9-ai-form">
+            <input type="text" id="pk9-ai-input" class="pk9-input" style="margin-top:0;flex:1 1 min(100%, 200px);min-width:0;" placeholder="Nhập câu hỏi bài tập hoặc công thức cần giải thích..." required />
+            <button type="submit" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0 1.2rem;">Gửi câu hỏi 🚀</button>
           </form>
         </div>
       </div>
@@ -2291,23 +2314,75 @@
   // ==========================================================================
   // TAB 11: SUPER DETAILED ADMIN DASHBOARD (TRUNG TÂM ĐIỀU HÀNH QUẢN TRỊ VIÊN)
   // ==========================================================================
-  async function fetchAdminDetail() {
+  const TAB_LABELS_VI = {
+    home: '🏠 Trang chủ',
+    lectures: '🎬 Video bài giảng',
+    exams: '🏛️ Phòng luyện đề',
+    leaderboard: '🏆 BXH Tuần & Top',
+    docs: '📚 Thư viện PDF',
+    'khoa-chui': '💎 Khóa chui tham khảo',
+    archive: '🗂️ Tổng ôn 2K8',
+    flashcards: '🧠 Flashcard 3D',
+    community: '🤝 Cộng đồng',
+    planner: '⏱️ Pomodoro 9+',
+    ai: '🤖 Trợ lý AI',
+    admin: '🛡️ Admin Pro'
+  };
+
+  function deviceMetaBadge(devType) {
+    if (devType === 'mobile') return { cls: 'mobile', label: '📱 Điện thoại' };
+    if (devType === 'tablet') return { cls: 'tablet', label: '📲 Tablet' };
+    return { cls: 'desktop', label: '💻 Máy tính' };
+  }
+
+  function renderAnalyticsBars(items, emptyText, labelFn = x => x, colorCss = '') {
+    const list = Array.isArray(items) ? items.filter(x => x && Number(x.count || 0) > 0) : [];
+    if (!list.length) {
+      return `<div style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--pk9-text-muted);">${esc(emptyText)}</div>`;
+    }
+    const maxVal = Math.max(1, ...list.map(x => Number(x.count || 0)));
+    return `
+      <div class="pk9-analytics-list">
+        ${list.slice(0, 8).map(item => {
+          const cnt = Number(item.count || 0);
+          const pct = Math.max(4, Math.round((cnt / maxVal) * 100));
+          const label = labelFn(item.name);
+          return `
+            <div class="pk9-analytics-bar-row">
+              <div class="pk9-analytics-bar-head">
+                <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(label)}</span>
+                <span style="font-variant-numeric:tabular-nums;color:var(--pk9-primary);flex-shrink:0;">${cnt.toLocaleString('vi-VN')}</span>
+              </div>
+              <div class="pk9-analytics-bar-track">
+                <div class="pk9-analytics-bar-fill" style="width:${pct}%;${colorCss}"></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  async function fetchAdminDetail(opts = {}) {
     if (!APP.isAdmin) return;
-    APP.adminLoading = true;
+    if (!opts.silent && !APP.adminDetailData) APP.adminLoading = true;
     try {
       const resp = await fetch('/api/dashboard?action=admin-detail', { credentials: 'include' });
       if (resp.ok) {
         const data = await resp.json();
         if (data?.ok) {
           APP.adminDetailData = data;
-          if (data.announcement) APP.systemAnnouncement = data.announcement;
+          if (data.announcement !== undefined) APP.systemAnnouncement = data.announcement;
           if (Array.isArray(data.custom_khoa_chui)) APP.customKhoaChui = data.custom_khoa_chui;
           renderSystemAnnouncementBar();
         }
       }
     } catch {}
     APP.adminLoading = false;
-    if (APP.activeTab === 'admin') renderAdminTab();
+    if (APP.activeTab === 'admin') {
+      const editingAdminInput = opts.silent && document.activeElement?.closest('#tab-admin input, #tab-admin select, #tab-admin textarea');
+      if (!editingAdminInput) renderAdminTab();
+    }
   }
 
   async function runAdminAction(payload) {
@@ -2363,21 +2438,31 @@
 
     const d = APP.adminDetailData;
     const kpis = d?.kpis || {
-      total_users: (APP.lbData.leaderboard || []).length || 1,
-      active_today: 1,
-      online_now: 1,
-      unique_visitors: 1,
-      visitors_today: 1,
-      visitors_7d: 1,
-      visitors_30d: 1,
-      pageviews_all: 12,
-      pageviews_today: 5,
+      total_users: (APP.lbData.leaderboard || []).length || 0,
+      active_today: 0,
+      online_now: 0,
+      unique_visitors: 0,
+      estimated_people: 0,
+      visitors_today: 0,
+      visitors_7d: 0,
+      visitors_30d: 0,
+      pageviews_all: 0,
+      pageviews_today: 0,
+      sessions_today: 0,
+      returning_today: 0,
+      new_today: 0,
+      return_rate: 0,
       total_attempts: 0,
       avg_exam_score: 0,
-      total_lessons_done: Object.values(APP.doneMap).filter(Boolean).length,
-      total_notes_saved: Object.keys(APP.notesMap).length,
-      total_xp_system: APP.user?.xp || 0
+      total_lessons_done: 0,
+      total_notes_saved: 0,
+      total_xp_system: 0
     };
+    const traffic = d?.traffic || {};
+    const obd = traffic.online_by_device || { mobile: 0, tablet: 0, desktop: 0 };
+    const devAll = traffic.devices || { mobile: 0, tablet: 0, desktop: 0, pwa: 0 };
+    const totalDevKnown = Math.max(1, (devAll.mobile || 0) + (devAll.tablet || 0) + (devAll.desktop || 0));
+    const mobileShare = Math.round((((devAll.mobile || 0) + (devAll.tablet || 0)) / totalDevKnown) * 100);
 
     const catalog = getCatalog();
     const totalCourses = catalog.length;
@@ -2388,85 +2473,107 @@
     root.innerHTML = `
       <div class="pk9-exam-hub">
         <section class="pk9-admin-hero">
-          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
-            <div>
-              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem;">
-                <span class="pk9-lb-live-pill">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.85rem;">
+            <div style="min-width:0;flex:1 1 min(100%, 360px);">
+              <div style="display:flex;align-items:center;gap:0.42rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <span class="pk9-live-pill">
                   <span class="pk9-live-dot"></span>
-                  <span>ADMIN COMMAND CENTER • GIÁM SÁT THỜI GIAN THỰC</span>
+                  <span>ADMIN COMMAND CENTER • TELEMETRY CHÍNH XÁC</span>
                 </span>
                 <span class="pk9-badge" style="background:rgba(255,255,255,0.16);color:#fff;">
-                  🗄️ Storage: ${esc(d?.storage_mode || 'Active Sync')}
+                  🗄️ ${esc(d?.storage_mode || 'Active Sync')}
                 </span>
                 <span class="pk9-badge" style="background:rgba(245,158,11,0.25);color:#fde047;">
                   📅 Tuần: ${esc(d?.week_key || APP.lbData.week_key || 'Hiện tại')}
                 </span>
               </div>
-              <h2 style="margin:0 0 0.35rem;font-size:1.6rem;font-weight:900;">
-                🛡️ Bảng Điều Khiển Quản Trị Siêu Chi Tiết — HỌC CÙNG PHÚC K9
+              <h2 style="margin:0 0 0.3rem;font-size:clamp(1.12rem, 2.5vw, 1.55rem);font-weight:900;">
+                🛡️ Trung Tâm Điều Hành & Đo Lường Đa Thiết Bị — HỌC CÙNG PHÚC K9
               </h2>
-              <p style="margin:0;color:rgba(255,255,255,0.85);font-size:0.88rem;">
-                Xin chào Quản trị viên <b>${esc(APP.user.display_name)} (@${esc(APP.user.username)})</b> • Theo dõi toàn diện lưu lượng truy cập, học viên, điểm thi, nội dung khóa học và cấu hình hệ thống.
+              <p style="margin:0;color:rgba(255,255,255,0.85);font-size:0.84rem;">
+                Quản trị viên <b>${esc(APP.user.display_name)} (@${esc(APP.user.username)})</b> • Tách chuẩn thiết bị thật (Mobile / Tablet / PC / Zalo & Threads WebView) — loại bỏ bot tự động.
               </p>
             </div>
-            <div style="display:flex;gap:0.55rem;flex-wrap:wrap;">
-              <button type="button" class="pk9-btn-hero-main" data-admin-refresh="1" style="padding:0.65rem 1.1rem;font-size:0.83rem;">
-                🔄 Làm mới Dữ liệu Live
+            <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-btn-hero-main" data-admin-refresh="1" style="padding:0.52rem 0.9rem;font-size:0.8rem;">
+                🔄 Làm mới
               </button>
-              <button type="button" class="pk9-btn-hero-sec" data-admin-export-json="1" style="padding:0.65rem 1.1rem;font-size:0.83rem;">
-                📥 Xuất Báo Cáo JSON/CSV
+              <button type="button" class="pk9-btn-hero-sec" data-admin-toggle-live="1" style="padding:0.52rem 0.9rem;font-size:0.8rem;">
+                ${APP.adminAutoLive ? '🟢 Live 15s' : '⏸ Tạm dừng Live'}
+              </button>
+              <button type="button" class="pk9-btn-hero-sec" data-admin-export-csv="1" style="padding:0.52rem 0.9rem;font-size:0.8rem;">
+                📊 Xuất CSV
+              </button>
+              <button type="button" class="pk9-btn-hero-sec" data-admin-export-json="1" style="padding:0.52rem 0.9rem;font-size:0.8rem;">
+                📥 JSON
               </button>
             </div>
           </div>
         </section>
 
-        <!-- 8 REAL-TIME KPI CARDS -->
+        <!-- 8 REAL-TIME ACCURATE MULTI-DEVICE KPI CARDS -->
         <div class="pk9-admin-kpi-grid">
           <div class="pk9-admin-kpi-card emerald">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">🟢 Đang Online / Truy Cập</div>
-            <div class="pk9-admin-kpi-val">${kpis.online_now} <span style="font-size:0.85rem;color:#10b981;">online</span></div>
-            <div style="font-size:0.76rem;color:var(--pk9-text-muted);">
-              Hôm nay: <b>${kpis.visitors_today}</b> khách • Tổng: <b>${kpis.unique_visitors}</b>
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">🟢 Đang Online Trực Tiếp</div>
+            <div class="pk9-admin-kpi-val">${kpis.online_now} <span style="font-size:0.82rem;color:#10b981;">online</span></div>
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              📱 <b>${obd.mobile}</b> Mobile • 💻 <b>${obd.desktop}</b> PC${obd.tablet ? ` • 📲 <b>${obd.tablet}</b> Tab` : ''}
             </div>
           </div>
 
           <div class="pk9-admin-kpi-card">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">👁️ Lượt Xem Trang (Pageviews)</div>
-            <div class="pk9-admin-kpi-val">${kpis.pageviews_all}</div>
-            <div style="font-size:0.76rem;color:var(--pk9-text-muted);">
-              Hôm nay: <b>+${kpis.pageviews_today}</b> lượt • 7 ngày: <b>${kpis.visitors_7d}</b> UV
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">📱 Thiết Bị Đã Vào Web</div>
+            <div class="pk9-admin-kpi-val">${Number(kpis.unique_visitors || 0).toLocaleString('vi-VN')}</div>
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              ~<b>${kpis.estimated_people ?? kpis.unique_visitors}</b> người thật • Hôm nay: <b style="color:#10b981;">+${kpis.visitors_today}</b> (🆕 ${kpis.new_today ?? 0})
             </div>
           </div>
 
           <div class="pk9-admin-kpi-card violet">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">👥 Tổng Tài Khoản Học Viên</div>
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">📲 Tỷ Trọng Mobile / PC</div>
+            <div class="pk9-admin-kpi-val">${mobileShare}% <span style="font-size:0.8rem;color:var(--pk9-primary);">Mobile</span></div>
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              📱 ${devAll.mobile || 0} ĐT • 💻 ${devAll.desktop || 0} PC${devAll.pwa ? ` • 🏠 ${devAll.pwa} App` : ''}
+            </div>
+          </div>
+
+          <div class="pk9-admin-kpi-card">
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">👁️ Lượt Xem & Phiên Hôm Nay</div>
+            <div class="pk9-admin-kpi-val">${Number(kpis.pageviews_all || 0).toLocaleString('vi-VN')}</div>
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              Hôm nay: <b>+${kpis.pageviews_today}</b> • Phiên: <b>${kpis.sessions_today ?? 0}</b> • Quay lại: <b>${kpis.return_rate ?? 0}%</b>
+            </div>
+          </div>
+
+          <div class="pk9-admin-kpi-card emerald">
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">👥 Học Viên Đăng Ký</div>
             <div class="pk9-admin-kpi-val">${kpis.total_users}</div>
-            <div style="font-size:0.76rem;color:var(--pk9-text-muted);">
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
               Hoạt động hôm nay: <b style="color:#10b981;">${kpis.active_today} học viên</b>
             </div>
           </div>
 
           <div class="pk9-admin-kpi-card rose">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">🏛️ Lượt Nộp Đề & Điểm TB</div>
-            <div class="pk9-admin-kpi-val">${kpis.total_attempts} <span style="font-size:0.88rem;color:#f59e0b;">(${Number(kpis.avg_exam_score || 0).toFixed(2)}đ)</span></div>
-            <div style="font-size:0.76rem;color:var(--pk9-text-muted);">
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">🏛️ Lượt Nộp Đề & Điểm TB</div>
+            <div class="pk9-admin-kpi-val">${kpis.total_attempts} <span style="font-size:0.84rem;color:#f59e0b;">(${Number(kpis.avg_exam_score || 0).toFixed(2)}đ)</span></div>
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
               Chấm tự động trên <b>${totalSeedExams} đề gốc Sở/Bộ</b>
             </div>
           </div>
 
           <div class="pk9-admin-kpi-card">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">🎬 Bài Giảng Đã Hoàn Thành</div>
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">🎬 Bài Giảng Hoàn Thành</div>
             <div class="pk9-admin-kpi-val">${kpis.total_lessons_done}</div>
-            <div style="font-size:0.76rem;color:var(--pk9-text-muted);">
-              Trên tổng số <b>${totalVideoLectures} bài giảng</b> (${totalCourses} khóa)
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              Trên tổng số <b>${totalVideoLectures} bài</b> (${totalCourses} khóa)
             </div>
           </div>
 
-          <div class="pk9-admin-kpi-card emerald">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">⚡ Tổng XP Toàn Hệ Thống</div>
-            <div class="pk9-admin-kpi-val">${kpis.total_xp_system.toLocaleString('vi-VN')}</div>
-            <div style="font-size:0.76rem;color:var(--pk9-text-muted);">
-              Sổ tay ghi chú đã lưu: <b>${kpis.total_notes_saved}</b>
+          <div class="pk9-admin-kpi-card violet">
+            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-text-muted);text-transform:uppercase;">⚡ Tổng XP Toàn Hệ Thống</div>
+            <div class="pk9-admin-kpi-val">${Number(kpis.total_xp_system || 0).toLocaleString('vi-VN')}</div>
+            <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              Ghi chú: <b>${kpis.total_notes_saved}</b> • UV 7 ngày: <b>${kpis.visitors_7d}</b>
             </div>
           </div>
         </div>
@@ -2474,19 +2581,22 @@
         <!-- ADMIN SUB-NAVIGATION -->
         <div class="pk9-admin-subtabs">
           <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'overview' ? 'active' : ''}" data-admin-subtab="overview">
-            📊 1. Biểu Đồ Lưu Lượng & Phân Tích Học Tập
+            📊 1. Tổng Quan & 14D
+          </button>
+          <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'traffic' ? 'active' : ''}" data-admin-subtab="traffic">
+            🌐 2. Thiết Bị & Live (${traffic.online_now ?? kpis.online_now ?? 0})
           </button>
           <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'users' ? 'active' : ''}" data-admin-subtab="users">
-            👥 2. Quản Lý Học Viên & Phân Quyền (${(d?.users || []).length})
+            👥 3. Học Viên (${(d?.users || []).length})
           </button>
           <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'exams' ? 'active' : ''}" data-admin-subtab="exams">
-            🏛️ 3. Giám Sát Lượt Thi & Phổ Điểm (${(d?.recent_attempts || []).length})
+            🏛️ 4. Giám Sát Thi (${(d?.recent_attempts || []).length})
           </button>
           <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'content' ? 'active' : ''}" data-admin-subtab="content">
-            💎 4. Quản Lý Khóa Chui, Video (${totalVideoLectures}) & PDF (${totalPdfDocs})
+            💎 5. Khóa Chui (${totalVideoLectures} Video)
           </button>
           <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'system' ? 'active' : ''}" data-admin-subtab="system">
-            ⚙️ 5. Hệ Thống, Thông Báo & Nhật Ký Audit
+            ⚙️ 6. Hệ Thống & Audit
           </button>
         </div>
 
@@ -2510,35 +2620,48 @@
     const series = Array.isArray(d?.daily_series) && d.daily_series.length ? d.daily_series : [];
     const users = Array.isArray(d?.users) ? d.users : [];
     const attempts = Array.isArray(d?.recent_attempts) ? d.recent_attempts : [];
-    const grades = d?.distributions?.grades || { '2K9': 1, '2K11': 0, '2K12': 0 };
+    const traffic = d?.traffic || {};
+    const grades = d?.distributions?.grades || { '2K9': 0, '2K8': 0, 'DGNL': 0, '2K11': 0, '2K12': 0 };
     const scores = d?.distributions?.scores || { '9_10': 0, '8_9': 0, '7_8': 0, '5_7': 0, 'under_5': 0 };
     const subjects = Array.isArray(d?.distributions?.subjects) ? d.distributions.subjects : [];
 
     // SUBTAB 1: OVERVIEW CHARTS & ANALYTICS
     if (APP.adminSubtab === 'overview') {
-      const maxPv = Math.max(10, ...series.map(s => (s.pageviews || 0) + (s.visitors || 0) + (s.attempts || 0) * 3));
-      const totalGradeUsers = Math.max(1, (grades['2K9'] || 0) + (grades['2K11'] || 0) + (grades['2K12'] || 0));
-      const totalScoreCount = Math.max(1, Object.values(scores).reduce((a, b) => a + b, 0));
+      const maxDayTraffic = Math.max(5, ...series.map(s => (s.visitors || 0) + (s.pageviews || 0)));
+      const totalGradeUsers = Math.max(1, Object.values(grades).reduce((a, b) => a + Number(b || 0), 0));
 
       return `
         <div class="pk9-admin-chart-grid">
           <div class="pk9-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
               <div>
-                <h3 style="margin:0;font-size:1.05rem;font-weight:900;">📈 Biểu Đồ Lưu Lượng & Hoạt Động 14 Ngày Gần Nhất</h3>
-                <div style="font-size:0.78rem;color:var(--pk9-text-muted);">Thống kê lượt xem trang, khách truy cập và lượt làm đề theo từng ngày</div>
+                <h3 style="margin:0;font-size:1rem;font-weight:900;">📈 Lưu Lượng Khách & Thiết Bị 14 Ngày Gần Nhất</h3>
+                <div style="font-size:0.76rem;color:var(--pk9-text-muted);margin-top:0.15rem;">
+                  <span style="color:#2563eb;font-weight:800;">■ Mobile/Tablet</span> &nbsp;
+                  <span style="color:#059669;font-weight:800;">■ PC/Laptop</span> &nbsp;• Trên cùng: Tổng lượt xem (PV)
+                </div>
               </div>
-              <span class="pk9-badge pk9-badge-verified">Real-time 14D</span>
+              <span class="pk9-badge pk9-badge-verified">Chính xác 14D</span>
             </div>
             <div class="pk9-bar-chart">
               ${series.map(item => {
-                const val = (item.pageviews || 0) + (item.visitors || 0) + (item.attempts || 0);
-                const hPct = Math.min(100, Math.max(8, Math.round((val / maxPv) * 100)));
+                const mob = Number(item.mobile_visitors || 0) + Number(item.tablet_visitors || 0);
+                const desk = Number(item.desktop_visitors || 0);
+                const pv = Number(item.pageviews || 0);
+                const vis = Number(item.visitors || 0);
+                const metric = Math.max(vis, mob + desk) + Math.round(pv * 0.25);
+                const hPct = Math.min(100, Math.max(6, Math.round((metric / maxDayTraffic) * 100)));
+                const devSum = Math.max(1, mob + desk);
+                const mobPct = mob + desk > 0 ? Math.round((mob / devSum) * 100) : 60;
+                const deskPct = 100 - mobPct;
                 return `
-                  <div class="pk9-bar-col" title="Ngày ${esc(item.date)}: ${item.pageviews} lượt xem, ${item.visitors} khách, ${item.attempts} đề thi">
-                    <span style="font-size:0.65rem;font-weight:800;color:var(--pk9-primary);">${val}</span>
-                    <div class="pk9-bar-fill" style="height:${hPct}%;"></div>
-                    <span style="font-size:0.66rem;color:var(--pk9-text-muted);font-weight:700;">${esc(item.label)}</span>
+                  <div class="pk9-bar-col" title="Ngày ${esc(item.date)}: ${vis} thiết bị (Mobile/Tab: ${mob}, PC: ${desk}), ${pv} lượt xem, ${item.attempts || 0} đề thi">
+                    <span style="font-size:0.64rem;font-weight:800;color:var(--pk9-primary);">${vis || pv}</span>
+                    <div class="pk9-bar-stack" style="height:${hPct}%;">
+                      <div class="pk9-bar-seg-mobile" style="height:${mobPct}%;"></div>
+                      <div class="pk9-bar-seg-desktop" style="height:${deskPct}%;"></div>
+                    </div>
+                    <span style="font-size:0.64rem;color:var(--pk9-text-muted);font-weight:700;">${esc(item.label)}</span>
                   </div>
                 `;
               }).join('')}
@@ -2546,31 +2669,33 @@
           </div>
 
           <div class="pk9-card">
-            <h3 style="margin:0 0 0.85rem;font-size:1.05rem;font-weight:900;">🎯 Phân Bổ Học Viên Theo Khối & Phổ Điểm</h3>
-            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <h3 style="margin:0 0 0.75rem;font-size:1rem;font-weight:900;">🎯 Phân Bổ Học Viên Theo Khối & Phổ Điểm</h3>
+            <div style="display:flex;flex-direction:column;gap:0.6rem;">
               ${[
-                { label: '🎓 Khối 12 — Luyện Thi THPT (2K9)', count: grades['2K9'] || 0, color: '#2563eb' },
-                { label: '📘 Khối 10 — Chương Trình Mới (2K11)', count: grades['2K11'] || 0, color: '#0d9488' },
-                { label: '🎯 Khối 9 — Ôn Thi Vào 10 (2K12)', count: grades['2K12'] || 0, color: '#f59e0b' }
+                { label: '🎓 Khối 12 — Luyện Thi 2026 (2K9)', count: grades['2K9'] || 0, color: '#2563eb' },
+                { label: '🏆 Tổng Ôn Khóa 2K8 Pro', count: grades['2K8'] || 0, color: '#8b5cf6' },
+                { label: '🧠 ĐGNL HCM / HSA / TSA', count: grades['DGNL'] || 0, color: '#ec4899' },
+                { label: '📘 Khối 10 — CT Mới (2K11)', count: grades['2K11'] || 0, color: '#0d9488' },
+                { label: '🎯 Khối 9 — Ôn Vào 10 (2K12)', count: grades['2K12'] || 0, color: '#f59e0b' }
               ].map(row => {
                 const pct = Math.round((row.count / totalGradeUsers) * 100);
                 return `
                   <div>
-                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;font-weight:800;margin-bottom:0.25rem;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:800;margin-bottom:0.2rem;">
                       <span>${row.label}</span>
-                      <span>${row.count} học viên (${pct}%)</span>
+                      <span>${row.count} HV (${pct}%)</span>
                     </div>
-                    <div class="pk9-topic-track" style="height:0.5rem;">
-                      <div class="pk9-topic-fill" style="width:${Math.max(4, pct)}%;background:${row.color};"></div>
+                    <div class="pk9-topic-track" style="height:0.46rem;">
+                      <div class="pk9-topic-fill" style="width:${row.count ? Math.max(4, pct) : 0}%;background:${row.color};"></div>
                     </div>
                   </div>
                 `;
               }).join('')}
             </div>
 
-            <hr style="border:none;border-top:1px dashed var(--pk9-border);margin:1rem 0;" />
-            <div style="font-weight:800;font-size:0.85rem;margin-bottom:0.55rem;">📊 Phổ Điểm Phòng Luyện Đề Chuẩn Bộ GD&ĐT:</div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.4rem;text-align:center;">
+            <hr style="border:none;border-top:1px dashed var(--pk9-border);margin:0.85rem 0;" />
+            <div style="font-weight:800;font-size:0.82rem;margin-bottom:0.45rem;">📊 Phổ Điểm Phòng Luyện Đề Chuẩn Bộ GD&ĐT:</div>
+            <div class="pk9-score-buckets-grid" style="text-align:center;">
               ${[
                 { k: '9_10', label: '9.0 - 10đ', c: '#10b981' },
                 { k: '8_9', label: '8.0 - 8.9đ', c: '#2563eb' },
@@ -2578,9 +2703,9 @@
                 { k: '5_7', label: '5.0 - 6.9đ', c: '#f59e0b' },
                 { k: 'under_5', label: '< 5.0đ', c: '#ef4444' }
               ].map(b => `
-                <div style="padding:0.5rem 0.3rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
-                  <div style="font-size:1.05rem;font-weight:900;color:${b.c};">${scores[b.k] || 0}</div>
-                  <div style="font-size:0.68rem;font-weight:700;color:var(--pk9-text-muted);">${b.label}</div>
+                <div style="padding:0.45rem 0.25rem;border-radius:0.7rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
+                  <div style="font-size:1rem;font-weight:900;color:${b.c};">${scores[b.k] || 0}</div>
+                  <div style="font-size:0.66rem;font-weight:700;color:var(--pk9-text-muted);">${b.label}</div>
                 </div>
               `).join('')}
             </div>
@@ -2589,13 +2714,13 @@
 
         <div class="pk9-grid-3">
           <div class="pk9-card">
-            <h4 style="margin:0 0 0.75rem;font-size:0.98rem;font-weight:900;">🏆 Top 5 Học Viên Dẫn Đầu XP Toàn Hệ Thống</h4>
-            <div style="display:flex;flex-direction:column;gap:0.55rem;">
+            <h4 style="margin:0 0 0.7rem;font-size:0.96rem;font-weight:900;">🏆 Top 5 Học Viên Dẫn Đầu XP</h4>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
               ${users.slice().sort((a, b) => b.xp - a.xp).slice(0, 5).map((u, idx) => `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.55rem 0.75rem;border-radius:0.75rem;background:var(--pk9-surface-2);">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0.7rem;border-radius:0.75rem;background:var(--pk9-surface-2);">
                   <div style="min-width:0;">
-                    <div style="font-weight:800;font-size:0.84rem;">#${idx + 1} • ${esc(u.display_name)} (@${esc(u.username)})</div>
-                    <div style="font-size:0.72rem;color:var(--pk9-text-muted);">${esc(u.school || 'Học viên K9')} • ${u.lessons_done} bài • ${u.exam_attempts} đề</div>
+                    <div style="font-weight:800;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">#${idx + 1} • ${esc(u.display_name)} (@${esc(u.username)})</div>
+                    <div style="font-size:0.71rem;color:var(--pk9-text-muted);">${esc(u.school || 'Học viên K9')} • ${u.lessons_done} bài • ${u.exam_attempts} đề</div>
                   </div>
                   <span class="pk9-badge pk9-badge-subj">⚡ ${u.xp} XP</span>
                 </div>
@@ -2604,18 +2729,18 @@
           </div>
 
           <div class="pk9-card">
-            <h4 style="margin:0 0 0.75rem;font-size:0.98rem;font-weight:900;">📚 Thống Kê Luyện Đề Theo Môn Học</h4>
-            <div style="display:flex;flex-direction:column;gap:0.55rem;">
+            <h4 style="margin:0 0 0.7rem;font-size:0.96rem;font-weight:900;">📚 Thống Kê Luyện Đề Theo Môn</h4>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
               ${subjects.length ? subjects.map(s => `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.55rem 0.75rem;border-radius:0.75rem;background:var(--pk9-surface-2);">
-                  <div>
-                    <div style="font-weight:800;font-size:0.85rem;">${esc(s.subject)}</div>
-                    <div style="font-size:0.73rem;color:var(--pk9-text-muted);">Điểm TB: <b>${s.avgScore}đ</b> • Cao nhất: <b>${s.bestScore}đ</b></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0.7rem;border-radius:0.75rem;background:var(--pk9-surface-2);">
+                  <div style="min-width:0;">
+                    <div style="font-weight:800;font-size:0.83rem;">${esc(s.subject)}</div>
+                    <div style="font-size:0.72rem;color:var(--pk9-text-muted);">Điểm TB: <b>${s.avgScore}đ</b> • Cao nhất: <b>${s.bestScore}đ</b></div>
                   </div>
                   <span class="pk9-badge pk9-badge-verified">${s.count} lượt thi</span>
                 </div>
               `).join('') : `
-                <div style="padding:1rem;text-align:center;color:var(--pk9-text-muted);font-size:0.84rem;">
+                <div style="padding:1rem;text-align:center;color:var(--pk9-text-muted);font-size:0.82rem;">
                   Chưa có lượt nộp đề nào. Khi học viên nộp bài, thống kê từng môn sẽ tự động tổng hợp tại đây.
                 </div>
               `}
@@ -2623,21 +2748,165 @@
           </div>
 
           <div class="pk9-card">
-            <h4 style="margin:0 0 0.75rem;font-size:0.98rem;font-weight:900;">⚡ Thao Tác Nhanh Cho Quản Trị Viên</h4>
-            <div style="display:flex;flex-direction:column;gap:0.55rem;">
-              <button type="button" class="pk9-btn-exam-primary" data-admin-subtab="users" style="width:100%;justify-content:center;">
+            <h4 style="margin:0 0 0.7rem;font-size:0.96rem;font-weight:900;">⚡ Thao Tác Nhanh Cho Admin</h4>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+              <button type="button" class="pk9-btn-exam-primary" data-admin-subtab="traffic" style="width:100%;justify-content:center;">
+                🌐 Xem Thiết Bị & Người Đang Online (${traffic.online_now || 0})
+              </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-admin-subtab="users" style="width:100%;justify-content:center;">
                 👥 Quản lý học viên & Cấp XP / VIP
               </button>
               <button type="button" class="pk9-btn-exam-ghost" data-admin-subtab="content" style="width:100%;justify-content:center;">
-                💎 Thêm link mới vào Khóa Chui Tham Khảo
+                💎 Quản lý link Khóa Chui Tham Khảo
               </button>
               <button type="button" class="pk9-btn-exam-ghost" data-admin-subtab="system" style="width:100%;justify-content:center;">
-                📢 Phát thông báo Banner toàn hệ thống
-              </button>
-              <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="khoa-chui" style="width:100%;justify-content:center;">
-                📊 Mở Bảng Khóa Chui Tham Khảo
+                📢 Phát thông báo toàn hệ thống
               </button>
             </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // SUBTAB 2: REAL-TIME MULTI-DEVICE & TRAFFIC TELEMETRY
+    if (APP.adminSubtab === 'traffic') {
+      const onlineSessions = Array.isArray(traffic.online_sessions) ? traffic.online_sessions : [];
+      const osList = Array.isArray(traffic.os_breakdown) ? traffic.os_breakdown : [];
+      const browserList = Array.isArray(traffic.browser_breakdown) ? traffic.browser_breakdown : [];
+      const topTabs = Array.isArray(traffic.top_tabs) ? traffic.top_tabs : [];
+      const topRefs = Array.isArray(traffic.top_referrers) ? traffic.top_referrers : [];
+      const recentDevices = Array.isArray(traffic.recent_devices) ? traffic.recent_devices : [];
+      const filteredDevices = recentDevices.filter(dev => {
+        if (APP.adminDeviceFilter === 'PWA') return Boolean(dev.pwa);
+        if (APP.adminDeviceFilter === 'ALL') return true;
+        return dev.device_type === APP.adminDeviceFilter;
+      });
+      const devToday = traffic.devices_today || { mobile: 0, tablet: 0, desktop: 0 };
+
+      return `
+        <div class="pk9-card" style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.65rem;margin-bottom:0.85rem;">
+            <div>
+              <h3 style="margin:0;font-size:1.02rem;font-weight:900;">🟢 Thiết Bị Đang Online Thời Gian Thực (Cửa Sổ 120s)</h3>
+              <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin-top:0.15rem;">
+                Hôm nay trên thiết bị: 📱 <b>${devToday.mobile || 0}</b> Điện thoại • 💻 <b>${devToday.desktop || 0}</b> PC • 📲 <b>${devToday.tablet || 0}</b> Tablet
+              </div>
+            </div>
+            <button type="button" class="pk9-admin-btn-xs" data-admin-refresh="1">🔄 Quét Live</button>
+          </div>
+          ${onlineSessions.length ? `
+            <div class="pk9-online-grid">
+              ${onlineSessions.map(sess => {
+                const dm = deviceMetaBadge(sess.device_type);
+                const agoSec = Math.max(0, Math.round((Date.now() - Number(sess.ts || Date.now())) / 1000));
+                const agoText = agoSec < 8 ? 'Vừa xong' : `${agoSec}s trước`;
+                return `
+                  <div class="pk9-session-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;">
+                      <span class="pk9-device-badge ${dm.cls}">${dm.label}</span>
+                      <span style="font-size:0.71rem;font-weight:700;color:#10b981;">● ${agoText}</span>
+                    </div>
+                    <div style="font-size:0.82rem;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      ${sess.username ? `👤 @${esc(sess.username)}` : `🕵️ Khách #${esc(sess.vid_short || 'anon')}`}
+                      ${sess.pwa ? ' <span class="pk9-badge pk9-badge-verified" style="font-size:0.65rem;padding:0.1rem 0.35rem;">PWA</span>' : ''}
+                    </div>
+                    <div style="font-size:0.74rem;color:var(--pk9-text-muted);">
+                      <b>${esc(sess.os || 'OS')}</b> • ${esc(sess.browser || 'Browser')}${sess.screen ? ` • ${esc(sess.screen)}` : ''}
+                    </div>
+                    <div style="font-size:0.73rem;color:var(--pk9-primary);font-weight:700;">
+                      Đang xem: ${esc(TAB_LABELS_VI[sess.active_tab] || sess.active_tab || 'home')}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `
+            <div style="padding:1.25rem;text-align:center;font-size:0.84rem;color:var(--pk9-text-muted);background:var(--pk9-surface-2);border-radius:0.9rem;">
+              Chưa ghi nhận thiết bị nào khác online trong 120 giây qua.
+            </div>
+          `}
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 255px),1fr));gap:0.85rem;margin-bottom:1rem;">
+          <div class="pk9-card">
+            <h4 style="margin:0 0 0.7rem;font-size:0.95rem;font-weight:900;">📱 Hệ Điều Hành (OS)</h4>
+            ${renderAnalyticsBars(osList, 'Chưa có dữ liệu hệ điều hành.', name => name)}
+          </div>
+          <div class="pk9-card">
+            <h4 style="margin:0 0 0.7rem;font-size:0.95rem;font-weight:900;">🌐 Trình Duyệt & In-App (Zalo/Threads)</h4>
+            ${renderAnalyticsBars(browserList, 'Chưa có dữ liệu trình duyệt.', name => name, 'background:linear-gradient(90deg,#7c3aed,#ec4899);')}
+          </div>
+          <div class="pk9-card">
+            <h4 style="margin:0 0 0.7rem;font-size:0.95rem;font-weight:900;">🔥 Chuyên Mục Được Xem Nhiều</h4>
+            ${renderAnalyticsBars(topTabs, 'Chưa có lượt chuyển mục.', name => TAB_LABELS_VI[name] || name, 'background:linear-gradient(90deg,#10b981,#06b6d4);')}
+          </div>
+          <div class="pk9-card">
+            <h4 style="margin:0 0 0.7rem;font-size:0.95rem;font-weight:900;">🔗 Nguồn Giới Thiệu (Referrers)</h4>
+            ${renderAnalyticsBars(topRefs, 'Chưa có dữ liệu nguồn truy cập.', name => name === 'direct' ? 'Truy cập trực tiếp (Direct / QR)' : name, 'background:linear-gradient(90deg,#f59e0b,#ef4444);')}
+          </div>
+        </div>
+
+        <div class="pk9-card">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.65rem;margin-bottom:0.85rem;">
+            <h4 style="margin:0;font-size:0.98rem;font-weight:900;">📋 Nhật Ký Thiết Bị Đã Truy Cập Website (${filteredDevices.length})</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+              ${[
+                { k: 'ALL', label: `Tất cả (${recentDevices.length})` },
+                { k: 'mobile', label: '📱 Điện thoại' },
+                { k: 'desktop', label: '💻 Máy tính' },
+                { k: 'tablet', label: '📲 Tablet' },
+                { k: 'PWA', label: '🏠 PWA App' }
+              ].map(f => `
+                <button type="button" class="pk9-exam-chip ${APP.adminDeviceFilter === f.k ? 'active' : ''}" data-admin-device-filter="${f.k}">
+                  ${f.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="pk9-admin-table-wrap">
+            <table class="pk9-admin-table">
+              <thead>
+                <tr>
+                  <th>Thiết bị / ID</th>
+                  <th>Hệ điều hành</th>
+                  <th>Trình duyệt / WebView</th>
+                  <th>Màn hình</th>
+                  <th>Tài khoản</th>
+                  <th>Mục cuối</th>
+                  <th>Nguồn</th>
+                  <th>Lượt vào</th>
+                  <th>Lần cuối</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filteredDevices.length ? filteredDevices.map(dev => {
+                  const dm = deviceMetaBadge(dev.device_type);
+                  return `
+                    <tr>
+                      <td>
+                        <span class="pk9-device-badge ${dm.cls}">${dm.label}</span>
+                        <div style="font-size:0.68rem;color:var(--pk9-text-muted);margin-top:0.2rem;">#${esc(dev.vid_short || '')} ${dev.pwa ? '• 🏠 PWA' : ''}</div>
+                      </td>
+                      <td><b>${esc(dev.os || '—')}</b></td>
+                      <td>${esc(dev.browser || '—')}</td>
+                      <td><code>${esc(dev.screen || '—')}</code></td>
+                      <td>${dev.username ? `<b>@${esc(dev.username)}</b>` : '<span style="color:var(--pk9-text-muted);">Khách vãng lai</span>'}</td>
+                      <td>${esc(TAB_LABELS_VI[dev.active_tab] || dev.active_tab || 'home')}</td>
+                      <td style="font-size:0.75rem;">${esc(dev.last_ref || 'direct')}</td>
+                      <td><b>${Number(dev.visits || 1)}</b> (${Number(dev.pageviews || 1)} PV)</td>
+                      <td style="font-size:0.74rem;color:var(--pk9-text-muted);">${dev.last_seen ? new Date(dev.last_seen).toLocaleString('vi-VN') : '—'}</td>
+                    </tr>
+                  `;
+                }).join('') : `
+                  <tr>
+                    <td colspan="9" style="text-align:center;padding:1.5rem;color:var(--pk9-text-muted);">
+                      Chưa có nhật ký thiết bị nào khớp bộ lọc.
+                    </td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
           </div>
         </div>
       `;
@@ -2879,24 +3148,24 @@
     if (APP.adminSubtab === 'content') {
       const catalog = getCatalog();
       return `
-        <div class="pk9-grid-3" style="margin-bottom:1.35rem;">
-          <div class="pk9-card" style="grid-column:span 2;">
-            <h4 style="margin:0 0 0.4rem;font-size:1.05rem;font-weight:900;">💎 Thêm Khóa Học / Bảng Tổng Hợp Mới Vào Mục "Khóa Chui Tham Khảo"</h4>
-            <p style="margin:0 0 0.85rem;font-size:0.81rem;color:var(--pk9-text-muted);">
+        <div class="pk9-grid-3" style="margin-bottom:1.15rem;">
+          <div class="pk9-card pk9-span-2">
+            <h4 style="margin:0 0 0.4rem;font-size:1.02rem;font-weight:900;">💎 Thêm Khóa Học / Bảng Tổng Hợp Mới Vào Mục "Khóa Chui Tham Khảo"</h4>
+            <p style="margin:0 0 0.75rem;font-size:0.8rem;color:var(--pk9-text-muted);">
               Khóa học được thêm tại đây sẽ xuất hiện ngay lập tức trong tab <b>Khóa Chui Tham Khảo</b> và hỗ trợ mở trực tiếp ngay trong web.
             </p>
-            <form id="pk9-admin-add-khoachui-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.65rem;">
+            <form id="pk9-admin-add-khoachui-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 190px),1fr));gap:0.6rem;">
               <input type="text" name="title" class="pk9-input" placeholder="Tên khóa học / chuyên đề (VD: Khóa Tổng Ôn Toán 12...)" required />
               <input type="text" name="teacher" class="pk9-input" placeholder="Giáo viên (VD: Thầy Đỗ Văn Đức)" required />
               <input type="text" name="subject" class="pk9-input" placeholder="Môn học (Toán, Vật lí, Hóa học...)" required />
               <input type="text" name="tag" class="pk9-input" placeholder="Nhãn (VD: HOT 2026, VIP 9+)" value="VIP 2026" />
               <input type="url" name="url" class="pk9-input" placeholder="Link Google Sheet / Drive / YouTube..." required />
-              <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.35rem;">➕ Thêm vào Khóa Chui Tham Khảo</button>
+              <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.3rem;">➕ Thêm vào Khóa Chui Tham Khảo</button>
             </form>
           </div>
 
           <div class="pk9-card">
-            <h4 style="margin:0 0 0.5rem;font-size:1rem;font-weight:900;">📊 Trạng Thái Bảng Gốc Khóa Chui</h4>
+            <h4 style="margin:0 0 0.5rem;font-size:0.98rem;font-weight:900;">📊 Trạng Thái Bảng Gốc Khóa Chui</h4>
             <div style="font-size:0.8rem;color:var(--pk9-text-muted);line-height:1.6;margin-bottom:0.85rem;">
               <div><b>Sheet ID:</b> <code>${KHOA_CHUI_SHEET_ID.slice(0, 18)}...</code></div>
               <div><b>GID mặc định:</b> <code>${KHOA_CHUI_GID}</code></div>
@@ -2908,6 +3177,23 @@
             </button>
           </div>
         </div>
+
+        ${APP.customKhoaChui.length ? `
+          <div class="pk9-card" style="margin-bottom:1.15rem;">
+            <h4 style="margin:0 0 0.65rem;font-size:0.96rem;font-weight:900;">📌 Danh Sách Khóa Chui Tùy Chỉnh Đang Hiển Thị (${APP.customKhoaChui.length})</h4>
+            <div style="display:flex;flex-direction:column;gap:0.45rem;">
+              ${APP.customKhoaChui.map(kc => `
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.55rem 0.75rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
+                  <div style="min-width:0;flex:1 1 min(100%, 220px);">
+                    <div style="font-weight:800;font-size:0.84rem;">${esc(kc.title)} <span class="pk9-badge pk9-badge-subj">${esc(kc.subject)}</span></div>
+                    <div style="font-size:0.74rem;color:var(--pk9-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(kc.teacher)} • ${esc(kc.url)}</div>
+                  </div>
+                  <button type="button" class="pk9-admin-btn-xs danger" data-admin-del-khoachui="${esc(kc.id)}">🗑️ Xóa</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
 
         <div class="pk9-admin-table-wrap">
           <table class="pk9-admin-table">
@@ -2949,8 +3235,8 @@
     const logs = Array.isArray(d?.audit_logs) ? d.audit_logs : [];
     const curAnn = APP.systemAnnouncement || {};
     return `
-      <div class="pk9-grid-3" style="margin-bottom:1.35rem;">
-        <div class="pk9-card" style="grid-column:span 2;">
+      <div class="pk9-grid-3" style="margin-bottom:1.15rem;">
+        <div class="pk9-card pk9-span-2">
           <h4 style="margin:0 0 0.45rem;font-size:1.05rem;font-weight:900;">📢 Phát Thông Báo Toàn Hệ Thống (System Broadcast Banner)</h4>
           <p style="margin:0 0 0.85rem;font-size:0.82rem;color:var(--pk9-text-muted);">
             Thanh thông báo sẽ hiển thị nổi bật trên đỉnh trang cho tất cả học viên đang truy cập website.
@@ -3989,6 +4275,56 @@
         return;
       }
 
+      const adminToggleLiveBtn = e.target.closest('[data-admin-toggle-live]');
+      if (adminToggleLiveBtn) {
+        APP.adminAutoLive = !APP.adminAutoLive;
+        syncAdminLivePolling();
+        renderAdminTab();
+        toast(APP.adminAutoLive ? '🟢 Đã bật tự động cập nhật mỗi 15 giây' : '⏸ Đã tạm dừng tự động làm mới', 'info');
+        return;
+      }
+
+      const adminDeviceFilterBtn = e.target.closest('[data-admin-device-filter]');
+      if (adminDeviceFilterBtn) {
+        APP.adminDeviceFilter = adminDeviceFilterBtn.getAttribute('data-admin-device-filter') || 'ALL';
+        renderAdminTab();
+        return;
+      }
+
+      const adminDelKcBtn = e.target.closest('[data-admin-del-khoachui]');
+      if (adminDelKcBtn) {
+        const id = adminDelKcBtn.getAttribute('data-admin-del-khoachui');
+        await runAdminAction({ sub_action: 'delete-khoa-chui', id });
+        return;
+      }
+
+      const adminExportCsvBtn = e.target.closest('[data-admin-export-csv]');
+      if (adminExportCsvBtn) {
+        const payload = APP.adminDetailData || {};
+        const csvCell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+        const rows = [['Ngay', 'Khach', 'Mobile', 'Desktop', 'Tablet', 'Pageviews', 'Bai_thi', 'Dang_ky']];
+        for (const s of (payload.daily_series || [])) {
+          rows.push([s.date, s.visitors, s.mobile_visitors || 0, s.desktop_visitors || 0, s.tablet_visitors || 0, s.pageviews, s.attempts, s.signups]);
+        }
+        rows.push([]);
+        rows.push(['Username', 'Ho_ten', 'Vai_tro', 'Khoi', 'XP', 'Bai_hoc_xong', 'So_de_thi', 'Diem_TB', 'Hoat_dong_cuoi']);
+        for (const u of (payload.users || [])) {
+          rows.push([u.username, u.display_name, u.role, u.grade, u.xp, u.lessons_done, u.exam_attempts, u.avg_score, u.last_active]);
+        }
+        const csvText = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `phuc-k9-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast('📊 Đã xuất báo cáo CSV (mở được ngay trong Excel)!', 'success');
+        return;
+      }
+
       const adminExportBtn = e.target.closest('[data-admin-export-json]');
       if (adminExportBtn) {
         const payload = APP.adminDetailData || {};
@@ -4509,6 +4845,83 @@
     }, { passive: true });
   }
 
+  function getVisitorClientId() {
+    try {
+      let vid = localStorage.getItem('pk9_visitor_id') || '';
+      if (!/^[a-f0-9-]{20,80}$/i.test(vid)) {
+        if (window.crypto?.randomUUID) {
+          vid = window.crypto.randomUUID();
+        } else if (window.crypto?.getRandomValues) {
+          const b = new Uint8Array(16);
+          window.crypto.getRandomValues(b);
+          b[6] = (b[6] & 0x0f) | 0x40;
+          b[8] = (b[8] & 0x3f) | 0x80;
+          const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+          vid = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+        }
+        if (vid) localStorage.setItem('pk9_visitor_id', vid);
+      }
+      return vid;
+    } catch {
+      return '';
+    }
+  }
+
+  function getSessionTabId() {
+    try {
+      let sid = sessionStorage.getItem('pk9_session_id') || '';
+      if (!sid) {
+        sid = window.crypto?.randomUUID ? window.crypto.randomUUID() : `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+        sessionStorage.setItem('pk9_session_id', sid);
+      }
+      return sid;
+    } catch {
+      return '';
+    }
+  }
+
+  let telemetryBooted = false;
+  function trackAnalyticsEvent(event = 'pageview', tabOverride = '') {
+    try {
+      const vid = getVisitorClientId();
+      const sid = getSessionTabId();
+      const coarse = Boolean(window.matchMedia?.('(pointer: coarse)')?.matches);
+      const minW = Math.min(window.innerWidth || 9999, screen?.width || 9999);
+      const isMob = typeof navigator.userAgentData?.mobile === 'boolean'
+        ? navigator.userAgentData.mobile
+        : (coarse && minW <= 900);
+      const payload = {
+        visitor_id: vid,
+        session_id: sid,
+        event,
+        path: location.pathname || '/',
+        tab: tabOverride || APP.activeTab || 'home',
+        ref: event === 'pageview' ? (document.referrer || '') : '',
+        mobile: isMob,
+        platform_hint: navigator.userAgentData?.platform || navigator.platform || '',
+        screen: (screen?.width && screen?.height) ? `${screen.width}x${screen.height}` : '',
+        screen_w: Number(screen?.width || window.innerWidth || 0),
+        dpr: Number(window.devicePixelRatio || 1),
+        pwa: Boolean(APP.isStandalone || window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator?.standalone),
+        touch_points: Number(navigator.maxTouchPoints || 0)
+      };
+      fetch('/api/dashboard?action=track-visitor', {
+        method: 'POST',
+        credentials: 'include',
+        keepalive: event === 'heartbeat',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+          if (d?.visitor_id && /^[a-f0-9-]{20,80}$/i.test(d.visitor_id)) {
+            try { localStorage.setItem('pk9_visitor_id', d.visitor_id); } catch {}
+          }
+        })
+        .catch(() => {});
+    } catch {}
+  }
+
   async function initApp() {
     try {
       const savedTheme = localStorage.getItem('pk9_theme');
@@ -4525,23 +4938,21 @@
     await fetchAuthAndLeaderboard();
     loadCommunityItems();
 
-    // Ghi nhận lượt truy cập thực vào thống kê Admin Dashboard
-    try {
-      let vid = '';
-      try {
-        vid = localStorage.getItem('pk9_visitor_id') || '';
-        if (!vid) {
-          vid = 'v_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now().toString(36);
-          localStorage.setItem('pk9_visitor_id', vid);
+    // Ghi nhận lượt truy cập thực & thiết bị (Mobile / Desktop / Tablet / WebView) vào Admin Dashboard
+    trackAnalyticsEvent('pageview', APP.activeTab || 'home');
+    if (!telemetryBooted) {
+      telemetryBooted = true;
+      setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          trackAnalyticsEvent('heartbeat', APP.activeTab || 'home');
         }
-      } catch {}
-      fetch('/api/dashboard?action=track-visitor', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visitor_id: vid, event: 'pageview', path: location.pathname || '/' })
-      }).catch(() => {});
-    } catch {}
+      }, 45000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          trackAnalyticsEvent('heartbeat', APP.activeTab || 'home');
+        }
+      });
+    }
   }
 
   if (document.readyState === 'loading') {
