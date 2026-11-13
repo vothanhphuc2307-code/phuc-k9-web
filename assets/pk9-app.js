@@ -611,7 +611,7 @@
         <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
           ${['2K9', '2K8', 'DGNL', '2K11', '2K12', 'ALL'].map(g => `
             <button type="button" class="pk9-exam-chip ${APP.gradeFilter === g ? 'active' : ''}" data-set-grade="${g}">
-              ${g === '2K9' ? '🎓 2K9 Theo Giáo Viên (8 Môn)' : g === '2K8' ? '🔥 Tuyển Chọn 2K8' : g === 'DGNL' ? '🏛️ ĐGNL & ĐGTD' : g === '2K11' ? '📘 Lớp 10 Mới (2K11)' : g === '2K12' ? '🎯 Ôn Vào 10 (2K12)' : `🌐 Tất cả (${catalog.length} khóa)`}
+              ${g === '2K9' ? `🎓 Theo Giáo Viên (${subjects2k9List.length} Môn & ĐGNL)` : g === '2K8' ? '🔥 Tuyển Chọn 2K8' : g === 'DGNL' ? '🏛️ ĐGNL & ĐGTD' : g === '2K11' ? '📘 Lớp 10 Mới (2K11)' : g === '2K12' ? '🎯 Ôn Vào 10 (2K12)' : `🌐 Tất cả (${catalog.length} khóa)`}
             </button>
           `).join('')}
         </div>
@@ -641,7 +641,7 @@
           }).join('')}
         </div>
         <div style="margin-top:0.75rem;font-size:0.82rem;color:var(--pk9-text-muted);text-align:center;">
-          💡 Đang có sẵn <b>${catalog.filter(c => c.grade === '2K9').length} giáo viên</b> trên 8 môn với tổng <b>${total2k9Pdfs} file PDF</b> đề thi & bản viết tay. Vào tab <b>Video Bài Giảng</b> để chọn đúng Thầy/Cô bạn đang học!
+          💡 Đang có sẵn <b>${catalog.filter(c => c.grade === '2K9').length} giáo viên</b> trên <b>${subjects2k9List.length} môn & ĐGNL</b> với tổng <b>${total2k9Pdfs} file PDF</b> đề thi & bản viết tay (100% link công khai). Vào tab <b>Video Bài Giảng</b> để chọn đúng Thầy/Cô bạn đang học!
         </div>
       ` : `
       <div class="pk9-grid-3">
@@ -767,8 +767,22 @@
   // ==========================================================================
   function toDrivePreviewUrl(rawUrl) {
     const raw = String(rawUrl || '').trim();
-    const m = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);
-    return m ? `https://drive.google.com/file/d/${m[1]}/preview` : raw;
+    if (!raw) return '';
+    const fileMatch = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);
+    if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
+    const openMatch = raw.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([A-Za-z0-9_-]+)/);
+    if (openMatch) return `https://drive.google.com/file/d/${openMatch[1]}/preview`;
+    const folderMatch = raw.match(/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([A-Za-z0-9_-]+)/);
+    if (folderMatch) return `https://drive.google.com/embeddedfolderview?id=${folderMatch[1]}#list`;
+    const docMatch = raw.match(/docs\.google\.com\/(document|presentation)\/d\/([A-Za-z0-9_-]+)/);
+    if (docMatch) return `https://docs.google.com/${docMatch[1]}/d/${docMatch[2]}/preview`;
+    const sheetMatch = raw.match(/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
+    if (sheetMatch) {
+      const gidMatch = raw.match(/gid=([0-9]+)/);
+      const gid = gidMatch ? gidMatch[1] : '0';
+      return `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}/htmlview?gid=${gid}&widget=true&headers=false`;
+    }
+    return raw;
   }
 
   function getTopicVideoEmbed(topic) {
@@ -791,13 +805,23 @@
         codeLabel: yt[1]
       };
     }
-    const dm = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);
+    const dm = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/)
+      || raw.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([A-Za-z0-9_-]+)/);
     if (dm) {
       return {
         kind: 'drive',
         embedUrl: `https://drive.google.com/file/d/${dm[1]}/preview`,
         externalUrl: raw,
         codeLabel: `Drive:${dm[1].slice(0, 8)}`
+      };
+    }
+    const fm = raw.match(/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([A-Za-z0-9_-]+)/);
+    if (fm) {
+      return {
+        kind: 'drive',
+        embedUrl: `https://drive.google.com/embeddedfolderview?id=${fm[1]}#list`,
+        externalUrl: raw,
+        codeLabel: `Folder:${fm[1].slice(0, 8)}`
       };
     }
     return { kind: 'none', embedUrl: raw, externalUrl: raw, codeLabel: 'Video' };
@@ -883,8 +907,9 @@
       ensure2k9CourseLoaded(course);
     }
 
+    const num2k9Subjects = new Set(catalog.filter(c => c.grade === '2K9').map(c => c.subject)).size || 8;
     const gradeMeta = [
-      { code: '2K9', icon: '🎓', label: 'Khối 12 (2K9) — Full Bài Giảng & PDF Theo Từng Giáo Viên', sub: 'Chọn Môn (8 môn) → Chọn Tên Thầy/Cô để vào Full Video & Tất Cả PDF' },
+      { code: '2K9', icon: '🎓', label: 'Khối 12 (2K9/2K8) — Full Bài Giảng & PDF Theo Từng Giáo Viên', sub: 'Chọn Môn → Chọn Tên Thầy/Cô để vào Full Chương, Chủ Đề, Video & Tất Cả PDF' },
       { code: '2K8', icon: '🔥', label: 'Khối 12 Tuyển Chọn 2K8 — Chuyên Đề + PDF', sub: 'Chuyên đề hay nhất đủ môn (Toán, Lí, Hóa, Sinh, Anh, Văn, Địa) kèm PDF dưới video' },
       { code: 'DGNL', icon: '🏛️', label: 'Luyện Thi ĐGNL & ĐGTD — V-ACT (Empire) • HSA • TSA • SP/BCA', sub: 'Chuyên đề ĐGNL ĐHQG-HCM (ưu tiên Empire), ĐHQG-HN (HSA), Bách Khoa (TSA) & Sư Phạm/BCA' },
       { code: '2K11', icon: '📘', label: 'Khối 10 — Chương Trình Mới GDPT 2018 (2K11)', sub: '5 Môn nền tảng: Toán 10, Vật Lí 10, Hóa Học 10, Sinh Học 10, Tiếng Anh 10' },
@@ -976,7 +1001,7 @@
                 <div style="min-width:0;flex:1;">
                   <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(gm.label)}</div>
                   <div style="font-size:0.73rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
-                    ${gm.code === '2K9' ? `${gCourses.length} giáo viên (8 môn)` : `${gCourses.length} môn học`} • <b>${gTopicsCount} bài giảng & PDF</b>
+                    ${gm.code === '2K9' ? `${gCourses.length} giáo viên (${num2k9Subjects} môn)` : `${gCourses.length} môn học`} • <b>${gTopicsCount} bài giảng & PDF</b>
                   </div>
                 </div>
               </button>
@@ -1650,9 +1675,8 @@
       const gidMatch = embedUrl.match(/gid=([0-9]+)/);
       const gid = gidMatch ? gidMatch[1] : '662446747';
       if (m) embedUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/htmlview?gid=${gid}&widget=true&headers=false`;
-    } else if (embedUrl.includes('drive.google.com/file/d/')) {
-      const m = embedUrl.match(/file\/d\/([A-Za-z0-9_-]+)/);
-      if (m) embedUrl = `https://drive.google.com/file/d/${m[1]}/preview`;
+    } else if (embedUrl.includes('drive.google.com/') || embedUrl.includes('docs.google.com/')) {
+      embedUrl = toDrivePreviewUrl(embedUrl);
     }
 
     overlay.innerHTML = `
