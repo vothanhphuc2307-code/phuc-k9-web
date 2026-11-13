@@ -63,7 +63,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/style.css" />
@@ -77,8 +77,20 @@
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
         processEscapes: true
       },
+      chtml: {
+        mtextInheritFont: true,
+        matchFontHeight: true,
+        scale: 1
+      },
       options: {
         skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      startup: {
+        pageReady: function () {
+          return window.MathJax.startup.defaultPageReady().then(function () {
+            window.dispatchEvent(new Event('pk9-mathjax-ready'));
+          });
+        }
       }
     };
   </script>
@@ -230,7 +242,10 @@
         </div>
 
         <div class="pk9-topbar-actions">
-          <button type="button" class="pk9-xp-chip" id="pk9-top-khoa-chui-btn" data-nav-tab="khoa-chui" title="Mở ngay Khóa Chui Tham Khảo trực tiếp trong web" style="background:linear-gradient(135deg,rgba(16,185,129,0.16),rgba(37,99,235,0.16));border-color:rgba(16,185,129,0.4);color:#0d9488;">
+          <button type="button" class="pk9-xp-chip pk9-install-chip" id="pk9-install-app-btn" data-install-app="1" title="Tải App Học Cùng Phúc K9 về điện thoại hoặc máy tính">
+            📲 <span>Tải App</span>
+          </button>
+          <button type="button" class="pk9-xp-chip pk9-hide-mob-xs" id="pk9-top-khoa-chui-btn" data-nav-tab="khoa-chui" title="Mở ngay Khóa Chui Tham Khảo trực tiếp trong web" style="background:linear-gradient(135deg,rgba(16,185,129,0.16),rgba(37,99,235,0.16));border-color:rgba(16,185,129,0.4);color:#0d9488;">
             💎 <span class="hide-xs">Khóa Chui Tham Khảo</span>
           </button>
           <button type="button" class="pk9-xp-chip" id="pk9-top-admin-btn" data-nav-tab="admin" title="Mở Trung tâm điều hành Admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.18),rgba(245,158,11,0.18));border-color:rgba(225,29,72,0.45);color:#e11d48;">
@@ -312,6 +327,11 @@
       <div id="pk9-cmd-results" style="max-height:340px;overflow-y:auto;"></div>
     </div>
   </div>
+
+  <!-- MOBILE FLOATING SCROLL-TO-TOP -->
+  <button type="button" id="pk9-mob-scroll-top" class="pk9-mob-scroll-top" title="Cuộn lên đầu trang" aria-label="Lên đầu trang">
+    ↑
+  </button>
 
   <!-- Core Scripts -->
   <script src="/assets/pk9-curriculum.js"></script>

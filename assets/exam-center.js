@@ -48,10 +48,40 @@
     return m ? decodeURIComponent(m[1]) : (window.PK9_AUTH?.csrf || '');
   }
 
+  const PENDING_TYPESET_ELS = new Set();
   function typesetMath(el) {
+    const target = el || document.body;
     if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-      window.MathJax.typesetPromise(el ? [el] : undefined).catch(() => {});
+      try {
+        if (typeof window.MathJax.typesetClear === 'function' && target) {
+          window.MathJax.typesetClear([target]);
+        }
+      } catch {}
+      window.MathJax.typesetPromise(target ? [target] : undefined).catch(() => {});
+    } else if (target) {
+      PENDING_TYPESET_ELS.add(target);
     }
+  }
+  window.addEventListener('pk9-mathjax-ready', () => {
+    PENDING_TYPESET_ELS.forEach(el => typesetMath(el));
+    PENDING_TYPESET_ELS.clear();
+  });
+
+  function getDirectDownloadUrl(rawUrl) {
+    const raw = String(rawUrl || '').trim();
+    if (!raw) return '';
+    const fileMatch = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/)
+      || raw.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([A-Za-z0-9_-]+)/);
+    if (fileMatch) return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+    return raw;
+  }
+
+  function isDownloadableSourceUrl(rawUrl) {
+    const raw = String(rawUrl || '').trim().toLowerCase();
+    return /\.pdf($|\?)/i.test(raw)
+      || raw.includes('drive.google.com/file/d/')
+      || raw.includes('drive.google.com/open?')
+      || raw.includes('drive.google.com/uc?');
   }
 
   function normShortAnswer(val) {
@@ -504,6 +534,9 @@
                       <button type="button" class="pk9-btn-exam-ghost" data-start-split="${esc(ex.id)}" title="Làm bài song song với file PDF gốc">
                         📄 Thi kèm PDF
                       </button>
+                      <a href="${esc(getDirectDownloadUrl(pdfPath))}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tải đề PDF về máy">
+                        ⬇️ Tải PDF
+                      </a>
                     ` : ''}
                   </div>
                 </article>
@@ -562,8 +595,13 @@
                   ⚡ Làm đề tương tác
                 </button>
               ` : ''}
+              ${isDownloadableSourceUrl(item.url) ? `
+                <a href="${esc(getDirectDownloadUrl(item.url))}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
+                  ⬇️ Tải PDF
+                </a>
+              ` : ''}
               <a href="${esc(item.url)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost">
-                🔗 Mở nguồn đề gốc ↗
+                🔗 Mở nguồn ↗
               </a>
             </div>
           </article>
@@ -615,9 +653,12 @@
         <div class="pk9-exam-workspace ${STATE.splitPdf && pdfPath ? 'with-pdf' : ''}">
           ${STATE.splitPdf && pdfPath ? `
             <div class="pk9-exam-pdf-pane">
-              <div style="padding:0.65rem 1rem;background:#0f172a;color:#fff;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
+              <div style="padding:0.65rem 1rem;background:#0f172a;color:#fff;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                 <span>📄 Đề gốc đối chiếu (${esc(ex.source || '')})</span>
-                <a href="${esc(pdfPath)}" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:none;">Mở tab mới ↗</a>
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                  <a href="${esc(getDirectDownloadUrl(pdfPath))}" download target="_blank" rel="noopener" style="color:#34d399;text-decoration:none;">⬇️ Tải PDF</a>
+                  <a href="${esc(pdfPath)}" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:none;">Mở tab mới ↗</a>
+                </div>
               </div>
               <iframe src="${esc(pdfPath)}" title="Đề PDF gốc"></iframe>
             </div>

@@ -1,10 +1,11 @@
 /* ============================================================================
  * HỌC CÙNG PHÚC K9 — PRODUCTION SERVICE WORKER (NETWORK-FIRST + SMART CACHE)
  * ============================================================================ */
-const CACHE_NAME = 'phuc-k9-ecosystem-v39';
+const CACHE_NAME = 'phuc-k9-ecosystem-v40';
 const CORE_ASSETS = [
   '/',
   '/index.html',
+  '/manifest.webmanifest',
   '/style.css',
   '/assets/exam-center.css',
   '/assets/pk9-curriculum.js',

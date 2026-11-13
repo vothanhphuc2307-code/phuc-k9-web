@@ -81,6 +81,24 @@ button, input, select, textarea {
   letter-spacing: inherit;
 }
 
+button, a, [role="button"], summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* MathJax Vietnamese \text{} font inheritance & safe formula scrolling */
+mjx-container {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+mjx-container mjx-mtext,
+mjx-container mjx-utext {
+  font-family: var(--pk9-font-sans) !important;
+}
+
 /* Subtle Ambient Mesh Background */
 body::before {
   content: '';
@@ -376,6 +394,29 @@ html.dark .pk9-topbar {
 
 html.dark .pk9-xp-chip {
   color: #fbbf24;
+}
+
+.pk9-install-chip {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(13, 148, 136, 0.16));
+  border-color: rgba(37, 99, 235, 0.35);
+  color: var(--pk9-primary);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+html.dark .pk9-install-chip {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.42);
+}
+
+.pk9-install-chip.installed {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #059669;
+}
+
+html.dark .pk9-install-chip.installed {
+  color: #34d399;
 }
 
 .pk9-icon-btn {
@@ -1325,21 +1366,32 @@ html.dark .pk9-podium-card.rank-3 {
   display: block;
 }
 
-/* 3D Flashcard Flip */
+/* 3D Flashcard Flip — Auto-Height Grid Stack (Zero Font Glitch & Zero Overflow) */
+.pk9-fc-deck-bar {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 .pk9-fc-scene {
-  perspective: 1100px;
-  max-width: 640px;
-  height: 310px;
-  margin: 1.25rem auto;
+  perspective: 1200px;
+  max-width: 680px;
+  width: 100%;
+  margin: 1.15rem auto 0.85rem;
   cursor: pointer;
+  user-select: none;
+  touch-action: pan-y;
 }
 
 .pk9-fc-card {
   width: 100%;
-  height: 100%;
+  min-height: 310px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.56s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pk9-fc-card.flipped {
@@ -1347,16 +1399,24 @@ html.dark .pk9-podium-card.rank-3 {
 }
 
 .pk9-fc-face {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  min-height: 310px;
   backface-visibility: hidden;
-  border-radius: 1.5rem;
-  padding: 2rem;
+  -webkit-backface-visibility: hidden;
+  border-radius: 1.45rem;
+  padding: 1.75rem 1.65rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.85rem;
   text-align: center;
+  font-family: var(--pk9-font-sans);
+  overflow-wrap: break-word;
+  word-break: normal;
   box-shadow: var(--pk9-shadow-md);
   border: 1px solid var(--pk9-border);
 }
@@ -1364,12 +1424,84 @@ html.dark .pk9-podium-card.rank-3 {
 .pk9-fc-front {
   background: var(--pk9-surface);
   color: var(--pk9-text);
+  transform: rotateY(0deg);
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .pk9-fc-back {
   background: linear-gradient(135deg, #1e3a8a, #0f766e);
   color: #ffffff;
   transform: rotateY(180deg);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pk9-fc-card.flipped .pk9-fc-front {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pk9-fc-card.flipped .pk9-fc-back {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.pk9-fc-badge {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.38;
+  justify-content: center;
+}
+
+.pk9-fc-question,
+.pk9-fc-answer {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  font-family: var(--pk9-font-sans);
+}
+
+.pk9-fc-question {
+  font-size: clamp(1.04rem, 2.3vw, 1.24rem);
+  font-weight: 600;
+  line-height: 1.66;
+  color: var(--pk9-text);
+}
+
+.pk9-fc-answer {
+  font-size: clamp(0.98rem, 2.1vw, 1.16rem);
+  font-weight: 500;
+  line-height: 1.72;
+  color: #ffffff;
+}
+
+.pk9-fc-face mjx-container {
+  max-width: 100% !important;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0.15rem 0.08rem;
+}
+
+.pk9-fc-back mjx-container {
+  color: #ffffff;
+}
+
+.pk9-fc-swipe-hint {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pk9-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.pk9-fc-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
 /* Modals & Command Palette */
@@ -1445,23 +1577,29 @@ html.dark .pk9-podium-card.rank-3 {
 .pk9-toast.success { border-left-color: #10b981; }
 .pk9-toast.error { border-left-color: #ef4444; }
 
-/* Mobile Bottom Nav & Drawer */
+/* Mobile Bottom Nav, Sticky Helpers & Drawer */
 .pk9-mobile-bottom-nav {
   display: none;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: var(--pk9-surface);
+  min-height: calc(62px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
   border-top: 1px solid var(--pk9-border);
   z-index: 60;
   grid-template-columns: repeat(6, 1fr);
-  padding: 0.25rem 0.25rem;
-  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+  padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.09);
+}
+
+html.dark .pk9-mobile-bottom-nav {
+  background: rgba(15, 23, 42, 0.94);
 }
 
 .pk9-mob-nav-btn {
+  position: relative;
   border: none;
   background: transparent;
   color: var(--pk9-text-muted);
@@ -1469,9 +1607,12 @@ html.dark .pk9-podium-card.rank-3 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  font-size: 0.68rem;
+  gap: 0.14rem;
+  min-height: 48px;
+  padding: 0.25rem 0.15rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  line-height: 1.15;
   cursor: pointer;
 }
 
@@ -1482,6 +1623,52 @@ html.dark .pk9-podium-card.rank-3 {
 .pk9-mob-nav-btn.active {
   color: var(--pk9-primary);
   font-weight: 800;
+}
+
+.pk9-mob-nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24%;
+  right: 24%;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, #2563eb, #0d9488);
+}
+
+.pk9-mob-scroll-top {
+  display: none;
+  position: fixed;
+  right: 0.95rem;
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  z-index: 58;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: linear-gradient(135deg, #2563eb, #0d9488);
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  box-shadow: 0 12px 26px -6px rgba(37, 99, 235, 0.55);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pk9-mob-scroll-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.pk9-mob-quick-bar,
+.pk9-mob-app-banner {
+  display: none;
 }
 
 /* Hide menu toggle button on desktop */
@@ -1515,8 +1702,37 @@ html.dark .pk9-podium-card.rank-3 {
 /* Responsive Breakpoints (Tablet & Mobile) */
 @media (max-width: 1024px) {
   [data-toggle-mobile-sidebar],
-  .pk9-mobile-brand-pill {
+  .pk9-mobile-brand-pill,
+  .pk9-mob-scroll-top {
     display: inline-flex;
+  }
+  .pk9-mob-app-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.95rem 1.05rem;
+    border-radius: 1.15rem;
+    margin-bottom: 1.1rem;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(13, 148, 136, 0.14));
+    border: 1.5px solid rgba(37, 99, 235, 0.34);
+  }
+  .pk9-mob-quick-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 1rem;
+    background: var(--pk9-surface);
+    border: 1.5px solid var(--pk9-border);
+    box-shadow: var(--pk9-shadow-sm);
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .pk9-lecture-hierarchy.mob-collapsed {
+    display: none;
   }
   .pk9-shell {
     grid-template-columns: 1fr;
@@ -1526,8 +1742,9 @@ html.dark .pk9-podium-card.rank-3 {
     left: -310px;
     top: 0;
     bottom: 0;
-    width: min(285px, 84vw);
+    width: min(290px, 85vw);
     z-index: 95;
+    padding-bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
     transition: left 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: var(--pk9-shadow-lg);
   }
@@ -1541,13 +1758,13 @@ html.dark .pk9-podium-card.rank-3 {
   .pk9-lecture-studio {
     grid-template-columns: 1fr;
   }
-  /* On mobile/tablet, put the Video Stage FIRST so students don't scroll past 30 chapters to see the video */
+  /* On mobile/tablet, put the Video Stage FIRST so students don't scroll past chapters to see video */
   .pk9-video-stage {
     order: -1;
   }
   .pk9-course-sidebar {
     position: static;
-    max-height: 420px;
+    max-height: 440px;
   }
   .pk9-grade-tier-grid {
     grid-template-columns: 1fr;
@@ -1571,67 +1788,177 @@ html.dark .pk9-podium-card.rank-3 {
     display: none;
   }
   .pk9-content {
-    padding: 0.95rem 0.9rem 5.5rem;
+    padding: 0.9rem 0.85rem calc(5.4rem + env(safe-area-inset-bottom, 0px));
   }
   .pk9-topbar {
-    padding: 0 0.75rem;
+    padding: 0 0.7rem;
     gap: 0.45rem;
   }
   .pk9-cmd-trigger {
     min-width: 0;
-    padding: 0.45rem 0.75rem;
+    padding: 0.45rem 0.72rem;
   }
   .pk9-kbd {
     display: none;
   }
 }
 
+@media (max-width: 768px) {
+  /* Prevent automatic page zoom on iOS Safari when focusing inputs */
+  input, select, textarea, .pk9-input, .pk9-exam-search input {
+    font-size: 16px !important;
+  }
+  /* Horizontal swipe-friendly chip rows on mobile */
+  .pk9-fc-deck-bar,
+  .pk9-grade-filter-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.3rem;
+    max-width: 100%;
+  }
+  .pk9-fc-deck-bar::-webkit-scrollbar,
+  .pk9-grade-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+  .pk9-fc-deck-bar > *,
+  .pk9-grade-filter-row > * {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .pk9-inapp-viewer-overlay {
+    padding: 0.4rem;
+  }
+  .pk9-inapp-viewer-box {
+    height: 94dvh;
+    border-radius: 1rem;
+  }
+  .pk9-sheet-toolbar {
+    padding: 0.7rem 0.85rem;
+    gap: 0.5rem;
+  }
+  .pk9-inline-pdf-wrap {
+    height: 62vh;
+    min-height: 360px;
+  }
+}
+
 @media (max-width: 640px) {
+  .pk9-hide-mob-xs {
+    display: none !important;
+  }
   .pk9-hero {
-    padding: 1.4rem 1.2rem;
+    padding: 1.35rem 1.1rem;
     border-radius: 1.35rem;
   }
   .pk9-hero h1 {
-    font-size: 1.45rem;
+    font-size: 1.42rem;
+  }
+  .pk9-hero-ctas {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .pk9-btn-hero-main,
+  .pk9-btn-hero-sec {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.72rem 1rem;
   }
   .pk9-hero-stats-card {
     grid-template-columns: repeat(2, 1fr);
-    padding: 0.85rem;
+    padding: 0.8rem;
     gap: 0.55rem;
   }
   .pk9-stat-box {
     padding: 0.65rem 0.75rem;
   }
   .pk9-stat-box strong {
-    font-size: 1.2rem;
+    font-size: 1.18rem;
   }
   .pk9-cmd-trigger span:first-child {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 115px;
-    font-size: 0.76rem;
+    max-width: 82px;
+    font-size: 0.78rem;
   }
   .pk9-xp-chip {
-    padding: 0.36rem 0.6rem;
-    font-size: 0.73rem;
+    padding: 0.38rem 0.58rem;
+    font-size: 0.75rem;
   }
   .pk9-xp-chip .hide-xs {
     display: none;
   }
   .pk9-auth-btn {
-    padding: 0.4rem 0.72rem;
-    font-size: 0.75rem;
+    padding: 0.42rem 0.72rem;
+    font-size: 0.76rem;
     white-space: nowrap;
   }
   .pk9-auth-btn .hide-xs {
     display: none;
   }
-  .pk9-subject-tier-grid {
-    grid-template-columns: 1fr;
+  /* Horizontal swipe carousels for Grade / Subject / Teacher selection instead of long vertical walls */
+  .pk9-lecture-hierarchy {
+    padding: 0.95rem 0.9rem;
+  }
+  .pk9-grade-tier-grid,
+  .pk9-subject-tier-grid,
+  .pk9-teacher-tier-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.6rem;
+    padding-bottom: 0.35rem;
+  }
+  .pk9-grade-tier-grid::-webkit-scrollbar,
+  .pk9-subject-tier-grid::-webkit-scrollbar,
+  .pk9-teacher-tier-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .pk9-grade-tier-card {
+    flex: 0 0 82%;
+    scroll-snap-align: start;
+  }
+  .pk9-subject-tier-card {
+    flex: 0 0 165px;
+    scroll-snap-align: start;
+  }
+  .pk9-teacher-tier-card {
+    flex: 0 0 78%;
+    scroll-snap-align: start;
   }
   .pk9-video-info-bar {
-    padding: 1rem;
+    padding: 0.95rem;
+  }
+  .pk9-video-action-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.45rem !important;
+  }
+  .pk9-video-action-grid > * {
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.8rem;
+  }
+  .pk9-pdf-chip-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+  .pk9-pdf-action-btn {
+    min-height: 44px;
+    justify-content: center;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.79rem;
+    text-align: center;
   }
   .pk9-study-subtabs {
     padding: 0.65rem 0.75rem 0;
@@ -1640,16 +1967,38 @@ html.dark .pk9-podium-card.rank-3 {
   }
   .pk9-study-subtab {
     white-space: nowrap;
-    padding: 0.55rem 0.8rem;
-    font-size: 0.79rem;
+    padding: 0.58rem 0.85rem;
+    font-size: 0.82rem;
+    min-height: 44px;
   }
   .pk9-study-body {
-    padding: 1rem;
+    padding: 0.95rem;
+  }
+  .pk9-fc-card,
+  .pk9-fc-face {
+    min-height: 255px;
+  }
+  .pk9-fc-face {
+    padding: 1.25rem 1rem;
+    border-radius: 1.2rem;
+    gap: 0.7rem;
+  }
+  .pk9-fc-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .pk9-fc-controls > button {
+    min-height: 44px;
+    max-width: none !important;
+    width: 100%;
+    font-size: 0.84rem;
+    padding: 0.55rem 0.75rem;
   }
   .pk9-toast-stack {
     left: 0.85rem;
     right: 0.85rem;
-    bottom: 4.5rem;
+    bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

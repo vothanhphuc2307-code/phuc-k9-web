@@ -59,7 +59,11 @@
     adminExamSearch: '',
     adminDetailData: null,
     adminLoading: false,
-    adminSelectedStudent: null
+    adminSelectedStudent: null,
+    // Mobile UX & PWA Install State
+    mobileSelectorsCollapsed: false,
+    deferredInstallPrompt: null,
+    isStandalone: false
   };
 
   window.PK9_AUTH = APP;
@@ -90,11 +94,24 @@
   }
   window.PK9_TOAST = toast;
 
+  const PENDING_TYPESET_ELS = new Set();
   function typeset(el) {
+    const target = el || document.body;
     if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-      window.MathJax.typesetPromise(el ? [el] : undefined).catch(() => {});
+      try {
+        if (typeof window.MathJax.typesetClear === 'function' && target) {
+          window.MathJax.typesetClear([target]);
+        }
+      } catch {}
+      window.MathJax.typesetPromise(target ? [target] : undefined).catch(() => {});
+    } else if (target) {
+      PENDING_TYPESET_ELS.add(target);
     }
   }
+  window.addEventListener('pk9-mathjax-ready', () => {
+    PENDING_TYPESET_ELS.forEach(el => typeset(el));
+    PENDING_TYPESET_ELS.clear();
+  });
 
   function loadLocalProgress() {
     try {
@@ -576,6 +593,19 @@
         </div>
       </section>
 
+      ${!APP.isStandalone ? `
+        <div class="pk9-mob-app-banner">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:0.74rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">📲 Trải Nghiệm App Trên Điện Thoại</div>
+            <div style="font-size:0.96rem;font-weight:800;margin-top:0.12rem;">Cài đặt App Học Cùng Phúc K9 & Tải PDF học offline</div>
+            <div style="font-size:0.8rem;color:var(--pk9-text-muted);margin-top:0.15rem;">Mở nhanh toàn màn hình từ Màn hình chính iOS/Android, tải mọi tài liệu PDF bài giảng về máy 1 chạm.</div>
+          </div>
+          <button type="button" class="pk9-btn-exam-primary" data-install-app="1" style="flex:0 0 auto;min-height:44px;">
+            📲 Tải App Về Điện Thoại
+          </button>
+        </div>
+      ` : ''}
+
       <!-- BANNER TRUY CẬP THẲNG KHÓA CHUI THAM KHẢO TRONG WEB -->
       <div class="pk9-card" style="margin-bottom:1.5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(37,99,235,0.12));border:1.5px solid rgba(16,185,129,0.38);">
         <div style="flex:1;min-width:250px;">
@@ -617,7 +647,7 @@
           <h2>🎬 Hệ Thống Video Bài Giảng Đa Môn (${APP.gradeFilter === 'ALL' ? 'Tất cả khối' : `Khối ${APP.gradeFilter}`})</h2>
           <p>Chọn môn học để xem video bài giảng, lý thuyết công thức, các dạng toán và làm bài tập tự luyện có chấm điểm.</p>
         </div>
-        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+        <div class="pk9-grade-filter-row" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
           ${['2K9', '2K8', 'DGNL', '2K11', '2K12', 'ALL'].map(g => `
             <button type="button" class="pk9-exam-chip ${APP.gradeFilter === g ? 'active' : ''}" data-set-grade="${g}">
               ${g === '2K9' ? `🎓 Theo Giáo Viên (${subjects2k9List.length} Môn & ĐGNL)` : g === '2K8' ? '🔥 Tuyển Chọn 2K8' : g === 'DGNL' ? '🏛️ ĐGNL & ĐGTD' : g === '2K11' ? '📘 Lớp 10 Mới (2K11)' : g === '2K12' ? '🎯 Ôn Vào 10 (2K12)' : `🌐 Tất cả (${catalog.length} khóa)`}
@@ -794,6 +824,19 @@
     return raw;
   }
 
+  function isDriveFolderUrl(rawUrl) {
+    return /drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\//i.test(String(rawUrl || ''));
+  }
+
+  function toDirectDownloadUrl(rawUrl) {
+    const raw = String(rawUrl || '').trim();
+    if (!raw || isDriveFolderUrl(raw) || /youtube\.com|youtu\.be|docs\.google\.com\/spreadsheets/i.test(raw)) return '';
+    const fileMatch = raw.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/)
+      || raw.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([A-Za-z0-9_-]+)/);
+    if (fileMatch) return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+    return raw;
+  }
+
   function getTopicVideoEmbed(topic) {
     if (!topic) return { kind: 'none', embedUrl: '', externalUrl: '', codeLabel: '' };
     if (topic.videoId) {
@@ -859,6 +902,7 @@
         <div class="pk9-pdf-chip-row">
           ${items.map((it, idx) => {
             const isOpen = activePreviewUrl === it.url;
+            const dlUrl = toDirectDownloadUrl(it.url);
             return `
               <button type="button"
                 class="pk9-pdf-action-btn ${isOpen ? 'primary' : ''}"
@@ -875,8 +919,13 @@
               >
                 🔍 Phóng to #${idx + 1}
               </button>
+              ${dlUrl ? `
+                <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-pdf-action-btn" title="Tải trực tiếp file PDF về điện thoại hoặc máy tính">
+                  ⬇️ Tải PDF
+                </a>
+              ` : ''}
               <a href="${esc(it.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
-                ↗️ Tải / Mở Drive
+                ↗️ Mở Drive
               </a>
             `;
           }).join('')}
@@ -991,7 +1040,27 @@
       || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${course.shortName || course.name} ${activeTopic?.title || ''}`)}`;
 
     root.innerHTML = `
-      <section class="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
+      <div class="pk9-mob-quick-bar">
+        <div style="min-width:0;flex:1 1 170px;">
+          <div style="font-size:0.7rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">Khối ${esc(activeGrade)} • ${esc(course.subject || '')}</div>
+          <div style="font-size:0.86rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👨‍🏫 ${esc(course.teacher)}</div>
+        </div>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="pk9-admin-btn-xs" data-toggle-mob-selectors="1" style="min-height:36px;">
+            ${APP.mobileSelectorsCollapsed ? '🔄 Đổi Môn / GV' : '🔼 Thu gọn bộ chọn'}
+          </button>
+          <button type="button" class="pk9-admin-btn-xs" data-mob-jump-sidebar="1" style="min-height:36px;">
+            📑 Mục lục
+          </button>
+          ${allCoursePdfs.length ? `
+            <button type="button" class="pk9-admin-btn-xs" data-toggle-teacher-pdfs="1" style="min-height:36px;color:var(--pk9-primary);border-color:rgba(37,99,235,0.35);">
+              📄 ${allCoursePdfs.length} PDF
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
+      <section class="pk9-lecture-hierarchy ${APP.mobileSelectorsCollapsed ? 'mob-collapsed' : ''}" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
         <div class="pk9-tier-label">
           <span>📚 BƯỚC 1: CHỌN KHỐI LỚP HỌC TẬP</span>
           <button type="button" class="pk9-btn-exam-ghost" data-toggle-theater="1" style="padding:0.35rem 0.75rem;font-size:0.76rem;">
@@ -1132,11 +1201,13 @@
             <input type="search" id="pk9-teacher-pdf-search" class="pk9-input" placeholder="🔍 Lọc tên đề / chuyên đề PDF..." value="${esc(APP.teacherPdfSearch)}" style="max-width:320px;margin:0;" />
           </div>
           <div class="pk9-teacher-pdf-list">
-            ${filteredCoursePdfs.slice(0, 120).map(p => `
+            ${filteredCoursePdfs.slice(0, 120).map(p => {
+              const dlUrl = toDirectDownloadUrl(p.url);
+              return `
               <div class="pk9-teacher-pdf-row">
                 <div>
-                  <div style="font-size:0.79rem;font-weight:800;line-height:1.3;">${esc(p.topicTitle)}</div>
-                  <div style="font-size:0.7rem;color:var(--pk9-text-muted);margin-top:0.1rem;">${esc(p.chapterTitle)} • <b>${esc(p.label)}</b></div>
+                  <div style="font-size:0.82rem;font-weight:700;line-height:1.4;">${esc(p.topicTitle)}</div>
+                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.12rem;">${esc(p.chapterTitle)} • <b>${esc(p.label)}</b></div>
                 </div>
                 <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
                   <button type="button" class="pk9-pdf-action-btn primary" data-open-inapp-url="${esc(p.url)}" data-open-inapp-title="${esc(`${p.topicTitle} — ${p.label}`)}" data-open-inapp-sub="${esc(course.teacher)} • Kho PDF 2K9">
@@ -1145,19 +1216,25 @@
                   <button type="button" class="pk9-pdf-action-btn" data-select-topic="${esc(p.topicId)}">
                     🎯 Tới bài
                   </button>
+                  ${dlUrl ? `
+                    <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-pdf-action-btn">
+                      ⬇️ Tải PDF
+                    </a>
+                  ` : ''}
                   <a href="${esc(p.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
                     ↗️ Drive
                   </a>
                 </div>
               </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
           ${filteredCoursePdfs.length > 120 ? `<div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.45rem;">Đang hiển thị 120/${filteredCoursePdfs.length} file đầu tiên — nhập từ khóa ở ô lọc bên trên để tìm nhanh file cụ thể.</div>` : ''}
         </section>
       ` : ''}
 
       <div class="pk9-lecture-studio ${APP.theaterMode ? 'theater' : ''}">
-        <aside class="pk9-course-sidebar">
+        <aside class="pk9-course-sidebar" id="pk9-course-sidebar">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;">
             <strong style="font-size:0.95rem;">📑 Mục lục: ${course.icon} ${esc(course.shortName || course.name)}</strong>
             <span class="pk9-badge pk9-badge-verified">${prog.done}/${prog.total} bài (${prog.percent}%)</span>
@@ -1216,7 +1293,7 @@
             ? vid.embedUrl
             : (activeTopic.pdfUrl ? toDrivePreviewUrl(activeTopic.pdfUrl) : '');
           return `
-          <div class="pk9-video-stage">
+          <div class="pk9-video-stage" id="pk9-video-stage">
             ${frameSrc ? `
               <div class="pk9-video-frame-wrap">
                 <iframe
@@ -1245,7 +1322,7 @@
                 </div>
               </div>
 
-              <div style="display:flex;flex-wrap:wrap;gap:0.45rem;align-items:center;">
+              <div class="pk9-video-action-grid">
                 ${prevTopic ? `
                   <button type="button" class="pk9-btn-exam-ghost" data-select-topic="${esc(prevTopic.id)}">← Bài trước</button>
                 ` : ''}
@@ -1260,6 +1337,9 @@
                 <a href="${esc(ytSearchUrl)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tìm thêm bài giảng cùng chủ đề trên YouTube">
                   🔎 Tìm thêm trên YouTube ↗
                 </a>
+                <button type="button" class="pk9-btn-exam-ghost" data-mob-jump-sidebar="1" title="Cuộn lên mục lục bài học">
+                  📑 Mục lục bài học
+                </button>
                 ${nextTopic ? `
                   <button type="button" class="pk9-btn-exam-ghost" data-select-topic="${esc(nextTopic.id)}">Bài tiếp →</button>
                 ` : ''}
@@ -1669,6 +1749,11 @@
                 <button type="button" class="pk9-btn-exam-primary" data-open-inapp-url="${esc(d.url)}" data-open-inapp-title="${esc(d.title)}" data-open-inapp-sub="${esc(d.subject)} • ${esc(d.source)}">
                   👁️ Đọc trực tiếp trong Web
                 </button>
+                ${!isDriveFolderUrl(d.url) ? `
+                  <a href="${esc(toDirectDownloadUrl(d.url) || d.url)}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.78rem;" title="Tải PDF về máy">
+                    ⬇️ Tải PDF
+                  </a>
+                ` : ''}
                 <a href="${esc(d.url)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.7rem;" title="Mở tab ngoài">
                   ↗
                 </a>
@@ -1718,6 +1803,12 @@
             ${subTitle ? `<div style="font-size:0.76rem;color:var(--pk9-text-muted);">${esc(subTitle)}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            ${!/youtube\.com|youtu\.be|spreadsheets/i.test(rawUrl || '') && toDirectDownloadUrl(rawUrl) ? `
+              <a href="${esc(toDirectDownloadUrl(rawUrl))}" download target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;background:#0ea5e9;color:#fff;border-color:#0ea5e9;">⬇️ Tải về</a>
+            ` : ''}
+            ${rawUrl ? `
+              <a href="${esc(rawUrl)}" target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;">↗️ Mở gốc</a>
+            ` : ''}
             <button type="button" class="pk9-admin-btn-xs" data-reload-inapp-iframe="1">🔄 Tải lại</button>
             <button type="button" class="pk9-btn-exam-primary" data-close-inapp-viewer="1" style="padding:0.42rem 0.95rem;background:#ef4444;">
               ✕ Đóng cửa sổ
@@ -1991,7 +2082,7 @@
             <h2>🃏 Flashcards 3D Phản Xạ Công Thức (${esc(deck.subject)})</h2>
             <p>Nhấn vào thẻ để lật 3D xem đáp án & công thức chuẩn. Hoàn thành bộ thẻ nhận ngay +20 XP.</p>
           </div>
-          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <div class="pk9-fc-deck-bar">
             ${decks.map((d, idx) => `
               <button type="button" class="pk9-exam-chip ${idx === APP.fcDeckIdx ? 'active' : ''}" data-fc-deck="${idx}">
                 ${d.icon} ${esc(d.subject)}
@@ -2003,21 +2094,23 @@
         <div class="pk9-fc-scene" data-fc-flip="1">
           <div class="pk9-fc-card ${APP.fcFlipped ? 'flipped' : ''}" id="pk9-fc-card-el">
             <div class="pk9-fc-face pk9-fc-front">
-              <span class="pk9-badge pk9-badge-subj" style="margin-bottom:0.85rem;">
+              <span class="pk9-badge pk9-badge-subj pk9-fc-badge">
                 ${deck.icon} ${esc(deck.subject)} • Thẻ ${(APP.fcCardIdx % cards.length) + 1}/${cards.length} (Nhấn để lật)
               </span>
-              <div style="font-size:1.18rem;font-weight:800;line-height:1.55;">${card.front}</div>
+              <div class="pk9-fc-question">${card.front}</div>
             </div>
             <div class="pk9-fc-face pk9-fc-back">
-              <span class="pk9-badge" style="background:rgba(255,255,255,0.2);color:#fff;margin-bottom:0.85rem;">
+              <span class="pk9-badge pk9-fc-badge" style="background:rgba(255,255,255,0.2);color:#fff;">
                 💡 Đáp án & Công thức chuẩn
               </span>
-              <div style="font-size:1.12rem;font-weight:700;line-height:1.6;">${card.back}</div>
+              <div class="pk9-fc-answer">${card.back}</div>
             </div>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:center;gap:0.75rem;flex-wrap:wrap;">
+        <div class="pk9-fc-swipe-hint">👈 Vuốt trái / phải để đổi thẻ • Chạm vào thẻ để lật 3D</div>
+
+        <div class="pk9-fc-controls">
           <button type="button" class="pk9-btn-exam-ghost" data-fc-prev="1">← Thẻ trước</button>
           <button type="button" class="pk9-btn-exam-ghost" data-fc-flip="1">🔄 Lật thẻ 3D</button>
           <button type="button" class="pk9-btn-exam-primary" data-fc-mastered="${esc(deck.id)}_${APP.fcCardIdx}" style="max-width:240px;">
@@ -3237,6 +3330,11 @@
         APP.activeTopicId = selTopic.getAttribute('data-select-topic');
         APP.inlinePdfUrl = '';
         renderLecturesTab();
+        if (window.innerWidth <= 1024) {
+          setTimeout(() => {
+            document.getElementById('pk9-video-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 60);
+        }
         return;
       }
 
@@ -3347,7 +3445,10 @@
 
       const fcPrev = e.target.closest('[data-fc-prev]');
       if (fcPrev) {
-        APP.fcCardIdx = Math.max(0, APP.fcCardIdx - 1);
+        const decks = window.PK9_FLASHCARDS || [];
+        const deck = decks[APP.fcDeckIdx % Math.max(1, decks.length)];
+        const len = Math.max(1, (deck?.cards || []).length);
+        APP.fcCardIdx = (APP.fcCardIdx - 1 + len) % len;
         APP.fcFlipped = false;
         renderFlashcardsTab();
         return;
@@ -3474,6 +3575,7 @@
         const bd = document.getElementById('pk9-sidebar-backdrop');
         const open = sb?.classList.toggle('mobile-open');
         if (bd) bd.classList.toggle('open', Boolean(open));
+        syncMobileScrollLock();
         return;
       }
 
@@ -3481,6 +3583,83 @@
       if (closeMobMenu) {
         document.getElementById('pk9-sidebar')?.classList.remove('mobile-open');
         document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
+        syncMobileScrollLock();
+        return;
+      }
+
+      const installAppBtn = e.target.closest('[data-install-app]');
+      if (installAppBtn) {
+        openInstallAppModal();
+        return;
+      }
+
+      const closeInstallBtn = e.target.closest('[data-close-install-modal]');
+      if (closeInstallBtn) {
+        closeInstallAppModal();
+        return;
+      }
+
+      const triggerNativeBtn = e.target.closest('[data-trigger-native-install]');
+      if (triggerNativeBtn) {
+        if (APP.deferredInstallPrompt) {
+          const deferred = APP.deferredInstallPrompt;
+          APP.deferredInstallPrompt = null;
+          Promise.resolve(deferred.prompt())
+            .then(() => deferred.userChoice)
+            .then((choice) => {
+              if (choice?.outcome === 'accepted') {
+                APP.isStandalone = true;
+                closeInstallAppModal();
+              }
+              updateInstallButtonUI();
+            })
+            .catch(() => {
+              updateInstallButtonUI();
+            });
+        }
+        return;
+      }
+
+      const copyAppLinkBtn = e.target.closest('[data-copy-app-link]');
+      if (copyAppLinkBtn) {
+        const appUrl = window.location.href;
+        const copyFallback = () => {
+          let copied = false;
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = appUrl;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            copied = document.execCommand('copy');
+            ta.remove();
+          } catch {}
+          copyAppLinkBtn.textContent = copied ? '✅ Đã sao chép link! Dán vào Safari/Chrome nhé' : appUrl;
+        };
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(appUrl)
+            .then(() => {
+              copyAppLinkBtn.textContent = '✅ Đã sao chép link! Dán vào Safari/Chrome nhé';
+            })
+            .catch(copyFallback);
+        } else {
+          copyFallback();
+        }
+        return;
+      }
+
+      const toggleMobSelBtn = e.target.closest('[data-toggle-mob-selectors]');
+      if (toggleMobSelBtn) {
+        APP.mobileSelectorsCollapsed = !APP.mobileSelectorsCollapsed;
+        renderLecturesTab();
+        return;
+      }
+
+      const mobJumpSidebarBtn = e.target.closest('[data-mob-jump-sidebar]');
+      if (mobJumpSidebarBtn) {
+        document.getElementById('pk9-course-sidebar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
 
@@ -3888,6 +4067,218 @@
     });
   }
 
+  function syncMobileScrollLock() {
+    const sidebarOpen = Boolean(document.getElementById('pk9-sidebar')?.classList.contains('mobile-open'));
+    const installOpen = Boolean(document.getElementById('pk9-install-modal'));
+    const locked = sidebarOpen || installOpen;
+    document.body.classList.toggle('pk9-scroll-lock', locked);
+    document.body.style.overflow = locked ? 'hidden' : '';
+  }
+
+  function updateInstallButtonUI() {
+    const standalone = APP.isStandalone
+      || Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches)
+      || window.navigator?.standalone === true;
+    APP.isStandalone = standalone;
+    const btn = document.getElementById('pk9-install-app-btn');
+    if (btn) {
+      btn.classList.toggle('installed', standalone);
+      if (standalone) {
+        btn.textContent = '✓ Đã cài App';
+        btn.title = 'Đang chạy ở chế độ ứng dụng độc lập';
+      } else if (APP.deferredInstallPrompt) {
+        btn.textContent = '📲 Cài App Ngay';
+        btn.title = 'Cài đặt web thành ứng dụng trên điện thoại';
+      } else {
+        btn.textContent = '📲 Tải App';
+        btn.title = 'Hướng dẫn cài ứng dụng lên màn hình chính';
+      }
+    }
+  }
+
+  function closeInstallAppModal() {
+    const existing = document.getElementById('pk9-install-modal');
+    if (existing) existing.remove();
+    syncMobileScrollLock();
+  }
+
+  function openInstallAppModal() {
+    closeInstallAppModal();
+    const ua = navigator.userAgent || '';
+    const isInApp = /FBAN|FBAV|FB_IAB|Instagram|Threads|Barcelona|Zalo|Line|MicroMessenger|TikTok/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isDark = document.documentElement.classList.contains('dark');
+    const standalone = APP.isStandalone
+      || Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches)
+      || window.navigator?.standalone === true;
+
+    const surface = isDark ? '#0f172a' : '#ffffff';
+    const textMain = isDark ? '#f1f5f9' : '#0f172a';
+    const textSub = isDark ? '#94a3b8' : '#475569';
+    const cardBg = isDark ? '#1e293b' : '#f8fafc';
+    const borderCol = isDark ? 'rgba(148,163,184,0.22)' : '#e2e8f0';
+
+    const modal = document.createElement('div');
+    modal.id = 'pk9-install-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.68);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    modal.innerHTML = `
+      <div role="dialog" aria-modal="true" aria-labelledby="pk9-install-title" style="width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:${surface};color:${textMain};border:1px solid ${borderCol};border-radius:20px;padding:1.25rem 1.3rem;box-shadow:0 24px 60px rgba(0,0,0,0.35);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.85rem;">
+          <div>
+            <h3 id="pk9-install-title" style="margin:0;font-size:1.12rem;font-weight:800;line-height:1.35;">📲 Tải & Cài App Học Cùng Phúc K9</h3>
+            <p style="margin:0.25rem 0 0;font-size:0.84rem;color:${textSub};line-height:1.45;">Học toàn màn hình như app thật, mở nhanh từ màn hình chính trên iPhone & Android.</p>
+          </div>
+          <button type="button" data-close-install-modal="1" aria-label="Đóng" style="flex:0 0 auto;min-width:38px;min-height:38px;border-radius:10px;border:1px solid ${borderCol};background:${cardBg};color:${textMain};font-weight:700;cursor:pointer;">✕</button>
+        </div>
+
+        ${standalone ? `
+          <div style="padding:0.85rem 1rem;border-radius:14px;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.35);color:#10b981;font-weight:700;font-size:0.9rem;margin-bottom:0.85rem;">
+            ✅ Bạn đang mở web ở chế độ Ứng dụng độc lập (PWA) rồi!
+          </div>
+        ` : ''}
+
+        ${APP.deferredInstallPrompt ? `
+          <button type="button" class="pk9-btn-exam-primary" data-trigger-native-install="1" style="width:100%;justify-content:center;padding:0.8rem 1rem;font-size:0.95rem;margin-bottom:0.85rem;">
+            📲 Cài Đặt Ứng Dụng Ngay (1 chạm)
+          </button>
+        ` : ''}
+
+        ${isInApp ? `
+          <div style="padding:0.85rem 0.95rem;border-radius:14px;background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.38);margin-bottom:0.85rem;">
+            <div style="font-weight:800;font-size:0.88rem;color:#d97706;margin-bottom:0.35rem;">⚠️ Đang mở trong trình duyệt nội bộ (Threads / FB / Zalo)</div>
+            <div style="font-size:0.82rem;color:${textSub};line-height:1.5;margin-bottom:0.65rem;">Trình duyệt trong app chặn tính năng cài App & tải PDF. Hãy bấm nút dưới để sao chép link rồi mở bằng <b>Safari</b> (iPhone) hoặc <b>Chrome</b> (Android).</div>
+            <button type="button" class="pk9-btn-exam-primary" data-copy-app-link="1" style="width:100%;justify-content:center;">
+              📋 Sao chép link mở Safari / Chrome
+            </button>
+          </div>
+        ` : `
+          <button type="button" class="pk9-btn-exam-ghost" data-copy-app-link="1" style="width:100%;justify-content:center;margin-bottom:0.85rem;">
+            📋 Sao chép link mở Safari / Chrome
+          </button>
+        `}
+
+        <div style="display:grid;gap:0.65rem;">
+          <div style="padding:0.8rem 0.9rem;border-radius:14px;background:${cardBg};border:1px solid ${borderCol};${isIOS ? 'box-shadow:0 0 0 2px rgba(59,130,246,0.35);' : ''}">
+            <div style="font-weight:800;font-size:0.88rem;margin-bottom:0.3rem;">🍎 Trên iPhone / iPad (Safari)</div>
+            <ol style="margin:0;padding-left:1.15rem;font-size:0.82rem;color:${textSub};line-height:1.55;">
+              <li>Mở web bằng trình duyệt <b>Safari</b>.</li>
+              <li>Chạm biểu tượng <b>Chia sẻ (ô vuông mũi tên lên)</b> ở thanh dưới.</li>
+              <li>Chọn <b>"Thêm vào MH chính" (Add to Home Screen)</b> → <b>Thêm</b>.</li>
+            </ol>
+          </div>
+
+          <div style="padding:0.8rem 0.9rem;border-radius:14px;background:${cardBg};border:1px solid ${borderCol};${!isIOS ? 'box-shadow:0 0 0 2px rgba(16,185,129,0.3);' : ''}">
+            <div style="font-weight:800;font-size:0.88rem;margin-bottom:0.3rem;">🤖 Trên Android / Chrome / Edge</div>
+            <ol style="margin:0;padding-left:1.15rem;font-size:0.82rem;color:${textSub};line-height:1.55;">
+              <li>Mở web bằng <b>Chrome</b> hoặc <b>Edge</b>.</li>
+              <li>Bấm nút <b>📲 Cài Đặt Ứng Dụng Ngay</b> ở trên (nếu có) hoặc bấm menu <b>⋮</b> góc phải.</li>
+              <li>Chọn <b>"Cài đặt ứng dụng" / "Thêm vào màn hình chính"</b>.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div style="margin-top:0.9rem;display:flex;justify-content:flex-end;">
+          <button type="button" class="pk9-btn-exam-ghost" data-close-install-modal="1">Đóng hướng dẫn</button>
+        </div>
+      </div>
+    `;
+    modal.addEventListener('click', (ev) => {
+      if (ev.target === modal) closeInstallAppModal();
+    });
+    document.body.appendChild(modal);
+    syncMobileScrollLock();
+  }
+
+  function initMobileAndPwaHelpers() {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    updateInstallButtonUI();
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      APP.deferredInstallPrompt = e;
+      updateInstallButtonUI();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      APP.deferredInstallPrompt = null;
+      APP.isStandalone = true;
+      closeInstallAppModal();
+      updateInstallButtonUI();
+    });
+
+    const scrollTopBtn = document.getElementById('pk9-mob-scroll-top');
+    if (scrollTopBtn) {
+      const onScroll = () => {
+        scrollTopBtn.classList.toggle('visible', window.scrollY > 360);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      scrollTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    const sidebarEl = document.getElementById('pk9-sidebar');
+    if (sidebarEl) {
+      if (typeof MutationObserver !== 'undefined') {
+        new MutationObserver(() => syncMobileScrollLock()).observe(sidebarEl, {
+          attributes: true,
+          attributeFilter: ['class'],
+        });
+      }
+      let sbStartX = 0;
+      let sbStartY = 0;
+      sidebarEl.addEventListener('touchstart', (ev) => {
+        if (!ev.touches || ev.touches.length !== 1) return;
+        sbStartX = ev.touches[0].clientX;
+        sbStartY = ev.touches[0].clientY;
+      }, { passive: true });
+      sidebarEl.addEventListener('touchend', (ev) => {
+        if (!sidebarEl.classList.contains('mobile-open') || !ev.changedTouches || !ev.changedTouches.length) return;
+        const dx = ev.changedTouches[0].clientX - sbStartX;
+        const dy = ev.changedTouches[0].clientY - sbStartY;
+        if (dx < -55 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          sidebarEl.classList.remove('mobile-open');
+          document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
+          syncMobileScrollLock();
+        }
+      }, { passive: true });
+    }
+
+    let fcStartX = 0;
+    let fcStartY = 0;
+    let fcSkipSwipe = false;
+    document.addEventListener('touchstart', (ev) => {
+      const scene = ev.target?.closest?.('.pk9-fc-scene');
+      if (!scene || !ev.touches || ev.touches.length !== 1) {
+        fcSkipSwipe = true;
+        return;
+      }
+      const mjx = ev.target.closest('mjx-container');
+      fcSkipSwipe = Boolean(mjx && mjx.scrollWidth > mjx.clientWidth + 6);
+      fcStartX = ev.touches[0].clientX;
+      fcStartY = ev.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (ev) => {
+      if (fcSkipSwipe || !ev.changedTouches || !ev.changedTouches.length) return;
+      const scene = ev.target?.closest?.('.pk9-fc-scene');
+      if (!scene) return;
+      const dx = ev.changedTouches[0].clientX - fcStartX;
+      const dy = ev.changedTouches[0].clientY - fcStartY;
+      if (Math.abs(dx) > 52 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        if (dx < 0) {
+          document.querySelector('[data-fc-next]')?.click();
+        } else {
+          document.querySelector('[data-fc-prev]')?.click();
+        }
+      }
+    }, { passive: true });
+  }
+
   async function initApp() {
     try {
       const savedTheme = localStorage.getItem('pk9_theme');
@@ -3896,6 +4287,7 @@
       }
     } catch {}
 
+    initMobileAndPwaHelpers();
     loadLocalProgress();
     bindEvents();
     renderHomeTab();
