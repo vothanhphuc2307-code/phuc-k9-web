@@ -455,7 +455,7 @@
               ${eq.title ? `<span class="pk9-badge pk9-badge-code">${eq.title.icon} ${esc(eq.title.name)}</span>` : ''}
             </div>
             <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
-              ${user ? `SBD: <b>${esc(rpg.sbd || 'K9')}</b> • Đã chinh phục <b>${rpg.questions_conquered || 0}</b> câu hỏi • Bảng tuần hoàn: <b>${ptUnlocked}/118</b>` : 'Đăng ký miễn phí để nhận 180 Vàng, 5 Kim cương & Lưu tiến trình trọn đời!'}
+              ${user ? `SBD: <b>${esc(rpg.sbd || 'K9')}</b> • Đã chinh phục <b>${rpg.questions_conquered || 0}</b> câu hỏi • Bảng tuần hoàn: <b>${ptUnlocked}/118</b>` : '🔒 <b>Chế độ Khách (BXH đang khóa)</b> — Đăng ký miễn phí để mở khóa BXH, giữ 180 Vàng & 5 Kim cương!'}
             </div>
             ${renderCurrencyStrip(rpg)}
           </div>
@@ -905,8 +905,10 @@
     }
 
     const rpg = getRpgState();
+    const user = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
+    const isGuestLocked = !user || Boolean(RPG_UI.journeyData?.locked);
     const jProg = rpg.journey || {};
-    const leaders = RPG_UI.journeyData?.leaders || [];
+    const leaders = isGuestLocked ? [] : (RPG_UI.journeyData?.leaders || []);
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
@@ -938,9 +940,15 @@
                   <div style="font-size:0.75rem;color:var(--pk9-text-muted);margin-bottom:0.55rem;">
                     Kỉ lục: <b>${st.best_score || 0}</b> đ • Lượt chơi: ${st.plays || 0}
                   </div>
-                  <button type="button" class="pk9-btn-exam-primary" data-start-island="${esc(isl.id)}" data-island-subj="${esc(isl.subject)}" style="width:100%;padding:0.48rem;">
-                    ⛵ Vượt Đảo Ngay (5 câu)
-                  </button>
+                  ${user ? `
+                    <button type="button" class="pk9-btn-exam-primary" data-start-island="${esc(isl.id)}" data-island-subj="${esc(isl.subject)}" style="width:100%;padding:0.48rem;">
+                      ⛵ Vượt Đảo Ngay (5 câu)
+                    </button>
+                  ` : `
+                    <button type="button" class="pk9-btn-exam-ghost" data-open-auth="register" style="width:100%;padding:0.48rem;">
+                      🔒 Đăng ký để Vượt Đảo & Tranh Cờ
+                    </button>
+                  `}
                 </article>
               `;
             }).join('')}
@@ -948,7 +956,19 @@
 
           <aside class="pk9-card">
             <h4 style="margin:0 0 0.65rem;font-size:1rem;font-weight:900;">🚩 Cờ Vùng Tuần (${esc(RPG_UI.journeyData?.week_key || 'Tuần này')} • Khối ${esc(RPG_UI.journeyData?.grade || '2K9')})</h4>
-            ${leaders.length ? leaders.map(row => `
+            ${isGuestLocked ? `
+              <div style="padding:1.15rem 0.9rem;border-radius:0.85rem;background:var(--pk9-surface-2);border:1px dashed var(--pk9-border);text-align:center;">
+                <div style="font-size:1.6rem;margin-bottom:0.35rem;">🔒</div>
+                <div style="font-weight:900;font-size:0.92rem;margin-bottom:0.35rem;">BXH Cờ Vùng Tuần Đang Khóa</div>
+                <p style="margin:0 0 0.8rem;font-size:0.8rem;color:var(--pk9-text-muted);line-height:1.5;">
+                  Tài khoản Khách không thể đua Cờ Vùng Tuần. Hãy đăng ký hoặc đăng nhập để mở khóa BXH và tranh Cờ #1!
+                </p>
+                <div style="display:flex;gap:0.45rem;justify-content:center;flex-wrap:wrap;">
+                  <button type="button" class="pk9-btn-exam-primary" data-open-auth="register" style="padding:0.42rem 0.78rem;font-size:0.78rem;">✨ Đăng ký ngay</button>
+                  <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login" style="padding:0.42rem 0.78rem;font-size:0.78rem;">🔑 Đăng nhập</button>
+                </div>
+              </div>
+            ` : leaders.length ? leaders.map(row => `
               <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0.65rem;border-radius:0.75rem;background:${row.has_flag ? 'rgba(245,158,11,0.12)' : 'var(--pk9-surface-2)'};border:1px solid var(--pk9-border);margin-bottom:0.45rem;font-size:0.82rem;">
                 <div style="display:flex;align-items:center;gap:0.45rem;min-width:0;">
                   <b>${row.has_flag ? '🚩 #1' : `#${row.rank}`}</b>
@@ -1192,6 +1212,11 @@
       }
       const startIsl = e.target.closest('[data-start-island]');
       if (startIsl) {
+        if (!window.PK9_GET_USER || !window.PK9_GET_USER()) {
+          toast('🔒 Tài khoản Khách không thể đua Vượt Đảo. Hãy đăng ký hoặc đăng nhập để mở khóa!', 'warning');
+          if (typeof window.PK9_OPEN_AUTH === 'function') window.PK9_OPEN_AUTH('register');
+          return;
+        }
         startQuizSession('journey', {
           islandId: startIsl.getAttribute('data-start-island'),
           subject: startIsl.getAttribute('data-island-subj')

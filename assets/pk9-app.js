@@ -22,7 +22,9 @@
     lbFetchedAt: 0,
     lbLoading: false,
     lbData: {
+      locked: true,
       week_key: '',
+      total_students: 0,
       leaderboard: [],
       weekly_leaderboard: [],
       exam_leaderboard: [],
@@ -352,7 +354,7 @@
     if (target === 'exams' && window.PK9_EXAM_CENTER) window.PK9_EXAM_CENTER.render();
     if (target === 'leaderboard') {
       renderLeaderboardTab();
-      refreshLeaderboard({ quiet: true });
+      if (APP.user) refreshLeaderboard({ quiet: true });
     }
     if (target === 'docs') renderDocsTab();
     if (target === 'khoa-chui') renderKhoaChuiTab();
@@ -384,6 +386,28 @@
   // AUTH & LEADERBOARD FETCHING
   // ==========================================================================
   async function refreshLeaderboard(opts = {}) {
+    if (!APP.user) {
+      APP.lbData = {
+        locked: true,
+        week_key: '',
+        total_students: 0,
+        leaderboard: [],
+        weekly_leaderboard: [],
+        exam_leaderboard: [],
+        my_rank: null
+      };
+      APP.lbFetchedAt = 0;
+      if (!opts.skipUiSync) {
+        updateHeaderAuthUI();
+        if (APP.activeTab === 'home') renderHomeTab();
+        if (APP.activeTab === 'leaderboard') renderLeaderboardTab();
+      }
+      if (!opts.quiet) {
+        toast('🔒 Tài khoản Khách chưa mở khóa BXH. Vui lòng đăng ký hoặc đăng nhập!', 'warning');
+        openAuthModal('register');
+      }
+      return APP.lbData;
+    }
     if (APP.lbLoading && !opts.force) return APP.lbData;
     if (!opts.force && APP.lbFetchedAt && (Date.now() - APP.lbFetchedAt) < 1500) {
       return APP.lbData;
@@ -394,11 +418,18 @@
         credentials: 'include',
         cache: 'no-store'
       });
+      if (lbResp.status === 401) {
+        APP.lbData = { locked: true, week_key: '', total_students: 0, leaderboard: [], weekly_leaderboard: [], exam_leaderboard: [], my_rank: null };
+        if (!opts.skipUiSync && APP.activeTab === 'leaderboard') renderLeaderboardTab();
+        return APP.lbData;
+      }
       if (lbResp.ok) {
         const lbJson = await lbResp.json();
-        if (lbJson?.ok) {
+        if (lbJson?.ok && !lbJson.locked) {
           APP.lbData = {
+            locked: false,
             week_key: lbJson.week_key || '',
+            total_students: Number(lbJson.total_students || 0),
             leaderboard: Array.isArray(lbJson.leaderboard) ? lbJson.leaderboard : [],
             weekly_leaderboard: Array.isArray(lbJson.weekly_leaderboard) ? lbJson.weekly_leaderboard : [],
             exam_leaderboard: Array.isArray(lbJson.exam_leaderboard) ? lbJson.exam_leaderboard : [],
@@ -517,25 +548,40 @@
     const adminNavGroup = document.getElementById('pk9-nav-admin-group');
     const adminNavBtn = document.getElementById('pk9-nav-admin-btn');
     const topAdminBtn = document.getElementById('pk9-top-admin-btn');
+    const lbNavPill = document.getElementById('pk9-nav-lb-pill');
 
     if (adminNavGroup) adminNavGroup.style.display = APP.isAdmin ? 'block' : 'none';
     if (adminNavBtn) adminNavBtn.style.display = APP.isAdmin ? 'flex' : 'none';
     if (topAdminBtn) topAdminBtn.style.display = APP.isAdmin ? 'inline-flex' : 'none';
+    if (lbNavPill) {
+      if (!APP.user) {
+        lbNavPill.textContent = '🔒 Khóa';
+        lbNavPill.className = 'pk9-nav-pill';
+      } else if (APP.isAdmin) {
+        lbNavPill.textContent = 'Ngoài BXH';
+        lbNavPill.className = 'pk9-nav-pill';
+      } else {
+        lbNavPill.textContent = 'Đua Top';
+        lbNavPill.className = 'pk9-nav-pill hot';
+      }
+    }
 
-    const doneCount = Object.values(APP.doneMap).filter(Boolean).length;
-    const xpVal = APP.user
-      ? Math.max(0, Number(APP.user.xp ?? 0))
-      : doneCount * 20;
-    const wkXpVal = APP.user
-      ? Math.max(0, Number(APP.user.weekly_xp ?? 0))
-      : doneCount * 20;
+    const xpVal = APP.user ? Math.max(0, Number(APP.user.xp ?? 0)) : 0;
+    const wkXpVal = APP.user ? Math.max(0, Number(APP.user.weekly_xp ?? 0)) : 0;
     const levelVal = Math.floor(xpVal / 100) + 1;
-    const streakVal = APP.user ? Math.max(1, Number(APP.user.streak || 1)) : 1;
+    const streakVal = APP.user ? Math.max(1, Number(APP.user.streak || 1)) : 0;
 
     if (xpChip) {
-      xpChip.innerHTML = APP.isAdmin
-        ? `<span class="hide-xs">🛡️ Quản trị viên • Chuỗi </span>🔥<b>${streakVal}<span class="pk9-hide-mob-430">d</span></b><span class="hide-xs"> (Ngoài BXH)</span>`
-        : `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡<b>${xpVal}<span class="pk9-hide-mob-430"> XP</span></b><span class="hide-xs"> (Lv.${levelVal})</span>`;
+      if (!APP.user) {
+        xpChip.innerHTML = `🔒 <span class="hide-xs">Khách • </span><b>BXH Khóa</b>`;
+        xpChip.title = 'Tài khoản Khách không được đua BXH — Đăng ký hoặc đăng nhập để mở khóa!';
+      } else if (APP.isAdmin) {
+        xpChip.innerHTML = `<span class="hide-xs">🛡️ Quản trị viên • Chuỗi </span>🔥<b>${streakVal}<span class="pk9-hide-mob-430">d</span></b><span class="hide-xs"> (Ngoài BXH)</span>`;
+        xpChip.title = 'Xem Bảng Xếp Hạng (Admin ngoài BXH)';
+      } else {
+        xpChip.innerHTML = `<span class="hide-xs">🔥 Chuỗi ${streakVal} ngày • </span>⚡<b>${xpVal}<span class="pk9-hide-mob-430"> XP</span></b><span class="hide-xs"> (Lv.${levelVal})</span>`;
+        xpChip.title = 'Xem thứ hạng của bạn trên BXH Tuần & Top';
+      }
     }
 
     const rawAvatar = APP.user ? String(APP.user.avatar_data || APP.user.avatar_url || '') : '';
@@ -593,13 +639,18 @@
         `;
       } else {
         sideCard.innerHTML = `
-          <div style="font-weight:800;font-size:0.83rem;margin-bottom:0.3rem;">🏆 Đua Top Học Viên K9</div>
+          <div style="font-weight:800;font-size:0.83rem;margin-bottom:0.3rem;">🔒 Đua BXH Đang Bị Khóa</div>
           <div style="font-size:0.75rem;color:var(--pk9-text-muted);margin-bottom:0.65rem;">
-            Đăng ký tài khoản miễn phí để nhận <b>+100 XP</b> khởi đầu và ghi danh lên <b>BXH Hàng Tuần & BXH Top</b>!
+            Tài khoản Khách chưa thể đua BXH. Đăng ký hoặc đăng nhập để mở khóa <b>BXH Tuần & Top</b> và nhận <b>+100 XP</b>!
           </div>
-          <button type="button" class="pk9-auth-btn" data-open-auth="register" style="width:100%;justify-content:center;padding:0.48rem;">
-            ✨ Tạo tài khoản ngay
-          </button>
+          <div style="display:flex;gap:0.4rem;">
+            <button type="button" class="pk9-auth-btn" data-open-auth="register" style="flex:1;justify-content:center;padding:0.46rem 0.4rem;font-size:0.76rem;">
+              ✨ Đăng ký
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login" style="flex:1;justify-content:center;padding:0.44rem 0.4rem;font-size:0.76rem;">
+              🔑 Đăng nhập
+            </button>
+          </div>
         `;
       }
     }
@@ -668,7 +719,9 @@
                 🏛️ <span class="pk9-hide-mob-xs">Luyện Đề Nguồn Thật & Chấm Điểm</span><span class="pk9-show-mob-xs">Luyện Đề</span>
               </button>
               <button type="button" class="pk9-btn-hero-sec" data-nav-tab="leaderboard">
-                🏆 <span class="pk9-hide-mob-xs">BXH Tuần & BXH Top Học Viên</span><span class="pk9-show-mob-xs">BXH Top</span>
+                ${APP.user
+                  ? `🏆 <span class="pk9-hide-mob-xs">BXH Tuần & BXH Top Học Viên</span><span class="pk9-show-mob-xs">BXH Top</span>`
+                  : `🔒 <span class="pk9-hide-mob-xs">Mở Khóa Đua BXH Top</span><span class="pk9-show-mob-xs">Mở BXH</span>`}
               </button>
             </div>
           </div>
@@ -871,21 +924,43 @@
       <div class="pk9-sec-head">
         <div>
           <h2>🏆 Bảng Xếp Hạng Đua Top Hàng Tuần & Top Học Viên Phúc K9</h2>
-          <p>Đăng ký tài khoản học viên để lưu điểm luyện đề, nhận XP mỗi ngày và tranh ngôi Thủ khoa Tuần.</p>
+          <p>${APP.user
+            ? 'Theo dõi điểm luyện đề, XP tích lũy mỗi ngày và tranh ngôi Thủ khoa Tuần.'
+            : 'Tính năng Đua Bảng Xếp Hạng chỉ mở cho thành viên đã đăng nhập hoặc đăng ký tài khoản.'}</p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
           ${!APP.user ? `
             <button type="button" class="pk9-auth-btn" data-open-auth="register">
-              ✨ Đăng ký tài khoản lên BXH (+100 XP)
+              🔓 Đăng ký mở khóa BXH (+100 XP)
             </button>
-          ` : ''}
-          <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="leaderboard">
-            Xem đầy đủ BXH Tuần & Top →
-          </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login">
+              🔑 Đăng nhập
+            </button>
+          ` : `
+            <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="leaderboard">
+              Xem đầy đủ BXH Tuần & Top →
+            </button>
+          `}
         </div>
       </div>
 
-      ${topWeekly.length ? `
+      ${!APP.user ? `
+        <div class="pk9-card" style="text-align:center;padding:2rem 1.25rem;background:linear-gradient(135deg,rgba(37,99,235,0.06),rgba(13,148,136,0.06));border:1.5px dashed rgba(37,99,235,0.35);">
+          <div style="font-size:2.3rem;margin-bottom:0.45rem;">🔒</div>
+          <div style="font-weight:900;font-size:1.1rem;margin-bottom:0.4rem;">Đấu Trường BXH Đang Bị Khóa Với Tài Khoản Khách</div>
+          <p style="margin:0 auto 1.05rem;max-width:560px;font-size:0.87rem;color:var(--pk9-text-muted);line-height:1.55;">
+            Tài khoản Khách vẫn có thể xem bài giảng và làm đề thử, nhưng <b>không thể xem hoặc đua Bảng Xếp Hạng</b>. Hãy đăng ký (miễn phí 10 giây) hoặc đăng nhập để mở khóa BXH Tuần, BXH Top & BXH Cao Thủ Luyện Đề!
+          </p>
+          <div style="display:flex;justify-content:center;gap:0.65rem;flex-wrap:wrap;">
+            <button type="button" class="pk9-auth-btn" data-open-auth="register">
+              ✨ Đăng ký mở khóa BXH (+100 XP)
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login">
+              🔑 Đã có tài khoản? Đăng nhập
+            </button>
+          </div>
+        </div>
+      ` : topWeekly.length ? `
         <div class="pk9-lb-podium">
           ${[topWeekly[1], topWeekly[0], topWeekly[2]].filter(Boolean).map(row => {
             const r = row.rank;
@@ -909,10 +984,10 @@
           <div style="font-size:2rem;margin-bottom:0.5rem;">🏆</div>
           <div style="font-weight:900;font-size:1.05rem;margin-bottom:0.35rem;">Chưa có học viên nào ghi danh trên Bảng Xếp Hạng</div>
           <p style="margin:0 0 1rem;font-size:0.86rem;color:var(--pk9-text-muted);">
-            Bảng xếp hạng chỉ hiển thị dữ liệu thật 100% từ các tài khoản học viên đã đăng ký và làm đề trên web. Hãy đăng ký ngay để chiếm vị trí Top #1!
+            Bảng xếp hạng chỉ hiển thị dữ liệu thật 100% từ các tài khoản học viên đã đăng ký và làm đề trên web. Hãy là người tiên phong bứt phá Top #1!
           </p>
-          <button type="button" class="pk9-auth-btn" data-open-auth="register">
-            🚀 Đăng ký tài khoản chiếm Top #1 ngay
+          <button type="button" class="pk9-btn-exam-primary" data-nav-tab="exams">
+            ⚡ Làm Đề Ghi Điểm Ngay
           </button>
         </div>
       `}
@@ -1591,6 +1666,58 @@
   function renderLeaderboardTab() {
     const root = document.getElementById('tab-leaderboard');
     if (!root) return;
+
+    if (!APP.user) {
+      root.innerHTML = `
+        <div class="pk9-exam-hub">
+          <div class="pk9-exam-hero">
+            <div class="pk9-exam-hero-grid">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.32rem 0.85rem;border-radius:999px;background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.45);font-size:0.75rem;font-weight:800;margin-bottom:0.8rem;">
+                  <span>🔒 ĐẤU TRƯỜNG BẢNG VÀNG PHÚC K9 • ĐANG KHÓA VỚI TÀI KHOẢN KHÁCH</span>
+                </div>
+                <h2 style="font-size:1.65rem;font-weight:900;margin:0 0 0.55rem;">
+                  Đăng Nhập hoặc Đăng Ký Để Mở Khóa Bảng Xếp Hạng!
+                </h2>
+                <p style="margin:0;color:rgba(255,255,255,0.88);font-size:0.92rem;line-height:1.6;">
+                  Tài khoản Khách chưa được tham gia đua Top để đảm bảo Bảng Xếp Hạng 100% công bằng, chống điểm ảo và lưu giữ đúng thành tích của từng học viên.
+                </p>
+                <div style="display:flex;gap:0.65rem;flex-wrap:wrap;margin-top:1.1rem;">
+                  <button type="button" class="pk9-btn-hero-main" data-open-auth="register">
+                    ✨ Đăng Ký Mở Khóa BXH (+100 XP)
+                  </button>
+                  <button type="button" class="pk9-btn-hero-sec" data-open-auth="login">
+                    🔑 Đăng Nhập Tài Khoản
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.22);border-radius:1.25rem;padding:1.2rem;">
+                  <div style="font-size:0.76rem;font-weight:800;color:#fde047;text-transform:uppercase;margin-bottom:0.45rem;">🎁 QUYỀN LỢI KHI MỞ KHÓA THÀNH VIÊN</div>
+                  <ul style="margin:0;padding-left:1.1rem;font-size:0.84rem;color:rgba(255,255,255,0.92);line-height:1.65;">
+                    <li>Tặng ngay <b>+100 XP</b>, <b>180 🪙 Vàng</b> & <b>5 💎 Kim cương</b>.</li>
+                    <li>Mở khóa đủ 3 bảng: <b>BXH Hàng Tuần</b>, <b>BXH Top Học Viên</b> & <b>BXH Cao Thủ Luyện Đề</b>.</li>
+                    <li>Tích XP thật từ <b>Video (+25 XP)</b>, <b>Flashcard (+20 XP)</b>, <b>Nộp Đề (+60→140 XP)</b> & <b>Vượt Đảo Cờ Vùng</b>.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pk9-card" style="text-align:center;padding:2rem 1.25rem;">
+            <div style="font-size:2.2rem;margin-bottom:0.4rem;">🛡️</div>
+            <div style="font-weight:900;font-size:1.05rem;margin-bottom:0.35rem;">Chế Độ Khách Chỉ Hỗ Trợ Xem Thử & Ôn Luyện Cá Nhân</div>
+            <p style="margin:0 auto 1rem;max-width:520px;font-size:0.86rem;color:var(--pk9-text-muted);line-height:1.55;">
+              Bạn có thể tạo tài khoản trong 10 giây (chỉ cần tên đăng nhập & mật khẩu) để chính thức bước vào Đấu Trường Đua Top cùng các học viên khác!
+            </p>
+            <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="home">
+              ← Quay về Trang Chủ
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
 
     const onlyStudents = rows => (rows || []).filter(r => !r.is_admin && r.role !== 'admin');
     const weeklyRows = onlyStudents(APP.lbData.weekly_leaderboard);
@@ -3988,7 +4115,9 @@
         APP.doneMap[tId] = !APP.doneMap[tId];
         await syncProgressToServer();
         if (APP.doneMap[tId]) {
-          let earnedMsg = '🎉 Đã hoàn thành bài giảng! +25 XP tích lũy vào BXH.';
+          let earnedMsg = APP.user
+            ? '🎉 Đã hoàn thành bài giảng!'
+            : '✅ Đã đánh dấu hoàn thành cục bộ (Chế độ Khách). Đăng nhập để tích +25 XP lên BXH!';
           if (APP.user) {
             try {
               const recRes = await fetch('/api/dashboard?action=record-study', {
@@ -4012,7 +4141,7 @@
               }
             } catch {}
           }
-          toast(earnedMsg, 'success');
+          toast(earnedMsg, APP.user ? 'success' : 'info');
         }
         renderLecturesTab();
         updateHeaderAuthUI();
@@ -4133,7 +4262,9 @@
         await updateFlashcardItemState(itemId, { status: 'mastered' });
         APP.fcCardIdx += 1;
         APP.fcFlipped = false;
-        let fcMsg = '⚡ Đã ghi nhớ thẻ công thức! (+20 XP · +15 Vàng)';
+        let fcMsg = APP.user
+          ? '⚡ Đã ghi nhớ thẻ công thức!'
+          : '✅ Đã ghi nhớ thẻ cục bộ (Chế độ Khách). Đăng nhập để nhận +20 XP lên BXH!';
         if (APP.user) {
           try {
             const recRes = await fetch('/api/dashboard?action=record-study', {
@@ -4158,7 +4289,7 @@
             }
           } catch {}
         }
-        toast(fcMsg, 'success');
+        toast(fcMsg, APP.user ? 'success' : 'info');
         renderFlashcardsTab();
         return;
       }
@@ -4237,10 +4368,14 @@
         APP.user = null;
         APP.isAdmin = false;
         APP.pendingAvatarData = undefined;
+        APP.lbData = { locked: true, week_key: '', total_students: 0, leaderboard: [], weekly_leaderboard: [], exam_leaderboard: [], my_rank: null };
+        window.PK9_RPG_STATE = null;
         updateHeaderAuthUI();
         closeAuthModal();
         toast('Đã đăng xuất tài khoản.', 'info');
-        fetchAuthAndLeaderboard();
+        await fetchAuthAndLeaderboard();
+        if (window.PK9_RPG?.loadMeta) await window.PK9_RPG.loadMeta();
+        if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
         return;
       }
 
@@ -4472,6 +4607,10 @@
             closeAuthModal();
             toast('🛡️ Đã đăng nhập tài khoản Admin! Đang mở Admin Command Center...', 'success');
             await fetchAuthAndLeaderboard();
+          if (window.PK9_RPG?.loadMeta) {
+            await window.PK9_RPG.loadMeta(APP.user?.settings?.preferred_grade || '2K9');
+          }
+          if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
             switchTab('admin');
           } else {
             toast(data?.message || 'Không thể đăng nhập nhanh Admin.', 'error');
@@ -4701,6 +4840,10 @@
           closeAuthModal();
           toast(data.message || 'Thành công!', 'success');
           await fetchAuthAndLeaderboard();
+          if (window.PK9_RPG?.loadMeta) {
+            await window.PK9_RPG.loadMeta(APP.user?.settings?.preferred_grade || '2K9');
+          }
+          if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
           if (APP.isAdmin) {
             toast('🛡️ Quyền Admin đã kích hoạt! Mở tab Admin Dashboard để theo dõi toàn bộ web.', 'info');
           }
@@ -4731,6 +4874,10 @@
             closeAuthModal();
             toast('Đã lưu cài đặt tài khoản thành công!', 'success');
             await fetchAuthAndLeaderboard();
+          if (window.PK9_RPG?.loadMeta) {
+            await window.PK9_RPG.loadMeta(APP.user?.settings?.preferred_grade || '2K9');
+          }
+          if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
           } else {
             toast(data?.message || 'Không thể lưu hồ sơ.', 'error');
           }

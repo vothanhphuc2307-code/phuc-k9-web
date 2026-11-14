@@ -494,42 +494,45 @@
       }
     } catch {}
 
-    // Record to dashboard & leaderboard
-    try {
-      const recResp = await fetch('/api/dashboard?action=record-exam', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': getCsrfToken()
-        },
-        body: JSON.stringify({
-          attempt_id: STATE.attemptId,
-          exam_id: STATE.activeExam.id,
-          title: STATE.activeExam.title,
-          subject: subjLabel(STATE.activeExam.subject),
-          grade: STATE.activeExam.program?.toUpperCase() || '2K9',
-          score: graded.score,
-          correct: graded.correct,
-          total_questions: graded.total,
-          review: (graded.review || []).slice(0, 40).map(r => ({
-            id: r.id, topic: r.topic || '', correct: Boolean(r.correct || r.status === 'correct'), status: r.status
-          }))
-        })
-      });
-      if (recResp.ok) {
-        const recData = await recResp.json();
-        xpEarned = Number(recData?.xp_earned || 0);
-        goldEarned = Number(recData?.gold_earned || 0);
-        diamondsEarned = Number(recData?.diamonds_earned || 0);
-        if (recData?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
-          window.PK9_APPLY_RPG_UPDATE(recData.rpg, { xp: recData.xp_total, weekly_xp: recData.weekly_xp });
+    // Record to dashboard & leaderboard only for logged-in accounts (guests cannot compete on BXH)
+    const loggedInUser = typeof window.PK9_GET_USER === 'function' ? window.PK9_GET_USER() : null;
+    if (loggedInUser) {
+      try {
+        const recResp = await fetch('/api/dashboard?action=record-exam', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': getCsrfToken()
+          },
+          body: JSON.stringify({
+            attempt_id: STATE.attemptId,
+            exam_id: STATE.activeExam.id,
+            title: STATE.activeExam.title,
+            subject: subjLabel(STATE.activeExam.subject),
+            grade: STATE.activeExam.program?.toUpperCase() || '2K9',
+            score: graded.score,
+            correct: graded.correct,
+            total_questions: graded.total,
+            review: (graded.review || []).slice(0, 40).map(r => ({
+              id: r.id, topic: r.topic || '', correct: Boolean(r.correct || r.status === 'correct'), status: r.status
+            }))
+          })
+        });
+        if (recResp.ok) {
+          const recData = await recResp.json();
+          xpEarned = Number(recData?.xp_earned || 0);
+          goldEarned = Number(recData?.gold_earned || 0);
+          diamondsEarned = Number(recData?.diamonds_earned || 0);
+          if (recData?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
+            window.PK9_APPLY_RPG_UPDATE(recData.rpg, { xp: recData.xp_total, weekly_xp: recData.weekly_xp });
+          }
+          if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
+            await window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
+          }
         }
-        if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
-          await window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
-        }
-      }
-    } catch {}
+      } catch {}
+    }
 
     STATE.doneExamIds.add(String(STATE.activeExam.id));
 
@@ -1051,8 +1054,12 @@
             <p style="margin:0 0 0.75rem;color:rgba(255,255,255,0.88);font-size:0.92rem;">
               ${gradeComment} • Trả lời đúng hoàn toàn: <b>${res.correct}/${res.total} câu</b> (Điểm thô: ${res.rawScore}/${res.maxScore})
             </p>
-            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-              ${STATE.xpAwarded > 0 ? `<span class="pk9-badge" style="background:#10b981;color:#fff;">⚡ +${STATE.xpAwarded} XP đã cộng vào BXH Tuần & Top</span>` : `<span class="pk9-badge" style="background:rgba(255,255,255,0.16);color:#fff;">💡 Đăng nhập tài khoản để lưu điểm lên BXH Tuần & Top</span>`}
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+              ${STATE.xpAwarded > 0
+                ? `<span class="pk9-badge" style="background:#10b981;color:#fff;">⚡ +${STATE.xpAwarded} XP đã cộng vào BXH Tuần & Top</span>`
+                : (typeof window.PK9_GET_USER === 'function' && window.PK9_GET_USER())
+                ? `<span class="pk9-badge" style="background:rgba(255,255,255,0.16);color:#fff;">✓ Đã chấm điểm & lưu vào hồ sơ cá nhân</span>`
+                : `<span class="pk9-badge" style="background:rgba(245,158,11,0.25);color:#fde68a;border:1px solid rgba(251,191,36,0.45);">🔒 Chế độ Khách — Điểm không tính lên BXH</span><button type="button" class="pk9-btn-exam-primary" data-open-auth="register" style="padding:0.32rem 0.75rem;font-size:0.78rem;">✨ Đăng ký lưu điểm & mở BXH</button>`}
               ${STATE.goldAwarded > 0 ? `<span class="pk9-badge" style="background:#f59e0b;color:#fff;">🪙 +${STATE.goldAwarded} Vàng</span>` : ''}
               ${STATE.diamondsAwarded > 0 ? `<span class="pk9-badge" style="background:#6366f1;color:#fff;">💎 +${STATE.diamondsAwarded} Kim cương</span>` : ''}
             </div>
