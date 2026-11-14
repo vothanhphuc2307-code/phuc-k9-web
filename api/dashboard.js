@@ -21,6 +21,12 @@ const {
   openPeriodicCell
 } = require('../lib/rpg');
 
+const GUEST_USERNAMES = new Set(['guest', 'khach', 'khách', 'anonymous', 'k9-guest', 'khach_k9']);
+function isGuestUsername(name) {
+  const n = normalizeUsername(name);
+  return !n || GUEST_USERNAMES.has(n);
+}
+
 async function loadJourneyLeaders(redis, grade = '2K9') {
   const wk = rpgWeekKey();
   const safeGrade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(grade || '').toUpperCase())
@@ -31,9 +37,9 @@ async function loadJourneyLeaders(redis, grade = '2K9') {
     const pairs = parseZrangePairs(raw);
     const out = [];
     for (const pair of pairs) {
-      const uname = String(pair.name || '');
+      const uname = normalizeUsername(pair.name || '');
       const score = Number(pair.count || 0);
-      if (!uname || isAdminUsername(uname)) continue;
+      if (!uname || isAdminUsername(uname) || isGuestUsername(uname)) continue;
       let meta = await redis.get(`phuc:rpg:journey_meta:${uname}`).catch(() => null);
       if (typeof meta === 'string') {
         try { meta = JSON.parse(meta); } catch { meta = null; }
@@ -598,13 +604,16 @@ async function collectAllUsers(redis) {
 
 async function handleRpgRequest(redis, req, res, session, action) {
   if (action === 'rpg-state' && req.method === 'GET') {
-    const grade = String(req.query?.grade || '2K9').toUpperCase();
+    const rawGrade = String(req.query?.grade || '2K9').toUpperCase();
+    const grade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(rawGrade) ? rawGrade : '2K9';
     let userRpg = null;
-    if (session?.username) {
+    if (session?.username && !isGuestUsername(session.username)) {
       const u = await getUser(redis, session.username);
       if (u) userRpg = buildPublicRpgSnapshot(u);
     }
-    const journey = await loadJourneyLeaders(redis, grade);
+    const journey = userRpg
+      ? await loadJourneyLeaders(redis, grade)
+      : { week_key: rpgWeekKey(), grade, locked: true, auth_required: true, leaders: [] };
     return sendJson(res, 200, {
       ok: true,
       catalog: CATALOG,
@@ -617,8 +626,8 @@ async function handleRpgRequest(redis, req, res, session, action) {
   if (req.method !== 'POST') {
     return sendJson(res, 405, { ok: false, message: 'Phương thức không hợp lệ cho RPG API.' });
   }
-  if (!session?.username) {
-    return sendJson(res, 401, { ok: false, message: 'Vui lòng đăng nhập để đồng bộ tiến trình RPG lên máy chủ.' });
+  if (!session?.username || isGuestUsername(session.username)) {
+    return sendJson(res, 401, { ok: false, auth_required: true, message: 'Tài khoản Khách chưa mở khóa. Vui lòng đăng nhập hoặc đăng ký để tham gia và đồng bộ phần thưởng!' });
   }
   const csrf = session.csrf || await getCsrf(req, res);
   if (!requireCsrf(req, session, csrf)) {
@@ -800,6 +809,25 @@ module.exports = async function handler(req, res) {
     if (action === 'leaderboard' && req.method === 'GET') {
       const now = new Date();
       const currentWeek = vnWeekKey(now);
+      const normSessionUser = session?.username ? normalizeUsername(session.username) : '';
+      const sessionUserObj = (!normSessionUser || isGuestUsername(normSessionUser))
+        ? null
+        : await getUser(redis, normSessionUser);
+      if (!sessionUserObj) {
+        return sendJson(res, 401, {
+          ok: false,
+          locked: true,
+          auth_required: true,
+          server_time: now.toISOString(),
+          week_key: currentWeek,
+          leaderboard: [],
+          weekly_leaderboard: [],
+          exam_leaderboard: [],
+          my_rank: null,
+          message: 'Tài khoản Khách không được đua Bảng Xếp Hạng. Vui lòng đăng nhập hoặc đăng ký tài khoản để mở khóa!'
+        });
+      }
+
       const [attempts, dbUsers, deletedRaw] = await Promise.all([
         listAttempts(redis),
         collectAllUsers(redis),
@@ -810,7 +838,7 @@ module.exports = async function handler(req, res) {
 
       for (const a of attempts) {
         const u = normalizeUsername(a.username);
-        if (!u || deletedSet.has(u)) continue;
+        if (!u || isGuestUsername(u) || deletedSet.has(u)) continue;
         const cur = stats.get(u) || {
           username: u,
           display_name: clean(a.display_name, 50) || u,
@@ -904,35 +932,7 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Include any real exam attempts from users whose profile wasn't in collectAllUsers (excluding admins & deleted)
-      for (const [normU, x] of stats.entries()) {
-        if (rowsByUsername.has(normU) || excludedUsernames.has(normU) || isAdminUsername(normU)) continue;
-        const xp = x.attempts * 60;
-        const li = levelInfo(xp);
-        rowsByUsername.set(normU, {
-          username: normU,
-          display_name: x.display_name || normU,
-          school: '',
-          grade: '2K9',
-          avatar_data: null,
-          xp,
-          weeklyXp: x.weeklyAttempts * 60,
-          level: li.level,
-          streak: 1,
-          xpToNext: li.next - li.into,
-          attempts: x.attempts,
-          weeklyAttempts: x.weeklyAttempts,
-          bestScore: x.bestScore,
-          weeklyBestScore: x.weeklyBestScore,
-          avgScore: x.attempts ? Math.round((x.totalScore / x.attempts) * 100) / 100 : 0,
-          accuracy: x.totalQuestions ? Math.round((x.totalCorrect / x.totalQuestions) * 100) : 0,
-          lessonsDone: 0,
-          badges: ['Thành Viên K9'],
-          isRegisteredUser: true,
-          updatedAt: x.updatedAt
-        });
-      }
-
+      // Registered accounts only — unauthenticated/guest or deleted accounts never enter BXH
       const allRows = Array.from(rowsByUsername.values());
 
       const sortedTop = allRows
@@ -977,6 +977,7 @@ module.exports = async function handler(req, res) {
 
       return sendJson(res, 200, {
         ok: true,
+        locked: false,
         server_time: now.toISOString(),
         week_key: currentWeek,
         total_students: allRows.length,
@@ -988,12 +989,20 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'record-exam' && req.method === 'POST') {
-      if (!session) return sendJson(res, 401, { ok: false, message: 'Hãy đăng nhập để lưu kết quả và vào bảng xếp hạng.' });
+      if (!session?.username || isGuestUsername(session.username)) {
+        return sendJson(res, 401, { ok: false, auth_required: true, message: 'Hãy đăng nhập hoặc đăng ký tài khoản để lưu kết quả và đua BXH!' });
+      }
       const csrf = session.csrf || await getCsrf(req, res);
       if (!requireCsrf(req, session, csrf)) return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
       let body = req.body || {};
       if (typeof body === 'string') {
         try { body = JSON.parse(body || '{}'); } catch { body = {}; }
+      }
+
+      const normUser = normalizeUsername(session.username);
+      const uProfile = await getUser(redis, normUser);
+      if (!uProfile) {
+        return sendJson(res, 401, { ok: false, auth_required: true, message: 'Tài khoản không hợp lệ hoặc chưa đăng ký. Vui lòng đăng nhập lại!' });
       }
 
       const attemptId = clean(body.attempt_id, 160);
@@ -1006,9 +1015,6 @@ module.exports = async function handler(req, res) {
           storedAttempt = null;
         }
       }
-
-      const normUser = normalizeUsername(session.username);
-      const uProfile = await getUser(redis, normUser);
       const score = storedAttempt?.result
         ? normScore(storedAttempt.result.score)
         : normScore(body.score);
@@ -1121,7 +1127,9 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'record-study' && req.method === 'POST') {
-      if (!session) return sendJson(res, 401, { ok: false, message: 'Hãy đăng nhập để tích lũy XP học tập.' });
+      if (!session?.username || isGuestUsername(session.username)) {
+        return sendJson(res, 401, { ok: false, auth_required: true, message: 'Tài khoản Khách không thể tích XP lên BXH. Hãy đăng nhập hoặc đăng ký!' });
+      }
       const csrf = session.csrf || await getCsrf(req, res);
       if (!requireCsrf(req, session, csrf)) return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
       let body = req.body || {};
@@ -1135,7 +1143,7 @@ module.exports = async function handler(req, res) {
       const key = `phuc:xp:study:${normUser}:${studyType}:${itemId}`;
       let xpEarned = 0, goldEarned = 0, duplicate = false;
       const u = await getUser(redis, normUser);
-      if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài khoản.' });
+      if (!u) return sendJson(res, 401, { ok: false, auth_required: true, message: 'Không tìm thấy tài khoản.' });
       const isAdm = isAdminAccount(u) || isAdminUsername(normUser);
       const wk = vnWeekKey();
       if (u.week_key !== wk) {

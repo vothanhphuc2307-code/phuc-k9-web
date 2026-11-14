@@ -219,6 +219,7 @@ module.exports = async function handler(req, res) {
         : '2K9';
       const school = String(body.school || '').trim().slice(0, 80);
       if (!validUsername(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập chỉ gồm chữ, số, dấu chấm, gạch ngang (3–40 ký tự).' });
+      if (['guest', 'khach', 'khach_k9', 'anonymous', 'k9-guest'].includes(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập này được dành riêng cho hệ thống. Hãy chọn tên khác!' });
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Họ và tên cần từ 2 đến 80 ký tự.' });
       if (password.length < 6 || password.length > 128) return sendJson(res, 422, { ok: false, message: 'Mật khẩu cần từ 6 đến 128 ký tự.' });
       const { salt, hash } = hashPassword(password);
