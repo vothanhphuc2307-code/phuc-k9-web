@@ -663,7 +663,7 @@ async function handleRpgRequest(redis, req, res, session, action) {
     out = openPeriodicCell(u, { mode: clean(body.mode || 'random', 20), z: body.z });
   } else if (sub === 'practice-finish') {
     const mode = body.mode === 'srs' ? 'srs' : 'practice';
-    const results = Array.isArray(body.results) ? body.results.slice(0, 40) : [];
+    const results = Array.isArray(body.results) ? body.results.slice(0, 60) : [];
     let correctCount = 0;
     for (const item of results) {
       const ok = Boolean(item?.correct);
@@ -682,8 +682,8 @@ async function handleRpgRequest(redis, req, res, session, action) {
       u.rpg.daily.practice_count = Number(u.rpg.daily.practice_count || 0) + 1;
     }
     u.rpg.questions_conquered = Number(u.rpg.questions_conquered || 0) + correctCount;
-    const baseGold = Math.min(80, 10 + correctCount * 6);
-    const baseXp = Math.min(45, 5 + correctCount * 3);
+    const baseGold = Math.min(120, 10 + correctCount * 6);
+    const baseXp = Math.min(65, 5 + correctCount * 3);
     const granted = applyRewardMultipliers(u, baseGold, baseXp, 0, isAdm);
     out = {
       ok: true,
@@ -700,6 +700,17 @@ async function handleRpgRequest(redis, req, res, session, action) {
     const correct = Math.max(0, Math.min(50, Math.round(Number(body.correct || 0))));
     const total = Math.max(1, Math.min(50, Math.round(Number(body.total || 5))));
     const timeSec = Math.max(1, Math.min(3600, Math.round(Number(body.time_sec || 60))));
+    if (Array.isArray(body.results)) {
+      for (const item of body.results.slice(0, 60)) {
+        if (item?.id) {
+          recordSrsAnswer(u, item.id, Boolean(item?.correct), {
+            topic: item.topic || '',
+            subject: item.subject || ''
+          });
+        }
+      }
+    }
+    u.rpg.questions_conquered = Number(u.rpg.questions_conquered || 0) + correct;
     const ratio = correct / total;
     const stars = ratio >= 0.9 ? 3 : ratio >= 0.7 ? 2 : ratio >= 0.4 ? 1 : 0;
     const speedBonus = correct > 0 ? Math.max(0, Math.round(120 / Math.max(5, timeSec))) : 0;
@@ -711,7 +722,8 @@ async function handleRpgRequest(redis, req, res, session, action) {
       plays: Number(prev.plays || 0) + 1,
       last_played: new Date().toISOString()
     };
-    const granted = applyRewardMultipliers(u, 15 + stars * 10 + correct * 3, 10 + stars * 6, stars === 3 && prev.stars < 3 ? 1 : 0, isAdm);
+    const extraXp = total > 5 ? Math.min(35, Math.round(Math.max(0, correct - 5) * 1.5)) : 0;
+    const granted = applyRewardMultipliers(u, 15 + stars * 10 + correct * 3, 10 + stars * 6 + extraXp, stars === 3 && prev.stars < 3 ? 1 : 0, isAdm);
 
     const wk = rpgWeekKey();
     const grade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(u.settings?.preferred_grade || '').toUpperCase())
