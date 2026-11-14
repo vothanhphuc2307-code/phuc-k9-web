@@ -80,11 +80,22 @@ function updateStreak(user, now = new Date()) {
   return diff === 1 ? old + 1 : diff > 1 ? 1 : old;
 }
 
+function parseUserRecord(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  try {
+    const parsed = JSON.parse(String(raw));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function ensureWeeklyState(user, now = new Date()) {
   const wk = vnWeekKey(now);
   if (user.week_key !== wk) {
     user.week_key = wk;
-    user.weekly_xp = Number(user.weekly_xp || 0) > 0 && !user.week_key ? Number(user.weekly_xp || 0) : 0;
+    user.weekly_xp = 0;
   }
   if (!Array.isArray(user.badges) || !user.badges.length) {
     user.badges = ['Thành Viên K9'];
@@ -104,7 +115,7 @@ async function touchUser(redis, user) {
   }
   if (user.week_key !== wk) {
     user.week_key = wk;
-    user.weekly_xp = isAdminAccount(user) ? 0 : Math.max(10, Number(user.weekly_xp || 0));
+    user.weekly_xp = 0;
     dirty = true;
   }
   if (dirty) {
@@ -179,7 +190,7 @@ module.exports = async function handler(req, res) {
     if (action === 'me' && req.method === 'GET') {
       if (!session) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
       setCookie(res, 'phuc_csrf', session.csrf || csrf, { httpOnly: false, maxAge: 60 * 60 * 24 * 30 });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
+      const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
       const fresh = await touchUser(redis, user);
       const isAdm = isAdminAccount(fresh);
@@ -238,6 +249,7 @@ module.exports = async function handler(req, res) {
       const created = await redis.set(`${USER_PREFIX}${username}`, user, { nx: true });
       if (!created) return sendJson(res, 409, { ok: false, message: 'Tên đăng nhập đã tồn tại.' });
       try { await redis.sadd('phuc:users:index', username); } catch {}
+      try { await redis.srem?.('phuc:users:deleted', username); } catch {}
       await createSession(res, username, csrf);
       return sendJson(res, 200, {
         ok: true,
@@ -254,7 +266,7 @@ module.exports = async function handler(req, res) {
     if (action === 'login') {
       const username = normalizeUsername(body.username);
       const password = String(body.password || '');
-      const user = await redis.get(`${USER_PREFIX}${username}`);
+      const user = parseUserRecord(await redis.get(`${USER_PREFIX}${username}`));
       if (!user || !verifyPassword(password, user)) {
         return sendJson(res, 401, { ok: false, message: 'Tên đăng nhập hoặc mật khẩu không đúng.', csrf });
       }
@@ -263,7 +275,7 @@ module.exports = async function handler(req, res) {
       user.last_active = now.toISOString();
       ensureWeeklyState(user, now);
       const isAdm = isAdminAccount(user);
-      if (!isAdm && (typeof user.xp !== 'number' || user.xp < 50)) user.xp = Math.max(50, Number(user.xp || 0));
+      if (!isAdm && (typeof user.xp !== 'number' || Number.isNaN(user.xp))) user.xp = 100;
       ensureUserRpgState(user, now);
       await redis.set(`${USER_PREFIX}${username}`, user);
       try { await redis.sadd('phuc:users:index', username); } catch {}
@@ -273,7 +285,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'save-profile') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
+      const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
       const displayName = String(body.display_name ?? user.display_name ?? '').trim();
       const preferred = String(body.preferred_grade ?? user.settings?.preferred_grade ?? '2K9').toUpperCase();
@@ -298,7 +310,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'change-password') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
+      const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
       const currentPass = String(body.current_password || '');
       const newPass = String(body.new_password || '');
@@ -324,7 +336,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'save-state') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
-      const user = await redis.get(`${USER_PREFIX}${session.username}`);
+      const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
       const now = new Date();
       user.streak = updateStreak(user, now);
@@ -333,16 +345,6 @@ module.exports = async function handler(req, res) {
 
       const prevDone = user.progress?.done && typeof user.progress.done === 'object' ? user.progress.done : {};
       const nextDone = body.done && typeof body.done === 'object' ? body.done : prevDone;
-      let newLessonsCount = 0;
-      for (const [k, v] of Object.entries(nextDone)) {
-        if (v && !prevDone[k]) newLessonsCount++;
-      }
-      if (newLessonsCount > 0 && !isAdminAccount(user)) {
-        const gainedXp = newLessonsCount * 20;
-        user.xp = Math.max(0, Number(user.xp || 0)) + gainedXp;
-        user.weekly_xp = Math.max(0, Number(user.weekly_xp || 0)) + gainedXp;
-        user.study_xp = Math.max(0, Number(user.study_xp || 0)) + gainedXp;
-      }
 
       user.progress = {
         done: nextDone,

@@ -114,7 +114,11 @@ function computeBadges(user, stats) {
   return Array.from(set).slice(0, 6);
 }
 async function getUser(redis, username) {
-  try { return await redis.get(`${USER_PREFIX}${username}`); } catch { return null; }
+  try {
+    return safeParseObj(await redis.get(`${USER_PREFIX}${normalizeUsername(username)}`));
+  } catch {
+    return null;
+  }
 }
 function todayStart() {
   const d = new Date();
@@ -555,8 +559,15 @@ async function collectTrafficSnapshot(redis, { detailed = false } = {}) {
 
 async function listAttempts(redis) {
   let raw = [];
-  try { raw = await redis.lrange(ATTEMPTS_KEY, 0, MAX_ATTEMPTS - 1); } catch { raw = []; }
-  return raw.map(x => { try { return typeof x === 'string' ? JSON.parse(x) : x; } catch { return null; } }).filter(Boolean);
+  for (const cap of [MAX_ATTEMPTS - 1, 999, 299]) {
+    try {
+      raw = await redis.lrange(ATTEMPTS_KEY, 0, cap);
+      break;
+    } catch {
+      raw = [];
+    }
+  }
+  return (raw || []).map(safeParseObj).filter(Boolean);
 }
 
 async function collectAllUsers(redis) {
@@ -789,12 +800,17 @@ module.exports = async function handler(req, res) {
     if (action === 'leaderboard' && req.method === 'GET') {
       const now = new Date();
       const currentWeek = vnWeekKey(now);
-      const attempts = await listAttempts(redis);
+      const [attempts, dbUsers, deletedRaw] = await Promise.all([
+        listAttempts(redis),
+        collectAllUsers(redis),
+        redis.smembers('phuc:users:deleted').catch(() => [])
+      ]);
+      const deletedSet = new Set((deletedRaw || []).map(x => normalizeUsername(x)).filter(Boolean));
       const stats = new Map();
 
       for (const a of attempts) {
-        const u = a.username;
-        if (!u) continue;
+        const u = normalizeUsername(a.username);
+        if (!u || deletedSet.has(u)) continue;
         const cur = stats.get(u) || {
           username: u,
           display_name: clean(a.display_name, 50) || u,
@@ -823,18 +839,19 @@ module.exports = async function handler(req, res) {
         stats.set(u, cur);
       }
 
-      const dbUsers = await collectAllUsers(redis);
       const rowsByUsername = new Map();
-      const excludedUsernames = new Set();
+      const excludedUsernames = new Set(deletedSet);
 
       for (const u of dbUsers) {
+        const normU = normalizeUsername(u.username);
+        if (!normU || deletedSet.has(normU)) continue;
         if (isAdminAccount(u)) {
-          excludedUsernames.add(normalizeUsername(u.username));
+          excludedUsernames.add(normU);
           continue;
         }
-        const x = stats.get(u.username) || {
-          username: u.username,
-          display_name: u.display_name || u.username,
+        const x = stats.get(normU) || {
+          username: normU,
+          display_name: u.display_name || normU,
           attempts: 0,
           weeklyAttempts: 0,
           totalScore: 0,
@@ -858,9 +875,9 @@ module.exports = async function handler(req, res) {
 
         const rpgSnap = buildPublicRpgSnapshot(u);
 
-        rowsByUsername.set(u.username, {
-          username: u.username,
-          display_name: u.display_name || x.display_name || u.username,
+        rowsByUsername.set(normU, {
+          username: normU,
+          display_name: u.display_name || x.display_name || normU,
           school: u.settings?.school || '',
           grade: u.settings?.preferred_grade || '2K9',
           avatar_data: u.avatar_data || u.avatar_url || null,
@@ -887,15 +904,14 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Include any real exam attempts from users whose profile wasn't in collectAllUsers (excluding admins)
-      for (const [uname, x] of stats.entries()) {
-        const normU = normalizeUsername(uname);
-        if (rowsByUsername.has(uname) || excludedUsernames.has(normU) || isAdminUsername(uname)) continue;
+      // Include any real exam attempts from users whose profile wasn't in collectAllUsers (excluding admins & deleted)
+      for (const [normU, x] of stats.entries()) {
+        if (rowsByUsername.has(normU) || excludedUsernames.has(normU) || isAdminUsername(normU)) continue;
         const xp = x.attempts * 60;
         const li = levelInfo(xp);
-        rowsByUsername.set(uname, {
-          username: uname,
-          display_name: x.display_name || uname,
+        rowsByUsername.set(normU, {
+          username: normU,
+          display_name: x.display_name || normU,
           school: '',
           grade: '2K9',
           avatar_data: null,
@@ -919,32 +935,35 @@ module.exports = async function handler(req, res) {
 
       const allRows = Array.from(rowsByUsername.values());
 
-      const topLeaderboard = allRows
+      const sortedTop = allRows
         .slice()
-        .sort((a, b) => b.xp - a.xp || b.bestScore - a.bestScore || b.attempts - a.attempts || b.streak - a.streak)
+        .sort((a, b) => b.xp - a.xp || b.bestScore - a.bestScore || b.attempts - a.attempts || b.streak - a.streak);
+      const topLeaderboard = sortedTop
         .slice(0, 50)
         .map((row, idx) => ({ ...row, rank: idx + 1 }));
 
-      const weeklyLeaderboard = allRows
+      const sortedWeekly = allRows
         .slice()
-        .sort((a, b) => b.weeklyXp - a.weeklyXp || b.weeklyBestScore - a.weeklyBestScore || b.weeklyAttempts - a.weeklyAttempts || b.xp - a.xp)
+        .sort((a, b) => b.weeklyXp - a.weeklyXp || b.weeklyBestScore - a.weeklyBestScore || b.weeklyAttempts - a.weeklyAttempts || b.xp - a.xp);
+      const weeklyLeaderboard = sortedWeekly
         .slice(0, 50)
         .map((row, idx) => ({ ...row, rank: idx + 1 }));
 
-      const examLeaderboard = allRows
+      const sortedExam = allRows
         .slice()
         .filter(r => r.attempts > 0 || r.bestScore > 0)
-        .sort((a, b) => b.bestScore - a.bestScore || b.avgScore - a.avgScore || b.attempts - a.attempts || b.xp - a.xp)
+        .sort((a, b) => b.bestScore - a.bestScore || b.avgScore - a.avgScore || b.attempts - a.attempts || b.xp - a.xp);
+      const examLeaderboard = sortedExam
         .slice(0, 50)
         .map((row, idx) => ({ ...row, rank: idx + 1 }));
 
       let myRank = null;
       if (session?.username) {
-        const u = session.username;
-        const isSessionAdm = excludedUsernames.has(normalizeUsername(u)) || isAdminUsername(u);
-        const topIdx = isSessionAdm ? -1 : topLeaderboard.findIndex(r => r.username === u);
-        const wkIdx = isSessionAdm ? -1 : weeklyLeaderboard.findIndex(r => r.username === u);
-        const exIdx = isSessionAdm ? -1 : examLeaderboard.findIndex(r => r.username === u);
+        const u = normalizeUsername(session.username);
+        const isSessionAdm = excludedUsernames.has(u) || isAdminUsername(u);
+        const topIdx = isSessionAdm ? -1 : sortedTop.findIndex(r => r.username === u);
+        const wkIdx = isSessionAdm ? -1 : sortedWeekly.findIndex(r => r.username === u);
+        const exIdx = isSessionAdm ? -1 : sortedExam.findIndex(r => r.username === u);
         myRank = {
           username: u,
           is_admin: isSessionAdm,
@@ -958,7 +977,9 @@ module.exports = async function handler(req, res) {
 
       return sendJson(res, 200, {
         ok: true,
+        server_time: now.toISOString(),
         week_key: currentWeek,
+        total_students: allRows.length,
         leaderboard: topLeaderboard,
         weekly_leaderboard: weeklyLeaderboard,
         exam_leaderboard: examLeaderboard,
@@ -986,7 +1007,8 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      const uProfile = await getUser(redis, session.username);
+      const normUser = normalizeUsername(session.username);
+      const uProfile = await getUser(redis, normUser);
       const score = storedAttempt?.result
         ? normScore(storedAttempt.result.score)
         : normScore(body.score);
@@ -1002,12 +1024,18 @@ module.exports = async function handler(req, res) {
         : Number(body.total_questions || 0) || 0;
       const sections = storedAttempt?.result?.sections || (body.sections && typeof body.sections === 'object' ? body.sections : {});
       const topicStats = Array.isArray(storedAttempt?.result?.topicStats) ? storedAttempt.result.topicStats : [];
-      const review = Array.isArray(body.review) ? body.review.slice(0, 60) : [];
+      const rawReview = Array.isArray(body.review) ? body.review.slice(0, 40) : [];
+      const review = rawReview.map(item => ({
+        id: clean(item?.id || '', 80),
+        topic: clean(item?.topic || '', 80),
+        status: clean(item?.status || (item?.correct ? 'correct' : 'wrong'), 16),
+        correct: Boolean(item?.correct || item?.status === 'correct')
+      }));
 
       const attempt = {
         attempt_id: attemptId || `att-${Date.now()}`,
-        username: session.username,
-        display_name: clean(uProfile?.display_name || body.display_name || session.username, 80),
+        username: normUser,
+        display_name: clean(uProfile?.display_name || body.display_name || normUser, 80),
         exam_id: examId,
         title,
         subject,
@@ -1022,8 +1050,8 @@ module.exports = async function handler(req, res) {
       };
 
       const baseKey = attemptId
-        ? `phuc:xp:exam:${session.username}:${attemptId}`
-        : `phuc:xp:exam:${session.username}:${crypto.createHash('sha1').update(JSON.stringify({ examId, score, correct, total: totalQuestions })).digest('hex')}`;
+        ? `phuc:xp:exam:${normUser}:${attemptId}`
+        : `phuc:xp:exam:${normUser}:${crypto.createHash('sha1').update(JSON.stringify({ examId, score, correct, total: totalQuestions })).digest('hex')}`;
 
       let xpEarned = 0, goldEarned = 0, diamondsEarned = 0, duplicate = false;
       try {
@@ -1031,8 +1059,8 @@ module.exports = async function handler(req, res) {
         if (granted) {
           await redis.lpush(ATTEMPTS_KEY, JSON.stringify(attempt));
           try { await redis.ltrim(ATTEMPTS_KEY, 0, MAX_ATTEMPTS - 1); } catch {}
-          const u = uProfile || await getUser(redis, session.username);
-          const isAdm = isAdminAccount(u) || isAdminUsername(session.username);
+          const u = uProfile || await getUser(redis, normUser);
+          const isAdm = isAdminAccount(u) || isAdminUsername(normUser);
           xpEarned = isAdm ? 0 : examXp(score);
           if (u) {
             const rpg = ensureUserRpgState(u);
@@ -1063,8 +1091,8 @@ module.exports = async function handler(req, res) {
               u.badges = computeBadges(u, { bestScore: score, attempts: 1 });
             }
             u.last_active = new Date().toISOString();
-            await redis.set(`${USER_PREFIX}${session.username}`, u);
-            try { await redis.sadd('phuc:users:index', session.username); } catch {}
+            await redis.set(`${USER_PREFIX}${normUser}`, u);
+            try { await redis.sadd('phuc:users:index', normUser); } catch {}
           }
         } else {
           duplicate = true;
@@ -1073,7 +1101,7 @@ module.exports = async function handler(req, res) {
         console.warn('exam-xp', e?.message);
       }
 
-      const u = await getUser(redis, session.username);
+      const u = await getUser(redis, normUser);
       const xpTotal = Math.max(0, Number(u?.xp || 0));
       const weeklyXp = Math.max(0, Number(u?.weekly_xp || 0));
       const li = levelInfo(xpTotal);
@@ -1103,11 +1131,17 @@ module.exports = async function handler(req, res) {
       const studyType = clean(body.type || 'lesson', 40);
       const itemId = clean(body.item_id || body.lesson_id || `study-${Date.now()}`, 120);
       const xpReward = studyType === 'flashcard' ? 20 : studyType === 'quiz' ? 30 : 25;
-      const key = `phuc:xp:study:${session.username}:${studyType}:${itemId}`;
+      const normUser = normalizeUsername(session.username);
+      const key = `phuc:xp:study:${normUser}:${studyType}:${itemId}`;
       let xpEarned = 0, goldEarned = 0, duplicate = false;
-      const u = await getUser(redis, session.username);
+      const u = await getUser(redis, normUser);
       if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài khoản.' });
-      const isAdm = isAdminAccount(u);
+      const isAdm = isAdminAccount(u) || isAdminUsername(normUser);
+      const wk = vnWeekKey();
+      if (u.week_key !== wk) {
+        u.week_key = wk;
+        u.weekly_xp = 0;
+      }
       const granted = !!(await redis.set(key, '1', { nx: true, ex: 60 * 60 * 24 * 180 }));
       if (granted) {
         xpEarned = isAdm ? 0 : xpReward;
@@ -1115,18 +1149,13 @@ module.exports = async function handler(req, res) {
         rpg.daily.study_count = Number(rpg.daily.study_count || 0) + 1;
         goldEarned = applyRewardMultipliers(u, 15, 0, 0, isAdm).gold;
         if (!isAdm) {
-          const wk = vnWeekKey();
-          if (u.week_key !== wk) {
-            u.week_key = wk;
-            u.weekly_xp = 0;
-          }
           u.xp = Math.max(100, Number(u.xp || 0)) + xpEarned;
           u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0)) + xpEarned;
           u.study_xp = Math.max(0, Number(u.study_xp || 0)) + xpEarned;
         }
         u.last_active = new Date().toISOString();
-        await redis.set(`${USER_PREFIX}${session.username}`, u);
-        try { await redis.sadd('phuc:users:index', session.username); } catch {}
+        await redis.set(`${USER_PREFIX}${normUser}`, u);
+        try { await redis.sadd('phuc:users:index', normUser); } catch {}
       } else {
         duplicate = true;
       }
@@ -1411,10 +1440,16 @@ module.exports = async function handler(req, res) {
       if (subAction === 'grant-xp') {
         const u = await getUser(redis, targetUsername);
         if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
-        const delta = Number(body.amount || 0);
-        u.xp = Math.max(0, Number(u.xp || 0) + delta);
-        u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0) + delta);
+        const delta = Math.round(Number(body.amount || 0));
+        const wk = vnWeekKey();
+        if (u.week_key !== wk) {
+          u.week_key = wk;
+          u.weekly_xp = 0;
+        }
+        u.xp = Math.max(0, Math.round(Number(u.xp || 0) + delta));
+        u.weekly_xp = Math.max(0, Math.round(Number(u.weekly_xp || 0) + delta));
         await redis.set(`${USER_PREFIX}${targetUsername}`, u);
+        try { await redis.sadd('phuc:users:index', targetUsername); } catch {}
         await logAdminAudit('Cập nhật XP', `${delta >= 0 ? '+' : ''}${delta} XP cho @${targetUsername}`);
         return sendJson(res, 200, { ok: true, message: `Đã cập nhật ${delta >= 0 ? '+' : ''}${delta} XP cho học viên @${targetUsername}.`, user: safeUser(u) });
       }
@@ -1482,6 +1517,7 @@ module.exports = async function handler(req, res) {
         };
         await redis.set(`${USER_PREFIX}${uname}`, newUser);
         try { await redis.sadd('phuc:users:index', uname); } catch {}
+        try { await redis.srem?.('phuc:users:deleted', uname); } catch {}
         await logAdminAudit('Tạo tài khoản mới', `Tạo @${uname} (${disp}) • ${xp} XP`);
         return sendJson(res, 200, { ok: true, message: `Đã tạo tài khoản @${uname} thành công!`, user: safeUser(newUser) });
       }
@@ -1491,6 +1527,10 @@ module.exports = async function handler(req, res) {
           return sendJson(res, 400, { ok: false, message: 'Không thể tự xóa tài khoản Admin đang đăng nhập.' });
         }
         await redis.del(`${USER_PREFIX}${targetUsername}`);
+        try {
+          await redis.srem?.('phuc:users:index', targetUsername);
+          await redis.sadd('phuc:users:deleted', targetUsername);
+        } catch {}
         await logAdminAudit('Xóa tài khoản', `Đã xóa tài khoản @${targetUsername}`);
         return sendJson(res, 200, { ok: true, message: `Đã xóa tài khoản @${targetUsername}.` });
       }
