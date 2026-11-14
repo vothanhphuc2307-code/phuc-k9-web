@@ -11,7 +11,13 @@ module.exports = async function handler(req, res) {
     await redis.set('phuc:health:last', new Date().toISOString(), { ex: 120 });
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.end(JSON.stringify({ ok: true, redis: true, blob: !!process.env.BLOB_READ_WRITE_TOKEN, openai: !!process.env.OPENAI_API_KEY }));
+    res.end(JSON.stringify({
+      ok: true,
+      redis: true,
+      storage_mode: redis.__isMemoryFallback ? 'memory' : 'redis',
+      blob: !!process.env.BLOB_READ_WRITE_TOKEN,
+      openai: !!process.env.OPENAI_API_KEY
+    }));
   } catch (err) {
     res.statusCode = 503;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');

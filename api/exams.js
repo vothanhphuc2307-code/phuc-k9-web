@@ -1,8 +1,45 @@
 const { getRedis } = require('../lib/redis');
-const { getSession, sendJson, isAdminUsername, isAdminAccount, getUserByUsername } = require('../lib/auth');
+const { USER_PREFIX, getSession, sendJson, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername } = require('../lib/auth');
 const { normalizeScoring, questionNeedsReview, validateExamStructure } = require('../lib/exam-utils');
+const {
+  vnWeekKey,
+  ensureUserRpgState,
+  buildPublicRpgSnapshot,
+  applyRewardMultipliers,
+  recordSrsAnswer
+} = require('../lib/rpg');
 const SEED = require('../lib/seed-exams');
 const crypto = require('crypto');
+
+const ATTEMPTS_KEY = 'phuc:exam-attempts';
+const MAX_ATTEMPTS = 5000;
+const GUEST_SET = new Set(['guest', 'khach', 'khách', 'anonymous', 'k9-guest', 'khach_k9']);
+function isGuestName(name) {
+  const n = normalizeUsername(name);
+  return !n || GUEST_SET.has(n);
+}
+function calcExamXp(score) {
+  const s = Math.max(0, Math.min(10, Number(score) || 0));
+  let bonus = 0;
+  if (s >= 9.5) bonus = 80;
+  else if (s >= 9) bonus = 60;
+  else if (s >= 8) bonus = 45;
+  else if (s >= 7) bonus = 30;
+  else if (s >= 5) bonus = 15;
+  return 60 + bonus;
+}
+function computeExamBadges(user, bestScore, attempts) {
+  const set = new Set(Array.isArray(user?.badges) ? user.badges : []);
+  set.add('Thành Viên K9');
+  const xp = Number(user?.xp || 0);
+  const streak = Number(user?.streak || 1);
+  if (bestScore >= 9.0) set.add('Thợ Săn 9+');
+  if (bestScore >= 9.5) set.add('Thủ Khoa Luyện Đề');
+  if (attempts >= 5) set.add('Chiến Thần Luyện Đề');
+  if (streak >= 7) set.add('Chuỗi 7 Ngày Lửa');
+  if (xp >= 1000) set.add('Học Bá K9');
+  return Array.from(set).slice(0, 6);
+}
 
 const key = (...p) => 'phuc:exam:' + p.join(':');
 const clean = (v, max = 400) => String(v ?? '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, max);
@@ -616,25 +653,132 @@ async function handler(req, res) {
       a.result = result;
       await r.set(key('attempt', a.id), JSON.stringify(a), { ex: 60 * 60 * 24 * 30 });
 
-      if (session?.username) {
-        const histKey = key('history', session.username);
+      let xpEarned = 0, goldEarned = 0, diamondsEarned = 0, xpTotal = 0, weeklyXp = 0, rpgSnap = null;
+      const normUser = session?.username ? normalizeUsername(session.username) : '';
+
+      if (normUser && !isGuestName(normUser)) {
+        const nowIso = new Date(a.submittedAt).toISOString();
+        const histKey = key('history', normUser);
         const hist = (await redisJsonGet(r, histKey)) || [];
-        hist.unshift({
+        const histFiltered = Array.isArray(hist)
+          ? hist.filter(h => String(h?.attemptId || h?.attempt_id || '') !== String(a.id))
+          : [];
+        histFiltered.unshift({
           attemptId: a.id,
+          attempt_id: a.id,
           examId: a.exam.id,
+          exam_id: a.exam.id,
           title: a.exam.title,
           subject: a.exam.subject,
+          grade: a.exam.grade || (a.exam.program ? String(a.exam.program).toUpperCase() : '2K9'),
           score: result.score,
           rawScore: result.rawScore,
           maxScore: result.maxScore,
           correct: result.correct,
           total: result.total,
+          total_questions: result.total,
           submittedAt: a.submittedAt,
+          created_at: nowIso,
           expired: !!a.expired
         });
-        await r.set(histKey, JSON.stringify(hist.slice(0, 100)));
+        await r.set(histKey, JSON.stringify(histFiltered.slice(0, 100)));
+
+        // Atomically record to phuc:exam-attempts & award XP/Gold/Diamonds/SRS on submit
+        // so leaderboard & user XP are ALWAYS updated even if the secondary record-exam request fails
+        try {
+          const uProfile = await redisJsonGet(r, `${USER_PREFIX}${normUser}`);
+          if (uProfile) {
+            const baseKey = `phuc:xp:exam:${normUser}:${a.id}`;
+            const isAdm = isAdminAccount(uProfile) || isAdminUsername(normUser);
+            const candidateXp = isAdm ? 0 : calcExamXp(result.score);
+            const granted = !!(await r.set(baseKey, JSON.stringify({
+              xp_earned: candidateXp,
+              gold_earned: 0,
+              diamonds_earned: 0,
+              recorded_by: 'exams'
+            }), { nx: true, ex: 60 * 60 * 24 * 365 }));
+
+            if (granted) {
+              const attemptRecord = {
+                attempt_id: a.id,
+                username: normUser,
+                display_name: clean(uProfile.display_name || normUser, 80),
+                exam_id: clean(a.exam.id || 'exam', 100),
+                title: clean(a.exam.title || 'Đề luyện thi Phúc K9', 180),
+                subject: clean(a.exam.subject || 'Toán', 40),
+                grade: clean(a.exam.grade || uProfile.settings?.preferred_grade || '2K9', 20),
+                score: Number(result.score || 0),
+                correct: Number(result.correct || 0),
+                total_questions: Number(result.total || 0),
+                created_at: nowIso,
+                sections: result.sections || {},
+                topicStats: Array.isArray(result.topicStats) ? result.topicStats : [],
+                review: Array.isArray(result.review) ? result.review.slice(0, 40).map(item => ({
+                  id: clean(item?.id || '', 80),
+                  topic: clean(item?.topic || '', 80),
+                  status: clean(item?.status || (item?.correct ? 'correct' : 'wrong'), 16),
+                  correct: Boolean(item?.correct || item?.status === 'correct')
+                })) : []
+              };
+              await r.lpush(ATTEMPTS_KEY, JSON.stringify(attemptRecord));
+              try { await r.ltrim(ATTEMPTS_KEY, 0, MAX_ATTEMPTS - 1); } catch {}
+
+              xpEarned = candidateXp;
+              const rpg = ensureUserRpgState(uProfile);
+              rpg.daily.exam_count = Number(rpg.daily.exam_count || 0) + 1;
+              rpg.questions_conquered = Number(rpg.questions_conquered || 0) + Math.max(0, Number(result.correct || 0));
+              const eco = applyRewardMultipliers(uProfile, 25 + Math.round(Number(result.score || 0) * 3), 0, Number(result.score || 0) >= 8 ? 2 : 1, isAdm);
+              goldEarned = eco.gold;
+              diamondsEarned = eco.diamonds;
+              for (const item of (result.review || []).slice(0, 40)) {
+                if (item?.id) {
+                  recordSrsAnswer(uProfile, item.id, Boolean(item.status === 'correct' || item.correct === true), {
+                    topic: item.topic || '',
+                    subject: a.exam.subject || 'Toán'
+                  });
+                }
+              }
+              if (!isAdm) {
+                const wk = vnWeekKey();
+                if (uProfile.week_key !== wk) {
+                  uProfile.week_key = wk;
+                  uProfile.weekly_xp = 0;
+                }
+                uProfile.xp = Math.max(100, Number(uProfile.xp || 0)) + xpEarned;
+                uProfile.weekly_xp = Math.max(0, Number(uProfile.weekly_xp || 0)) + xpEarned;
+                uProfile.exam_xp = Math.max(0, Number(uProfile.exam_xp || 0)) + xpEarned;
+                uProfile.streak = Math.max(1, Number(uProfile.streak || 1));
+                uProfile.badges = computeExamBadges(uProfile, Number(result.score || 0), histFiltered.length);
+              }
+              uProfile.last_active = nowIso;
+              await r.set(`${USER_PREFIX}${normUser}`, uProfile);
+              try { await r.sadd('phuc:users:index', normUser); } catch {}
+              await r.set(baseKey, JSON.stringify({
+                xp_earned: xpEarned,
+                gold_earned: goldEarned,
+                diamonds_earned: diamondsEarned,
+                recorded_by: 'exams'
+              }), { ex: 60 * 60 * 24 * 365 });
+            }
+            xpTotal = Math.max(0, Number(uProfile.xp || 0));
+            weeklyXp = Math.max(0, Number(uProfile.weekly_xp || 0));
+            rpgSnap = buildPublicRpgSnapshot(uProfile);
+          }
+        } catch (syncErr) {
+          console.warn('exam-submit-sync', syncErr?.message);
+        }
       }
-      return sendJson(res, 200, { ok: true, result, expired });
+      return sendJson(res, 200, {
+        ok: true,
+        result,
+        expired,
+        xp_earned: xpEarned,
+        gold_earned: goldEarned,
+        diamonds_earned: diamondsEarned,
+        xp_total: xpTotal,
+        weekly_xp: weeklyXp,
+        rpg: rpgSnap
+      });
     }
 
     return sendJson(res, 400, { ok: false, message: 'Action không hợp lệ.' });

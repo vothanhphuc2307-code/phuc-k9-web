@@ -363,12 +363,17 @@
     if (sidebar) sidebar.classList.remove('mobile-open');
     document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
 
-    if (target === 'home') renderHomeTab();
+    if (target === 'home') {
+      renderHomeTab();
+      if (APP.user && (!APP.lbFetchedAt || Date.now() - APP.lbFetchedAt > 8000)) {
+        refreshLeaderboard({ force: true, quiet: true });
+      }
+    }
     if (target === 'lectures') renderLecturesTab();
     if (target === 'exams' && window.PK9_EXAM_CENTER) window.PK9_EXAM_CENTER.render();
     if (target === 'leaderboard') {
       renderLeaderboardTab();
-      if (APP.user) refreshLeaderboard({ quiet: true });
+      if (APP.user) refreshLeaderboard({ force: true, quiet: true });
     }
     if (target === 'docs') renderDocsTab();
     if (target === 'khoa-chui') renderKhoaChuiTab();
@@ -978,18 +983,19 @@
         </div>
       ` : topWeekly.length ? `
         <div class="pk9-lb-podium">
-          ${[topWeekly[1], topWeekly[0], topWeekly[2]].filter(Boolean).map(row => {
+          ${(topWeekly.length >= 3 ? [topWeekly[1], topWeekly[0], topWeekly[2]] : topWeekly).filter(Boolean).map(row => {
             const r = row.rank;
             const crown = r === 1 ? '👑' : r === 2 ? '🥈' : '🥉';
             return `
               <div class="pk9-podium-card rank-${r}">
                 <div class="pk9-podium-crown">${crown}</div>
-                <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
-                <div style="font-weight:900;font-size:1.02rem;">Hạng #${r} • ${esc(row.display_name)}</div>
-                <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">🏫 ${esc(row.school || 'Học viên đã đăng ký')}</div>
-                <div style="display:flex;justify-content:center;gap:0.45rem;flex-wrap:wrap;">
-                  <span class="pk9-badge pk9-badge-subj">🔥 +${row.weeklyXp} XP Tuần</span>
-                  <span class="pk9-badge pk9-badge-verified">🎯 Đỉnh: ${Number(row.bestScore || 0).toFixed(2)}đ</span>
+                <div class="pk9-lb-avatar ${esc(row.rpg_frame || 'pk9-frame-bronze')}">${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
+                <div style="font-weight:900;font-size:1.02rem;">Hạng #${r} • ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''}</div>
+                <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}</div>
+                <div style="display:flex;justify-content:center;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="pk9-badge pk9-badge-subj">🔥 +${Number(row.weeklyXp || 0)} XP Tuần</span>
+                  <span class="pk9-badge pk9-badge-code">⚡ ${Number(row.xp || 0)} XP (Lv.${Number(row.level || 1)})</span>
+                  <span class="pk9-badge pk9-badge-verified">🎯 Đỉnh: ${Number(row.bestScore || 0).toFixed(2)}đ • ${Number(row.attempts || 0)} đề</span>
                 </div>
               </div>
             `;
@@ -1839,8 +1845,13 @@
                     </div>
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
                       <strong style="display:block;font-size:1.2rem;color:#fbbf24;">#${myRank?.examRank || '—'}</strong>
-                      <span style="font-size:0.72rem;">Đỉnh ${Number(myRank?.entry?.bestScore || 0).toFixed(1)}đ</span>
+                      <span style="font-size:0.72rem;">Đỉnh ${Number(myRank?.entry?.bestScore || 0).toFixed(1)}đ (${Number(myRank?.entry?.attempts || 0)} đề)</span>
                     </div>
+                  </div>
+                  <div style="margin-top:0.65rem;padding-top:0.55rem;border-top:1px dashed rgba(255,255,255,0.2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.4rem;font-size:0.74rem;color:rgba(255,255,255,0.9);">
+                    <span>📚 <b>${Number(myRank?.entry?.lessonsDone ?? Object.values(APP.doneMap || {}).filter(Boolean).length)}</b> bài học</span>
+                    <span>⚔️ <b>${Number(myRank?.entry?.questionsConquered ?? APP.user?.rpg?.questions_conquered ?? 0)}</b> câu chinh phục</span>
+                    <span>🔥 Chuỗi <b>${Number(myRank?.entry?.streak ?? APP.user?.streak ?? 1)}</b> ngày</span>
                   </div>
                 </div>
               ` : `
@@ -1997,17 +2008,18 @@
           <div>
             <div style="font-weight:800;color:var(--pk9-primary);font-size:0.86rem;">
               ${APP.lbMode === 'weekly'
-                ? `🔥 ${Number(row.weeklyXp || 0)} XP Tuần`
+                ? `🔥 ${Number(row.weeklyXp || 0)} XP Tuần <span style="font-size:0.73rem;color:var(--pk9-text-muted);">• Tổng ${Number(row.xp || 0)} XP</span>`
                 : APP.lbMode === 'exam'
-                ? `🎯 Đỉnh ${Number(row.bestScore || 0).toFixed(2)}đ <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(TB ${Number(row.avgScore || 0).toFixed(2)}đ)</span>`
-                : `⚡ ${Number(row.xp || 0)} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${Number(row.level || 1)})</span>`}
+                ? `🎯 Đỉnh ${Number(row.bestScore || 0).toFixed(2)}đ <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(TB ${Number(row.avgScore || 0).toFixed(2)}đ • ${Number(row.attempts || 0)} đề)</span>`
+                : `⚡ ${Number(row.xp || 0)} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${Number(row.level || 1)} • Tuần +${Number(row.weeklyXp || 0)})</span>`}
             </div>
             <div class="pk9-topic-track" style="height:0.38rem;margin-top:0.28rem;">
               <div class="pk9-topic-fill" style="width:${pct}%;"></div>
             </div>
           </div>
-          <div class="hide-mob" style="font-size:0.83rem;">
-            🎯 Đỉnh: <b>${Number(row.bestScore || 0).toFixed(2)}đ</b> • ${row.attempts || 0} đề
+          <div class="hide-mob" style="font-size:0.82rem;">
+            <div>🎯 Đỉnh: <b>${Number(row.bestScore || 0).toFixed(2)}đ</b> • ${Number(row.attempts || 0)} đề</div>
+            <div style="font-size:0.73rem;color:var(--pk9-text-muted);">📚 ${Number(row.lessonsDone || 0)} bài • ⚔️ ${Number(row.questionsConquered || 0)} câu</div>
           </div>
           <div class="hide-mob" style="font-size:0.8rem;">
             🔥 ${row.streak || 1} ngày • <span class="pk9-badge pk9-badge-code">${esc((row.badges || ['Thành Viên K9'])[0])}</span>
@@ -2428,7 +2440,7 @@
     }
   }
 
-  async function updateFlashcardItemState(cardKey, patch) {
+  async function updateFlashcardItemState(cardKey, patch, opts = {}) {
     try {
       const curMap = getFlashcardsStateMap();
       const next = { ...(curMap[cardKey] || {}), ...patch, updatedAt: new Date().toISOString() };
@@ -2439,7 +2451,7 @@
       }
     } catch {}
 
-    if (APP.user) {
+    if (APP.user && !opts.skipServerSync) {
       try {
         const resp = await fetch('/api/dashboard?action=rpg-settings', {
           method: 'POST',
@@ -4502,7 +4514,6 @@
         } else {
           renderLecturesTab();
         }
-        await syncProgressToServer();
         if (isDoneNow) {
           let earnedMsg = APP.user
             ? '🎉 Đã hoàn thành bài giảng!'
@@ -4526,11 +4537,16 @@
                 } else if (recData.xp_earned === 0) {
                   earnedMsg = '✅ Đã đánh dấu hoàn thành bài giảng (đã nhận XP trước đó).';
                 }
-                await fetchAuthAndLeaderboard();
               }
             } catch {}
           }
+          await syncProgressToServer();
+          if (APP.user) {
+            await fetchAuthAndLeaderboard();
+          }
           toast(earnedMsg, APP.user ? 'success' : 'info');
+        } else {
+          await syncProgressToServer();
         }
         updateHeaderAuthUI();
         return;
@@ -4660,7 +4676,8 @@
           APP.fcCardIdx += 1;
         }
         APP.fcFlipped = false;
-        updateFlashcardItemState(itemId, { status: 'mastered' });
+        // Skip duplicate rpg-settings POST when logged in because record-study atomically saves flashcard mastery + XP
+        updateFlashcardItemState(itemId, { status: 'mastered' }, { skipServerSync: Boolean(APP.user) });
         renderFlashcardsTab();
         let fcMsg = APP.user
           ? '⚡ Đã ghi nhớ thẻ công thức!'
@@ -4674,17 +4691,20 @@
             body: JSON.stringify({ type: 'flashcard', item_id: itemId })
           })
             .then(r => r.json().then(d => ({ ok: r.ok, d })))
-            .then(({ ok, d }) => {
+            .then(async ({ ok, d }) => {
               if (ok && d?.ok) {
                 if (typeof d.xp_total === 'number') APP.user.xp = d.xp_total;
                 if (typeof d.weekly_xp === 'number') APP.user.weekly_xp = d.weekly_xp;
-                if (d.rpg) APP.user.rpg = d.rpg;
+                if (d.rpg) {
+                  APP.user.rpg = d.rpg;
+                  window.PK9_RPG_STATE = d.rpg;
+                }
                 if (d.xp_earned > 0) {
                   toast(`⚡ Đã ghi nhớ thẻ! +${d.xp_earned} XP · +${d.gold_earned || 0} Vàng lên BXH!`, 'success');
                 } else {
                   toast('⚡ Đã ghi nhớ thẻ công thức!', 'info');
                 }
-                fetchAuthAndLeaderboard();
+                await fetchAuthAndLeaderboard();
                 updateHeaderAuthUI();
               }
             })
@@ -5319,14 +5339,7 @@
         APP.lbSearch = e.target.value || '';
         const rowsEl = document.getElementById('pk9-lb-rows-body');
         if (rowsEl) {
-          const isWeekly = APP.lbMode === 'weekly';
-          const isExamMode = APP.lbMode === 'exam';
-          const rawRows = isExamMode
-            ? (APP.lbData.exam_leaderboard || [])
-            : isWeekly
-              ? (APP.lbData.weekly_leaderboard?.length ? APP.lbData.weekly_leaderboard : APP.lbData.leaderboard || [])
-              : (APP.lbData.leaderboard || []);
-          rowsEl.innerHTML = buildLeaderboardRowsHtml(rawRows, isWeekly, isExamMode);
+          rowsEl.innerHTML = buildLeaderboardRowsHtml();
         }
       } else if (e.target.id === 'pk9-doc-search-input') {
         APP.docSearch = e.target.value || '';
@@ -5998,11 +6011,17 @@
       setInterval(() => {
         if (document.visibilityState === 'visible') {
           trackAnalyticsEvent('heartbeat', APP.activeTab || 'home');
+          if (APP.user && (APP.activeTab === 'leaderboard' || APP.activeTab === 'home')) {
+            refreshLeaderboard({ force: true, quiet: true });
+          }
         }
-      }, 45000);
+      }, 30000);
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           trackAnalyticsEvent('heartbeat', APP.activeTab || 'home');
+          if (APP.user) {
+            refreshLeaderboard({ force: true, quiet: true });
+          }
         }
       });
     }

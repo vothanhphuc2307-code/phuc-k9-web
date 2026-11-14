@@ -576,6 +576,12 @@
         if (data?.ok && data.result) {
           graded = data.result;
         }
+        if (Number(data?.xp_earned) > 0) xpEarned = Number(data.xp_earned);
+        if (Number(data?.gold_earned) > 0) goldEarned = Number(data.gold_earned);
+        if (Number(data?.diamonds_earned) > 0) diamondsEarned = Number(data.diamonds_earned);
+        if (data?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
+          window.PK9_APPLY_RPG_UPDATE(data.rpg, { xp: data.xp_total, weekly_xp: data.weekly_xp });
+        }
       }
     } catch {}
 
@@ -606,15 +612,17 @@
         });
         if (recResp.ok) {
           const recData = await recResp.json();
-          xpEarned = Number(recData?.xp_earned || 0);
-          goldEarned = Number(recData?.gold_earned || 0);
-          diamondsEarned = Number(recData?.diamonds_earned || 0);
+          if (Number(recData?.xp_earned) > 0) xpEarned = Number(recData.xp_earned);
+          if (Number(recData?.gold_earned) > 0) goldEarned = Number(recData.gold_earned);
+          if (Number(recData?.diamonds_earned) > 0) diamondsEarned = Number(recData.diamonds_earned);
           if (recData?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
             window.PK9_APPLY_RPG_UPDATE(recData.rpg, { xp: recData.xp_total, weekly_xp: recData.weekly_xp });
           }
-          if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
-            await window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
-          }
+        }
+      } catch {}
+      try {
+        if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
+          await window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
         }
       } catch {}
     }

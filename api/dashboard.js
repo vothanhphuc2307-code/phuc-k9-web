@@ -246,16 +246,18 @@ function parseClientAgent(req, body = {}) {
 async function scanKeys(redis, matchPattern, cap = 600) {
   const keys = [];
   let cursor = 0;
+  const seenCursors = new Set();
   try {
     do {
+      seenCursors.add(String(cursor));
       const scan = await redis.scan(cursor, { match: matchPattern, count: 150 });
-      cursor = Number(scan?.[0] ?? 0);
+      cursor = scan?.[0] ?? '0';
       const batch = Array.isArray(scan?.[1]) ? scan[1] : [];
       for (const k of batch) {
         keys.push(k);
         if (keys.length >= cap) return keys;
       }
-    } while (cursor !== 0);
+    } while (String(cursor) !== '0' && !seenCursors.has(String(cursor)));
   } catch {}
   return keys;
 }
@@ -576,30 +578,132 @@ async function listAttempts(redis) {
   return (raw || []).map(safeParseObj).filter(Boolean);
 }
 
-async function collectAllUsers(redis) {
+async function collectAllUsers(redis, extraUsernames = []) {
   const map = new Map();
   const keys = await scanKeys(redis, `${USER_PREFIX}*`, 1500);
   if (keys.length) {
     const vals = await Promise.all(keys.map(k => redis.get(k).catch(() => null)));
     for (const u of vals) {
       const obj = safeParseObj(u);
-      if (obj && obj.username) map.set(obj.username, obj);
+      if (obj && obj.username) map.set(normalizeUsername(obj.username), obj);
     }
   }
+  const indexedSet = new Set();
   try {
     const indexed = await redis.smembers('phuc:users:index');
     if (Array.isArray(indexed)) {
-      const missing = indexed.filter(uname => uname && !map.has(uname));
-      if (missing.length) {
-        const vals = await Promise.all(missing.map(uname => redis.get(`${USER_PREFIX}${uname}`).catch(() => null)));
-        for (const u of vals) {
-          const obj = safeParseObj(u);
-          if (obj && obj.username) map.set(obj.username, obj);
-        }
+      for (const uname of indexed) {
+        const norm = normalizeUsername(uname);
+        if (norm) indexedSet.add(norm);
       }
     }
   } catch {}
+  for (const uname of extraUsernames || []) {
+    const norm = normalizeUsername(uname);
+    if (norm && !isGuestUsername(norm)) indexedSet.add(norm);
+  }
+  const missing = [...indexedSet].filter(uname => uname && !map.has(uname));
+  if (missing.length) {
+    const vals = await Promise.all(missing.map(uname => redis.get(`${USER_PREFIX}${uname}`).catch(() => null)));
+    for (const u of vals) {
+      const obj = safeParseObj(u);
+      if (obj && obj.username) map.set(normalizeUsername(obj.username), obj);
+    }
+  }
   return Array.from(map.values());
+}
+
+async function listAllAttempts(redis, dbUsers = [], baseAttempts = null) {
+  const attempts = Array.isArray(baseAttempts) ? baseAttempts.slice() : await listAttempts(redis);
+  const seenAttemptIds = new Set();
+  for (const a of attempts) {
+    const aid = String(a?.attempt_id || a?.attemptId || '').trim();
+    if (aid) seenAttemptIds.add(`${normalizeUsername(a?.username)}:${aid}`);
+  }
+  if (!Array.isArray(dbUsers) || !dbUsers.length) return attempts;
+
+  // Reconcile per-user phuc:exam:history:<username> so any exam submitted via /api/exams
+  // where a secondary network call was interrupted is still 100% counted on BXH & user XP
+  const nonAdminUsers = dbUsers.filter(u => u?.username && !isGuestUsername(u.username));
+  if (!nonAdminUsers.length) return attempts;
+
+  try {
+    const histLists = await Promise.all(
+      nonAdminUsers.map(u => redis.get(`phuc:exam:history:${normalizeUsername(u.username)}`).catch(() => null))
+    );
+    const now = new Date();
+    const currentWeek = vnWeekKey(now);
+
+    for (let i = 0; i < nonAdminUsers.length; i++) {
+      const u = nonAdminUsers[i];
+      const normU = normalizeUsername(u.username);
+      const isAdm = isAdminAccount(u) || isAdminUsername(normU);
+      const hist = safeParseObj(histLists[i]);
+      if (!Array.isArray(hist) || !hist.length) continue;
+
+      let userModified = false;
+      for (const h of hist) {
+        if (!h || typeof h !== 'object') continue;
+        const attId = clean(h.attemptId || h.attempt_id || '', 160);
+        if (!attId) continue;
+        const compositeKey = `${normU}:${attId}`;
+        if (seenAttemptIds.has(compositeKey)) continue;
+        seenAttemptIds.add(compositeKey);
+
+        const createdIso = h.created_at
+          || (h.submittedAt ? new Date(Number(h.submittedAt)).toISOString() : (u.last_active || now.toISOString()));
+        const sc = normScore(h.score);
+        const recAttempt = {
+          attempt_id: attId,
+          username: normU,
+          display_name: clean(u.display_name || normU, 80),
+          exam_id: clean(h.examId || h.exam_id || 'exam', 100),
+          title: clean(h.title || 'Đề luyện thi Phúc K9', 180),
+          subject: clean(h.subject || 'Toán', 40),
+          grade: clean(h.grade || u.settings?.preferred_grade || '2K9', 20),
+          score: sc,
+          correct: Number(h.correct || 0),
+          total_questions: Number(h.total_questions || h.total || 0),
+          created_at: createdIso
+        };
+        attempts.push(recAttempt);
+
+        // Self-heal ATTEMPTS_KEY & user XP if this attempt was never rewarded
+        try {
+          const xpKey = `phuc:xp:exam:${normU}:${attId}`;
+          const earnedXp = isAdm ? 0 : examXp(sc);
+          const granted = !!(await redis.set(xpKey, JSON.stringify({
+            xp_earned: earnedXp,
+            gold_earned: 0,
+            diamonds_earned: 0,
+            recorded_by: 'reconciled'
+          }), { nx: true, ex: 60 * 60 * 24 * 365 }));
+          if (granted) {
+            await redis.lpush(ATTEMPTS_KEY, JSON.stringify(recAttempt));
+            if (!isAdm) {
+              if (u.week_key !== currentWeek) {
+                u.week_key = currentWeek;
+                u.weekly_xp = 0;
+              }
+              u.xp = Math.max(100, Number(u.xp || 0)) + earnedXp;
+              if (isWithinCurrentWeek(createdIso, now)) {
+                u.weekly_xp = Math.max(0, Number(u.weekly_xp || 0)) + earnedXp;
+              }
+              u.exam_xp = Math.max(0, Number(u.exam_xp || 0)) + earnedXp;
+              userModified = true;
+            }
+          }
+        } catch {}
+      }
+      if (userModified) {
+        try {
+          await redis.set(`${USER_PREFIX}${normU}`, u);
+        } catch {}
+      }
+    }
+  } catch {}
+
+  return attempts;
 }
 
 async function handleRpgRequest(redis, req, res, session, action) {
@@ -840,11 +944,16 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const [attempts, dbUsers, deletedRaw] = await Promise.all([
+      const [rawAttempts, deletedRaw] = await Promise.all([
         listAttempts(redis),
-        collectAllUsers(redis),
         redis.smembers('phuc:users:deleted').catch(() => [])
       ]);
+      const extraUsernames = [
+        normSessionUser,
+        ...rawAttempts.map(a => a?.username).filter(Boolean)
+      ];
+      const dbUsers = await collectAllUsers(redis, extraUsernames);
+      const attempts = await listAllAttempts(redis, dbUsers, rawAttempts);
       const deletedSet = new Set((deletedRaw || []).map(x => normalizeUsername(x)).filter(Boolean));
       const stats = new Map();
 
@@ -862,18 +971,23 @@ module.exports = async function handler(req, res) {
           weeklyBestScore: 0,
           totalCorrect: 0,
           totalQuestions: 0,
+          totalExamXp: 0,
+          weeklyExamXp: 0,
           updatedAt: a.created_at || ''
         };
         const sc = normScore(a.score);
+        const exXp = examXp(sc);
         cur.attempts += 1;
         cur.totalScore += sc;
         cur.bestScore = Math.max(cur.bestScore, sc);
         cur.totalCorrect += Number(a.correct || 0);
         cur.totalQuestions += Number(a.total_questions || 0);
+        cur.totalExamXp += exXp;
         if (isWithinCurrentWeek(a.created_at, now)) {
           cur.weeklyAttempts += 1;
           cur.weeklyTotalScore += sc;
           cur.weeklyBestScore = Math.max(cur.weeklyBestScore, sc);
+          cur.weeklyExamXp += exXp;
         }
         if ((a.created_at || '') > cur.updatedAt) cur.updatedAt = a.created_at;
         stats.set(u, cur);
@@ -900,15 +1014,25 @@ module.exports = async function handler(req, res) {
           weeklyBestScore: 0,
           totalCorrect: 0,
           totalQuestions: 0,
+          totalExamXp: 0,
+          weeklyExamXp: 0,
           updatedAt: u.last_active || u.created_at || ''
         };
         const doneCount = u.progress?.done && typeof u.progress.done === 'object'
           ? Object.values(u.progress.done).filter(Boolean).length
           : 0;
+        const fcMap = u.rpg?.flashcards_state && typeof u.rpg.flashcards_state === 'object'
+          ? u.rpg.flashcards_state
+          : {};
+        const masteredFlashcards = Object.values(fcMap).filter(s => s && s.status === 'mastered').length;
+        const questionsConquered = Math.max(
+          Number(u.rpg?.questions_conquered || 0),
+          Number(x.totalCorrect || 0)
+        );
         const baseXp = Math.max(0, Number(u.xp || 0));
         const wkXp = u.week_key === currentWeek
-          ? Math.max(0, Number(u.weekly_xp || 0))
-          : 0;
+          ? Math.max(0, Number(u.weekly_xp || 0), Number(x.weeklyExamXp || 0))
+          : Number(x.weeklyExamXp || 0);
         const li = levelInfo(baseXp);
         const accuracy = x.totalQuestions ? Math.round((x.totalCorrect / x.totalQuestions) * 100) : 0;
         const avgScore = x.attempts ? Math.round((x.totalScore / x.attempts) * 100) / 100 : 0;
@@ -933,6 +1057,8 @@ module.exports = async function handler(req, res) {
           avgScore,
           accuracy,
           lessonsDone: doneCount,
+          masteredFlashcards,
+          questionsConquered,
           badges: computeBadges({ ...u, xp: baseXp }, x),
           rpg_tier: rpgSnap.tier?.name || 'Bậc Đồng',
           rpg_frame: rpgSnap.equipped_details?.frame?.cssClass || 'pk9-frame-bronze',
@@ -1073,13 +1199,19 @@ module.exports = async function handler(req, res) {
 
       let xpEarned = 0, goldEarned = 0, diamondsEarned = 0, duplicate = false;
       try {
-        const granted = !!(await redis.set(baseKey, '1', { nx: true, ex: 60 * 60 * 24 * 365 }));
+        const u = uProfile || await getUser(redis, normUser);
+        const isAdm = isAdminAccount(u) || isAdminUsername(normUser);
+        const candidateXp = isAdm ? 0 : examXp(score);
+        const granted = !!(await redis.set(baseKey, JSON.stringify({
+          xp_earned: candidateXp,
+          gold_earned: 0,
+          diamonds_earned: 0,
+          recorded_by: 'record-exam'
+        }), { nx: true, ex: 60 * 60 * 24 * 365 }));
         if (granted) {
           await redis.lpush(ATTEMPTS_KEY, JSON.stringify(attempt));
           try { await redis.ltrim(ATTEMPTS_KEY, 0, MAX_ATTEMPTS - 1); } catch {}
-          const u = uProfile || await getUser(redis, normUser);
-          const isAdm = isAdminAccount(u) || isAdminUsername(normUser);
-          xpEarned = isAdm ? 0 : examXp(score);
+          xpEarned = candidateXp;
           if (u) {
             const rpg = ensureUserRpgState(u);
             rpg.daily.exam_count = Number(rpg.daily.exam_count || 0) + 1;
@@ -1111,9 +1243,27 @@ module.exports = async function handler(req, res) {
             u.last_active = new Date().toISOString();
             await redis.set(`${USER_PREFIX}${normUser}`, u);
             try { await redis.sadd('phuc:users:index', normUser); } catch {}
+            await redis.set(baseKey, JSON.stringify({
+              xp_earned: xpEarned,
+              gold_earned: goldEarned,
+              diamonds_earned: diamondsEarned,
+              recorded_by: 'record-exam'
+            }), { ex: 60 * 60 * 24 * 365 });
           }
         } else {
-          duplicate = true;
+          const prevGrant = safeParseObj(await redis.get(baseKey).catch(() => null));
+          if (prevGrant && prevGrant.recorded_by === 'exams') {
+            xpEarned = Number(prevGrant.xp_earned || 0);
+            goldEarned = Number(prevGrant.gold_earned || 0);
+            diamondsEarned = Number(prevGrant.diamonds_earned || 0);
+            duplicate = false;
+            await redis.set(baseKey, JSON.stringify({
+              ...prevGrant,
+              recorded_by: 'both'
+            }), { ex: 60 * 60 * 24 * 365 });
+          } else {
+            duplicate = true;
+          }
         }
       } catch (e) {
         console.warn('exam-xp', e?.message);
@@ -1162,10 +1312,27 @@ module.exports = async function handler(req, res) {
         u.week_key = wk;
         u.weekly_xp = 0;
       }
+      const rpg = ensureUserRpgState(u);
+      let stateMutated = false;
+      if (studyType === 'lesson' && itemId && body.mark_done !== false) {
+        u.progress = u.progress && typeof u.progress === 'object' ? u.progress : { done: {}, resume: null, notes: {} };
+        u.progress.done = u.progress.done && typeof u.progress.done === 'object' ? u.progress.done : {};
+        if (!u.progress.done[itemId]) {
+          u.progress.done[itemId] = true;
+          stateMutated = true;
+        }
+      } else if (studyType === 'flashcard' && itemId) {
+        const curFc = rpg.flashcards_state[itemId] || {};
+        if (curFc.status !== 'mastered') {
+          curFc.status = 'mastered';
+          curFc.updatedAt = new Date().toISOString();
+          rpg.flashcards_state[itemId] = curFc;
+          stateMutated = true;
+        }
+      }
       const granted = !!(await redis.set(key, '1', { nx: true, ex: 60 * 60 * 24 * 180 }));
       if (granted) {
         xpEarned = isAdm ? 0 : xpReward;
-        const rpg = ensureUserRpgState(u);
         rpg.daily.study_count = Number(rpg.daily.study_count || 0) + 1;
         goldEarned = applyRewardMultipliers(u, 15, 0, 0, isAdm).gold;
         if (!isAdm) {
@@ -1178,6 +1345,11 @@ module.exports = async function handler(req, res) {
         try { await redis.sadd('phuc:users:index', normUser); } catch {}
       } else {
         duplicate = true;
+        if (stateMutated) {
+          u.last_active = new Date().toISOString();
+          await redis.set(`${USER_PREFIX}${normUser}`, u);
+          try { await redis.sadd('phuc:users:index', normUser); } catch {}
+        }
       }
       const li = levelInfo(u.xp);
       return sendJson(res, 200, {
@@ -1194,8 +1366,11 @@ module.exports = async function handler(req, res) {
 
     if (action === 'my-results' && req.method === 'GET') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Chưa đăng nhập.' });
-      const attempts = (await listAttempts(redis))
-        .filter(a => a.username === session.username)
+      const normU = normalizeUsername(session.username);
+      const uObj = await getUser(redis, normU);
+      const allAtts = await listAllAttempts(redis, uObj ? [uObj] : []);
+      const attempts = allAtts
+        .filter(a => normalizeUsername(a.username) === normU)
         .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
         .slice(0, 50);
       return sendJson(res, 200, { ok: true, attempts });
