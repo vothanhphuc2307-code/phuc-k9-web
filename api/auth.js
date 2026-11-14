@@ -9,18 +9,38 @@ const { ensureUserRpgState } = require('../lib/rpg');
 
 async function ensureDefaultAdmin(redis) {
   try {
-    const existing = await redis.get(`${USER_PREFIX}admin`);
+    const envAdminPass = String(process.env.ADMIN_DEFAULT_PASSWORD || '').trim();
+    const isProd = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    const existing = parseUserRecord(await redis.get(`${USER_PREFIX}admin`));
     if (existing) {
+      let dirty = false;
       if (existing.xp === 9999 && existing.weekly_xp === 1200) {
         existing.xp = 0;
         existing.weekly_xp = 0;
         if (existing.streak === 30) existing.streak = 1;
         existing.badges = ['Quản Trị Viên Tối Cao', 'Sáng Lập Phúc K9'];
+        dirty = true;
+      }
+      if (envAdminPass.length >= 8 && envAdminPass !== 'admin123' && verifyPassword('admin123', existing)) {
+        const { salt, hash } = hashPassword(envAdminPass);
+        existing.salt = salt;
+        existing.password_hash = hash;
+        dirty = true;
+      }
+      if (dirty) {
         await redis.set(`${USER_PREFIX}admin`, existing);
       }
       return existing;
     }
-    const { salt, hash } = hashPassword(process.env.ADMIN_DEFAULT_PASSWORD || 'admin123');
+
+    // In production (Vercel), NEVER seed @admin with a predictable hardcoded password.
+    if (isProd && (envAdminPass.length < 8 || envAdminPass === 'admin123')) {
+      console.warn('[security] ADMIN_DEFAULT_PASSWORD is not configured strongly in production; default @admin account not auto-seeded.');
+      return null;
+    }
+
+    const seedPassword = envAdminPass || 'admin123';
+    const { salt, hash } = hashPassword(seedPassword);
     const now = new Date();
     const nowIso = now.toISOString();
     const wk = vnWeekKey(now);
@@ -50,6 +70,17 @@ async function ensureDefaultAdmin(redis) {
   } catch {
     return null;
   }
+}
+
+function getClientIp(req) {
+  const fwd = String(req?.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+  const realIp = String(req?.headers?.['x-real-ip'] || '').trim();
+  const raw = fwd || realIp || req?.socket?.remoteAddress || 'local';
+  return raw.replace(/[^a-zA-Z0-9:._-]/g, '').slice(0, 64) || 'local';
+}
+
+function hasWeakDefaultAdminPassword(user) {
+  return Boolean(user && isAdminAccount(user) && verifyPassword('admin123', user));
 }
 
 function dayKey(v) {
@@ -194,7 +225,14 @@ module.exports = async function handler(req, res) {
       if (!user) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
       const fresh = await touchUser(redis, user);
       const isAdm = isAdminAccount(fresh);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(fresh), csrf: session.csrf || csrf, is_admin: isAdm });
+      return sendJson(res, 200, {
+        ok: true,
+        authenticated: true,
+        user: safeUser(fresh),
+        csrf: session.csrf || csrf,
+        is_admin: isAdm,
+        weak_password_warning: isAdm && hasWeakDefaultAdminPassword(fresh)
+      });
     }
 
     if (!['register', 'login', 'save-state', 'save-profile', 'change-password', 'logout'].includes(action)) {
@@ -220,26 +258,29 @@ module.exports = async function handler(req, res) {
       const school = String(body.school || '').trim().slice(0, 80);
       if (!validUsername(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập chỉ gồm chữ, số, dấu chấm, gạch ngang (3–40 ký tự).' });
       if (['guest', 'khach', 'khach_k9', 'anonymous', 'k9-guest'].includes(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập này được dành riêng cho hệ thống. Hãy chọn tên khác!' });
+      if (isAdminUsername(username)) {
+        return sendJson(res, 403, { ok: false, message: 'Tên đăng nhập này thuộc quyền Quản trị viên hệ thống, không thể tự đăng ký công khai.' });
+      }
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Họ và tên cần từ 2 đến 80 ký tự.' });
       if (password.length < 6 || password.length > 128) return sendJson(res, 422, { ok: false, message: 'Mật khẩu cần từ 6 đến 128 ký tự.' });
       const { salt, hash } = hashPassword(password);
       const now = new Date();
       const nowIso = now.toISOString();
       const wk = vnWeekKey(now);
-      const isAdm = isAdminUsername(username);
       const user = {
         username,
         display_name: displayName,
-        ...(isAdm ? { role: 'admin', is_admin: true } : {}),
+        role: 'student',
+        is_admin: false,
         salt,
         password_hash: hash,
         created_at: nowIso,
         last_active: nowIso,
         streak: 1,
-        xp: isAdm ? 0 : 100,
-        weekly_xp: isAdm ? 0 : 100,
+        xp: 100,
+        weekly_xp: 100,
         week_key: wk,
-        badges: isAdm ? ['Quản Trị Viên K9'] : ['Tân Binh K9'],
+        badges: ['Tân Binh K9'],
         progress: { done: {}, resume: null, notes: {} },
         settings: { preferred_grade: preferredGrade, school },
         google: { linked: false, email: null },
@@ -257,20 +298,34 @@ module.exports = async function handler(req, res) {
         authenticated: true,
         user: safeUser(user),
         csrf,
-        is_admin: isAdm,
-        message: isAdm
-          ? 'Tạo tài khoản Quản trị viên thành công!'
-          : 'Tạo tài khoản thành công! Bạn được tặng +100 XP khởi đầu và đã có mặt trên Bảng Xếp Hạng.'
+        is_admin: false,
+        message: 'Tạo tài khoản thành công! Bạn được tặng +100 XP khởi đầu và đã có mặt trên Bảng Xếp Hạng.'
       });
     }
 
     if (action === 'login') {
       const username = normalizeUsername(body.username);
       const password = String(body.password || '');
+      const clientIp = getClientIp(req);
+      const failKey = `phuc:auth:fail:${clientIp}:${username || '_'}`;
+      const fails = Number(await redis.get(failKey).catch(() => 0) || 0);
+      if (fails >= 10) {
+        return sendJson(res, 429, {
+          ok: false,
+          message: 'Bạn đã nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau 15 phút.',
+          csrf
+        });
+      }
+
       const user = parseUserRecord(await redis.get(`${USER_PREFIX}${username}`));
       if (!user || !verifyPassword(password, user)) {
+        try {
+          await redis.incr(failKey);
+          await redis.expire(failKey, 900);
+        } catch {}
         return sendJson(res, 401, { ok: false, message: 'Tên đăng nhập hoặc mật khẩu không đúng.', csrf });
       }
+      try { await redis.del(failKey); } catch {}
       const now = new Date();
       user.streak = updateStreak(user, now);
       user.last_active = now.toISOString();
@@ -281,7 +336,16 @@ module.exports = async function handler(req, res) {
       await redis.set(`${USER_PREFIX}${username}`, user);
       try { await redis.sadd('phuc:users:index', username); } catch {}
       await createSession(res, username, csrf);
-      return sendJson(res, 200, { ok: true, authenticated: true, user: safeUser(user), csrf, is_admin: isAdm, message: isAdm ? 'Đăng nhập quyền Quản Trị Viên (Admin) thành công!' : 'Đăng nhập thành công.' });
+      const weakWarn = isAdm && hasWeakDefaultAdminPassword(user);
+      return sendJson(res, 200, {
+        ok: true,
+        authenticated: true,
+        user: safeUser(user),
+        csrf,
+        is_admin: isAdm,
+        weak_password_warning: weakWarn,
+        message: isAdm ? 'Đăng nhập quyền Quản Trị Viên (Admin) thành công!' : 'Đăng nhập thành công.'
+      });
     }
 
     if (action === 'save-profile') {

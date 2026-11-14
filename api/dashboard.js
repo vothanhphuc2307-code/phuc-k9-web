@@ -1,7 +1,7 @@
 const { getRedis } = require('../lib/redis');
 const {
   USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie,
-  hashPassword, safeUser, normalizeUsername, isAdminUsername, isAdminAccount
+  hashPassword, verifyPassword, safeUser, normalizeUsername, isAdminUsername, isAdminAccount
 } = require('../lib/auth');
 const crypto = require('crypto');
 const {
@@ -1358,12 +1358,19 @@ module.exports = async function handler(req, res) {
 
       const activeTodayCount = allUsers.filter(u => u?.last_active && new Date(u.last_active).getTime() >= start).length;
       const avgExamScore = attempts.length ? Math.round((totalScoreAll / attempts.length) * 100) / 100 : 0;
+      const defaultAdminRec = allUsers.find(u => normalizeUsername(u?.username) === 'admin');
+      const curAdminRec = allUsers.find(u => normalizeUsername(u?.username) === normalizeUsername(session.username));
+      const weakAdminPassword = Boolean(
+        (defaultAdminRec && verifyPassword('admin123', defaultAdminRec)) ||
+        (curAdminRec && verifyPassword('admin123', curAdminRec))
+      );
 
       return sendJson(res, 200, {
         ok: true,
         server_time: now.toISOString(),
         week_key: currentWeek,
         storage_mode: redis.__isMemoryFallback ? 'Memory Fallback (Local Dev)' : 'Upstash Redis Cloud',
+        weak_admin_password: weakAdminPassword,
         kpis: {
           total_users: allUsers.length,
           active_today: activeTodayCount,
@@ -1481,8 +1488,10 @@ module.exports = async function handler(req, res) {
       if (subAction === 'reset-password') {
         const u = await getUser(redis, targetUsername);
         if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
-        const newPass = String(body.new_password || '123456').trim();
-        if (newPass.length < 6) return sendJson(res, 422, { ok: false, message: 'Mật khẩu mới cần từ 6 ký tự.' });
+        const newPass = String(body.new_password || '').trim();
+        if (newPass.length < 6 || newPass.length > 128) {
+          return sendJson(res, 422, { ok: false, message: 'Vui lòng nhập mật khẩu mới rõ ràng (6–128 ký tự).' });
+        }
         const { salt, hash } = hashPassword(newPass);
         u.salt = salt;
         u.password_hash = hash;
