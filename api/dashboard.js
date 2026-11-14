@@ -4,6 +4,58 @@ const {
   hashPassword, safeUser, normalizeUsername, isAdminUsername, isAdminAccount
 } = require('../lib/auth');
 const crypto = require('crypto');
+const {
+  CATALOG,
+  RANK_TIERS,
+  vnWeekKey: rpgWeekKey,
+  ensureUserRpgState,
+  buildPublicRpgSnapshot,
+  applyRewardMultipliers,
+  performCheckin,
+  claimDailyMission,
+  buyCatalogItem,
+  equipCatalogItem,
+  convertCurrency,
+  recordSrsAnswer,
+  toggleExamBookmark,
+  openPeriodicCell
+} = require('../lib/rpg');
+
+async function loadJourneyLeaders(redis, grade = '2K9') {
+  const wk = rpgWeekKey();
+  const safeGrade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(grade || '').toUpperCase())
+    ? String(grade).toUpperCase()
+    : '2K9';
+  try {
+    const raw = await redis.zrange(`phuc:rpg:journey_week:${wk}:${safeGrade}`, 0, 14, { rev: true, withScores: true }).catch(() => []);
+    const pairs = parseZrangePairs(raw);
+    const out = [];
+    for (const pair of pairs) {
+      const uname = String(pair.name || '');
+      const score = Number(pair.count || 0);
+      if (!uname || isAdminUsername(uname)) continue;
+      let meta = await redis.get(`phuc:rpg:journey_meta:${uname}`).catch(() => null);
+      if (typeof meta === 'string') {
+        try { meta = JSON.parse(meta); } catch { meta = null; }
+      }
+      out.push({
+        rank: out.length + 1,
+        username: uname,
+        display_name: meta?.display_name || uname,
+        grade: meta?.grade || safeGrade,
+        outfit_icon: meta?.outfit_icon || '🧑‍🎓',
+        frame_class: meta?.frame_class || 'pk9-frame-bronze',
+        best_score: score,
+        islands_cleared: Number(meta?.islands_cleared || 0),
+        stars_total: Number(meta?.stars_total || 0),
+        has_flag: out.length === 0
+      });
+    }
+    return { week_key: wk, grade: safeGrade, leaders: out };
+  } catch {
+    return { week_key: wk, grade: safeGrade, leaders: [] };
+  }
+}
 
 const ATTEMPTS_KEY = 'phuc:exam-attempts';
 const MAX_ATTEMPTS = 5000;
@@ -533,6 +585,187 @@ async function collectAllUsers(redis) {
   return Array.from(map.values());
 }
 
+async function handleRpgRequest(redis, req, res, session, action) {
+  if (action === 'rpg-state' && req.method === 'GET') {
+    const grade = String(req.query?.grade || '2K9').toUpperCase();
+    let userRpg = null;
+    if (session?.username) {
+      const u = await getUser(redis, session.username);
+      if (u) userRpg = buildPublicRpgSnapshot(u);
+    }
+    const journey = await loadJourneyLeaders(redis, grade);
+    return sendJson(res, 200, {
+      ok: true,
+      catalog: CATALOG,
+      tiers: RANK_TIERS,
+      user_rpg: userRpg,
+      journey
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return sendJson(res, 405, { ok: false, message: 'Phương thức không hợp lệ cho RPG API.' });
+  }
+  if (!session?.username) {
+    return sendJson(res, 401, { ok: false, message: 'Vui lòng đăng nhập để đồng bộ tiến trình RPG lên máy chủ.' });
+  }
+  const csrf = session.csrf || await getCsrf(req, res);
+  if (!requireCsrf(req, session, csrf)) {
+    return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
+  }
+
+  let body = req.body || {};
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body || '{}'); } catch { body = {}; }
+  }
+
+  const u = await getUser(redis, session.username);
+  if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài khoản.' });
+  const isAdm = isAdminAccount(u) || isAdminUsername(session.username);
+  ensureUserRpgState(u);
+
+  const sub = action.slice(4);
+  let out = null;
+
+  if (sub === 'checkin') {
+    out = performCheckin(u, isAdm);
+  } else if (sub === 'claim-mission') {
+    out = claimDailyMission(u, clean(body.mission_id || '', 40), isAdm);
+  } else if (sub === 'buy') {
+    out = buyCatalogItem(u, body.item_id);
+  } else if (sub === 'equip') {
+    out = equipCatalogItem(u, body.item_id, clean(body.unequip || '', 20));
+  } else if (sub === 'convert') {
+    out = convertCurrency(u, clean(body.direction || '', 30), body.amount);
+  } else if (sub === 'bookmark') {
+    out = toggleExamBookmark(u, body);
+  } else if (sub === 'periodic-open') {
+    out = openPeriodicCell(u, { mode: clean(body.mode || 'random', 20), z: body.z });
+  } else if (sub === 'practice-finish') {
+    const mode = body.mode === 'srs' ? 'srs' : 'practice';
+    const results = Array.isArray(body.results) ? body.results.slice(0, 40) : [];
+    let correctCount = 0;
+    for (const item of results) {
+      const ok = Boolean(item?.correct);
+      if (ok) correctCount += 1;
+      if (item?.id) {
+        recordSrsAnswer(u, item.id, ok, {
+          topic: item.topic || '',
+          subject: item.subject || ''
+        });
+      }
+    }
+    const total = Math.max(1, results.length);
+    if (mode === 'srs') {
+      u.rpg.daily.srs_count = Number(u.rpg.daily.srs_count || 0) + total;
+    } else {
+      u.rpg.daily.practice_count = Number(u.rpg.daily.practice_count || 0) + 1;
+    }
+    u.rpg.questions_conquered = Number(u.rpg.questions_conquered || 0) + correctCount;
+    const baseGold = Math.min(80, 10 + correctCount * 6);
+    const baseXp = Math.min(45, 5 + correctCount * 3);
+    const granted = applyRewardMultipliers(u, baseGold, baseXp, 0, isAdm);
+    out = {
+      ok: true,
+      mode,
+      correct: correctCount,
+      total,
+      granted,
+      message: mode === 'srs'
+        ? `📒 Đã ôn ${total} câu Sổ Ôn Tập (Đúng ${correctCount}/${total}): +${granted.gold} Vàng${granted.xp ? ` · +${granted.xp} EXP` : ''}!`
+        : `⚡ Hoàn thành lượt Luyện Nhiệm Vụ (${correctCount}/${total} câu): +${granted.gold} Vàng${granted.xp ? ` · +${granted.xp} EXP` : ''}!`
+    };
+  } else if (sub === 'journey-submit') {
+    const islandId = clean(body.island_id || 'island-toan', 60);
+    const correct = Math.max(0, Math.min(50, Math.round(Number(body.correct || 0))));
+    const total = Math.max(1, Math.min(50, Math.round(Number(body.total || 5))));
+    const timeSec = Math.max(1, Math.min(3600, Math.round(Number(body.time_sec || 60))));
+    const ratio = correct / total;
+    const stars = ratio >= 0.9 ? 3 : ratio >= 0.7 ? 2 : ratio >= 0.4 ? 1 : 0;
+    const speedBonus = correct > 0 ? Math.max(0, Math.round(120 / Math.max(5, timeSec))) : 0;
+    const score = Math.round(ratio * 1000 + stars * 120 + speedBonus);
+    const prev = u.rpg.journey[islandId] || { stars: 0, best_score: 0, plays: 0 };
+    u.rpg.journey[islandId] = {
+      stars: Math.max(Number(prev.stars || 0), stars),
+      best_score: Math.max(Number(prev.best_score || 0), score),
+      plays: Number(prev.plays || 0) + 1,
+      last_played: new Date().toISOString()
+    };
+    const granted = applyRewardMultipliers(u, 15 + stars * 10 + correct * 3, 10 + stars * 6, stars === 3 && prev.stars < 3 ? 1 : 0, isAdm);
+
+    const wk = rpgWeekKey();
+    const grade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(u.settings?.preferred_grade || '').toUpperCase())
+      ? String(u.settings.preferred_grade).toUpperCase()
+      : '2K9';
+    if (!isAdm) {
+      try {
+        const zKey = `phuc:rpg:journey_week:${wk}:${grade}`;
+        const curBest = Number(await redis.zscore(zKey, u.username).catch(() => 0)) || 0;
+        if (score > curBest) await redis.zadd(zKey, { score, member: u.username });
+        const snap = buildPublicRpgSnapshot(u);
+        const islands = Object.values(u.rpg.journey || {});
+        const meta = {
+          display_name: u.display_name || u.username,
+          grade,
+          outfit_icon: snap.equipped_details?.outfit?.icon || '🧑‍🎓',
+          frame_class: snap.equipped_details?.frame?.cssClass || 'pk9-frame-bronze',
+          islands_cleared: islands.filter(x => Number(x?.stars || 0) > 0).length,
+          stars_total: islands.reduce((s, x) => s + Number(x?.stars || 0), 0)
+        };
+        await redis.set(`phuc:rpg:journey_meta:${u.username}`, meta, { ex: 60 * 60 * 24 * 60 });
+      } catch {}
+    }
+    const journey = await loadJourneyLeaders(redis, grade);
+    out = {
+      ok: true,
+      island_id: islandId,
+      stars,
+      score,
+      granted,
+      journey,
+      message: `🏝️ Chinh phục ${islandId}: Đạt ${stars}⭐ (${score} điểm) · +${granted.gold} Vàng${granted.xp ? ` · +${granted.xp} EXP` : ''}!`
+    };
+  } else if (sub === 'settings') {
+    if (body.paper_theme && ['paper-white', 'paper-ivory', 'paper-softgray'].includes(body.paper_theme)) {
+      u.rpg.paper_theme = body.paper_theme;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'motto')) {
+      u.rpg.motto = clean(body.motto || '', 90);
+    }
+    if (body.flashcard_update && typeof body.flashcard_update === 'object') {
+      const fk = clean(body.flashcard_update.key || '', 80);
+      if (fk) {
+        const cur = u.rpg.flashcards_state[fk] || {};
+        if (['new', 'learning', 'mastered'].includes(body.flashcard_update.status)) {
+          cur.status = body.flashcard_update.status;
+        }
+        if (typeof body.flashcard_update.star === 'boolean') {
+          cur.star = body.flashcard_update.star;
+        }
+        cur.updatedAt = new Date().toISOString();
+        u.rpg.flashcards_state[fk] = cur;
+      }
+    }
+    out = { ok: true, message: 'Đã đồng bộ cài đặt học tập & giao diện!' };
+  } else {
+    return sendJson(res, 404, { ok: false, message: 'RPG action không tồn tại.' });
+  }
+
+  if (!out?.ok) {
+    return sendJson(res, out?.status || 400, { ok: false, message: out?.message || 'Thao tác thất bại.', rpg: buildPublicRpgSnapshot(u) });
+  }
+
+  u.last_active = new Date().toISOString();
+  await redis.set(`${USER_PREFIX}${session.username}`, u);
+  try { await redis.sadd('phuc:users:index', session.username); } catch {}
+  return sendJson(res, 200, {
+    ...out,
+    xp: Number(u.xp || 0),
+    weekly_xp: Number(u.weekly_xp || 0),
+    rpg: buildPublicRpgSnapshot(u)
+  });
+}
+
 module.exports = async function handler(req, res) {
   try {
     const action = String(req.query?.action || 'overview').toLowerCase();
@@ -623,6 +856,8 @@ module.exports = async function handler(req, res) {
         const accuracy = x.totalQuestions ? Math.round((x.totalCorrect / x.totalQuestions) * 100) : 0;
         const avgScore = x.attempts ? Math.round((x.totalScore / x.attempts) * 100) / 100 : 0;
 
+        const rpgSnap = buildPublicRpgSnapshot(u);
+
         rowsByUsername.set(u.username, {
           username: u.username,
           display_name: u.display_name || x.display_name || u.username,
@@ -642,6 +877,11 @@ module.exports = async function handler(req, res) {
           accuracy,
           lessonsDone: doneCount,
           badges: computeBadges({ ...u, xp: baseXp }, x),
+          rpg_tier: rpgSnap.tier?.name || 'Bậc Đồng',
+          rpg_frame: rpgSnap.equipped_details?.frame?.cssClass || 'pk9-frame-bronze',
+          rpg_title: rpgSnap.equipped_details?.title?.name || '',
+          rpg_pet: rpgSnap.equipped_details?.pet?.icon || '',
+          rpg_outfit: rpgSnap.equipped_details?.outfit?.icon || '',
           isRegisteredUser: true,
           updatedAt: x.updatedAt || u.last_active || u.created_at || ''
         });
@@ -785,7 +1025,7 @@ module.exports = async function handler(req, res) {
         ? `phuc:xp:exam:${session.username}:${attemptId}`
         : `phuc:xp:exam:${session.username}:${crypto.createHash('sha1').update(JSON.stringify({ examId, score, correct, total: totalQuestions })).digest('hex')}`;
 
-      let xpEarned = 0, duplicate = false;
+      let xpEarned = 0, goldEarned = 0, diamondsEarned = 0, duplicate = false;
       try {
         const granted = !!(await redis.set(baseKey, '1', { nx: true, ex: 60 * 60 * 24 * 365 }));
         if (granted) {
@@ -795,6 +1035,21 @@ module.exports = async function handler(req, res) {
           const isAdm = isAdminAccount(u) || isAdminUsername(session.username);
           xpEarned = isAdm ? 0 : examXp(score);
           if (u) {
+            const rpg = ensureUserRpgState(u);
+            rpg.daily.exam_count = Number(rpg.daily.exam_count || 0) + 1;
+            rpg.questions_conquered = Number(rpg.questions_conquered || 0) + Math.max(0, correct);
+            const eco = applyRewardMultipliers(u, 25 + Math.round(score * 3), 0, score >= 8 ? 2 : 1, isAdm);
+            goldEarned = eco.gold;
+            diamondsEarned = eco.diamonds;
+            const srsList = Array.isArray(storedAttempt?.result?.review) ? storedAttempt.result.review : review;
+            for (const item of (srsList || []).slice(0, 40)) {
+              if (item?.id) {
+                recordSrsAnswer(u, item.id, Boolean(item.status === 'correct' || item.correct === true), {
+                  topic: item.topic || '',
+                  subject
+                });
+              }
+            }
             if (!isAdm) {
               const wk = vnWeekKey();
               if (u.week_key !== wk) {
@@ -827,9 +1082,12 @@ module.exports = async function handler(req, res) {
         saved: true,
         score,
         xp_earned: xpEarned,
+        gold_earned: goldEarned,
+        diamonds_earned: diamondsEarned,
         xp_total: xpTotal,
         weekly_xp: weeklyXp,
         level: li.level,
+        rpg: u ? buildPublicRpgSnapshot(u) : null,
         duplicate
       });
     }
@@ -846,13 +1104,16 @@ module.exports = async function handler(req, res) {
       const itemId = clean(body.item_id || body.lesson_id || `study-${Date.now()}`, 120);
       const xpReward = studyType === 'flashcard' ? 20 : studyType === 'quiz' ? 30 : 25;
       const key = `phuc:xp:study:${session.username}:${studyType}:${itemId}`;
-      let xpEarned = 0, duplicate = false;
+      let xpEarned = 0, goldEarned = 0, duplicate = false;
       const u = await getUser(redis, session.username);
       if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài khoản.' });
       const isAdm = isAdminAccount(u);
       const granted = !!(await redis.set(key, '1', { nx: true, ex: 60 * 60 * 24 * 180 }));
       if (granted) {
         xpEarned = isAdm ? 0 : xpReward;
+        const rpg = ensureUserRpgState(u);
+        rpg.daily.study_count = Number(rpg.daily.study_count || 0) + 1;
+        goldEarned = applyRewardMultipliers(u, 15, 0, 0, isAdm).gold;
         if (!isAdm) {
           const wk = vnWeekKey();
           if (u.week_key !== wk) {
@@ -873,9 +1134,11 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 200, {
         ok: true,
         xp_earned: xpEarned,
+        gold_earned: goldEarned,
         xp_total: Number(u.xp || 0),
         weekly_xp: Number(u.weekly_xp || 0),
         level: li.level,
+        rpg: buildPublicRpgSnapshot(u),
         duplicate
       });
     }
@@ -1282,6 +1545,10 @@ module.exports = async function handler(req, res) {
       }
 
       return sendJson(res, 400, { ok: false, message: 'Sub-action quản trị không hợp lệ.' });
+    }
+
+    if (action.startsWith('rpg-')) {
+      return await handleRpgRequest(redis, req, res, session, action);
     }
 
     if (action === 'public-config' && req.method === 'GET') {

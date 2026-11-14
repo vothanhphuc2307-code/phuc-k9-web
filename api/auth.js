@@ -5,6 +5,7 @@ const {
   getCsrf, requireCsrf, isAdminUsername, isAdminAccount
 } = require('../lib/auth');
 const crypto = require('crypto');
+const { ensureUserRpgState } = require('../lib/rpg');
 
 async function ensureDefaultAdmin(redis) {
   try {
@@ -233,6 +234,7 @@ module.exports = async function handler(req, res) {
         avatar_data: null,
         avatar_url: null
       };
+      ensureUserRpgState(user, now);
       const created = await redis.set(`${USER_PREFIX}${username}`, user, { nx: true });
       if (!created) return sendJson(res, 409, { ok: false, message: 'Tên đăng nhập đã tồn tại.' });
       try { await redis.sadd('phuc:users:index', username); } catch {}
@@ -262,6 +264,7 @@ module.exports = async function handler(req, res) {
       ensureWeeklyState(user, now);
       const isAdm = isAdminAccount(user);
       if (!isAdm && (typeof user.xp !== 'number' || user.xp < 50)) user.xp = Math.max(50, Number(user.xp || 0));
+      ensureUserRpgState(user, now);
       await redis.set(`${USER_PREFIX}${username}`, user);
       try { await redis.sadd('phuc:users:index', username); } catch {}
       await createSession(res, username, csrf);

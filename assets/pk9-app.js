@@ -31,6 +31,7 @@
     fcDeckIdx: 0,
     fcCardIdx: 0,
     fcFlipped: false,
+    fcFilter: 'ALL', // 'ALL' | 'new' | 'learning' | 'mastered' | 'star'
     pomoSec: 25 * 60,
     pomoRunning: false,
     pomoTimer: null,
@@ -317,7 +318,7 @@
   }
 
   function switchTab(tabId, options = {}) {
-    const validTabs = ['home', 'lectures', 'exams', 'leaderboard', 'docs', 'khoa-chui', 'archive', 'flashcards', 'community', 'planner', 'ai', 'admin'];
+    const validTabs = ['home', 'lectures', 'exams', 'leaderboard', 'docs', 'khoa-chui', 'archive', 'flashcards', 'community', 'planner', 'ai', 'missions', 'journey', 'shop', 'periodic', 'idcard', 'admin'];
     const prevTab = APP.activeTab;
     const target = validTabs.includes(tabId) ? tabId : 'home';
     APP.activeTab = target;
@@ -355,6 +356,9 @@
     if (target === 'community') renderCommunityTab();
     if (target === 'planner') renderPlannerTab();
     if (target === 'ai') renderAiTab();
+    if (['missions', 'journey', 'shop', 'periodic', 'idcard'].includes(target) && window.PK9_RPG) {
+      window.PK9_RPG.renderTab(target);
+    }
     if (target === 'admin') {
       renderAdminTab();
       fetchAdminDetail();
@@ -383,6 +387,7 @@
         APP.isAdmin = Boolean(meData.is_admin || meData.user?.is_admin || meData.user?.role === 'admin');
         if (meData.authenticated && meData.user) {
           APP.user = meData.user;
+          window.PK9_RPG_STATE = meData.user.rpg || window.PK9_RPG_STATE || null;
           if (meData.user.progress?.done) {
             APP.doneMap = { ...APP.doneMap, ...meData.user.progress.done };
           }
@@ -393,6 +398,7 @@
         } else {
           APP.user = null;
           APP.isAdmin = false;
+          window.PK9_RPG_STATE = null;
         }
       }
     } catch {}
@@ -433,6 +439,17 @@
     }
   }
   window.PK9_REFRESH_AUTH_AND_LEADERBOARD = fetchAuthAndLeaderboard;
+  window.PK9_GET_USER = () => APP.user;
+  window.PK9_GET_CSRF = () => APP.csrf;
+  window.PK9_OPEN_AUTH = mode => openAuthModal(mode);
+  window.PK9_ON_RPG_SYNC = (rpg, extra = {}) => {
+    if (APP.user && rpg) APP.user.rpg = rpg;
+    if (APP.user && typeof extra.xp === 'number') APP.user.xp = extra.xp;
+    if (APP.user && typeof extra.weekly_xp === 'number') APP.user.weekly_xp = extra.weekly_xp;
+    updateHeaderAuthUI();
+    if (APP.activeTab === 'home') renderHomeTab();
+    if (APP.activeTab === 'flashcards') renderFlashcardsTab();
+  };
 
   function renderSystemAnnouncementBar() {
     const bar = document.getElementById('pk9-system-announcement-bar');
@@ -500,9 +517,11 @@
     if (sideCard) {
       const myRank = APP.lbData.my_rank;
       if (APP.user) {
+        const rpgInfo = APP.user.rpg || window.PK9_RPG_STATE || {};
+        const eqFrame = rpgInfo.equipped_details?.frame?.cssClass || 'pk9-frame-bronze';
         const avatarThumb = safeAvatar
-          ? `<img src="${esc(safeAvatar)}" alt="${esc(APP.user.display_name || '')}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(56,189,248,0.5);" />`
-          : `<div style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}</div>`;
+          ? `<img class="${esc(eqFrame)}" src="${esc(safeAvatar)}" alt="${esc(APP.user.display_name || '')}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
+          : `<div class="${esc(eqFrame)}" style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${rpgInfo.equipped_details?.outfit?.icon || esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}</div>`;
         sideCard.innerHTML = `
           <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.55rem;">
             ${avatarThumb}
@@ -511,7 +530,7 @@
                 ${esc(APP.user.display_name)} ${APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
               </div>
               <div style="font-size:0.72rem;color:var(--pk9-text-muted);">
-                ${APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • Tuần: ${wkXpVal} XP`}
+                ${APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • 🪙${rpgInfo.gold ?? 180} · 💎${rpgInfo.diamonds ?? 5}`}
               </div>
             </div>
           </div>
@@ -633,6 +652,11 @@
 
       <div class="pk9-mob-shortcut-strip" aria-label="Công cụ nhanh trên di động">
         <button type="button" class="pk9-mob-tool-pill" data-open-cmd="1">🔍 Tìm bài / đề</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="missions">⚡ Luyện nhiệm vụ</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="shop">🛍️ Cửa hàng & Túi</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="periodic">⚗️ Bảng tuần hoàn</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="journey">🗺️ Vượt đảo</button>
+        <button type="button" class="pk9-mob-tool-pill" data-nav-tab="idcard">🪪 Thẻ QR</button>
         <button type="button" class="pk9-mob-tool-pill" data-nav-tab="docs">📚 Thư viện PDF</button>
         <button type="button" class="pk9-mob-tool-pill" data-nav-tab="flashcards">🃏 Flashcards 3D</button>
         <button type="button" class="pk9-mob-tool-pill" data-nav-tab="archive">🗂️ Tổng ôn 2K8</button>
@@ -642,6 +666,8 @@
         <button type="button" class="pk9-mob-tool-pill" data-open-auth="profile">👤 Tài khoản</button>
         ${APP.isAdmin ? '<button type="button" class="pk9-mob-tool-pill" data-nav-tab="admin" style="color:#e11d48;border-color:rgba(225,29,72,0.35);">🛡️ Admin Pro</button>' : ''}
       </div>
+
+      ${window.PK9_RPG && typeof window.PK9_RPG.renderHomeWidget === 'function' ? window.PK9_RPG.renderHomeWidget(APP.user, APP.isAdmin) : ''}
 
       ${!APP.isStandalone ? `
         <div class="pk9-mob-app-banner">
@@ -1663,16 +1689,17 @@
             return `
               <div class="pk9-podium-card rank-${r}">
                 <div class="pk9-podium-crown">${slot.crown}</div>
-                <div class="pk9-lb-avatar">${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
-                <div style="font-weight:900;font-size:1.06rem;">${slot.title} • ${esc(row.display_name)}</div>
+                <div class="pk9-lb-avatar ${esc(row.rpg_frame || 'pk9-frame-bronze')}">${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
+                <div style="font-weight:900;font-size:1.06rem;">${slot.title} • ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''}</div>
                 <div style="font-size:0.79rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">
-                  🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}
+                  🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')} ${row.rpg_tier ? `• <b>${esc(row.rpg_tier)}</b>` : ''}
                 </div>
                 <div style="display:flex;justify-content:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem;">
                   <span class="pk9-badge pk9-badge-subj">${mainMetric}</span>
                   <span class="pk9-badge pk9-badge-verified">📝 ${row.attempts || 0} đề • Cao nhất ${Number(row.bestScore || 0).toFixed(2)}đ</span>
                 </div>
                 <div style="display:flex;justify-content:center;gap:0.35rem;flex-wrap:wrap;">
+                  ${row.rpg_title ? `<span class="pk9-badge pk9-badge-code">✨ ${esc(row.rpg_title)}</span>` : ''}
                   ${(row.badges || []).slice(0, 2).map(b => `<span class="pk9-badge pk9-badge-code">🏅 ${esc(b)}</span>`).join('')}
                 </div>
               </div>
@@ -1699,15 +1726,15 @@
                   ${rankBadge}
                 </div>
                 <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                  <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px -4px rgba(37,99,235,0.45);">
-                    ${esc((row.display_name || 'K').slice(0, 1).toUpperCase())}
+                  <div class="${esc(row.rpg_frame || 'pk9-frame-bronze')}" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">
+                    ${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}
                   </div>
                   <div style="min-width:0;">
                     <div style="font-weight:800;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      ${esc(row.display_name)} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
+                      ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
                     </div>
                     <div style="font-size:0.76rem;color:var(--pk9-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}
+                      🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')} ${row.rpg_title ? `• ${esc(row.rpg_title)}` : ''}
                     </div>
                   </div>
                 </div>
@@ -2116,21 +2143,76 @@
   // ==========================================================================
   // TAB 7: 3D INTERACTIVE FLASHCARDS
   // ==========================================================================
+  function getFlashcardsStateMap() {
+    if (window.PK9_RPG_STATE?.flashcards_state && typeof window.PK9_RPG_STATE.flashcards_state === 'object') {
+      return window.PK9_RPG_STATE.flashcards_state;
+    }
+    try {
+      return JSON.parse(localStorage.getItem('pk9_fc_state') || '{}') || {};
+    } catch {
+      return {};
+    }
+  }
+
+  async function updateFlashcardItemState(cardKey, patch) {
+    try {
+      const curMap = getFlashcardsStateMap();
+      const next = { ...(curMap[cardKey] || {}), ...patch, updatedAt: new Date().toISOString() };
+      curMap[cardKey] = next;
+      localStorage.setItem('pk9_fc_state', JSON.stringify(curMap));
+      if (window.PK9_RPG_STATE) {
+        window.PK9_RPG_STATE.flashcards_state = { ...(window.PK9_RPG_STATE.flashcards_state || {}), [cardKey]: next };
+      }
+    } catch {}
+
+    if (APP.user) {
+      try {
+        const resp = await fetch('/api/dashboard?action=rpg-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+          body: JSON.stringify({ flashcard_update: { key: cardKey, ...patch } })
+        });
+        if (resp.ok) {
+          const d = await resp.json();
+          if (d?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') window.PK9_APPLY_RPG_UPDATE(d.rpg);
+        }
+      } catch {}
+    }
+  }
+
   function renderFlashcardsTab() {
     const root = document.getElementById('tab-flashcards');
     if (!root) return;
     const decks = Array.isArray(window.PK9_FLASHCARDS) ? window.PK9_FLASHCARDS : [];
     const deck = decks[APP.fcDeckIdx] || decks[0];
     if (!deck) return;
-    const cards = deck.cards || [];
-    const card = cards[APP.fcCardIdx % cards.length] || cards[0];
+    const rawCards = (deck.cards || []).map((c, idx) => ({ ...c, _origIdx: idx, _key: `${deck.id}_${idx}` }));
+    const fcMap = getFlashcardsStateMap();
+    const counts = { ALL: rawCards.length, new: 0, learning: 0, mastered: 0, star: 0 };
+    for (const c of rawCards) {
+      const st = fcMap[c._key] || { status: 'new', star: false };
+      const sName = st.status || 'new';
+      counts[sName] = (counts[sName] || 0) + 1;
+      if (st.star) counts.star += 1;
+    }
+    const filteredCards = rawCards.filter(c => {
+      const st = fcMap[c._key] || { status: 'new', star: false };
+      if (APP.fcFilter === 'ALL') return true;
+      if (APP.fcFilter === 'star') return Boolean(st.star);
+      return (st.status || 'new') === APP.fcFilter;
+    });
+    const cards = filteredCards.length ? filteredCards : rawCards;
+    const safeIdx = ((APP.fcCardIdx % cards.length) + cards.length) % cards.length;
+    const card = cards[safeIdx] || cards[0];
+    const cardState = fcMap[card._key] || { status: 'new', star: false };
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
         <div class="pk9-sec-head" style="margin-top:0;">
           <div>
             <h2>🃏 Flashcards 3D Phản Xạ Công Thức (${esc(deck.subject)})</h2>
-            <p>Nhấn vào thẻ để lật 3D xem đáp án & công thức chuẩn. Hoàn thành bộ thẻ nhận ngay +20 XP.</p>
+            <p>Nhấn vào thẻ để lật 3D xem đáp án. Phân loại Chưa học / Đang học / Đã thuộc / Thẻ sao ⭐ & đồng bộ lên tài khoản!</p>
           </div>
           <div class="pk9-fc-deck-bar">
             ${decks.map((d, idx) => `
@@ -2141,11 +2223,25 @@
           </div>
         </div>
 
+        <div class="pk9-fc-status-bar">
+          <button type="button" class="pk9-exam-chip ${APP.fcFilter === 'ALL' ? 'active' : ''}" data-fc-filter="ALL">Tất cả (${counts.ALL})</button>
+          <button type="button" class="pk9-exam-chip ${APP.fcFilter === 'new' ? 'active' : ''}" data-fc-filter="new">Chưa học (${counts.new})</button>
+          <button type="button" class="pk9-exam-chip ${APP.fcFilter === 'learning' ? 'active' : ''}" data-fc-filter="learning">Đang học (${counts.learning})</button>
+          <button type="button" class="pk9-exam-chip ${APP.fcFilter === 'mastered' ? 'active' : ''}" data-fc-filter="mastered">Đã thuộc (${counts.mastered})</button>
+          <button type="button" class="pk9-exam-chip ${APP.fcFilter === 'star' ? 'active' : ''}" data-fc-filter="star">⭐ Có thẻ sao (${counts.star})</button>
+        </div>
+
+        ${!filteredCards.length ? `
+          <div style="padding:0.75rem 1rem;border-radius:0.85rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);font-size:0.82rem;">
+            Bộ lọc "${esc(APP.fcFilter)}" chưa có thẻ nào — đang hiển thị tạm toàn bộ ${rawCards.length} thẻ.
+          </div>
+        ` : ''}
+
         <div class="pk9-fc-scene" data-fc-flip="1">
           <div class="pk9-fc-card ${APP.fcFlipped ? 'flipped' : ''}" id="pk9-fc-card-el">
             <div class="pk9-fc-face pk9-fc-front">
               <span class="pk9-badge pk9-badge-subj pk9-fc-badge">
-                ${deck.icon} ${esc(deck.subject)} • Thẻ ${(APP.fcCardIdx % cards.length) + 1}/${cards.length} (Nhấn để lật)
+                ${deck.icon} ${esc(deck.subject)} • Thẻ ${safeIdx + 1}/${cards.length} ${cardState.star ? '⭐' : ''} (Nhấn để lật)
               </span>
               <div class="pk9-fc-question">${card.front}</div>
             </div>
@@ -2163,7 +2259,13 @@
         <div class="pk9-fc-controls">
           <button type="button" class="pk9-btn-exam-ghost" data-fc-prev="1">← Thẻ trước</button>
           <button type="button" class="pk9-btn-exam-ghost" data-fc-flip="1">🔄 Lật thẻ 3D</button>
-          <button type="button" class="pk9-btn-exam-primary" data-fc-mastered="${esc(deck.id)}_${APP.fcCardIdx}" style="max-width:240px;">
+          <button type="button" class="pk9-btn-exam-ghost" data-fc-star="${esc(card._key)}" data-fc-curstar="${cardState.star ? '1' : '0'}">
+            ${cardState.star ? '⭐ Bỏ sao' : '☆ Đánh dấu sao'}
+          </button>
+          <button type="button" class="pk9-btn-exam-ghost" data-fc-learning="${esc(card._key)}">
+            📖 Đang học
+          </button>
+          <button type="button" class="pk9-btn-exam-primary" data-fc-mastered="${esc(card._key)}" style="max-width:240px;">
             ✅ Đã thuộc thẻ này (+20 XP)
           </button>
           <button type="button" class="pk9-btn-exam-ghost" data-fc-next="1">Thẻ tiếp →</button>
@@ -3894,6 +3996,36 @@
         return;
       }
 
+      const fcFilterBtn = e.target.closest('[data-fc-filter]');
+      if (fcFilterBtn) {
+        APP.fcFilter = fcFilterBtn.getAttribute('data-fc-filter') || 'ALL';
+        APP.fcCardIdx = 0;
+        APP.fcFlipped = false;
+        renderFlashcardsTab();
+        return;
+      }
+
+      const fcStarBtn = e.target.closest('[data-fc-star]');
+      if (fcStarBtn) {
+        const key = fcStarBtn.getAttribute('data-fc-star');
+        const nextStar = fcStarBtn.getAttribute('data-fc-curstar') !== '1';
+        await updateFlashcardItemState(key, { star: nextStar });
+        toast(nextStar ? '⭐ Đã đánh dấu sao thẻ này!' : 'Đã bỏ dấu sao thẻ.', 'info');
+        renderFlashcardsTab();
+        return;
+      }
+
+      const fcLearnBtn = e.target.closest('[data-fc-learning]');
+      if (fcLearnBtn) {
+        const key = fcLearnBtn.getAttribute('data-fc-learning');
+        await updateFlashcardItemState(key, { status: 'learning' });
+        APP.fcCardIdx += 1;
+        APP.fcFlipped = false;
+        toast('📖 Đã xếp thẻ vào mục Đang học.', 'info');
+        renderFlashcardsTab();
+        return;
+      }
+
       const fcFlip = e.target.closest('[data-fc-flip]');
       if (fcFlip) {
         APP.fcFlipped = !APP.fcFlipped;
@@ -3924,9 +4056,10 @@
       const fcMastered = e.target.closest('[data-fc-mastered]');
       if (fcMastered) {
         const itemId = fcMastered.getAttribute('data-fc-mastered');
+        await updateFlashcardItemState(itemId, { status: 'mastered' });
         APP.fcCardIdx += 1;
         APP.fcFlipped = false;
-        toast('⚡ Đã ghi nhớ thẻ công thức! (+20 XP)', 'success');
+        toast('⚡ Đã ghi nhớ thẻ công thức! (+20 XP · +15 Vàng)', 'success');
         if (APP.user) {
           try {
             await fetch('/api/dashboard?action=record-study', {

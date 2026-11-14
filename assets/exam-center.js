@@ -21,10 +21,19 @@
   }
 
   const STATE = {
-    view: 'catalog', // 'catalog' | 'sources' | 'taking' | 'result'
+    view: 'catalog', // 'catalog' | 'sources' | 'bookmarks' | 'taking' | 'result'
     subjectFilter: 'ALL',
+    statusFilter: 'ALL', // 'ALL' | 'todo' | 'done'
+    paperTheme: (() => {
+      try {
+        const p = localStorage.getItem('pk9_paper_theme');
+        if (['paper-white', 'paper-ivory', 'paper-softgray'].includes(p)) return p;
+      } catch {}
+      return 'paper-ivory';
+    })(),
     searchQuery: '',
     exams: [],
+    doneExamIds: new Set(),
     activeExam: null,
     attemptId: null,
     answers: {},
@@ -34,8 +43,100 @@
     remainingSec: 0,
     timerId: null,
     lastResult: null,
-    xpAwarded: 0
+    xpAwarded: 0,
+    goldAwarded: 0,
+    diamondsAwarded: 0
   };
+
+  function getBookmarksList() {
+    const serverBm = window.PK9_RPG_STATE?.bookmarks;
+    if (Array.isArray(serverBm)) return serverBm;
+    try {
+      const local = JSON.parse(localStorage.getItem('pk9_rpg_bookmarks') || '[]');
+      return Array.isArray(local) ? local : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function isQuestionBookmarked(qId) {
+    return getBookmarksList().some(b => String(b.id) === String(qId));
+  }
+
+  function getActivePaperTheme() {
+    const srv = window.PK9_RPG_STATE?.paper_theme;
+    if (['paper-white', 'paper-ivory', 'paper-softgray'].includes(srv)) return srv;
+    return STATE.paperTheme || 'paper-ivory';
+  }
+
+  async function syncPaperTheme(theme) {
+    if (!['paper-white', 'paper-ivory', 'paper-softgray'].includes(theme)) return;
+    STATE.paperTheme = theme;
+    try { localStorage.setItem('pk9_paper_theme', theme); } catch {}
+    if (window.PK9_RPG_STATE) window.PK9_RPG_STATE.paper_theme = theme;
+    document.querySelectorAll('.pk9-exam-room').forEach(el => {
+      el.classList.remove('paper-white', 'paper-ivory', 'paper-softgray');
+      el.classList.add(theme);
+    });
+    document.querySelectorAll('[data-paper-theme]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-paper-theme') === theme);
+    });
+    try {
+      const resp = await fetch('/api/dashboard?action=rpg-settings', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+        body: JSON.stringify({ paper_theme: theme })
+      });
+      if (resp.ok) {
+        const d = await resp.json();
+        if (d?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') window.PK9_APPLY_RPG_UPDATE(d.rpg);
+      }
+    } catch {}
+  }
+
+  async function toggleQuestionBookmark(qId, btnEl = null) {
+    const ex = STATE.activeExam;
+    const q = ex?.questions?.find(item => String(item.id) === String(qId));
+    const existing = getBookmarksList().find(b => String(b.id) === String(qId));
+    const payload = q ? {
+      id: String(q.id),
+      examId: ex?.id || '',
+      examTitle: ex?.title || '',
+      subject: subjLabel(ex?.subject || ''),
+      topic: q.topic || '',
+      type: normalizeQuestionType(q),
+      number: q.number || 0,
+      text: q.text || q.prompt || ''
+    } : (existing || { id: String(qId) });
+
+    // Optimistic local update
+    try {
+      const cur = getBookmarksList().slice();
+      const idx = cur.findIndex(b => String(b.id) === String(qId));
+      const nowSaved = idx < 0;
+      if (nowSaved) cur.unshift({ ...payload, savedAt: new Date().toISOString() });
+      else cur.splice(idx, 1);
+      localStorage.setItem('pk9_rpg_bookmarks', JSON.stringify(cur.slice(0, 150)));
+      if (window.PK9_RPG_STATE) window.PK9_RPG_STATE.bookmarks = cur.slice(0, 150);
+      if (btnEl) btnEl.textContent = nowSaved ? '📌 Đã lưu' : '📌 Lưu câu';
+      if (window.PK9_TOAST) window.PK9_TOAST(nowSaved ? '📌 Đã lưu câu hỏi để ôn lại sau!' : 'Đã bỏ lưu câu hỏi.', 'info');
+    } catch {}
+
+    try {
+      const resp = await fetch('/api/dashboard?action=rpg-bookmark', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+        body: JSON.stringify(payload)
+      });
+      if (resp.ok) {
+        const d = await resp.json();
+        if (d?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') window.PK9_APPLY_RPG_UPDATE(d.rpg);
+      }
+    } catch {}
+    if (STATE.view === 'bookmarks') renderExamCenter();
+  }
 
   function esc(str) {
     return String(str ?? '').replace(/[&<>"']/g, m => ({
@@ -222,6 +323,21 @@
       }
     } catch {}
     STATE.exams = Array.from(byId.values());
+    const done = new Set();
+    try {
+      const hist = JSON.parse(localStorage.getItem('pk9_exam_history') || '[]');
+      for (const h of hist) if (h?.examId) done.add(String(h.examId));
+    } catch {}
+    try {
+      const hResp = await fetch('/api/exams?action=history', { credentials: 'include' });
+      if (hResp.ok) {
+        const hData = await hResp.json();
+        for (const a of (hData?.attempts || hData?.history || [])) {
+          if (a?.examId || a?.exam_id) done.add(String(a.examId || a.exam_id));
+        }
+      }
+    } catch {}
+    STATE.doneExamIds = done;
   }
 
   function findFullSeedExam(examId) {
@@ -351,6 +467,8 @@
     const seedExam = findFullSeedExam(STATE.activeExam.id) || STATE.activeExam;
     let graded = gradeExamLocally(seedExam, STATE.answers);
     let xpEarned = 0;
+    let goldEarned = 0;
+    let diamondsEarned = 0;
 
     try {
       const resp = await fetch('/api/exams?action=submit', {
@@ -393,17 +511,27 @@
           grade: STATE.activeExam.program?.toUpperCase() || '2K9',
           score: graded.score,
           correct: graded.correct,
-          total_questions: graded.total
+          total_questions: graded.total,
+          review: (graded.review || []).slice(0, 40).map(r => ({
+            id: r.id, topic: r.topic || '', correct: Boolean(r.correct || r.status === 'correct'), status: r.status
+          }))
         })
       });
       if (recResp.ok) {
         const recData = await recResp.json();
         xpEarned = Number(recData?.xp_earned || 0);
+        goldEarned = Number(recData?.gold_earned || 0);
+        diamondsEarned = Number(recData?.diamonds_earned || 0);
+        if (recData?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
+          window.PK9_APPLY_RPG_UPDATE(recData.rpg);
+        }
         if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
           window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
         }
       }
     } catch {}
+
+    STATE.doneExamIds.add(String(STATE.activeExam.id));
 
     try {
       localStorage.removeItem(`pk9_exam_draft_${STATE.activeExam.id}`);
@@ -422,22 +550,39 @@
 
     STATE.lastResult = graded;
     STATE.xpAwarded = xpEarned;
+    STATE.goldAwarded = goldEarned;
+    STATE.diamondsAwarded = diamondsEarned;
     STATE.view = 'result';
     renderExamCenter();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.PK9_TOAST) {
-      window.PK9_TOAST(`Đã chấm bài hoàn tất: ${Number(graded.score || 0).toFixed(2)}/10 điểm!${xpEarned ? ` (+${xpEarned} XP vào BXH)` : ''}`, 'success');
+      const rewardStr = [
+        xpEarned ? `+${xpEarned} XP` : '',
+        goldEarned ? `+${goldEarned} Vàng` : '',
+        diamondsEarned ? `+${diamondsEarned} 💎` : ''
+      ].filter(Boolean).join(' · ');
+      window.PK9_TOAST(`Đã chấm bài hoàn tất: ${Number(graded.score || 0).toFixed(2)}/10 điểm!${rewardStr ? ` (${rewardStr})` : ''}`, 'success');
     }
   }
 
   function renderCatalogView(root) {
     const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
     const q = STATE.searchQuery.trim().toLowerCase();
-    const filtered = STATE.exams.filter(ex => {
+    const bookmarks = getBookmarksList();
+    const doneIds = STATE.doneExamIds;
+    const filteredBySubjAndQ = STATE.exams.filter(ex => {
       const sName = subjLabel(ex.subject);
       if (STATE.subjectFilter !== 'ALL' && sName !== STATE.subjectFilter) return false;
       if (!q) return true;
       return `${ex.title} ${sName} ${ex.source || ex.sourceOrg || ''} ${ex.periodLabel || ''}`.toLowerCase().includes(q);
+    });
+    const todoCount = filteredBySubjAndQ.filter(ex => !doneIds.has(String(ex.id))).length;
+    const doneCount = filteredBySubjAndQ.filter(ex => doneIds.has(String(ex.id))).length;
+    const filtered = filteredBySubjAndQ.filter(ex => {
+      const isDone = doneIds.has(String(ex.id));
+      if (STATE.statusFilter === 'todo' && isDone) return false;
+      if (STATE.statusFilter === 'done' && !isDone) return false;
+      return true;
     });
 
     let hist = [];
@@ -459,7 +604,7 @@
                 Phòng Thi Ảo & Hệ Thống Chấm Điểm Tự Động Phúc K9
               </h2>
               <p style="margin:0;color:rgba(255,255,255,0.86);font-size:0.92rem;line-height:1.6;">
-                Tích hợp đề thi thật từ các Sở GD&ĐT (Lâm Đồng, Điện Biên, Hà Nội, Nghệ An...), THPT Ngô Gia Tự, Bộ GD&ĐT và ĐGNL HSA/V-ACT. Hệ thống chấm chuẩn 3 phần (Trắc nghiệm ABCD • Đúng/Sai lũy tiến 0.1→1.0đ • Trả lời ngắn), phân tích điểm yếu theo chuyên đề và cộng XP trực tiếp vào <b>BXH Hàng Tuần & BXH Top Học Viên</b>.
+                Tích hợp đề thi thật từ các Sở GD&ĐT (Lâm Đồng, Điện Biên, Hà Nội, Nghệ An...), THPT Ngô Gia Tự, Bộ GD&ĐT và ĐGNL HSA/V-ACT. Hệ thống chấm chuẩn 3 phần, lưu câu hỏi hay, chỉnh nền giấy làm bài & cộng XP + Vàng + Kim cương trực tiếp!
               </p>
             </div>
             <div class="pk9-exam-kpis">
@@ -490,6 +635,9 @@
                 ${sub === 'ALL' ? '🔥 Tất cả môn' : esc(sub)}
               </button>
             `).join('')}
+            <button type="button" class="pk9-exam-chip ${STATE.view === 'bookmarks' ? 'active' : ''}" data-exam-view="bookmarks">
+              📌 Câu đã lưu (${bookmarks.length})
+            </button>
             <button type="button" class="pk9-exam-chip ${STATE.view === 'sources' ? 'active' : ''}" data-exam-view="sources">
               📚 Kho Đề Gốc Sở / Bộ (${sourcesList.length + refDocs.length})
             </button>
@@ -500,19 +648,36 @@
           </div>
         </div>
 
-        ${STATE.view === 'sources' ? renderVerifiedSourcesSection(sourcesList, refDocs, q) : `
+        ${STATE.view === 'catalog' ? `
+          <div class="pk9-exam-status-bar">
+            <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'ALL' ? 'active' : ''}" data-exam-status="ALL">
+              📋 Tất cả (${filteredBySubjAndQ.length})
+            </button>
+            <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'todo' ? 'active' : ''}" data-exam-status="todo">
+              ⚡ Chưa làm (${todoCount})
+            </button>
+            <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'done' ? 'active' : ''}" data-exam-status="done">
+              ✅ Đã làm (${doneCount})
+            </button>
+          </div>
+        ` : ''}
+
+        ${STATE.view === 'sources' ? renderVerifiedSourcesSection(sourcesList, refDocs, q)
+          : STATE.view === 'bookmarks' ? renderBookmarksSection(bookmarks, q)
+          : `
           <div class="pk9-exam-grid">
-            ${filtered.map(ex => {
+            ${filtered.length ? filtered.map(ex => {
               const qCount = ex.questionCount || (ex.questions ? ex.questions.length : 22);
               const sName = subjLabel(ex.subject);
               const pdfPath = ex.sourceFile || ex.pdfUrl || '';
               const duration = ex.duration || ex.durationMinutes || 50;
+              const isDone = doneIds.has(String(ex.id));
               return `
                 <article class="pk9-exam-card">
                   <div>
                     <div class="pk9-exam-card-badges">
                       <span class="pk9-badge pk9-badge-subj">📘 ${esc(sName)} • Khối ${esc(ex.grade || '12')}</span>
-                      <span class="pk9-badge pk9-badge-verified">✓ Nguồn thật đã kiểm duyệt</span>
+                      <span class="pk9-badge pk9-badge-verified">${isDone ? '✅ Đã làm' : '✓ Nguồn thật đã kiểm duyệt'}</span>
                     </div>
                     <h4>${esc(ex.title)}</h4>
                     <div class="pk9-exam-origin">
@@ -528,7 +693,7 @@
                   </div>
                   <div class="pk9-exam-actions">
                     <button type="button" class="pk9-btn-exam-primary" data-start-exam="${esc(ex.id)}">
-                      ⚡ Vào phòng thi & Chấm điểm
+                      ${isDone ? '🔄 Làm lại & Nâng điểm' : '⚡ Vào phòng thi & Chấm điểm'}
                     </button>
                     ${pdfPath ? `
                       <button type="button" class="pk9-btn-exam-ghost" data-start-split="${esc(ex.id)}" title="Làm bài song song với file PDF gốc">
@@ -541,9 +706,59 @@
                   </div>
                 </article>
               `;
-            }).join('')}
+            }).join('') : `
+              <div style="grid-column:1/-1;padding:2rem;text-align:center;background:var(--pk9-surface);border-radius:1rem;border:1px dashed var(--pk9-border);color:var(--pk9-text-muted);">
+                Không có đề thi phù hợp bộ lọc hiện tại. Thử chuyển sang <b>Tất cả môn</b> hoặc <b>Chưa làm / Đã làm</b> nhé!
+              </div>
+            `}
           </div>
         `}
+      </div>
+    `;
+  }
+
+  function renderBookmarksSection(bookmarks, q) {
+    const list = (bookmarks || []).filter(b => {
+      if (!q) return true;
+      return `${b.text || ''} ${b.topic || ''} ${b.subject || ''} ${b.examTitle || ''}`.toLowerCase().includes(q);
+    });
+    if (!list.length) {
+      return `
+        <div style="padding:2.2rem 1.5rem;text-align:center;background:var(--pk9-surface);border-radius:1.15rem;border:1px dashed var(--pk9-border);">
+          <div style="font-size:2rem;margin-bottom:0.4rem;">📌</div>
+          <div style="font-weight:800;font-size:1rem;margin-bottom:0.25rem;">Chưa có câu hỏi nào được lưu</div>
+          <div style="font-size:0.84rem;color:var(--pk9-text-muted);max-width:460px;margin:0 auto;">
+            Trong lúc làm đề thi, hãy bấm nút <b>📌 Lưu câu</b> ở những câu hay hoặc câu khó để gom lại ôn tập tại đây!
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="pk9-exam-grid">
+        ${list.map(b => `
+          <article class="pk9-exam-card">
+            <div>
+              <div class="pk9-exam-card-badges">
+                <span class="pk9-badge pk9-badge-subj">📘 ${esc(b.subject || 'Tổng hợp')}</span>
+                ${b.topic ? `<span class="pk9-badge pk9-badge-verified">📌 ${esc(b.topic)}</span>` : ''}
+              </div>
+              <div style="font-size:0.86rem;font-weight:700;line-height:1.5;color:var(--pk9-text);margin:0.4rem 0 0.65rem;">
+                ${esc(b.text || 'Câu hỏi đã lưu')}
+              </div>
+              ${b.examTitle ? `<div class="pk9-exam-origin">📄 Đề: ${esc(b.examTitle)} (Câu ${esc(b.number || '?')})</div>` : ''}
+            </div>
+            <div class="pk9-exam-actions">
+              ${b.examId ? `
+                <button type="button" class="pk9-btn-exam-primary" data-start-exam="${esc(b.examId)}">
+                  ⚡ Mở đề thi chứa câu này
+                </button>
+              ` : ''}
+              <button type="button" class="pk9-btn-exam-ghost" data-bookmark-q="${esc(b.id)}">
+                🗑️ Bỏ lưu
+              </button>
+            </div>
+          </article>
+        `).join('')}
       </div>
     `;
   }
@@ -620,32 +835,38 @@
     const p2 = questions.filter(q => normalizeQuestionType(q) === 'truefalse');
     const p3 = questions.filter(q => normalizeQuestionType(q) === 'short');
 
+    const paperTheme = getActivePaperTheme();
     root.innerHTML = `
-      <div class="pk9-exam-room">
+      <div class="pk9-exam-room ${esc(paperTheme)}">
         <div class="pk9-exam-sticky-bar">
-          <div>
-            <div style="font-size:0.76rem;font-weight:800;color:#2563eb;text-transform:uppercase;">
+          <div class="pk9-exam-sticky-head">
+            <div class="pk9-exam-sticky-org">
               🏛️ ${esc(ex.source || ex.sourceOrg || 'Đề thi chính thức')} • ${esc(subjLabel(ex.subject))}
             </div>
-            <div style="font-size:1.02rem;font-weight:900;color:var(--pk9-text,#0f172a);">
+            <div class="pk9-exam-sticky-title">
               ${esc(ex.title)}
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
+          <div class="pk9-exam-sticky-controls">
             <span class="pk9-timer-pill" id="pk9-exam-timer">⏱ ${formatClock(STATE.remainingSec)}</span>
-            <span style="font-size:0.84rem;font-weight:800;padding:0.45rem 0.85rem;border-radius:999px;background:var(--pk9-surface-2,#f1f5f9);">
-              Đã làm: <b id="pk9-exam-progress-text">${answeredCount}/${questions.length}</b>
+            <span class="pk9-exam-progress-pill">
+              <span class="pk9-hide-mob-xs">Đã làm: </span><b id="pk9-exam-progress-text">${answeredCount}/${questions.length}</b>
             </span>
+            <div class="pk9-paper-switch" role="group" aria-label="Nền giấy làm bài">
+              <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-white' ? 'active' : ''}" data-paper-theme="paper-white" title="Nền giấy trắng">⬜ Trắng</button>
+              <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-ivory' ? 'active' : ''}" data-paper-theme="paper-ivory" title="Nền giấy ngà dịu mắt">📜 Ngà</button>
+              <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-softgray' ? 'active' : ''}" data-paper-theme="paper-softgray" title="Nền giấy xám dịu">🌫️ Xám</button>
+            </div>
             ${pdfPath ? `
-              <button type="button" class="pk9-btn-exam-ghost" data-toggle-split-pdf="1">
-                ${STATE.splitPdf ? '📐 Ẩn khung PDF' : '📄 Mở khung PDF gốc'}
+              <button type="button" class="pk9-btn-exam-ghost pk9-exam-pdf-btn" data-toggle-split-pdf="1">
+                ${STATE.splitPdf ? '📐 Ẩn PDF' : '📄 PDF'}
               </button>
             ` : ''}
-            <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1">
-              ✅ Nộp bài & Chấm điểm
+            <button type="button" class="pk9-btn-exam-primary pk9-exam-submit-btn" data-submit-exam="1">
+              ✅ Nộp bài<span class="pk9-hide-mob-xs"> & Chấm điểm</span>
             </button>
-            <button type="button" class="pk9-btn-exam-ghost" data-exit-exam="1">
-              ✕ Thoát
+            <button type="button" class="pk9-btn-exam-ghost pk9-exam-exit-btn" data-exit-exam="1">
+              ✕<span class="pk9-hide-mob-xs"> Thoát</span>
             </button>
           </div>
         </div>
@@ -776,6 +997,7 @@
       `;
     }
 
+    const bookmarked = isQuestionBookmarked(q.id);
     return `
       <div class="pk9-q-card ${done ? 'answered' : ''}" id="pk9-q-${esc(q.id)}">
         <div class="pk9-q-header">
@@ -783,9 +1005,14 @@
             <span>Câu ${q.number || displayIndex} (Phần ${esc(q.section || 'I')})</span>
             ${q.topic ? `<span class="pk9-q-topic-tag">📌 ${esc(q.topic)}</span>` : ''}
           </div>
-          <button type="button" class="pk9-btn-exam-ghost" data-flag-q="${esc(q.id)}" style="padding:0.28rem 0.65rem;font-size:0.75rem;">
-            ${flagged ? '🚩 Đã đánh dấu' : '🏳️ Đánh dấu'}
-          </button>
+          <div style="display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;">
+            <button type="button" class="pk9-btn-exam-ghost" data-bookmark-q="${esc(q.id)}" style="padding:0.28rem 0.65rem;font-size:0.75rem;">
+              ${bookmarked ? '📌 Đã lưu' : '📌 Lưu câu'}
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-flag-q="${esc(q.id)}" style="padding:0.28rem 0.65rem;font-size:0.75rem;">
+              ${flagged ? '🚩 Đã đánh dấu' : '🏳️ Đánh dấu'}
+            </button>
+          </div>
         </div>
         <div class="pk9-q-prompt">${esc(promptText)}</div>
         ${bodyHtml}
@@ -826,6 +1053,8 @@
             </p>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
               ${STATE.xpAwarded > 0 ? `<span class="pk9-badge" style="background:#10b981;color:#fff;">⚡ +${STATE.xpAwarded} XP đã cộng vào BXH Tuần & Top</span>` : `<span class="pk9-badge" style="background:rgba(255,255,255,0.16);color:#fff;">💡 Đăng nhập tài khoản để lưu điểm lên BXH Tuần & Top</span>`}
+              ${STATE.goldAwarded > 0 ? `<span class="pk9-badge" style="background:#f59e0b;color:#fff;">🪙 +${STATE.goldAwarded} Vàng</span>` : ''}
+              ${STATE.diamondsAwarded > 0 ? `<span class="pk9-badge" style="background:#6366f1;color:#fff;">💎 +${STATE.diamondsAwarded} Kim cương</span>` : ''}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:0.55rem;">
@@ -964,14 +1193,35 @@
       const subjBtn = e.target.closest('[data-exam-subj]');
       if (subjBtn) {
         STATE.subjectFilter = subjBtn.getAttribute('data-exam-subj') || 'ALL';
-        if (STATE.view !== 'sources') STATE.view = 'catalog';
+        STATE.view = 'catalog';
         renderExamCenter();
+        return;
+      }
+
+      const statusBtn = e.target.closest('[data-exam-status]');
+      if (statusBtn) {
+        STATE.statusFilter = statusBtn.getAttribute('data-exam-status') || 'ALL';
+        STATE.view = 'catalog';
+        renderExamCenter();
+        return;
+      }
+
+      const paperBtn = e.target.closest('[data-paper-theme]');
+      if (paperBtn) {
+        syncPaperTheme(paperBtn.getAttribute('data-paper-theme'));
+        return;
+      }
+
+      const bookmarkBtn = e.target.closest('[data-bookmark-q]');
+      if (bookmarkBtn) {
+        toggleQuestionBookmark(bookmarkBtn.getAttribute('data-bookmark-q'), bookmarkBtn);
         return;
       }
 
       const viewBtn = e.target.closest('[data-exam-view]');
       if (viewBtn) {
-        STATE.view = STATE.view === 'sources' ? 'catalog' : 'sources';
+        const nextView = viewBtn.getAttribute('data-exam-view') || 'sources';
+        STATE.view = STATE.view === nextView ? 'catalog' : nextView;
         renderExamCenter();
         return;
       }
