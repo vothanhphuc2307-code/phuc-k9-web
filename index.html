@@ -66,8 +66,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="/style.css?v=48" />
-  <link rel="stylesheet" href="/assets/exam-center.css?v=48" />
+  <link rel="stylesheet" href="/style.css?v=49" />
+  <link rel="stylesheet" href="/assets/exam-center.css?v=49" />
 
   <!-- MathJax Configuration for LaTeX Formulas -->
   <script>
@@ -352,7 +352,90 @@
       <span>🏆</span>
       <span>BXH Top</span>
     </button>
+    <button type="button" class="pk9-mob-nav-btn" id="pk9-mob-hub-btn" data-open-mob-hub="1">
+      <span>⚡</span>
+      <span>Tiện ích</span>
+    </button>
   </nav>
+
+  <!-- MOBILE QUICK HUB BOTTOM SHEET (1-TAP ACCESS TO ALL RPG & STUDY TOOLS) -->
+  <div class="pk9-mob-hub-sheet" id="pk9-mob-hub-sheet" role="dialog" aria-modal="true" aria-label="Tiện ích & Học Vui RPG">
+    <div class="pk9-mob-hub-backdrop" data-close-mob-hub="1"></div>
+    <div class="pk9-mob-hub-panel">
+      <div class="pk9-mob-hub-handle"></div>
+      <div class="pk9-mob-hub-head">
+        <div>
+          <strong style="font-size:0.96rem;display:block;">⚡ Trung Tâm Tiện Ích &amp; Học Vui RPG</strong>
+          <div id="pk9-mob-hub-wallet" style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.15rem;">
+            🪙 160 Vàng • 💎 5 KC • 🔥 Chuỗi 1 ngày • ⚡ Cấp 1
+          </div>
+        </div>
+        <button type="button" class="pk9-icon-btn" data-close-mob-hub="1" aria-label="Đóng">✕</button>
+      </div>
+      <div class="pk9-mob-hub-grid">
+        <button type="button" class="pk9-mob-hub-tile hot" data-nav-tab="missions">
+          <span class="pk9-mob-hub-icon">⚡</span>
+          <span class="pk9-mob-hub-label">Luyện Nhiệm Vụ</span>
+          <span class="pk9-mob-hub-sub">Sổ ôn SRS • +Vàng</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="journey">
+          <span class="pk9-mob-hub-icon">🗺️</span>
+          <span class="pk9-mob-hub-label">Vượt Đảo RPG</span>
+          <span class="pk9-mob-hub-sub">Hành trình ải</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="shop">
+          <span class="pk9-mob-hub-icon">🛍️</span>
+          <span class="pk9-mob-hub-label">Cửa Hàng &amp; Đồ</span>
+          <span class="pk9-mob-hub-sub">Thay đồ • Vật phẩm</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="periodic">
+          <span class="pk9-mob-hub-icon">⚗️</span>
+          <span class="pk9-mob-hub-label">Bảng Tuần Hoàn</span>
+          <span class="pk9-mob-hub-sub">118 nguyên tố</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="idcard">
+          <span class="pk9-mob-hub-icon">🪪</span>
+          <span class="pk9-mob-hub-label">Thẻ Học Viên QR</span>
+          <span class="pk9-mob-hub-sub">Nhân vật &amp; Châm ngôn</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="flashcards">
+          <span class="pk9-mob-hub-icon">🃏</span>
+          <span class="pk9-mob-hub-label">Flashcards 3D</span>
+          <span class="pk9-mob-hub-sub">Lật thẻ công thức</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="docs">
+          <span class="pk9-mob-hub-icon">📚</span>
+          <span class="pk9-mob-hub-label">Thư Viện PDF</span>
+          <span class="pk9-mob-hub-sub">84+ Ebook &amp; Đề</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="archive">
+          <span class="pk9-mob-hub-icon">🗂️</span>
+          <span class="pk9-mob-hub-label">Kho Tổng Ôn</span>
+          <span class="pk9-mob-hub-sub">Tài liệu 2K8/2K9</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="planner">
+          <span class="pk9-mob-hub-icon">⏱️</span>
+          <span class="pk9-mob-hub-label">Bàn Pomodoro</span>
+          <span class="pk9-mob-hub-sub">Tập trung 25p/50p</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="ai">
+          <span class="pk9-mob-hub-icon">🤖</span>
+          <span class="pk9-mob-hub-label">Gia Sư AI 24/7</span>
+          <span class="pk9-mob-hub-sub">Giải bài chi tiết</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="community">
+          <span class="pk9-mob-hub-icon">🤝</span>
+          <span class="pk9-mob-hub-label">Cộng Đồng K9</span>
+          <span class="pk9-mob-hub-sub">Chia sẻ tài liệu</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-open-auth="profile" data-close-mob-hub="1">
+          <span class="pk9-mob-hub-icon">⚙️</span>
+          <span class="pk9-mob-hub-label">Tài Khoản &amp; PIN</span>
+          <span class="pk9-mob-hub-sub">Hồ sơ • Khôi phục</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- AUTH & PROFILE MODAL -->
   <div class="pk9-modal-backdrop" id="pk9-auth-modal" role="dialog" aria-modal="true">
@@ -381,8 +464,8 @@
   <script src="/assets/pk9-2k9-manifest.js"></script>
   <script src="/assets/pk9-2k8-curated.js"></script>
   <script src="/assets/pk9-2k8-dgnl.js"></script>
-  <script src="/assets/exam-center.js?v=48"></script>
-  <script src="/assets/pk9-rpg.js?v=48"></script>
-  <script src="/assets/pk9-app.js?v=48"></script>
+  <script src="/assets/exam-center.js?v=49"></script>
+  <script src="/assets/pk9-rpg.js?v=49"></script>
+  <script src="/assets/pk9-app.js?v=49"></script>
 </body>
 </html>

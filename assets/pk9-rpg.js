@@ -430,6 +430,65 @@
     `;
   }
 
+  function renderWeeklyScheduleStrip(rpg) {
+    const now = new Date();
+    const vnNow = new Date(now.getTime() + 7 * 3600 * 1000);
+    const dayOfWeek = vnNow.getUTCDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const checkedToday = Boolean(rpg.checkin?.checked_today);
+    const streak = Math.max(0, Number(rpg.checkin?.streak || 0));
+    const dueCount = Number(rpg.srs?.due_count || 0);
+    const missions = Array.isArray(rpg.missions) ? rpg.missions : [];
+    const doneMissions = missions.filter(m => m.completed).length;
+    const totalMissions = missions.length || 4;
+
+    const daysHtml = labels.map((lb, idx) => {
+      const d = new Date(vnNow.getTime() + (mondayOffset + idx) * 86400000);
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const diffFromToday = todayIdx - idx;
+      let status = 'upcoming';
+      let icon = '•';
+      if (idx === todayIdx) {
+        status = checkedToday ? 'done today' : 'today';
+        icon = checkedToday ? '✓' : '🔥';
+      } else if (diffFromToday > 0) {
+        const coveredByStreak = checkedToday ? diffFromToday < streak : diffFromToday <= streak;
+        status = coveredByStreak ? 'done' : 'makeup';
+        icon = coveredByStreak ? '✓' : '!';
+      }
+      return `
+        <div class="pk9-week-day ${status}" title="${lb} (${dd}/${mm})">
+          <span class="pk9-week-day-lb">${lb}</span>
+          <span class="pk9-week-day-num">${dd}/${mm}</span>
+          <span class="pk9-week-day-dot">${icon}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="pk9-weekly-schedule">
+        <div class="pk9-weekly-head">
+          <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+            <strong style="font-size:0.84rem;color:var(--pk9-text);">📅 Lịch Của Em • Chuỗi ${streak} Ngày</strong>
+            <span class="pk9-badge pk9-badge-subj" style="font-size:0.7rem;">Nhiệm vụ ngày: ${doneMissions}/${totalMissions}</span>
+            ${dueCount > 0 ? `<span class="pk9-badge" style="background:rgba(239,68,68,0.14);color:#dc2626;font-size:0.7rem;">⏰ Cần ôn bù: ${dueCount} câu SRS</span>` : `<span class="pk9-badge pk9-badge-verified" style="font-size:0.7rem;">✓ Không nợ bài SRS</span>`}
+          </div>
+          <div class="pk9-weekly-QuickActions">
+            ${!checkedToday ? `<button type="button" class="pk9-admin-btn-xs" data-rpg-checkin="1" style="background:#10b981;color:#fff;border:none;">🎁 Điểm danh (+30🪙)</button>` : ''}
+            ${dueCount > 0 ? `<button type="button" class="pk9-admin-btn-xs" data-nav-tab="missions" style="background:#ef4444;color:#fff;border:none;">📕 Ôn bù ${dueCount} câu ›</button>` : ''}
+            <button type="button" class="pk9-admin-btn-xs" data-nav-tab="missions">⚡ Làm nhiệm vụ (${doneMissions}/${totalMissions}) ›</button>
+          </div>
+        </div>
+        <div class="pk9-weekly-days-grid">
+          ${daysHtml}
+        </div>
+      </div>
+    `;
+  }
+
   // Render compact RPG Hero Bar inside tab-home
   function renderHomeRpgWidget(user, isAdmin) {
     const rpg = getRpgState();
@@ -482,6 +541,7 @@
             </button>
           </div>
         </div>
+        ${renderWeeklyScheduleStrip(rpg)}
       </div>
     `;
   }
@@ -1323,9 +1383,15 @@
     document.addEventListener('input', e => {
       if (e.target && e.target.id === 'pk9-pt-search-input') {
         RPG_UI.ptSearch = e.target.value || '';
-        renderPeriodicTab();
-        const inp = document.getElementById('pk9-pt-search-input');
-        if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+        const q = RPG_UI.ptSearch.trim().toLowerCase();
+        document.querySelectorAll('#tab-periodic [data-pt-pick]').forEach(btn => {
+          const z = Number(btn.getAttribute('data-pt-pick'));
+          const el = ELEMENT_BY_Z.get(z);
+          if (el) {
+            const match = !q || `${el.z} ${el.sym} ${el.name}`.toLowerCase().includes(q);
+            btn.classList.toggle('dimmed', !match);
+          }
+        });
       }
     });
 

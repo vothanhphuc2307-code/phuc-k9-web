@@ -3530,3 +3530,240 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
     justify-items: start;
   }
 }
+
+/* ==========================================================================
+ * v49 — MOBILE QUICK HUB SHEET & WEEKLY SCHEDULE STRIP ("LỊCH CỦA EM")
+ * ========================================================================== */
+@media (max-width: 1024px) {
+  .pk9-mobile-bottom-nav {
+    grid-template-columns: repeat(6, 1fr) !important;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+  }
+  .pk9-mob-nav-btn {
+    font-size: 0.64rem;
+    padding: 0.28rem 0.1rem;
+    letter-spacing: -0.01em;
+  }
+}
+
+.pk9-mob-hub-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: none;
+}
+
+.pk9-mob-hub-sheet.open {
+  display: block;
+}
+
+.pk9-mob-hub-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(4px);
+}
+
+.pk9-mob-hub-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--pk9-surface);
+  border-top: 1px solid var(--pk9-border);
+  border-radius: 1.35rem 1.35rem 0 0;
+  padding: 0.55rem 0.95rem calc(4.8rem + env(safe-area-inset-bottom, 0px));
+  max-height: 82vh;
+  overflow-y: auto;
+  box-shadow: 0 -16px 40px rgba(15, 23, 42, 0.25);
+  animation: pk9FadeSlideUp 0.2s ease;
+}
+
+.pk9-mob-hub-handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--pk9-border);
+  margin: 0 auto 0.55rem;
+}
+
+.pk9-mob-hub-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.7rem;
+  border-bottom: 1px solid var(--pk9-border);
+}
+
+.pk9-mob-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (max-width: 370px) {
+  .pk9-mob-hub-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pk9-mob-hub-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.18rem;
+  padding: 0.62rem 0.68rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--pk9-border);
+  background: var(--pk9-surface-2);
+  color: var(--pk9-text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease;
+}
+
+.pk9-mob-hub-tile:active {
+  transform: scale(0.97);
+}
+
+.pk9-mob-hub-tile.hot {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.pk9-mob-hub-icon {
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
+.pk9-mob-hub-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pk9-mob-hub-sub {
+  font-size: 0.66rem;
+  color: var(--pk9-text-muted);
+  line-height: 1.2;
+}
+
+/* Weekly Study Schedule Strip ("Lịch của em") */
+.pk9-weekly-schedule {
+  margin-top: 0.75rem;
+  padding: 0.72rem 0.85rem;
+  border-radius: 0.95rem;
+  background: var(--pk9-surface-2);
+  border: 1px solid var(--pk9-border);
+}
+
+.pk9-weekly-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.55rem;
+}
+
+.pk9-weekly-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--pk9-text);
+}
+
+.pk9-weekly-sub {
+  font-size: 0.74rem;
+  color: var(--pk9-text-muted);
+}
+
+.pk9-weekly-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.pk9-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.36rem 0.2rem;
+  border-radius: 0.68rem;
+  border: 1px solid var(--pk9-border);
+  background: var(--pk9-surface);
+  font-size: 0.7rem;
+  gap: 0.12rem;
+}
+
+.pk9-week-day.today {
+  border-color: var(--pk9-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.pk9-week-day.done {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.38);
+}
+
+.pk9-week-day-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--pk9-text-muted);
+}
+
+.pk9-week-day.today .pk9-week-day-label {
+  color: var(--pk9-primary);
+}
+
+.pk9-week-day-num {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--pk9-text);
+}
+
+.pk9-week-day-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.pk9-weekly-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.pk9-weekly-task-chip {
+  border: 1px solid var(--pk9-border);
+  background: var(--pk9-surface);
+  color: var(--pk9-text);
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.73rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pk9-weekly-task-chip.warn {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+.pk9-weekly-task-chip.hot {
+  border-color: rgba(225, 29, 72, 0.4);
+  background: rgba(225, 29, 72, 0.1);
+  color: #e11d48;
+}
+
+.pk9-weekly-task-chip.ok {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+

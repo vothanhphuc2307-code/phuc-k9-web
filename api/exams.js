@@ -1,21 +1,17 @@
 const { getRedis } = require('../lib/redis');
-const { getSession, sendJson } = require('../lib/auth');
+const { getSession, sendJson, isAdminUsername, isAdminAccount, getUserByUsername } = require('../lib/auth');
 const { normalizeScoring, questionNeedsReview, validateExamStructure } = require('../lib/exam-utils');
 const SEED = require('../lib/seed-exams');
 const crypto = require('crypto');
 
-const ADMIN_ENV = 'ADMIN_USERNAME';
 const key = (...p) => 'phuc:exam:' + p.join(':');
 const clean = (v, max = 400) => String(v ?? '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, max);
 
-function admins() {
-  return String(process.env[ADMIN_ENV] || process.env.ADMINUSER || '')
-    .split(',')
-    .map(x => x.trim().toLowerCase())
-    .filter(Boolean);
-}
-function isAdmin(u) {
-  return admins().includes(String(u || '').trim().toLowerCase());
+async function isAdminSession(session) {
+  if (!session?.username) return false;
+  if (isAdminUsername(session.username)) return true;
+  const u = await getUserByUsername(session.username);
+  return isAdminAccount(u);
 }
 function csrfOk(req, session) {
   return !session || String(req.headers['x-csrf-token'] || '') === String(session.csrf || '');
@@ -47,7 +43,7 @@ async function redisJsonGet(r, k) {
 
 function normalizeExamMeta(e) {
   e = JSON.parse(JSON.stringify(e || {}));
-  e.program = e.program || (String(e.grade || '') === '12' ? '2k9' : '');
+  e.program = e.program || (String(e.grade || '') === '12' || String(e.grade || '').toUpperCase() === '2K9' ? '2k9' : '');
   e.subject = e.subject || 'other';
   e.year = e.year || '2026';
   e.examType = e.examType || 'other';
@@ -55,7 +51,36 @@ function normalizeExamMeta(e) {
   e.semester = e.semester || '';
   e.examSession = e.examSession || '';
   e.originUrl = e.originUrl || '';
+  e.source = e.source || e.sourceOrg || '';
+  if (e.duration === undefined && e.durationMin !== undefined) {
+    e.duration = Number(e.durationMin) || 50;
+  }
   e.periodLabel = e.periodLabel || ([e.examType, e.semester, e.year].filter(Boolean).join(' • ') || 'Kỳ thi chuẩn cấu trúc');
+  if (Array.isArray(e.questions)) {
+    e.questions = e.questions.map((q, idx) => {
+      if (!q || typeof q !== 'object') return q;
+      const nq = { ...q };
+      if (!nq.text && nq.prompt) nq.text = String(nq.prompt);
+      if (!nq.number) nq.number = idx + 1;
+      if (nq.type === 'true_false') nq.type = 'truefalse';
+      if (nq.type === 'short_answer') nq.type = 'short';
+      if (!nq.section) {
+        const p = Number(nq.part);
+        nq.section = p === 2 || nq.type === 'truefalse' ? 'II' : p === 3 || nq.type === 'short' ? 'III' : 'I';
+      }
+      if (nq.type === 'mcq') {
+        if (!Array.isArray(nq.options) && Array.isArray(nq.choices)) nq.options = nq.choices;
+        if (typeof nq.answer === 'number' && nq.answer >= 0 && nq.answer < 26) {
+          nq.answer = String.fromCharCode(65 + nq.answer);
+        }
+      }
+      if (nq.type === 'short' && Array.isArray(nq.answer)) {
+        nq.acceptedAnswers = nq.answer.map(String);
+        nq.answer = String(nq.answer[0] ?? '');
+      }
+      return nq;
+    });
+  }
   e.scoring = normalizeScoring(e);
   return e;
 }
@@ -210,7 +235,15 @@ function grade(exam, answers) {
         const item = q.statements[i];
         const one = v !== null && v === !!item.answer;
         if (one) c++;
-        detail.push({ index: i, text: item.text, userChoice: v, expected: !!item.answer, correct: one });
+        detail.push({
+          index: i,
+          text: item.text,
+          user: v,
+          answer: !!item.answer,
+          userChoice: v,
+          expected: !!item.answer,
+          correct: one
+        });
       }
       pts = Number(tfScale[Math.min(c, tfScale.length - 1)] || 0);
       ok = c === (q.statements || []).length;
@@ -231,6 +264,8 @@ function grade(exam, answers) {
     tStat.maxPts = Number((tStat.maxPts + maxPts).toFixed(2));
     topicMap.set(topicName, tStat);
 
+    const earnedNum = Number(pts.toFixed(2));
+    const maxNum = Number(maxPts.toFixed(2));
     review.push({
       id: q.id,
       number: q.number,
@@ -240,14 +275,18 @@ function grade(exam, answers) {
       text: q.text,
       options: q.type === 'mcq' ? q.options : undefined,
       userAnswer: a ?? null,
-      points: Number(pts.toFixed(2)),
-      maxPoints: Number(maxPts.toFixed(2)),
+      earned: earnedNum,
+      max: maxNum,
+      points: earnedNum,
+      maxPoints: maxNum,
+      status: ok ? 'correct' : earnedNum > 0 ? 'partial' : 'wrong',
       correct: ok,
       correctAnswer: q.type === 'mcq'
         ? q.answer
         : q.type === 'short'
-        ? (q.acceptedAnswers || [q.answer])
+        ? (Array.isArray(q.acceptedAnswers) && q.acceptedAnswers.length ? q.acceptedAnswers[0] : q.answer)
         : (q.statements || []).map(s => !!s.answer),
+      acceptedAnswers: q.type === 'short' ? (q.acceptedAnswers || [q.answer]) : undefined,
       statements: detail,
       explanation: q.explanation || '',
       sourcePage: q.sourcePage,
@@ -342,8 +381,9 @@ async function handler(req, res) {
       }
 
       if (action === 'admin-list') {
-        if (!session || !isAdmin(session.username)) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
-        const ids = new Set(SEED.map(x => x.id));
+        if (!(await isAdminSession(session))) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
+        const seedIdSet = new Set(SEED.map(x => x.id));
+        const ids = new Set(seedIdSet);
         try {
           for (const id of (await r.smembers('phuc:exam:index')) || []) ids.add(String(id));
         } catch {}
@@ -367,6 +407,7 @@ async function handler(req, res) {
               duration: x.duration,
               questionCount: (x.questions || []).length,
               published: x.published !== false,
+              isSeed: seedIdSet.has(x.id),
               reviewCount: (x.questions || []).filter(questionNeedsReview).length,
               updatedAt: x.updatedAt || x.createdAt || null
             });
@@ -377,7 +418,7 @@ async function handler(req, res) {
       }
 
       if (action === 'admin-get') {
-        if (!session || !isAdmin(session.username)) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
+        if (!(await isAdminSession(session))) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
         const e = await getExam(r, id);
         if (!e) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy đề.' });
         return sendJson(res, 200, { ok: true, exam: adminExam(e) });
@@ -413,13 +454,13 @@ async function handler(req, res) {
     const body = await parseBody(req);
 
     // Admin actions require authenticated admin + CSRF
-    if (['admin-import', 'publish', 'unpublish'].includes(action)) {
+    if (['admin-import', 'publish', 'unpublish', 'delete'].includes(action)) {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Hãy đăng nhập tài khoản quản trị.' });
       if (!csrfOk(req, session)) return sendJson(res, 403, { ok: false, message: 'CSRF không hợp lệ.' });
-      if (!isAdmin(session.username)) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
+      if (!(await isAdminSession(session))) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
 
       if (action === 'admin-import') {
-        let e = body.exam;
+        let e = normalizeExamMeta(body.exam);
         const structErr = validateExamStructure(e);
         if (structErr) return sendJson(res, 400, { ok: false, message: structErr });
         const existing = await getExam(r, clean(e.id, 200));
@@ -440,16 +481,25 @@ async function handler(req, res) {
         e.semester = clean(e.semester, 40);
         e.examSession = clean(e.examSession, 80);
         e.periodLabel = clean(e.periodLabel, 120);
-        e.published = false;
+        const needs = (e.questions || []).filter(questionNeedsReview);
+        const wantPub = Boolean(body.publish_now) && needs.length === 0;
+        e.published = wantPub;
+        if (wantPub) e.publishedAt = Date.now();
         e.updatedAt = Date.now();
         e.updatedBy = session.username;
         await r.set(key('def', e.id), JSON.stringify(e));
         try { await r.sadd('phuc:exam:index', e.id); } catch {}
-        return sendJson(res, 200, { ok: true, message: 'Đã lưu đề ở trạng thái nháp.', exam: adminExam(e) });
+        return sendJson(res, 200, {
+          ok: true,
+          exam_id: e.id,
+          published: e.published,
+          message: wantPub ? 'Đã nhập và xuất bản đề thi thành công!' : 'Đã lưu đề ở trạng thái nháp.',
+          exam: adminExam(e)
+        });
       }
 
       if (action === 'publish') {
-        const e = await getExam(r, clean(body.id, 200));
+        const e = await getExam(r, clean(body.id || body.exam_id, 200));
         if (!e) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy đề.' });
         const needs = (e.questions || []).filter(questionNeedsReview);
         if (needs.length) {
@@ -464,17 +514,25 @@ async function handler(req, res) {
         e.updatedBy = session.username;
         await r.set(key('def', e.id), JSON.stringify(e));
         try { await r.sadd('phuc:exam:index', e.id); } catch {}
-        return sendJson(res, 200, { ok: true, exam: publicExam(e) });
+        return sendJson(res, 200, { ok: true, message: 'Đã xuất bản đề thi.', exam: publicExam(e) });
       }
 
       if (action === 'unpublish') {
-        const e = await getExam(r, clean(body.id, 200));
+        const e = await getExam(r, clean(body.id || body.exam_id, 200));
         if (!e) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy đề.' });
         e.published = false;
         e.updatedAt = Date.now();
         e.updatedBy = session.username;
         await r.set(key('def', e.id), JSON.stringify(e));
         return sendJson(res, 200, { ok: true, message: 'Đã chuyển đề về trạng thái nháp.' });
+      }
+
+      if (action === 'delete') {
+        const targetId = clean(body.id || body.exam_id, 200);
+        if (!targetId) return sendJson(res, 400, { ok: false, message: 'Thiếu mã đề.' });
+        await r.del(key('def', targetId));
+        try { if (typeof r.srem === 'function') await r.srem('phuc:exam:index', targetId); } catch {}
+        return sendJson(res, 200, { ok: true, message: 'Đã xóa bản lưu đề tùy chỉnh.' });
       }
     }
 

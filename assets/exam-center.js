@@ -39,6 +39,16 @@
     answers: {},
     flagged: {},
     splitPdf: false,
+    focusSingleQ: (() => {
+      try {
+        return localStorage.getItem('pk9_exam_single_q') === '1';
+      } catch {
+        return false;
+      }
+    })(),
+    currentQIdx: 0,
+    paletteDrawerOpen: false,
+    serverSaveTimer: null,
     startedAt: 0,
     remainingSec: 0,
     timerId: null,
@@ -369,6 +379,58 @@
     }
   }
 
+  function readExamDraft(examId) {
+    try {
+      const raw = localStorage.getItem(`pk9_exam_draft_${examId}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      if (parsed._v === 2 && parsed.answers && typeof parsed.answers === 'object') {
+        return {
+          answers: parsed.answers,
+          flagged: parsed.flagged && typeof parsed.flagged === 'object' ? parsed.flagged : {},
+          remainingSec: Number(parsed.remainingSec || 0),
+          attemptId: parsed.attemptId || null,
+          currentQIdx: Number(parsed.currentQIdx || 0)
+        };
+      }
+      return {
+        answers: parsed,
+        flagged: {},
+        remainingSec: 0,
+        attemptId: null,
+        currentQIdx: 0
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function hasSavedDraft(examId) {
+    const d = readExamDraft(examId);
+    if (!d || !d.answers) return false;
+    return Object.keys(d.answers).some(k => {
+      const v = d.answers[k];
+      if (Array.isArray(v)) return v.some(x => typeof x === 'boolean');
+      return String(v ?? '').trim() !== '';
+    });
+  }
+
+  function persistLocalDraftNow() {
+    if (!STATE.activeExam) return;
+    try {
+      localStorage.setItem(`pk9_exam_draft_${STATE.activeExam.id}`, JSON.stringify({
+        _v: 2,
+        answers: STATE.answers,
+        flagged: STATE.flagged,
+        remainingSec: STATE.remainingSec,
+        attemptId: STATE.attemptId,
+        currentQIdx: STATE.currentQIdx,
+        savedAt: Date.now()
+      }));
+    } catch {}
+  }
+
   function startTimer() {
     stopTimer();
     STATE.timerId = setInterval(() => {
@@ -377,6 +439,7 @@
         return;
       }
       STATE.remainingSec = Math.max(0, STATE.remainingSec - 1);
+      if (STATE.remainingSec % 5 === 0) persistLocalDraftNow();
       const timerEl = document.getElementById('pk9-exam-timer');
       if (timerEl) {
         timerEl.textContent = `⏱ ${formatClock(STATE.remainingSec)}`;
@@ -391,7 +454,8 @@
 
   async function startExamById(examId, openSplitPdf = false) {
     let fullExam = findFullSeedExam(examId);
-    let attemptId = `local-${examId}-${Date.now()}`;
+    const draft = readExamDraft(examId);
+    let attemptId = draft?.attemptId || `local-${examId}-${Date.now()}`;
 
     try {
       const resp = await fetch('/api/exams?action=start', {
@@ -425,31 +489,52 @@
       return;
     }
 
-    let savedAnswers = {};
-    try {
-      const rawDraft = localStorage.getItem(`pk9_exam_draft_${examId}`);
-      if (rawDraft) savedAnswers = JSON.parse(rawDraft) || {};
-    } catch {}
+    const defaultSec = Number(fullExam.duration || fullExam.durationMinutes || 50) * 60;
+    const restoredSec = (draft && draft.remainingSec > 30 && draft.remainingSec <= defaultSec)
+      ? draft.remainingSec
+      : defaultSec;
+    const hadProgress = hasSavedDraft(examId);
 
     const pdfPath = fullExam.sourceFile || fullExam.pdfUrl || '';
     STATE.activeExam = fullExam;
     STATE.attemptId = attemptId;
-    STATE.answers = savedAnswers;
-    STATE.flagged = {};
+    STATE.answers = draft?.answers || {};
+    STATE.flagged = draft?.flagged || {};
+    STATE.currentQIdx = Math.max(0, Math.min((fullExam.questions || []).length - 1, Number(draft?.currentQIdx || 0)));
+    STATE.paletteDrawerOpen = false;
     STATE.splitPdf = Boolean(openSplitPdf && pdfPath);
     STATE.startedAt = Date.now();
-    STATE.remainingSec = Number(fullExam.duration || fullExam.durationMinutes || 50) * 60;
+    STATE.remainingSec = restoredSec;
     STATE.view = 'taking';
+    persistLocalDraftNow();
     renderExamCenter();
     startTimer();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (hadProgress && window.PK9_TOAST) {
+      window.PK9_TOAST('🔄 Đã khôi phục bài làm dở, câu đánh dấu & thời gian còn lại!', 'info');
+    }
   }
 
   function saveDraftDebounced() {
     if (!STATE.activeExam) return;
-    try {
-      localStorage.setItem(`pk9_exam_draft_${STATE.activeExam.id}`, JSON.stringify(STATE.answers));
-    } catch {}
+    persistLocalDraftNow();
+    if (STATE.serverSaveTimer) clearTimeout(STATE.serverSaveTimer);
+    STATE.serverSaveTimer = setTimeout(() => {
+      if (STATE.view !== 'taking' || !STATE.activeExam || !STATE.attemptId || String(STATE.attemptId).startsWith('local-')) return;
+      fetch('/api/exams?action=save', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: JSON.stringify({
+          attemptId: STATE.attemptId,
+          attempt_id: STATE.attemptId,
+          answers: STATE.answers
+        })
+      }).catch(() => {});
+    }, 3500);
   }
 
   async function submitActiveExam(autoSubmitted = false) {
@@ -568,11 +653,13 @@
     }
   }
 
-  function renderCatalogView(root) {
-    const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
+  function buildCatalogDynamicHtml() {
     const q = STATE.searchQuery.trim().toLowerCase();
     const bookmarks = getBookmarksList();
     const doneIds = STATE.doneExamIds;
+    const sourcesList = Array.isArray(window.PK9_EXAM_SOURCES) ? window.PK9_EXAM_SOURCES : [];
+    const refDocs = Array.isArray(window.PHUC_PDF_REFERENCE_V27) ? window.PHUC_PDF_REFERENCE_V27 : [];
+
     const filteredBySubjAndQ = STATE.exams.filter(ex => {
       const sName = subjLabel(ex.subject);
       if (STATE.subjectFilter !== 'ALL' && sName !== STATE.subjectFilter) return false;
@@ -587,6 +674,90 @@
       if (STATE.statusFilter === 'done' && !isDone) return false;
       return true;
     });
+
+    return `
+      ${STATE.view === 'catalog' ? `
+        <div class="pk9-exam-status-bar">
+          <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'ALL' ? 'active' : ''}" data-exam-status="ALL">
+            📋 Tất cả (${filteredBySubjAndQ.length})
+          </button>
+          <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'todo' ? 'active' : ''}" data-exam-status="todo">
+            ⚡ Chưa làm (${todoCount})
+          </button>
+          <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'done' ? 'active' : ''}" data-exam-status="done">
+            ✅ Đã làm (${doneCount})
+          </button>
+        </div>
+      ` : ''}
+
+      ${STATE.view === 'sources' ? renderVerifiedSourcesSection(sourcesList, refDocs, q)
+        : STATE.view === 'bookmarks' ? renderBookmarksSection(bookmarks, q)
+        : `
+        <div class="pk9-exam-grid">
+          ${filtered.length ? filtered.map(ex => {
+            const qCount = ex.questionCount || (ex.questions ? ex.questions.length : 22);
+            const sName = subjLabel(ex.subject);
+            const pdfPath = ex.sourceFile || ex.pdfUrl || '';
+            const duration = ex.duration || ex.durationMinutes || 50;
+            const isDone = doneIds.has(String(ex.id));
+            const hasDraft = hasSavedDraft(ex.id);
+            return `
+              <article class="pk9-exam-card">
+                <div>
+                  <div class="pk9-exam-card-badges">
+                    <span class="pk9-badge pk9-badge-subj">📘 ${esc(sName)} • Khối ${esc(ex.grade || '12')}</span>
+                    ${hasDraft ? `<span class="pk9-badge pk9-badge-draft">⏳ Đang làm dở</span>` : ''}
+                    <span class="pk9-badge pk9-badge-verified">${isDone ? '✅ Đã làm' : '✓ Nguồn thật đã kiểm duyệt'}</span>
+                  </div>
+                  <h4>${esc(ex.title)}</h4>
+                  <div class="pk9-exam-origin">
+                    🏛️ <b>Nguồn đề:</b> ${esc(ex.source || ex.sourceOrg || 'Bộ GD&ĐT / Sở GD&ĐT')}
+                  </div>
+                  <div class="pk9-exam-meta-row">
+                    <span>⏱ ${esc(duration)} phút</span>
+                    <span>•</span>
+                    <span>📝 ${qCount} câu hỏi (3 phần)</span>
+                    <span>•</span>
+                    <span>🎯 Thang 10đ + Giải chi tiết</span>
+                  </div>
+                </div>
+                <div class="pk9-exam-actions">
+                  <button type="button" class="pk9-btn-exam-primary" data-start-exam="${esc(ex.id)}">
+                    ${hasDraft ? '⏳ Tiếp tục làm bài dở' : isDone ? '🔄 Làm lại & Nâng điểm' : '⚡ Vào phòng thi & Chấm điểm'}
+                  </button>
+                  ${pdfPath ? `
+                    <button type="button" class="pk9-btn-exam-ghost" data-start-split="${esc(ex.id)}" title="Làm bài song song với file PDF gốc">
+                      📄 Thi kèm PDF
+                    </button>
+                    <a href="${esc(getDirectDownloadUrl(pdfPath))}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tải đề PDF về máy">
+                      ⬇️ Tải PDF
+                    </a>
+                  ` : ''}
+                </div>
+              </article>
+            `;
+          }).join('') : `
+            <div style="grid-column:1/-1;padding:2rem;text-align:center;background:var(--pk9-surface);border-radius:1rem;border:1px dashed var(--pk9-border);color:var(--pk9-text-muted);">
+              Không có đề thi phù hợp bộ lọc hiện tại. Thử chuyển sang <b>Tất cả môn</b> hoặc <b>Chưa làm / Đã làm</b> nhé!
+            </div>
+          `}
+        </div>
+      `}
+    `;
+  }
+
+  function updateCatalogDynamicDOM() {
+    const dyn = document.getElementById('pk9-exam-dynamic-body');
+    if (dyn) {
+      dyn.innerHTML = buildCatalogDynamicHtml();
+    } else {
+      renderExamCenter();
+    }
+  }
+
+  function renderCatalogView(root) {
+    const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
+    const bookmarks = getBookmarksList();
 
     let hist = [];
     try { hist = JSON.parse(localStorage.getItem('pk9_exam_history') || '[]'); } catch {}
@@ -651,71 +822,9 @@
           </div>
         </div>
 
-        ${STATE.view === 'catalog' ? `
-          <div class="pk9-exam-status-bar">
-            <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'ALL' ? 'active' : ''}" data-exam-status="ALL">
-              📋 Tất cả (${filteredBySubjAndQ.length})
-            </button>
-            <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'todo' ? 'active' : ''}" data-exam-status="todo">
-              ⚡ Chưa làm (${todoCount})
-            </button>
-            <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'done' ? 'active' : ''}" data-exam-status="done">
-              ✅ Đã làm (${doneCount})
-            </button>
-          </div>
-        ` : ''}
-
-        ${STATE.view === 'sources' ? renderVerifiedSourcesSection(sourcesList, refDocs, q)
-          : STATE.view === 'bookmarks' ? renderBookmarksSection(bookmarks, q)
-          : `
-          <div class="pk9-exam-grid">
-            ${filtered.length ? filtered.map(ex => {
-              const qCount = ex.questionCount || (ex.questions ? ex.questions.length : 22);
-              const sName = subjLabel(ex.subject);
-              const pdfPath = ex.sourceFile || ex.pdfUrl || '';
-              const duration = ex.duration || ex.durationMinutes || 50;
-              const isDone = doneIds.has(String(ex.id));
-              return `
-                <article class="pk9-exam-card">
-                  <div>
-                    <div class="pk9-exam-card-badges">
-                      <span class="pk9-badge pk9-badge-subj">📘 ${esc(sName)} • Khối ${esc(ex.grade || '12')}</span>
-                      <span class="pk9-badge pk9-badge-verified">${isDone ? '✅ Đã làm' : '✓ Nguồn thật đã kiểm duyệt'}</span>
-                    </div>
-                    <h4>${esc(ex.title)}</h4>
-                    <div class="pk9-exam-origin">
-                      🏛️ <b>Nguồn đề:</b> ${esc(ex.source || ex.sourceOrg || 'Bộ GD&ĐT / Sở GD&ĐT')}
-                    </div>
-                    <div class="pk9-exam-meta-row">
-                      <span>⏱ ${esc(duration)} phút</span>
-                      <span>•</span>
-                      <span>📝 ${qCount} câu hỏi (3 phần)</span>
-                      <span>•</span>
-                      <span>🎯 Thang 10đ + Giải chi tiết</span>
-                    </div>
-                  </div>
-                  <div class="pk9-exam-actions">
-                    <button type="button" class="pk9-btn-exam-primary" data-start-exam="${esc(ex.id)}">
-                      ${isDone ? '🔄 Làm lại & Nâng điểm' : '⚡ Vào phòng thi & Chấm điểm'}
-                    </button>
-                    ${pdfPath ? `
-                      <button type="button" class="pk9-btn-exam-ghost" data-start-split="${esc(ex.id)}" title="Làm bài song song với file PDF gốc">
-                        📄 Thi kèm PDF
-                      </button>
-                      <a href="${esc(getDirectDownloadUrl(pdfPath))}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" title="Tải đề PDF về máy">
-                        ⬇️ Tải PDF
-                      </a>
-                    ` : ''}
-                  </div>
-                </article>
-              `;
-            }).join('') : `
-              <div style="grid-column:1/-1;padding:2rem;text-align:center;background:var(--pk9-surface);border-radius:1rem;border:1px dashed var(--pk9-border);color:var(--pk9-text-muted);">
-                Không có đề thi phù hợp bộ lọc hiện tại. Thử chuyển sang <b>Tất cả môn</b> hoặc <b>Chưa làm / Đã làm</b> nhé!
-              </div>
-            `}
-          </div>
-        `}
+        <div id="pk9-exam-dynamic-body">
+          ${buildCatalogDynamicHtml()}
+        </div>
       </div>
     `;
   }
@@ -838,6 +947,10 @@
     const p2 = questions.filter(q => normalizeQuestionType(q) === 'truefalse');
     const p3 = questions.filter(q => normalizeQuestionType(q) === 'short');
 
+    const curIdx = Math.max(0, Math.min(questions.length - 1, Number(STATE.currentQIdx) || 0));
+    STATE.currentQIdx = curIdx;
+    const curQ = questions[curIdx] || null;
+
     const paperTheme = getActivePaperTheme();
     root.innerHTML = `
       <div class="pk9-exam-room ${esc(paperTheme)}">
@@ -860,6 +973,12 @@
               <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-ivory' ? 'active' : ''}" data-paper-theme="paper-ivory" title="Nền giấy ngà dịu mắt">📜 Ngà</button>
               <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-softgray' ? 'active' : ''}" data-paper-theme="paper-softgray" title="Nền giấy xám dịu">🌫️ Xám</button>
             </div>
+            <button type="button" class="pk9-btn-exam-ghost pk9-exam-mode-btn" data-toggle-single-q="1" title="Chuyển chế độ Từng câu / Tất cả câu">
+              ${STATE.focusSingleQ ? '📜 Tất cả' : '📱 Từng câu'}
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost pk9-exam-palette-btn" data-toggle-palette-drawer="1" title="Mở bản đồ câu hỏi">
+              🧭 Bản đồ
+            </button>
             ${pdfPath ? `
               <button type="button" class="pk9-btn-exam-ghost pk9-exam-pdf-btn" data-toggle-split-pdf="1">
                 ${STATE.splitPdf ? '📐 Ẩn PDF' : '📄 PDF'}
@@ -889,29 +1008,67 @@
           ` : ''}
 
           <div class="pk9-exam-questions-col">
-            ${p1.length ? `
-              <div class="pk9-section-banner">
-                <h4>PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn (${p1.length} câu)</h4>
-                <p>Mỗi câu hỏi thí sinh chỉ chọn một phương án A, B, C hoặc D.</p>
+            ${STATE.focusSingleQ && curQ ? `
+              <div class="pk9-single-q-nav">
+                <button type="button" class="pk9-btn-exam-ghost" data-step-q="-1" ${curIdx === 0 ? 'disabled style="opacity:0.45;pointer-events:none;"' : ''}>
+                  ← Câu trước
+                </button>
+                <button type="button" class="pk9-btn-exam-ghost" data-toggle-palette-drawer="1" style="font-weight:900;">
+                  🧭 Câu ${curIdx + 1}/${questions.length} (Phần ${esc(curQ.section || 'I')})
+                </button>
+                ${curIdx < questions.length - 1 ? `
+                  <button type="button" class="pk9-btn-exam-primary" data-step-q="1">
+                    Câu tiếp →
+                  </button>
+                ` : `
+                  <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1">
+                    ✅ Nộp bài
+                  </button>
+                `}
               </div>
-              ${p1.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
-            ` : ''}
+              ${renderQuestionCard(curQ, curIdx + 1)}
+              <div class="pk9-single-q-nav" style="margin-top:0.25rem;">
+                <button type="button" class="pk9-btn-exam-ghost" data-step-q="-1" ${curIdx === 0 ? 'disabled style="opacity:0.45;pointer-events:none;"' : ''}>
+                  ← Câu trước
+                </button>
+                <button type="button" class="pk9-btn-exam-ghost" data-toggle-single-q="1">
+                  📜 Xem toàn bộ ${questions.length} câu
+                </button>
+                ${curIdx < questions.length - 1 ? `
+                  <button type="button" class="pk9-btn-exam-primary" data-step-q="1">
+                    Câu tiếp →
+                  </button>
+                ` : `
+                  <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1">
+                    ✅ Nộp bài
+                  </button>
+                `}
+              </div>
+            ` : `
+              ${p1.length ? `
+                <div class="pk9-section-banner">
+                  <h4>PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn (${p1.length} câu)</h4>
+                  <p>Mỗi câu hỏi thí sinh chỉ chọn một phương án A, B, C hoặc D.</p>
+                </div>
+                ${p1.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
+              ` : ''}
 
-            ${p2.length ? `
-              <div class="pk9-section-banner">
-                <h4>PHẦN II. Câu trắc nghiệm Đúng / Sai (${p2.length} câu — Thang điểm lũy tiến Bộ GD&ĐT)</h4>
-                <p>Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn Đúng hoặc Sai. (Đúng 1 ý: 0,1đ • 2 ý: 0,25đ • 3 ý: 0,5đ • 4 ý: 1,0đ).</p>
-              </div>
-              ${p2.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
-            ` : ''}
+              ${p2.length ? `
+                <div class="pk9-section-banner">
+                  <h4>PHẦN II. Câu trắc nghiệm Đúng / Sai (${p2.length} câu — Thang điểm lũy tiến Bộ GD&ĐT)</h4>
+                  <p>Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn Đúng hoặc Sai. (Đúng 1 ý: 0,1đ • 2 ý: 0,25đ • 3 ý: 0,5đ • 4 ý: 1,0đ).</p>
+                </div>
+                ${p2.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
+              ` : ''}
 
-            ${p3.length ? `
-              <div class="pk9-section-banner">
-                <h4>PHẦN III. Câu trắc nghiệm trả lời ngắn (${p3.length} câu)</h4>
-                <p>Thí sinh tính toán và điền kết quả số (dùng dấu phẩy hoặc dấu chấm cho số thập phân).</p>
-              </div>
-              ${p3.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
-            ` : ''}
+              ${p3.length ? `
+                <div class="pk9-section-banner">
+                  <h4>PHẦN III. Câu trắc nghiệm trả lời ngắn (${p3.length} câu)</h4>
+                  <p>Thí sinh tính toán và điền kết quả số (dùng dấu phẩy hoặc dấu chấm cho số thập phân).</p>
+                </div>
+                ${p3.map((q, idx) => renderQuestionCard(q, idx + 1)).join('')}
+              ` : ''}
+            `}
           </div>
 
           ${!(STATE.splitPdf && pdfPath) ? `
@@ -926,8 +1083,9 @@
                 ${questions.map((q, idx) => {
                   const done = isQuestionAnswered(q, STATE.answers[q.id]);
                   const flag = Boolean(STATE.flagged[q.id]);
+                  const isCur = STATE.focusSingleQ && idx === curIdx;
                   return `
-                    <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''}" data-jump-q="${esc(q.id)}">
+                    <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''} ${isCur ? 'current' : ''}" data-jump-q="${esc(q.id)}" data-jump-idx="${idx}">
                       ${idx + 1}
                     </button>
                   `;
@@ -940,6 +1098,38 @@
               </div>
             </aside>
           ` : ''}
+        </div>
+
+        <div class="pk9-palette-drawer-backdrop ${STATE.paletteDrawerOpen ? 'open' : ''}" id="pk9-exam-palette-drawer" data-close-palette-drawer="1">
+          <div class="pk9-palette-drawer" onclick="event.stopPropagation()">
+            <div class="pk9-palette-drawer-head">
+              <div>
+                <div style="font-weight:900;font-size:0.98rem;">🧭 Bản đồ câu hỏi (<span id="pk9-drawer-progress-text">${answeredCount}/${questions.length}</span> đã làm)</div>
+                <div style="font-size:0.76rem;color:var(--pk9-text-muted,#64748b);">Chạm số câu để chuyển nhanh • 🟩 Đã làm • 🟧 Đánh dấu</div>
+              </div>
+              <button type="button" class="pk9-btn-exam-ghost" data-close-palette-drawer="1" style="padding:0.3rem 0.65rem;">✕ Đóng</button>
+            </div>
+            <div class="pk9-palette-grid" id="pk9-palette-drawer-grid">
+              ${questions.map((q, idx) => {
+                const done = isQuestionAnswered(q, STATE.answers[q.id]);
+                const flag = Boolean(STATE.flagged[q.id]);
+                const isCur = STATE.focusSingleQ && idx === curIdx;
+                return `
+                  <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''} ${isCur ? 'current' : ''}" data-jump-q="${esc(q.id)}" data-jump-idx="${idx}">
+                    ${idx + 1}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+            <div style="margin-top:0.9rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-btn-exam-ghost" data-toggle-single-q="1" style="flex:1;">
+                ${STATE.focusSingleQ ? '📜 Xem tất cả câu' : '📱 Chế độ Từng câu'}
+              </button>
+              <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1" style="flex:1;">
+                ✅ Nộp bài ngay
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -1170,17 +1360,22 @@
     const answeredCount = questions.filter(q => isQuestionAnswered(q, STATE.answers[q.id])).length;
     const progEl = document.getElementById('pk9-exam-progress-text');
     if (progEl) progEl.textContent = `${answeredCount}/${questions.length}`;
-    const palette = document.getElementById('pk9-palette-grid');
-    if (palette) {
-      palette.querySelectorAll('[data-jump-q]').forEach(btn => {
-        const qId = btn.getAttribute('data-jump-q');
-        const qObj = questions.find(x => x.id === qId);
-        if (qObj) {
-          btn.classList.toggle('answered', isQuestionAnswered(qObj, STATE.answers[qId]));
-          btn.classList.toggle('flagged', Boolean(STATE.flagged[qId]));
-        }
-      });
-    }
+    const drawerProgEl = document.getElementById('pk9-drawer-progress-text');
+    if (drawerProgEl) drawerProgEl.textContent = `${answeredCount}/${questions.length}`;
+
+    ['pk9-palette-grid', 'pk9-palette-drawer-grid'].forEach(gridId => {
+      const palette = document.getElementById(gridId);
+      if (palette) {
+        palette.querySelectorAll('[data-jump-q]').forEach(btn => {
+          const qId = btn.getAttribute('data-jump-q');
+          const qObj = questions.find(x => x.id === qId);
+          if (qObj) {
+            btn.classList.toggle('answered', isQuestionAnswered(qObj, STATE.answers[qId]));
+            btn.classList.toggle('flagged', Boolean(STATE.flagged[qId]));
+          }
+        });
+      }
+    });
   }
 
   function renderExamCenter() {
@@ -1209,7 +1404,7 @@
       if (statusBtn) {
         STATE.statusFilter = statusBtn.getAttribute('data-exam-status') || 'ALL';
         STATE.view = 'catalog';
-        renderExamCenter();
+        updateCatalogDynamicDOM();
         return;
       }
 
@@ -1248,6 +1443,41 @@
       const toggleSplit = e.target.closest('[data-toggle-split-pdf]');
       if (toggleSplit) {
         STATE.splitPdf = !STATE.splitPdf;
+        renderExamCenter();
+        return;
+      }
+
+      const togglePaletteBtn = e.target.closest('[data-toggle-palette-drawer]');
+      if (togglePaletteBtn) {
+        STATE.paletteDrawerOpen = !STATE.paletteDrawerOpen;
+        const drawer = document.getElementById('pk9-exam-palette-drawer');
+        if (drawer) drawer.classList.toggle('open', STATE.paletteDrawerOpen);
+        return;
+      }
+
+      const closePaletteBtn = e.target.closest('[data-close-palette-drawer]');
+      if (closePaletteBtn) {
+        STATE.paletteDrawerOpen = false;
+        const drawer = document.getElementById('pk9-exam-palette-drawer');
+        if (drawer) drawer.classList.remove('open');
+        return;
+      }
+
+      const toggleSingleQBtn = e.target.closest('[data-toggle-single-q]');
+      if (toggleSingleQBtn) {
+        STATE.focusSingleQ = !STATE.focusSingleQ;
+        STATE.paletteDrawerOpen = false;
+        saveDraftDebounced();
+        renderExamCenter();
+        return;
+      }
+
+      const stepQBtn = e.target.closest('[data-step-q]');
+      if (stepQBtn && STATE.activeExam) {
+        const delta = Number(stepQBtn.getAttribute('data-step-q') || 0);
+        const total = (STATE.activeExam.questions || []).length;
+        STATE.currentQIdx = Math.max(0, Math.min(total - 1, (STATE.currentQIdx || 0) + delta));
+        saveDraftDebounced();
         renderExamCenter();
         return;
       }
@@ -1298,6 +1528,7 @@
         const qId = flagBtn.getAttribute('data-flag-q');
         STATE.flagged[qId] = !STATE.flagged[qId];
         flagBtn.textContent = STATE.flagged[qId] ? '🚩 Đã đánh dấu' : '🏳️ Đánh dấu';
+        saveDraftDebounced();
         updateTakingProgressUI();
         return;
       }
@@ -1305,6 +1536,21 @@
       const jumpBtn = e.target.closest('[data-jump-q]');
       if (jumpBtn) {
         const qId = jumpBtn.getAttribute('data-jump-q');
+        const qIdx = Number(jumpBtn.getAttribute('data-jump-idx'));
+        if (Number.isFinite(qIdx) && qIdx >= 0) {
+          STATE.currentQIdx = qIdx;
+        } else if (STATE.activeExam?.questions) {
+          const foundIdx = STATE.activeExam.questions.findIndex(x => x.id === qId);
+          if (foundIdx >= 0) STATE.currentQIdx = foundIdx;
+        }
+        STATE.paletteDrawerOpen = false;
+        const drawer = document.getElementById('pk9-exam-palette-drawer');
+        if (drawer) drawer.classList.remove('open');
+        if (STATE.focusSingleQ) {
+          saveDraftDebounced();
+          renderExamCenter();
+          return;
+        }
         const target = document.getElementById(`pk9-q-${qId}`);
         if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
@@ -1312,15 +1558,21 @@
 
       const submitBtn = e.target.closest('[data-submit-exam]');
       if (submitBtn) {
+        STATE.paletteDrawerOpen = false;
         submitActiveExam(false);
         return;
       }
 
       const exitBtn = e.target.closest('[data-exit-exam]');
       if (exitBtn) {
+        persistLocalDraftNow();
         stopTimer();
+        STATE.paletteDrawerOpen = false;
         STATE.view = 'catalog';
         renderExamCenter();
+        if (window.PK9_TOAST) {
+          window.PK9_TOAST('Đã lưu tự động tiến độ & thời gian làm bài để bạn tiếp tục sau!', 'info');
+        }
         return;
       }
 
@@ -1343,12 +1595,7 @@
     document.addEventListener('input', e => {
       if (e.target && e.target.id === 'pk9-exam-search-input') {
         STATE.searchQuery = e.target.value || '';
-        renderExamCenter();
-        const input = document.getElementById('pk9-exam-search-input');
-        if (input) {
-          input.focus();
-          input.setSelectionRange(input.value.length, input.value.length);
-        }
+        updateCatalogDynamicDOM();
         return;
       }
 
@@ -1362,6 +1609,12 @@
         updateTakingProgressUI();
       }
     });
+
+    window.addEventListener('beforeunload', () => {
+      if (STATE.view === 'taking' && STATE.activeExam) {
+        persistLocalDraftNow();
+      }
+    });
   }
 
   async function initExamCenter() {
@@ -1373,6 +1626,14 @@
     init: initExamCenter,
     render: renderExamCenter,
     startExamById,
+    isTakingExam() {
+      return STATE.view === 'taking' && Boolean(STATE.activeExam);
+    },
+    persistDraft: persistLocalDraftNow,
+    async reloadCatalog() {
+      await loadExamCatalog();
+      renderExamCenter();
+    },
     filterBySubject(sub) {
       STATE.subjectFilter = sub || 'ALL';
       STATE.view = 'catalog';

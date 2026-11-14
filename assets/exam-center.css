@@ -972,6 +972,8 @@ html.dark .pk9-exam-room.paper-softgray .pk9-q-card {
   }
   .pk9-exam-submit-btn,
   .pk9-exam-pdf-btn,
+  .pk9-exam-mode-btn,
+  .pk9-exam-palette-btn,
   .pk9-exam-exit-btn {
     min-height: 34px !important;
     padding: 0.28rem 0.56rem !important;
@@ -1011,5 +1013,81 @@ html.dark .pk9-exam-room.paper-softgray .pk9-q-card {
   }
   .pk9-short-input {
     font-size: 16px !important;
+  }
+}
+
+/* v49: Draft Badge, Single-Question Focus Mode & Mobile Palette Drawer */
+.pk9-badge-draft {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.pk9-palette-btn.current {
+  outline: 2.5px solid #2563eb;
+  outline-offset: 1px;
+  font-weight: 900;
+}
+
+.pk9-single-q-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.95rem;
+  background: var(--pk9-surface, #ffffff);
+  border: 1px solid var(--pk9-border, #e2e8f0);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.pk9-palette-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.pk9-palette-drawer-backdrop.open {
+  display: flex;
+}
+
+.pk9-palette-drawer {
+  width: 100%;
+  max-width: 520px;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--pk9-surface, #ffffff);
+  border: 1px solid var(--pk9-border, #e2e8f0);
+  border-radius: 1.25rem;
+  padding: 1rem 1.1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+  animation: pk9SlideUpSheet 0.2s ease-out;
+}
+
+.pk9-palette-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--pk9-border, #e2e8f0);
+}
+
+@keyframes pk9SlideUpSheet {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

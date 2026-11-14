@@ -326,6 +326,14 @@
     const validTabs = ['home', 'lectures', 'exams', 'leaderboard', 'docs', 'khoa-chui', 'archive', 'flashcards', 'community', 'planner', 'ai', 'missions', 'journey', 'shop', 'periodic', 'idcard', 'admin'];
     const prevTab = APP.activeTab;
     const target = validTabs.includes(tabId) ? tabId : 'home';
+
+    if (prevTab === 'exams' && target !== 'exams' && !options.force && window.PK9_EXAM_CENTER?.isTakingExam?.()) {
+      window.PK9_EXAM_CENTER.persistDraft?.();
+      if (typeof window.confirm === 'function' && !window.confirm('Bạn đang trong phòng thi. Chuyển sang mục khác ngay bây giờ? (Hệ thống đã tự động lưu nháp tiến độ & thời gian còn lại để bạn làm tiếp sau)')) {
+        return;
+      }
+    }
+
     APP.activeTab = target;
 
     if (options.courseId) {
@@ -345,6 +353,11 @@
     document.querySelectorAll('[data-nav-tab]').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === target);
     });
+    const mobHubBtn = document.getElementById('pk9-mob-hub-btn');
+    if (mobHubBtn) {
+      mobHubBtn.classList.toggle('active', !['home', 'lectures', 'khoa-chui', 'exams', 'leaderboard'].includes(target));
+    }
+    document.getElementById('pk9-mob-hub-sheet')?.classList.remove('open');
 
     const sidebar = document.getElementById('pk9-sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
@@ -1207,28 +1220,13 @@
 
     // Flatten topics & collect ALL unique PDFs of this selected teacher/course
     const flatTopics = [];
-    const allCoursePdfs = [];
-    const seenCoursePdfUrls = new Set();
-    for (const ch of course.chapters || []) {
-      for (const t of ch.topics || []) {
-        flatTopics.push(t);
-        const pushPdf = (url, label) => {
-          if (!url || seenCoursePdfUrls.has(url)) return;
-          seenCoursePdfUrls.add(url);
-          allCoursePdfs.push({ url, label: label || 'Tài liệu PDF', topicTitle: t.title, chapterTitle: ch.title, topicId: t.id });
-        };
-        if (t.pdfUrl) pushPdf(t.pdfUrl, 'Tài liệu / Đề PDF');
-        if (t.solutionPdfUrl) pushPdf(t.solutionPdfUrl, 'Đáp án / Viết tay PDF');
-        if (Array.isArray(t.pdfs)) t.pdfs.forEach(p => pushPdf(p?.url, p?.label));
-      }
-    }
+    const allCoursePdfs = collectCourseAllPdfs(course, flatTopics);
     const curIdx = flatTopics.findIndex(t => t.id === activeTopic?.id);
     const prevTopic = curIdx > 0 ? flatTopics[curIdx - 1] : null;
     const nextTopic = curIdx >= 0 && curIdx < flatTopics.length - 1 ? flatTopics[curIdx + 1] : null;
 
     const isDone = Boolean(activeTopic && APP.doneMap[activeTopic.id]);
     const prog = countCourseProgress(course);
-    const qFilter = APP.lectureSearch.trim().toLowerCase();
     const pdfQuery = APP.teacherPdfSearch.trim().toLowerCase();
     const filteredCoursePdfs = pdfQuery
       ? allCoursePdfs.filter(p => `${p.topicTitle} ${p.chapterTitle} ${p.label}`.toLowerCase().includes(pdfQuery))
@@ -1257,7 +1255,7 @@
         </div>
       </div>
 
-      <section class="pk9-lecture-hierarchy ${APP.mobileSelectorsCollapsed ? 'mob-collapsed' : ''}" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
+      <section class="pk9-lecture-hierarchy ${APP.mobileSelectorsCollapsed ? 'mob-collapsed' : ''}" id="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
         <div class="pk9-tier-label">
           <span>📚 BƯỚC 1: CHỌN KHỐI LỚP HỌC TẬP</span>
           <button type="button" class="pk9-btn-exam-ghost" data-toggle-theater="1" style="padding:0.35rem 0.75rem;font-size:0.76rem;">
@@ -1385,102 +1383,34 @@
           <div style="font-size:0.85rem;font-weight:800;">
             📚 <b>${esc(course.name)}</b>: ${flatTopics.length} mục bài học • <span style="color:var(--pk9-primary);">${allCoursePdfs.length} file PDF</span> (Đề + Bản viết tay / Đáp án)
           </div>
-          <button type="button" class="pk9-btn-exam-primary" data-toggle-teacher-pdfs="1" style="padding:0.45rem 0.9rem;font-size:0.8rem;">
+          <button type="button" class="pk9-btn-exam-primary" id="pk9-teacher-pdf-toggle-btn" data-toggle-teacher-pdfs="1" data-pdf-total="${allCoursePdfs.length}" style="padding:0.45rem 0.9rem;font-size:0.8rem;">
             ${APP.showTeacherPdfDrawer ? '🔽 Thu gọn Kho PDF' : `📄 Mở Kho Tất Cả PDF (${allCoursePdfs.length} file)`}
           </button>
         </div>
-      ` : ''}
-
-      ${APP.showTeacherPdfDrawer && allCoursePdfs.length ? `
-        <section class="pk9-teacher-pdf-drawer" aria-label="Kho tất cả file PDF của giáo viên">
+        <section class="pk9-teacher-pdf-drawer" id="pk9-teacher-pdf-drawer-sec" style="display:${APP.showTeacherPdfDrawer ? 'block' : 'none'};" aria-label="Kho tất cả file PDF của giáo viên">
           <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.65rem;">
-            <strong style="font-size:0.95rem;">📂 Tất cả File PDF của ${esc(course.teacher)} (${filteredCoursePdfs.length}/${allCoursePdfs.length})</strong>
+            <strong style="font-size:0.95rem;" id="pk9-teacher-pdf-count-label">📂 Tất cả File PDF của ${esc(course.teacher)} (${filteredCoursePdfs.length}/${allCoursePdfs.length})</strong>
             <input type="search" id="pk9-teacher-pdf-search" class="pk9-input" placeholder="🔍 Lọc tên đề / chuyên đề PDF..." value="${esc(APP.teacherPdfSearch)}" style="max-width:320px;margin:0;" />
           </div>
-          <div class="pk9-teacher-pdf-list">
-            ${filteredCoursePdfs.slice(0, 120).map(p => {
-              const dlUrl = toDirectDownloadUrl(p.url);
-              return `
-              <div class="pk9-teacher-pdf-row">
-                <div>
-                  <div style="font-size:0.82rem;font-weight:700;line-height:1.4;">${esc(p.topicTitle)}</div>
-                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.12rem;">${esc(p.chapterTitle)} • <b>${esc(p.label)}</b></div>
-                </div>
-                <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                  <button type="button" class="pk9-pdf-action-btn primary" data-open-inapp-url="${esc(p.url)}" data-open-inapp-title="${esc(`${p.topicTitle} — ${p.label}`)}" data-open-inapp-sub="${esc(course.teacher)} • Kho PDF 2K9">
-                    📖 Đọc ngay
-                  </button>
-                  <button type="button" class="pk9-pdf-action-btn" data-select-topic="${esc(p.topicId)}">
-                    🎯 Tới bài
-                  </button>
-                  ${dlUrl ? `
-                    <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-pdf-action-btn">
-                      ⬇️ Tải PDF
-                    </a>
-                  ` : ''}
-                  <a href="${esc(p.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
-                    ↗️ Drive
-                  </a>
-                </div>
-              </div>
-              `;
-            }).join('')}
+          <div id="pk9-teacher-pdf-list-wrap">
+            ${buildTeacherPdfRowsHtml(course, allCoursePdfs)}
           </div>
-          ${filteredCoursePdfs.length > 120 ? `<div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.45rem;">Đang hiển thị 120/${filteredCoursePdfs.length} file đầu tiên — nhập từ khóa ở ô lọc bên trên để tìm nhanh file cụ thể.</div>` : ''}
         </section>
       ` : ''}
 
-      <div class="pk9-lecture-studio ${APP.theaterMode ? 'theater' : ''}">
+      <div class="pk9-lecture-studio ${APP.theaterMode ? 'theater' : ''}" id="pk9-lecture-studio">
         <aside class="pk9-course-sidebar" id="pk9-course-sidebar">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;">
             <strong style="font-size:0.95rem;">📑 Mục lục: ${course.icon} ${esc(course.shortName || course.name)}</strong>
-            <span class="pk9-badge pk9-badge-verified">${prog.done}/${prog.total} bài (${prog.percent}%)</span>
+            <span class="pk9-badge pk9-badge-verified" id="pk9-course-prog-badge">${prog.done}/${prog.total} bài (${prog.percent}%)</span>
           </div>
           <div class="pk9-topic-track" style="margin-bottom:0.75rem;">
-            <div class="pk9-topic-fill" style="width:${Math.max(4, prog.percent)}%;"></div>
+            <div class="pk9-topic-fill" id="pk9-course-prog-fill" style="width:${Math.max(4, prog.percent)}%;"></div>
           </div>
           <input type="search" id="pk9-lecture-search-input" class="pk9-input" placeholder="🔍 Tìm bài giảng / chuyên đề..." value="${esc(APP.lectureSearch)}" style="margin-top:0;margin-bottom:0.5rem;" />
 
-          <div>
-            ${(course.chapters || []).map(ch => {
-              const topics = (ch.topics || []).filter(t => {
-                if (!qFilter) return true;
-                return `${t.title} ${t.code || ''} ${t.desc || ''}`.toLowerCase().includes(qFilter);
-              });
-              if (!topics.length) return '';
-              const chKey = `${course.id}::${ch.id}`;
-              const isOpen = qFilter
-                ? true
-                : (APP.openChaptersMap[chKey] !== undefined
-                    ? Boolean(APP.openChaptersMap[chKey])
-                    : (ch.id === activeChapter?.id || (course.chapters || []).length <= 2));
-              return `
-                <div class="pk9-chapter-block">
-                  <button type="button" class="pk9-chapter-head" data-toggle-chapter="${esc(chKey)}">
-                    <span>${isOpen ? '▾ ' : '▸ '}${esc(ch.title)}</span>
-                    <span style="font-size:0.72rem;color:var(--pk9-text-muted);flex-shrink:0;">${topics.length} bài</span>
-                  </button>
-                  ${isOpen ? `
-                  <div class="pk9-topic-list">
-                    ${topics.map(t => {
-                      const done = Boolean(APP.doneMap[t.id]);
-                      const act = t.id === activeTopic?.id;
-                      const hasPdf = Boolean(t.pdfUrl || t.solutionPdfUrl || (Array.isArray(t.pdfs) && t.pdfs.length));
-                      const isPdfOnly = t.kind === 'pdf' || (!t.videoId && !t.driveVideoUrl && Boolean(t.pdfUrl));
-                      return `
-                        <button type="button" class="pk9-topic-btn ${act ? 'active' : ''}" data-select-topic="${esc(t.id)}">
-                          <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${isPdfOnly ? '📄 ' : ''}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
-                          <span style="font-size:0.78rem;color:${done ? '#10b981' : 'var(--pk9-text-soft)'};flex-shrink:0;">
-                            ${done ? '✓ Đã học' : esc(t.duration || '45p')}
-                          </span>
-                        </button>
-                      `;
-                    }).join('')}
-                  </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
+          <div id="pk9-lecture-chapters-list">
+            ${buildCourseChaptersListHtml(course, activeChapter, activeTopic)}
           </div>
         </aside>
 
@@ -1502,7 +1432,9 @@
               </div>
             ` : ''}
 
-            ${renderTopicPdfAttachments(activeTopic)}
+            <div id="pk9-topic-pdf-attachments-wrap">
+              ${renderTopicPdfAttachments(activeTopic)}
+            </div>
 
             <div class="pk9-video-info-bar">
               <div style="flex:1 1 min(100%, 200px);min-width:0;">
@@ -1568,6 +1500,114 @@
       `}
     `;
     typeset(root);
+  }
+
+  function collectCourseAllPdfs(course, flatTopicsOut = []) {
+    const allCoursePdfs = [];
+    const seenCoursePdfUrls = new Set();
+    if (!course) return allCoursePdfs;
+    for (const ch of course.chapters || []) {
+      for (const t of ch.topics || []) {
+        flatTopicsOut.push(t);
+        const pushPdf = (url, label) => {
+          if (!url || seenCoursePdfUrls.has(url)) return;
+          seenCoursePdfUrls.add(url);
+          allCoursePdfs.push({ url, label: label || 'Tài liệu PDF', topicTitle: t.title, chapterTitle: ch.title, topicId: t.id });
+        };
+        if (t.pdfUrl) pushPdf(t.pdfUrl, 'Tài liệu / Đề PDF');
+        if (t.solutionPdfUrl) pushPdf(t.solutionPdfUrl, 'Đáp án / Viết tay PDF');
+        if (Array.isArray(t.pdfs)) t.pdfs.forEach(p => pushPdf(p?.url, p?.label));
+      }
+    }
+    return allCoursePdfs;
+  }
+
+  function buildTeacherPdfRowsHtml(course, allCoursePdfsInput) {
+    const allCoursePdfs = allCoursePdfsInput || collectCourseAllPdfs(course);
+    const pdfQuery = APP.teacherPdfSearch.trim().toLowerCase();
+    const filteredCoursePdfs = pdfQuery
+      ? allCoursePdfs.filter(p => `${p.topicTitle} ${p.chapterTitle} ${p.label}`.toLowerCase().includes(pdfQuery))
+      : allCoursePdfs;
+    const countLabel = document.getElementById('pk9-teacher-pdf-count-label');
+    if (countLabel && course) {
+      countLabel.textContent = `📂 Tất cả File PDF của ${course.teacher} (${filteredCoursePdfs.length}/${allCoursePdfs.length})`;
+    }
+    return `
+      <div class="pk9-teacher-pdf-list">
+        ${filteredCoursePdfs.slice(0, 120).map(p => {
+          const dlUrl = toDirectDownloadUrl(p.url);
+          return `
+          <div class="pk9-teacher-pdf-row">
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;line-height:1.4;">${esc(p.topicTitle)}</div>
+              <div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.12rem;">${esc(p.chapterTitle)} • <b>${esc(p.label)}</b></div>
+            </div>
+            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-pdf-action-btn primary" data-open-inapp-url="${esc(p.url)}" data-open-inapp-title="${esc(`${p.topicTitle} — ${p.label}`)}" data-open-inapp-sub="${esc(course?.teacher || '')} • Kho PDF 2K9">
+                📖 Đọc ngay
+              </button>
+              <button type="button" class="pk9-pdf-action-btn" data-select-topic="${esc(p.topicId)}">
+                🎯 Tới bài
+              </button>
+              ${dlUrl ? `
+                <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-pdf-action-btn">
+                  ⬇️ Tải PDF
+                </a>
+              ` : ''}
+              <a href="${esc(p.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
+                ↗️ Drive
+              </a>
+            </div>
+          </div>
+          `;
+        }).join('')}
+      </div>
+      ${filteredCoursePdfs.length > 120 ? `<div style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.45rem;">Đang hiển thị 120/${filteredCoursePdfs.length} file đầu tiên — nhập từ khóa ở ô lọc bên trên để tìm nhanh file cụ thể.</div>` : ''}
+    `;
+  }
+
+  function buildCourseChaptersListHtml(course, activeChapter, activeTopic) {
+    if (!course) return '';
+    const qFilter = APP.lectureSearch.trim().toLowerCase();
+    return (course.chapters || []).map(ch => {
+      const topics = (ch.topics || []).filter(t => {
+        if (!qFilter) return true;
+        return `${t.title} ${t.code || ''} ${t.desc || ''}`.toLowerCase().includes(qFilter);
+      });
+      if (!topics.length) return '';
+      const chKey = `${course.id}::${ch.id}`;
+      const isOpen = qFilter
+        ? true
+        : (APP.openChaptersMap[chKey] !== undefined
+            ? Boolean(APP.openChaptersMap[chKey])
+            : (ch.id === activeChapter?.id || (course.chapters || []).length <= 2));
+      return `
+        <div class="pk9-chapter-block">
+          <button type="button" class="pk9-chapter-head" data-toggle-chapter="${esc(chKey)}">
+            <span>${isOpen ? '▾ ' : '▸ '}${esc(ch.title)}</span>
+            <span style="font-size:0.72rem;color:var(--pk9-text-muted);flex-shrink:0;">${topics.length} bài</span>
+          </button>
+          ${isOpen ? `
+          <div class="pk9-topic-list">
+            ${topics.map(t => {
+              const done = Boolean(APP.doneMap[t.id]);
+              const act = t.id === activeTopic?.id;
+              const hasPdf = Boolean(t.pdfUrl || t.solutionPdfUrl || (Array.isArray(t.pdfs) && t.pdfs.length));
+              const isPdfOnly = t.kind === 'pdf' || (!t.videoId && !t.driveVideoUrl && Boolean(t.pdfUrl));
+              return `
+                <button type="button" class="pk9-topic-btn ${act ? 'active' : ''}" data-select-topic="${esc(t.id)}">
+                  <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${isPdfOnly ? '📄 ' : ''}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
+                  <span style="font-size:0.78rem;color:${done ? '#10b981' : 'var(--pk9-text-soft)'};flex-shrink:0;">
+                    ${done ? '✓ Đã học' : esc(t.duration || '45p')}
+                  </span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
   }
 
   function renderTopicSubtabContent(topic) {
@@ -1895,82 +1935,141 @@
             <div class="hide-mob">Thành tích Luyện đề</div>
             <div class="hide-mob">Chuỗi & Huy hiệu</div>
           </div>
-          ${filtered.length ? filtered.map((row, idx) => {
-            const isMe = APP.user && String(row.username || '').toLowerCase() === String(APP.user.username || '').toLowerCase();
-            const rankBadge = row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`;
-            const curVal = APP.lbMode === 'exam'
-              ? Number(row.bestScore || 0)
-              : Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 0;
-            const pct = Math.min(100, Math.max(curVal > 0 ? 12 : 4, Math.round((curVal / (maxMetric || 1)) * 100)));
-            return `
-              <div class="pk9-lb-row ${isMe ? 'me' : ''}" style="animation-delay:${Math.min(idx * 0.05, 0.4)}s;">
-                <div style="font-weight:900;font-size:0.95rem;color:${row.rank <= 3 ? '#d97706' : 'var(--pk9-text)'};">
-                  ${rankBadge}
-                </div>
-                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                  <div class="${esc(row.rpg_frame || 'pk9-frame-bronze')}" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">
-                    ${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}
-                  </div>
-                  <div style="min-width:0;">
-                    <div style="font-weight:800;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
-                    </div>
-                    <div style="font-size:0.76rem;color:var(--pk9-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')} ${row.rpg_title ? `• ${esc(row.rpg_title)}` : ''}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div style="font-weight:800;color:var(--pk9-primary);font-size:0.86rem;">
-                    ${APP.lbMode === 'weekly'
-                      ? `🔥 ${Number(row.weeklyXp || 0)} XP Tuần`
-                      : APP.lbMode === 'exam'
-                      ? `🎯 Đỉnh ${Number(row.bestScore || 0).toFixed(2)}đ <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(TB ${Number(row.avgScore || 0).toFixed(2)}đ)</span>`
-                      : `⚡ ${Number(row.xp || 0)} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${Number(row.level || 1)})</span>`}
-                  </div>
-                  <div class="pk9-topic-track" style="height:0.38rem;margin-top:0.28rem;">
-                    <div class="pk9-topic-fill" style="width:${pct}%;"></div>
-                  </div>
-                </div>
-                <div class="hide-mob" style="font-size:0.83rem;">
-                  🎯 Đỉnh: <b>${Number(row.bestScore || 0).toFixed(2)}đ</b> • ${row.attempts || 0} đề
-                </div>
-                <div class="hide-mob" style="font-size:0.8rem;">
-                  🔥 ${row.streak || 1} ngày • <span class="pk9-badge pk9-badge-code">${esc((row.badges || ['Thành Viên K9'])[0])}</span>
-                </div>
-              </div>
-            `;
-          }).join('') : `
-            <div style="padding:2.2rem 1.5rem;text-align:center;color:var(--pk9-text-muted);font-size:0.9rem;">
-              Chưa có học viên thật nào ghi nhận ở mục này. Hãy đăng ký tài khoản hoặc hoàn thành 1 đề thi để xuất hiện đầu tiên!
-            </div>
-          `}
+          <div id="pk9-lb-rows-body">
+            ${buildLeaderboardRowsHtml()}
+          </div>
         </div>
       </div>
     `;
   }
 
+  function buildLeaderboardRowsHtml() {
+    const onlyStudents = rows => (rows || []).filter(r => !r.is_admin && r.role !== 'admin');
+    const weeklyRows = onlyStudents(APP.lbData.weekly_leaderboard);
+    const topRows = onlyStudents(APP.lbData.leaderboard);
+    const examRows = onlyStudents(APP.lbData.exam_leaderboard);
+    const list = APP.lbMode === 'weekly'
+      ? weeklyRows
+      : APP.lbMode === 'exam'
+      ? examRows
+      : topRows;
+    const q = APP.lbSearch.trim().toLowerCase();
+    const filtered = list.filter(r => {
+      if (!q) return true;
+      return `${r.display_name} ${r.username} ${r.school || ''} ${r.grade || ''}`.toLowerCase().includes(q);
+    });
+    const maxMetric = APP.lbMode === 'exam'
+      ? Math.max(10, ...list.map(x => Number(x.bestScore) || 0))
+      : Math.max(100, ...list.map(x => Number(APP.lbMode === 'weekly' ? x.weeklyXp : x.xp) || 0));
+
+    if (!filtered.length) {
+      return `
+        <div style="padding:2.2rem 1.5rem;text-align:center;color:var(--pk9-text-muted);font-size:0.9rem;">
+          Chưa có học viên thật nào ghi nhận ở mục này. Hãy đăng ký tài khoản hoặc hoàn thành 1 đề thi để xuất hiện đầu tiên!
+        </div>
+      `;
+    }
+    return filtered.map((row, idx) => {
+      const isMe = APP.user && String(row.username || '').toLowerCase() === String(APP.user.username || '').toLowerCase();
+      const rankBadge = row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`;
+      const curVal = APP.lbMode === 'exam'
+        ? Number(row.bestScore || 0)
+        : Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 0;
+      const pct = Math.min(100, Math.max(curVal > 0 ? 12 : 4, Math.round((curVal / (maxMetric || 1)) * 100)));
+      return `
+        <div class="pk9-lb-row ${isMe ? 'me' : ''}" style="animation-delay:${Math.min(idx * 0.05, 0.4)}s;">
+          <div style="font-weight:900;font-size:0.95rem;color:${row.rank <= 3 ? '#d97706' : 'var(--pk9-text)'};">
+            ${rankBadge}
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+            <div class="${esc(row.rpg_frame || 'pk9-frame-bronze')}" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">
+              ${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}
+            </div>
+            <div style="min-width:0;">
+              <div style="font-weight:800;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
+              </div>
+              <div style="font-size:0.76rem;color:var(--pk9-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')} ${row.rpg_title ? `• ${esc(row.rpg_title)}` : ''}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-weight:800;color:var(--pk9-primary);font-size:0.86rem;">
+              ${APP.lbMode === 'weekly'
+                ? `🔥 ${Number(row.weeklyXp || 0)} XP Tuần`
+                : APP.lbMode === 'exam'
+                ? `🎯 Đỉnh ${Number(row.bestScore || 0).toFixed(2)}đ <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(TB ${Number(row.avgScore || 0).toFixed(2)}đ)</span>`
+                : `⚡ ${Number(row.xp || 0)} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${Number(row.level || 1)})</span>`}
+            </div>
+            <div class="pk9-topic-track" style="height:0.38rem;margin-top:0.28rem;">
+              <div class="pk9-topic-fill" style="width:${pct}%;"></div>
+            </div>
+          </div>
+          <div class="hide-mob" style="font-size:0.83rem;">
+            🎯 Đỉnh: <b>${Number(row.bestScore || 0).toFixed(2)}đ</b> • ${row.attempts || 0} đề
+          </div>
+          <div class="hide-mob" style="font-size:0.8rem;">
+            🔥 ${row.streak || 1} ngày • <span class="pk9-badge pk9-badge-code">${esc((row.badges || ['Thành Viên K9'])[0])}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   // ==========================================================================
   // TAB 5: PDF PRO LIBRARY (84+ DOCUMENTS)
   // ==========================================================================
-  function renderDocsTab() {
-    const root = document.getElementById('tab-docs');
-    if (!root) return;
-
+  function getAllDocsList() {
     const kv = Array.isArray(window.KIMVAN_DOCS) ? window.KIMVAN_DOCS : [];
     const ref = Array.isArray(window.PHUC_PDF_REFERENCE_V27) ? window.PHUC_PDF_REFERENCE_V27 : [];
-    const allDocs = [
+    return [
       ...ref.map((d, i) => ({ id: `ref-${i}`, title: d.title, subject: d.subject || 'Tổng hợp', kind: d.kind || 'Đề thi & Lời giải', source: d.source || 'Sở GD&ĐT', url: d.url })),
       ...kv.map((d, i) => ({ id: `kv-${i}`, title: d.title, subject: d.subject || 'Tổng hợp', kind: d.kind || 'Ebook / Tài liệu', source: 'Kho Tài Liệu Phúc K9', url: d.url }))
     ];
+  }
 
-    const subjects = ['ALL', 'Toán 12', 'Vật lí 12', 'Hóa học 12', 'Sinh học 12', 'Tiếng Anh 12'];
+  function buildDocsCardsHtml() {
+    const allDocs = getAllDocsList();
     const q = APP.docSearch.trim().toLowerCase();
     const filtered = allDocs.filter(d => {
       if (APP.docSubject !== 'ALL' && !String(d.subject).toLowerCase().includes(APP.docSubject.replace(' 12', '').toLowerCase())) return false;
       if (!q) return true;
       return `${d.title} ${d.subject} ${d.kind} ${d.source}`.toLowerCase().includes(q);
     });
+    return filtered.map(d => `
+      <article class="pk9-exam-card">
+        <div>
+          <div class="pk9-exam-card-badges">
+            <span class="pk9-badge pk9-badge-subj">${esc(d.subject)}</span>
+            <span class="pk9-badge pk9-badge-code">${esc(d.kind)}</span>
+          </div>
+          <h4>${esc(d.title)}</h4>
+          <div class="pk9-exam-origin">🏛️ Nguồn: ${esc(d.source)}</div>
+        </div>
+        <div class="pk9-exam-actions">
+          <button type="button" class="pk9-btn-exam-primary" data-open-inapp-url="${esc(d.url)}" data-open-inapp-title="${esc(d.title)}" data-open-inapp-sub="${esc(d.subject)} • ${esc(d.source)}">
+            👁️ Đọc trực tiếp trong Web
+          </button>
+          ${!isDriveFolderUrl(d.url) ? `
+            <a href="${esc(toDirectDownloadUrl(d.url) || d.url)}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.78rem;" title="Tải PDF về máy">
+              ⬇️ Tải PDF
+            </a>
+          ` : ''}
+          <a href="${esc(d.url)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.7rem;" title="Mở tab ngoài">
+            ↗
+          </a>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  function renderDocsTab() {
+    const root = document.getElementById('tab-docs');
+    if (!root) return;
+
+    const allDocs = getAllDocsList();
+    const subjects = ['ALL', 'Toán 12', 'Vật lí 12', 'Hóa học 12', 'Sinh học 12', 'Tiếng Anh 12'];
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
@@ -1995,32 +2094,8 @@
           </div>
         </div>
 
-        <div class="pk9-exam-grid">
-          ${filtered.map(d => `
-            <article class="pk9-exam-card">
-              <div>
-                <div class="pk9-exam-card-badges">
-                  <span class="pk9-badge pk9-badge-subj">${esc(d.subject)}</span>
-                  <span class="pk9-badge pk9-badge-code">${esc(d.kind)}</span>
-                </div>
-                <h4>${esc(d.title)}</h4>
-                <div class="pk9-exam-origin">🏛️ Nguồn: ${esc(d.source)}</div>
-              </div>
-              <div class="pk9-exam-actions">
-                <button type="button" class="pk9-btn-exam-primary" data-open-inapp-url="${esc(d.url)}" data-open-inapp-title="${esc(d.title)}" data-open-inapp-sub="${esc(d.subject)} • ${esc(d.source)}">
-                  👁️ Đọc trực tiếp trong Web
-                </button>
-                ${!isDriveFolderUrl(d.url) ? `
-                  <a href="${esc(toDirectDownloadUrl(d.url) || d.url)}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.78rem;" title="Tải PDF về máy">
-                    ⬇️ Tải PDF
-                  </a>
-                ` : ''}
-                <a href="${esc(d.url)}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.7rem;" title="Mở tab ngoài">
-                  ↗
-                </a>
-              </div>
-            </article>
-          `).join('')}
+        <div class="pk9-exam-grid" id="pk9-doc-cards-grid">
+          ${buildDocsCardsHtml()}
         </div>
       </div>
     `;
@@ -2220,7 +2295,7 @@
         <!-- IN-APP DIRECTORY OF REFERENCED COURSES (OPEN DIRECTLY IN WEB WITHOUT LEAVING) -->
         <div id="pk9-khoa-chui-directory" class="pk9-sec-head" style="margin-top:1.5rem;">
           <div>
-            <h3>🚀 Danh Mục Khóa Học & Chuyên Đề Tham Khảo Mở Nhanh Trong Web (${filtered.length} khóa)</h3>
+            <h3 id="pk9-kc-dir-count">🚀 Danh Mục Khóa Học & Chuyên Đề Tham Khảo Mở Nhanh Trong Web (${filtered.length} khóa)</h3>
             <p>Bấm vào bất kỳ khóa học nào bên dưới để <b>mở trình xem trực tiếp ngay trong web</b> hoặc chuyển thẳng vào Phòng Học Video tương ứng.</p>
           </div>
         </div>
@@ -2239,40 +2314,55 @@
           </div>
         </div>
 
-        <div class="pk9-exam-grid">
-          ${filtered.map(item => `
-            <article class="pk9-exam-card">
-              <div>
-                <div class="pk9-exam-card-badges">
-                  <span class="pk9-badge pk9-badge-subj">${esc(item.subject || 'Khóa học')}</span>
-                  <span class="pk9-badge pk9-badge-verified">💎 ${esc(item.tag || 'Tham khảo')}</span>
-                </div>
-                <h4>${esc(item.title)}</h4>
-                <div class="pk9-exam-origin">👨‍🏫 Giáo viên: <b>${esc(item.teacher || 'Hệ sinh thái Phúc K9')}</b></div>
-                ${item.items ? `<div style="font-size:0.78rem;color:var(--pk9-text-muted);margin-top:0.25rem;">📦 Nội dung: ${esc(item.items)}</div>` : ''}
-              </div>
-              <div class="pk9-exam-actions" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.85rem;">
-                <button
-                  type="button"
-                  class="pk9-btn-exam-primary"
-                  data-open-inapp-url="${esc(item.url || KHOA_CHUI_HTMLVIEW_URL)}"
-                  data-open-inapp-title="${esc(item.title)}"
-                  data-open-inapp-sub="${esc(item.teacher || item.subject || '')}"
-                  style="flex:1;"
-                >
-                  🖥️ Xem ngay trong Web
-                </button>
-                ${item.courseId ? `
-                  <button type="button" class="pk9-btn-exam-ghost" data-open-lecture-course="${esc(item.courseId)}">
-                    🎬 Vào Phòng Video
-                  </button>
-                ` : ''}
-              </div>
-            </article>
-          `).join('')}
+        <div class="pk9-exam-grid" id="pk9-kc-cards-grid">
+          ${buildKhoaChuiCardsHtml()}
         </div>
       </div>
     `;
+  }
+
+  function buildKhoaChuiCardsHtml() {
+    const allItems = getKhoaChuiCuratedList();
+    const q = APP.kcSearch.trim().toLowerCase();
+    const filtered = allItems.filter(item => {
+      if (APP.kcSubject !== 'ALL' && !String(item.subject || '').toLowerCase().includes(APP.kcSubject.toLowerCase())) return false;
+      if (!q) return true;
+      return `${item.title} ${item.teacher || ''} ${item.subject || ''} ${item.tag || ''}`.toLowerCase().includes(q);
+    });
+    const dirCountEl = document.getElementById('pk9-kc-dir-count');
+    if (dirCountEl) {
+      dirCountEl.textContent = `🚀 Danh Mục Khóa Học & Chuyên Đề Tham Khảo Mở Nhanh Trong Web (${filtered.length} khóa)`;
+    }
+    return filtered.map(item => `
+      <article class="pk9-exam-card">
+        <div>
+          <div class="pk9-exam-card-badges">
+            <span class="pk9-badge pk9-badge-subj">${esc(item.subject || 'Khóa học')}</span>
+            <span class="pk9-badge pk9-badge-verified">💎 ${esc(item.tag || 'Tham khảo')}</span>
+          </div>
+          <h4>${esc(item.title)}</h4>
+          <div class="pk9-exam-origin">👨‍🏫 Giáo viên: <b>${esc(item.teacher || 'Hệ sinh thái Phúc K9')}</b></div>
+          ${item.items ? `<div style="font-size:0.78rem;color:var(--pk9-text-muted);margin-top:0.25rem;">📦 Nội dung: ${esc(item.items)}</div>` : ''}
+        </div>
+        <div class="pk9-exam-actions" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.85rem;">
+          <button
+            type="button"
+            class="pk9-btn-exam-primary"
+            data-open-inapp-url="${esc(item.url || KHOA_CHUI_HTMLVIEW_URL)}"
+            data-open-inapp-title="${esc(item.title)}"
+            data-open-inapp-sub="${esc(item.teacher || item.subject || '')}"
+            style="flex:1;"
+          >
+            🖥️ Xem ngay trong Web
+          </button>
+          ${item.courseId ? `
+            <button type="button" class="pk9-btn-exam-ghost" data-open-lecture-course="${esc(item.courseId)}">
+              🎬 Vào Phòng Video
+            </button>
+          ` : ''}
+        </div>
+      </article>
+    `).join('');
   }
 
   // ==========================================================================
@@ -2683,14 +2773,23 @@
     if (!APP.isAdmin) return;
     if (!opts.silent && !APP.adminDetailData) APP.adminLoading = true;
     try {
-      const resp = await fetch('/api/dashboard?action=admin-detail', { credentials: 'include' });
-      if (resp.ok) {
+      const [resp, exResp] = await Promise.all([
+        fetch('/api/dashboard?action=admin-detail', { credentials: 'include' }),
+        fetch('/api/exams?action=admin-list', { credentials: 'include' }).catch(() => null)
+      ]);
+      if (resp && resp.ok) {
         const data = await resp.json();
         if (data?.ok) {
           APP.adminDetailData = data;
           if (data.announcement !== undefined) APP.systemAnnouncement = data.announcement;
           if (Array.isArray(data.custom_khoa_chui)) APP.customKhoaChui = data.custom_khoa_chui;
           renderSystemAnnouncementBar();
+        }
+      }
+      if (exResp && exResp.ok) {
+        const exData = await exResp.json().catch(() => ({}));
+        if (Array.isArray(exData?.exams)) {
+          APP.adminExamsCatalog = exData.exams;
         }
       }
     } catch {}
@@ -3351,64 +3450,84 @@
                 <th>Thao tác Quản trị</th>
               </tr>
             </thead>
-            <tbody>
-              ${filteredUsers.map(u => `
-                <tr>
-                  <td>
-                    <div style="font-weight:800;color:var(--pk9-text);">${esc(u.display_name)}</div>
-                    <div style="font-size:0.75rem;color:var(--pk9-text-muted);">@${esc(u.username)} • 🏫 ${esc(u.school || 'Chưa khai báo')}</div>
-                  </td>
-                  <td>
-                    <span class="pk9-badge" style="background:${u.role === 'admin' ? '#e11d48' : u.role === 'vip' ? '#d97706' : 'rgba(37,99,235,0.12)'};color:${u.role === 'admin' || u.role === 'vip' ? '#fff' : 'var(--pk9-primary)'};">
-                      ${u.role.toUpperCase()}
-                    </span>
-                    <span class="pk9-badge pk9-badge-code">${esc(u.grade)}</span>
-                  </td>
-                  <td>
-                    <div style="font-weight:800;color:var(--pk9-primary);">⚡ ${u.xp} XP (Lv.${u.level})</div>
-                    <div style="font-size:0.74rem;color:var(--pk9-text-muted);">Tuần: ${u.weekly_xp} XP • 🔥 ${u.streak} ngày</div>
-                  </td>
-                  <td>
-                    <b>${u.lessons_done}</b> bài đã xong<br/>
-                    <span style="font-size:0.73rem;color:var(--pk9-text-muted);">${u.notes_count} ghi chú</span>
-                  </td>
-                  <td>
-                    <b>${u.exam_attempts}</b> lượt thi<br/>
-                    <span style="font-size:0.74rem;color:#10b981;font-weight:700;">Cao nhất: ${Number(u.best_score || 0).toFixed(2)}đ</span>
-                  </td>
-                  <td style="font-size:0.75rem;color:var(--pk9-text-muted);">
-                    ${u.last_active ? new Date(u.last_active).toLocaleString('vi-VN') : '—'}
-                  </td>
-                  <td>
-                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
-                      <button type="button" class="pk9-admin-btn-xs" data-admin-inspect-user="${esc(u.username)}" title="Xem chi tiết học viên">🔎 Chi tiết</button>
-                      <button type="button" class="pk9-admin-btn-xs" data-admin-grant-xp="${esc(u.username)}" data-xp-amount="200">+200 XP</button>
-                      <button type="button" class="pk9-admin-btn-xs" data-admin-toggle-role="${esc(u.username)}" data-cur-role="${esc(u.role)}">
-                        ${u.role === 'student' ? '⬆️ Lên VIP' : u.role === 'vip' ? '🛡️ Lên Admin' : '🎓 Về Student'}
-                      </button>
-                      <button type="button" class="pk9-admin-btn-xs" data-admin-reset-pw="${esc(u.username)}">🔑 Đặt lại MK</button>
-                      ${u.username !== APP.user.username ? `
-                        <button type="button" class="pk9-admin-btn-xs danger" data-admin-del-user="${esc(u.username)}">🗑️ Xóa</button>
-                      ` : ''}
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
+            <tbody id="pk9-admin-users-tbody">
+              ${buildAdminUsersRowsHtml(users)}
             </tbody>
           </table>
         </div>
       `;
     }
 
-    // SUBTAB 3: EXAM ATTEMPTS & SUBMISSIONS MONITOR
+    // SUBTAB 3: EXAM ATTEMPTS & SUBMISSIONS MONITOR + EXAM MANAGER
     if (APP.adminSubtab === 'exams') {
       const q = APP.adminExamSearch.trim().toLowerCase();
       const filteredAttempts = attempts.filter(a => {
         if (!q) return true;
         return `${a.username} ${a.display_name} ${a.title} ${a.subject}`.toLowerCase().includes(q);
       });
+      const adminExams = Array.isArray(APP.adminExamsCatalog) && APP.adminExamsCatalog.length
+        ? APP.adminExamsCatalog
+        : (Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS.map(x => ({
+            id: x.id,
+            title: x.title,
+            subject: x.subject,
+            grade: x.grade || '12',
+            duration: x.durationMinutes || x.duration || 50,
+            questionCount: (x.questions || []).length,
+            published: true,
+            isSeed: true
+          })) : []);
 
       return `
+        <div class="pk9-grid-3" style="margin-bottom:1.15rem;">
+          <div class="pk9-card pk9-span-2">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+              <h4 style="margin:0;font-size:1.02rem;font-weight:900;">➕ Nhập Đề Thi Tương Tác Chuẩn 3 Phần GDPT 2018 (JSON Import)</h4>
+              <button type="button" class="pk9-admin-btn-xs" data-fill-sample-exam-json="1" style="background:rgba(37,99,235,0.12);color:var(--pk9-primary);">
+                📋 Điền Mẫu Đề 3 Phần Chuẩn
+              </button>
+            </div>
+            <p style="margin:0 0 0.65rem;font-size:0.79rem;color:var(--pk9-text-muted);">
+              Dán cấu trúc JSON đề thi (gồm Phần I trắc nghiệm ABCD, Phần II Đúng/Sai 4 ý, Phần III Trả lời ngắn) để xuất bản trực tiếp vào Phòng Thi Ảo.
+            </p>
+            <form id="pk9-admin-import-exam-form" style="display:flex;flex-direction:column;gap:0.6rem;">
+              <textarea id="pk9-admin-exam-json" name="exam_json" class="pk9-input" rows="5" placeholder='{"id":"exam-hoa-12-de-moi","title":"Đề Thi Thử Hóa Học 12 — Đề Số 1","subject":"Hóa học","grade":"12","duration":50,"source":"Thầy Dương Hóa / Sở GD&ĐT","questions":[...]}' style="font-family:monospace;font-size:0.78rem;" required></textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                <label style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.82rem;font-weight:700;cursor:pointer;">
+                  <input type="checkbox" name="publish_now" value="1" checked />
+                  Xuất bản hiển thị ngay trong Phòng Luyện Đề
+                </label>
+                <button type="submit" class="pk9-btn-exam-primary">🚀 Nhập & Xuất Bản Đề Thi</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="pk9-card">
+            <h4 style="margin:0 0 0.55rem;font-size:0.98rem;font-weight:900;">📚 Kho Đề Thi Hiện Có (${adminExams.length} đề)</h4>
+            <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0.45rem;">
+              ${adminExams.map(ex => `
+                <div style="padding:0.5rem 0.65rem;border-radius:0.7rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);display:flex;justify-content:space-between;align-items:center;gap:0.45rem;">
+                  <div style="min-width:0;flex:1;">
+                    <div style="font-weight:800;font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(ex.title)}</div>
+                    <div style="font-size:0.72rem;color:var(--pk9-text-muted);">
+                      ${esc(ex.subject)} • ${ex.questionCount || 0} câu • ${ex.published !== false ? '<b style="color:#10b981;">Đang mở</b>' : '<b style="color:#f59e0b;">Đang ẩn</b>'}
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:0.3rem;flex-shrink:0;">
+                    <button type="button" class="pk9-admin-btn-xs" data-quick-start-exam="${esc(ex.id)}" title="Mở đề thi">⚡ Thi</button>
+                    ${!ex.isSeed ? `
+                      <button type="button" class="pk9-admin-btn-xs" data-admin-exam-toggle-pub="${esc(ex.id)}" data-cur-pub="${ex.published !== false ? '1' : '0'}">
+                        ${ex.published !== false ? '🙈 Ẩn' : '👁️ Hiện'}
+                      </button>
+                      <button type="button" class="pk9-admin-btn-xs danger" data-admin-exam-delete="${esc(ex.id)}">🗑️</button>
+                    ` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
         <div class="pk9-exam-toolbar">
           <div>
             <h3 style="margin:0;font-size:1.05rem;font-weight:900;">🏛️ Nhật Ký Nộp Bài & Chấm Điểm Tự Động Thời Gian Thực (${filteredAttempts.length} lượt)</h3>
@@ -3432,37 +3551,8 @@
                 <th>Số câu đúng</th>
               </tr>
             </thead>
-            <tbody>
-              ${filteredAttempts.length ? filteredAttempts.map(a => `
-                <tr>
-                  <td style="font-size:0.76rem;color:var(--pk9-text-muted);">
-                    ${a.created_at ? new Date(a.created_at).toLocaleString('vi-VN') : 'Vừa xong'}
-                  </td>
-                  <td>
-                    <div style="font-weight:800;">${esc(a.display_name || a.username)}</div>
-                    <div style="font-size:0.73rem;color:var(--pk9-text-muted);">@${esc(a.username)}</div>
-                  </td>
-                  <td style="font-weight:700;">${esc(a.title)}</td>
-                  <td>
-                    <span class="pk9-badge pk9-badge-subj">${esc(a.subject)}</span>
-                    <span class="pk9-badge pk9-badge-code">${esc(a.grade || '2K9')}</span>
-                  </td>
-                  <td>
-                    <span style="font-size:1.02rem;font-weight:900;color:${Number(a.score) >= 8 ? '#10b981' : Number(a.score) >= 5 ? '#2563eb' : '#ef4444'};">
-                      ${Number(a.score || 0).toFixed(2)} điểm
-                    </span>
-                  </td>
-                  <td>
-                    <b>${a.correct || 0}</b> / ${a.total_questions || 0} câu
-                  </td>
-                </tr>
-              `).join('') : `
-                <tr>
-                  <td colspan="6" style="text-align:center;padding:2rem;color:var(--pk9-text-muted);">
-                    Chưa có lượt nộp đề nào khớp bộ lọc.
-                  </td>
-                </tr>
-              `}
+            <tbody id="pk9-admin-attempts-tbody">
+              ${buildAdminExamAttemptsRowsHtml(attempts)}
             </tbody>
           </table>
         </div>
@@ -3647,8 +3737,111 @@
     `;
   }
 
+  function buildAdminUsersRowsHtml(users) {
+    const q = (APP.adminUserSearch || '').trim().toLowerCase();
+    const roleFilter = APP.adminUserRoleFilter || 'ALL';
+    const filtered = (users || []).filter(u => {
+      if (roleFilter !== 'ALL' && (u.role || 'student') !== roleFilter) return false;
+      if (!q) return true;
+      return `${u.username} ${u.display_name} ${u.school} ${u.grade}`.toLowerCase().includes(q);
+    });
+    if (!filtered.length) {
+      return `
+        <tr>
+          <td colspan="9" style="text-align:center;padding:2rem;color:var(--pk9-text-muted);">
+            Chưa có học viên nào khớp bộ lọc.
+          </td>
+        </tr>
+      `;
+    }
+    return filtered.map((u, idx) => `
+      <tr style="${APP.adminSelectedStudent === u.username ? 'background:rgba(37,99,235,0.08);' : ''}">
+        <td><b>${idx + 1}</b></td>
+        <td>
+          <div style="font-weight:800;">${esc(u.display_name)}</div>
+          <div style="font-size:0.74rem;color:var(--pk9-text-muted);">@${esc(u.username)} • ${esc(u.school || 'Chưa cập nhật trường')}</div>
+        </td>
+        <td>
+          <span class="pk9-admin-role-pill ${esc(u.role || 'student')}">
+            ${u.role === 'admin' ? '🛡️ ADMIN' : u.role === 'vip' ? '💎 VIP' : '🎓 Học viên'}
+          </span>
+        </td>
+        <td><span class="pk9-badge pk9-badge-grade">${esc(u.grade || '2K9')}</span></td>
+        <td>
+          <div style="font-weight:900;color:var(--pk9-primary);">${u.xp || 100} XP</div>
+          <div style="font-size:0.72rem;color:var(--pk9-text-muted);">🔥 ${u.streak || 1} ngày</div>
+        </td>
+        <td>
+          <span style="font-weight:800;">${u.lessons_done || 0} bài</span>
+          ${u.notes_count ? `<div style="font-size:0.72rem;color:var(--pk9-text-muted);">📝 ${u.notes_count} ghi chú</div>` : ''}
+        </td>
+        <td>
+          <span style="font-weight:800;">${u.exam_attempts || 0} đề</span>
+          ${u.avg_score !== null && u.avg_score !== undefined ? `<div style="font-size:0.74rem;font-weight:800;color:#10b981;">TB: ${Number(u.avg_score).toFixed(2)}đ</div>` : ''}
+        </td>
+        <td style="font-size:0.76rem;color:var(--pk9-text-muted);">
+          ${u.last_active ? new Date(u.last_active).toLocaleString('vi-VN') : 'Mới tạo'}
+        </td>
+        <td>
+          <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+            <button type="button" class="pk9-btn-exam-ghost" data-admin-inspect-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;">🔍 Chi tiết</button>
+            <button type="button" class="pk9-btn-exam-ghost" data-admin-grant-xp="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#10b981;">⚡ +200 XP</button>
+            <button type="button" class="pk9-btn-exam-ghost" data-admin-toggle-role="${esc(u.username)}" data-cur-role="${esc(u.role || 'student')}" style="padding:0.25rem 0.5rem;font-size:0.72rem;">
+              ${u.role === 'student' ? '💎 Lên VIP' : u.role === 'vip' ? '🛡️ Lên Admin' : '🎓 Về Học viên'}
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-admin-reset-pw="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#f59e0b;">🔑 Đổi MK</button>
+            ${u.username !== 'admin' ? `
+              <button type="button" class="pk9-btn-exam-ghost" data-admin-del-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#ef4444;">🗑️</button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function buildAdminExamAttemptsRowsHtml(attempts) {
+    const q = (APP.adminExamSearch || '').trim().toLowerCase();
+    const filtered = (attempts || []).filter(a => {
+      if (!q) return true;
+      return `${a.username} ${a.display_name} ${a.exam_title} ${a.subject}`.toLowerCase().includes(q);
+    });
+    if (!filtered.length) {
+      return `
+        <tr>
+          <td colspan="7" style="text-align:center;padding:2rem;color:var(--pk9-text-muted);">
+            Chưa có lượt nộp bài thi nào được ghi nhận trên hệ thống.
+          </td>
+        </tr>
+      `;
+    }
+    return filtered.map((a, idx) => {
+      const sc = Number(a.score ?? 0);
+      const badgeColor = sc >= 8 ? '#10b981' : sc >= 6.5 ? '#2563eb' : sc >= 5 ? '#f59e0b' : '#ef4444';
+      const mins = Math.floor(Number(a.duration_sec || 0) / 60);
+      const secs = Number(a.duration_sec || 0) % 60;
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td style="font-size:0.76rem;color:var(--pk9-text-muted);">${a.submitted_at ? new Date(a.submitted_at).toLocaleString('vi-VN') : 'Vừa xong'}</td>
+          <td>
+            <div style="font-weight:800;">${esc(a.display_name || a.username)}</div>
+            <div style="font-size:0.72rem;color:var(--pk9-text-muted);">@${esc(a.username)}</div>
+          </td>
+          <td style="font-weight:700;">${esc(a.exam_title || a.exam_id)}</td>
+          <td><span class="pk9-badge pk9-badge-subj">${esc(a.subject || 'Tổng hợp')}</span></td>
+          <td>
+            <span style="padding:0.22rem 0.55rem;border-radius:999px;font-weight:900;font-size:0.82rem;background:${badgeColor}1f;color:${badgeColor};">
+              ${sc.toFixed(2)} đ
+            </span>
+          </td>
+          <td style="font-size:0.8rem;font-weight:700;">${mins}p ${secs}s</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
   // ==========================================================================
-  // AUTH MODAL (LOGIN / REGISTER / PROFILE)
+  // AUTH MODAL (LOGIN / REGISTER / PROFILE / FORGOT PASSWORD)
   // ==========================================================================
   function isSafeAvatarUrl(src) {
     return /^(https?:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(String(src || ''));
@@ -3737,7 +3930,7 @@
       });
     }
     modal.classList.add('open');
-    const resolvedMode = (APP.user && defaultMode !== 'switch-login' && defaultMode !== 'switch-register')
+    const resolvedMode = (APP.user && defaultMode !== 'switch-login' && defaultMode !== 'switch-register' && defaultMode !== 'forgot')
       ? (defaultMode === 'security' ? 'security' : 'profile')
       : defaultMode;
     renderAuthModalContent(resolvedMode);
@@ -3752,6 +3945,44 @@
     const box = document.getElementById('pk9-auth-modal-box');
     if (!box) return;
 
+    if (mode === 'forgot') {
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9rem;">
+          <h3 style="margin:0;font-size:1.18rem;font-weight:900;">🔑 Khôi Phục Mật Khẩu Tự Động</h3>
+          <button type="button" class="pk9-icon-btn" data-close-auth="1">✕</button>
+        </div>
+        <p style="margin:0 0 0.9rem;font-size:0.84rem;color:var(--pk9-text-muted);line-height:1.5;">
+          Nhập tên đăng nhập và <b>Mã PIN khôi phục</b> hoặc <b>Gmail khôi phục</b> bạn đã đăng ký để đặt lại mật khẩu mới ngay lập tức.
+        </p>
+        <form id="pk9-forgot-form" style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div>
+            <label style="font-size:0.82rem;font-weight:700;">Tên đăng nhập cần khôi phục</label>
+            <input type="text" name="username" class="pk9-input" placeholder="VD: minhanh2k9" required />
+          </div>
+          <div>
+            <label style="font-size:0.82rem;font-weight:700;">Mã PIN khôi phục hoặc Gmail đã đăng ký</label>
+            <input type="text" name="recovery_input" class="pk9-input" placeholder="Nhập Mã PIN (4–12 ký tự) hoặc Gmail của bạn" required />
+          </div>
+          <div>
+            <label style="font-size:0.82rem;font-weight:700;">Mật khẩu mới (tối thiểu 6 ký tự)</label>
+            <input type="password" name="new_password" class="pk9-input" minlength="6" maxlength="128" placeholder="••••••••" required />
+          </div>
+          <div>
+            <label style="font-size:0.82rem;font-weight:700;">Xác nhận mật khẩu mới</label>
+            <input type="password" name="confirm_password" class="pk9-input" minlength="6" maxlength="128" placeholder="Nhập lại mật khẩu mới" required />
+          </div>
+          <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.35rem;padding:0.8rem;">
+            🔓 Đặt lại mật khẩu &amp; Đăng nhập ngay
+          </button>
+        </form>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.9rem;padding-top:0.75rem;border-top:1px solid var(--pk9-border);font-size:0.8rem;">
+          <button type="button" class="pk9-btn-exam-ghost" data-switch-auth-mode="login" style="font-size:0.8rem;">← Quay lại Đăng nhập</button>
+          <span style="color:var(--pk9-text-muted);font-size:0.75rem;">Chưa cài PIN? Nhắn Admin để cấp lại MK</span>
+        </div>
+      `;
+      return;
+    }
+
     if (APP.user && mode !== 'switch-login' && mode !== 'switch-register') {
       const isSecurity = mode === 'security';
       const initialChar = (APP.user.display_name || APP.user.username || 'U').trim().charAt(0).toUpperCase() || 'U';
@@ -3760,6 +3991,8 @@
         : (APP.user.avatar_data || APP.user.avatar_url || '');
       const userBio = String(APP.user.settings?.bio || '').trim();
       const userGrade = APP.user.settings?.preferred_grade || '2K9';
+      const recEmail = String(APP.user.settings?.recovery_email || '').trim();
+      const hasPin = Boolean(APP.user.has_recovery || APP.user.settings?.has_recovery_pin);
 
       box.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9rem;">
@@ -3832,6 +4065,16 @@
                 ${renderGradeOptionsHtml(userGrade)}
               </select>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.65rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px dashed var(--pk9-border);">
+              <div>
+                <label style="font-size:0.76rem;font-weight:800;">📧 Gmail khôi phục MK</label>
+                <input type="email" name="recovery_email" class="pk9-input" value="${esc(recEmail)}" placeholder="VD: ban@gmail.com" style="font-size:0.8rem;padding:0.45rem 0.6rem;" />
+              </div>
+              <div>
+                <label style="font-size:0.76rem;font-weight:800;">🔐 Mã PIN khôi phục ${hasPin ? '(Đã cài)' : '(4–12 số)'}</label>
+                <input type="password" name="recovery_pin" class="pk9-input" minlength="4" maxlength="32" placeholder="${hasPin ? 'Nhập để đổi PIN mới' : 'VD: 200927'}" style="font-size:0.8rem;padding:0.45rem 0.6rem;" />
+              </div>
+            </div>
             <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.25rem;">💾 Lưu cài đặt tài khoản</button>
           </form>
         `}
@@ -3891,12 +4134,29 @@
               ${renderGradeOptionsHtml('2K9')}
             </select>
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.6rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px dashed var(--pk9-border);">
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">📧 Gmail khôi phục (Tùy chọn)</label>
+              <input type="email" name="recovery_email" class="pk9-input" placeholder="VD: ban@gmail.com" style="font-size:0.8rem;padding:0.45rem 0.6rem;" />
+            </div>
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">🔐 Mã PIN khôi phục (4–12 ký tự)</label>
+              <input type="password" name="recovery_pin" class="pk9-input" minlength="4" maxlength="32" placeholder="VD: 200927" style="font-size:0.8rem;padding:0.45rem 0.6rem;" />
+            </div>
+          </div>
         ` : ''}
         <div>
           <label style="font-size:0.82rem;font-weight:700;">Mật khẩu (tối thiểu 6 ký tự)</label>
           <input type="password" name="password" class="pk9-input" placeholder="••••••••" required />
         </div>
-        <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.5rem;padding:0.8rem;">
+        ${!isReg ? `
+          <div style="display:flex;justify-content:flex-end;margin-top:-0.25rem;">
+            <button type="button" class="pk9-btn-exam-ghost" data-switch-auth-mode="forgot" style="padding:0.25rem 0.55rem;font-size:0.78rem;color:var(--pk9-primary);border:none;">
+              🔑 Quên mật khẩu? Khôi phục bằng PIN / Gmail
+            </button>
+          </div>
+        ` : ''}
+        <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.35rem;padding:0.8rem;">
           ${isReg ? '🎉 Hoàn tất Đăng ký & Nhận +100 XP Lên BXH' : '🚀 Đăng nhập ngay'}
         </button>
       </form>
@@ -3999,6 +4259,32 @@
   // ==========================================================================
   function bindEvents() {
     document.addEventListener('click', async e => {
+      const openMobHub = e.target.closest('[data-open-mob-hub]');
+      if (openMobHub) {
+        const sheet = document.getElementById('pk9-mob-hub-sheet');
+        if (sheet) {
+          const isOpen = sheet.classList.toggle('open');
+          document.getElementById('pk9-mob-hub-btn')?.classList.toggle('active', isOpen);
+          const walletEl = document.getElementById('pk9-mob-hub-wallet');
+          if (walletEl) {
+            const rpg = window.PK9_RPG_STATE || APP.user?.rpg || {};
+            const gold = rpg.gold ?? 160;
+            const dia = rpg.diamonds ?? 5;
+            const streak = APP.user?.streak ?? rpg.streak ?? 1;
+            const lv = rpg.level ?? 1;
+            walletEl.innerHTML = `🪙 <b>${gold}</b> Vàng • 💎 <b>${dia}</b> KC • 🔥 Chuỗi <b>${streak}</b> ngày • ⚡ Cấp <b>${lv}</b>`;
+          }
+        }
+        return;
+      }
+
+      const closeMobHub = e.target.closest('[data-close-mob-hub]');
+      if (closeMobHub) {
+        document.getElementById('pk9-mob-hub-sheet')?.classList.remove('open');
+        document.getElementById('pk9-mob-hub-btn')?.classList.remove('active');
+        return;
+      }
+
       const navBtn = e.target.closest('[data-nav-tab]');
       if (navBtn) {
         switchTab(navBtn.getAttribute('data-nav-tab'));
@@ -4075,7 +4361,16 @@
       const togglePdfDrawer = e.target.closest('[data-toggle-teacher-pdfs]');
       if (togglePdfDrawer) {
         APP.showTeacherPdfDrawer = !APP.showTeacherPdfDrawer;
-        renderLecturesTab();
+        const drawerWrap = document.getElementById('pk9-teacher-pdf-drawer-wrap');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        if (drawerWrap && activeCourse && document.getElementById('pk9-video-stage')) {
+          drawerWrap.innerHTML = buildTeacherPdfDrawerHtml(activeCourse);
+          const count = (activeCourse.teacherPdfs || []).length;
+          togglePdfDrawer.classList.toggle('active', APP.showTeacherPdfDrawer);
+          togglePdfDrawer.innerHTML = `📄 Kho PDF Giáo Viên (${count}) ${APP.showTeacherPdfDrawer ? '▲' : '▼'}`;
+        } else {
+          renderLecturesTab();
+        }
         return;
       }
 
@@ -4097,15 +4392,21 @@
         const chKey = toggleCh.getAttribute('data-toggle-chapter');
         if (chKey) {
           const cur = APP.openChaptersMap[chKey];
+          const c = getCourseById(APP.activeCourseId);
+          const found = findTopicInCourse(c, APP.activeTopicId);
           if (cur === undefined) {
-            const c = getCourseById(APP.activeCourseId);
-            const actCh = findTopicInCourse(c, APP.activeTopicId)?.chapter;
+            const actCh = found?.chapter;
             const defaultOpen = (actCh && `${c.id}::${actCh.id}` === chKey) || ((c?.chapters || []).length <= 2);
             APP.openChaptersMap[chKey] = !defaultOpen;
           } else {
             APP.openChaptersMap[chKey] = !cur;
           }
-          renderLecturesTab();
+          const chListEl = document.getElementById('pk9-lecture-chapters-list');
+          if (chListEl && c && found?.topic) {
+            chListEl.innerHTML = buildLectureChaptersHtml(c, found.topic, found.chapter);
+          } else {
+            renderLecturesTab();
+          }
         }
         return;
       }
@@ -4134,21 +4435,52 @@
           APP.inlinePdfUrl = url;
           APP.inlinePdfTitle = title;
         }
-        renderLecturesTab();
+        const pdfSlot = document.getElementById('pk9-inline-pdf-viewer-slot');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+        if (pdfSlot && activeCourse && found?.topic && document.getElementById('pk9-video-stage')) {
+          pdfSlot.innerHTML = buildInlinePdfSlotHtml();
+          const attachWrap = document.getElementById('pk9-topic-pdf-attachments-wrap');
+          if (attachWrap) attachWrap.innerHTML = buildTopicPdfAttachmentsHtml(found.topic);
+          const drawerList = document.getElementById('pk9-teacher-pdf-list-wrap');
+          if (drawerList) drawerList.innerHTML = buildTeacherPdfListHtml(activeCourse.teacherPdfs || []);
+        } else {
+          renderLecturesTab();
+        }
         return;
       }
 
       const subtabBtn = e.target.closest('[data-study-subtab]');
       if (subtabBtn) {
         APP.studySubtab = subtabBtn.getAttribute('data-study-subtab');
-        renderLecturesTab();
+        const subtabPanel = document.getElementById('pk9-study-subtab-panel');
+        const subtabBar = document.getElementById('pk9-study-subtabs-bar');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+        if (subtabPanel && activeCourse && found?.topic && document.getElementById('pk9-video-stage')) {
+          if (subtabBar) {
+            subtabBar.querySelectorAll('[data-study-subtab]').forEach(btn => {
+              btn.classList.toggle('active', btn.getAttribute('data-study-subtab') === APP.studySubtab);
+            });
+          }
+          subtabPanel.innerHTML = renderStudySubtabContent(activeCourse, found.topic);
+        } else {
+          renderLecturesTab();
+        }
         return;
       }
 
       const theaterBtn = e.target.closest('[data-toggle-theater]');
       if (theaterBtn) {
         APP.theaterMode = !APP.theaterMode;
-        renderLecturesTab();
+        const layoutGrid = document.getElementById('pk9-lecture-layout-grid');
+        if (layoutGrid && document.getElementById('pk9-video-stage')) {
+          layoutGrid.classList.toggle('theater', APP.theaterMode);
+          theaterBtn.classList.toggle('active', APP.theaterMode);
+          theaterBtn.innerHTML = `🖥️ ${APP.theaterMode ? 'Thu nhỏ' : 'Rạp chiếu phim'}`;
+        } else {
+          renderLecturesTab();
+        }
         return;
       }
 
@@ -4156,8 +4488,22 @@
       if (doneBtn) {
         const tId = doneBtn.getAttribute('data-toggle-done-topic');
         APP.doneMap[tId] = !APP.doneMap[tId];
+        const isDoneNow = Boolean(APP.doneMap[tId]);
+        if (document.getElementById('pk9-video-stage')) {
+          doneBtn.style.borderColor = isDoneNow ? '#10b981' : '';
+          doneBtn.style.color = isDoneNow ? '#10b981' : '';
+          doneBtn.innerHTML = isDoneNow ? '✅ Đã hoàn thành bài này' : '☑️ Đánh dấu hoàn thành (+25 XP)';
+          const activeCourse = getCourseById(APP.activeCourseId);
+          const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+          const chListEl = document.getElementById('pk9-lecture-chapters-list');
+          if (chListEl && activeCourse && found?.topic) {
+            chListEl.innerHTML = buildLectureChaptersHtml(activeCourse, found.topic, found.chapter);
+          }
+        } else {
+          renderLecturesTab();
+        }
         await syncProgressToServer();
-        if (APP.doneMap[tId]) {
+        if (isDoneNow) {
           let earnedMsg = APP.user
             ? '🎉 Đã hoàn thành bài giảng!'
             : '✅ Đã đánh dấu hoàn thành cục bộ (Chế độ Khách). Đăng nhập để tích +25 XP lên BXH!';
@@ -4186,7 +4532,6 @@
           }
           toast(earnedMsg, APP.user ? 'success' : 'info');
         }
-        renderLecturesTab();
         updateHeaderAuthUI();
         return;
       }
@@ -4196,7 +4541,14 @@
         const qKey = quizOpt.getAttribute('data-topic-quiz');
         const oIdx = Number(quizOpt.getAttribute('data-topic-opt'));
         APP.quizAnswers[qKey] = oIdx;
-        renderLecturesTab();
+        const subtabPanel = document.getElementById('pk9-study-subtab-panel');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+        if (subtabPanel && activeCourse && found?.topic) {
+          subtabPanel.innerHTML = renderStudySubtabContent(activeCourse, found.topic);
+        } else {
+          renderLecturesTab();
+        }
         return;
       }
 
@@ -4255,7 +4607,7 @@
       if (fcStarBtn) {
         const key = fcStarBtn.getAttribute('data-fc-star');
         const nextStar = fcStarBtn.getAttribute('data-fc-curstar') !== '1';
-        await updateFlashcardItemState(key, { star: nextStar });
+        updateFlashcardItemState(key, { star: nextStar });
         toast(nextStar ? '⭐ Đã đánh dấu sao thẻ này!' : 'Đã bỏ dấu sao thẻ.', 'info');
         renderFlashcardsTab();
         return;
@@ -4264,11 +4616,13 @@
       const fcLearnBtn = e.target.closest('[data-fc-learning]');
       if (fcLearnBtn) {
         const key = fcLearnBtn.getAttribute('data-fc-learning');
-        await updateFlashcardItemState(key, { status: 'learning' });
-        APP.fcCardIdx += 1;
+        if (APP.fcFilter !== 'new') {
+          APP.fcCardIdx += 1;
+        }
         APP.fcFlipped = false;
-        toast('📖 Đã xếp thẻ vào mục Đang học.', 'info');
+        updateFlashcardItemState(key, { status: 'learning' });
         renderFlashcardsTab();
+        toast('📖 Đã xếp thẻ vào mục Đang học.', 'info');
         return;
       }
 
@@ -4302,38 +4656,42 @@
       const fcMastered = e.target.closest('[data-fc-mastered]');
       if (fcMastered) {
         const itemId = fcMastered.getAttribute('data-fc-mastered');
-        await updateFlashcardItemState(itemId, { status: 'mastered' });
-        APP.fcCardIdx += 1;
+        if (APP.fcFilter !== 'new' && APP.fcFilter !== 'learning') {
+          APP.fcCardIdx += 1;
+        }
         APP.fcFlipped = false;
+        updateFlashcardItemState(itemId, { status: 'mastered' });
+        renderFlashcardsTab();
         let fcMsg = APP.user
           ? '⚡ Đã ghi nhớ thẻ công thức!'
           : '✅ Đã ghi nhớ thẻ cục bộ (Chế độ Khách). Đăng nhập để nhận +20 XP lên BXH!';
         if (APP.user) {
-          try {
-            const recRes = await fetch('/api/dashboard?action=record-study', {
-              method: 'POST',
-              credentials: 'include',
-              cache: 'no-store',
-              headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
-              body: JSON.stringify({ type: 'flashcard', item_id: itemId })
-            });
-            const recData = await recRes.json().catch(() => ({}));
-            if (recRes.ok && recData.ok) {
-              if (typeof recData.xp_total === 'number') APP.user.xp = recData.xp_total;
-              if (typeof recData.weekly_xp === 'number') APP.user.weekly_xp = recData.weekly_xp;
-              if (recData.rpg) APP.user.rpg = recData.rpg;
-              if (recData.xp_earned > 0) {
-                fcMsg = `⚡ Đã ghi nhớ thẻ! +${recData.xp_earned} XP · +${recData.gold_earned || 0} Vàng lên BXH!`;
-              } else if (recData.xp_earned === 0) {
-                fcMsg = '⚡ Đã ghi nhớ thẻ công thức (đã nhận XP thẻ này trước đó).';
+          fetch('/api/dashboard?action=record-study', {
+            method: 'POST',
+            credentials: 'include',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify({ type: 'flashcard', item_id: itemId })
+          })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+              if (ok && d?.ok) {
+                if (typeof d.xp_total === 'number') APP.user.xp = d.xp_total;
+                if (typeof d.weekly_xp === 'number') APP.user.weekly_xp = d.weekly_xp;
+                if (d.rpg) APP.user.rpg = d.rpg;
+                if (d.xp_earned > 0) {
+                  toast(`⚡ Đã ghi nhớ thẻ! +${d.xp_earned} XP · +${d.gold_earned || 0} Vàng lên BXH!`, 'success');
+                } else {
+                  toast('⚡ Đã ghi nhớ thẻ công thức!', 'info');
+                }
+                fetchAuthAndLeaderboard();
+                updateHeaderAuthUI();
               }
-              await fetchAuthAndLeaderboard();
-              updateHeaderAuthUI();
-            }
-          } catch {}
+            })
+            .catch(() => {});
+        } else {
+          toast(fcMsg, 'info');
         }
-        toast(fcMsg, APP.user ? 'success' : 'info');
-        renderFlashcardsTab();
         return;
       }
 
@@ -4527,7 +4885,14 @@
       const toggleMobSelBtn = e.target.closest('[data-toggle-mob-selectors]');
       if (toggleMobSelBtn) {
         APP.mobileSelectorsCollapsed = !APP.mobileSelectorsCollapsed;
-        renderLecturesTab();
+        const selWrap = document.getElementById('pk9-lecture-selectors');
+        if (selWrap) {
+          selWrap.classList.toggle('collapsed', APP.mobileSelectorsCollapsed);
+          const activeCourse = getCourseById(APP.activeCourseId);
+          toggleMobSelBtn.innerHTML = `${APP.mobileSelectorsCollapsed ? '🔽 Mở bộ lọc Khối / Môn / Giáo viên' : '🔼 Thu gọn bộ lọc'} • <b style="color:var(--pk9-primary);">${esc(activeCourse?.shortName || activeCourse?.name || '')}</b>`;
+        } else {
+          renderLecturesTab();
+        }
         return;
       }
 
@@ -4569,7 +4934,19 @@
       const kcZoomBtn = e.target.closest('[data-kc-zoom]');
       if (kcZoomBtn) {
         APP.kcZoom = Number(kcZoomBtn.getAttribute('data-kc-zoom')) || 100;
-        renderKhoaChuiTab();
+        const ifr = document.getElementById('pk9-khoa-chui-iframe');
+        if (ifr) {
+          const z = APP.kcZoom;
+          const scaleStyle = z !== 100
+            ? `transform:scale(${z / 100});transform-origin:top left;width:${(10000 / z).toFixed(2)}%;height:${(10000 / z).toFixed(2)}%;`
+            : 'width:100%;height:100%;';
+          ifr.setAttribute('style', `border:0;display:block;background:#fff;${scaleStyle}`);
+          document.querySelectorAll('[data-kc-zoom]').forEach(btn => {
+            btn.classList.toggle('active', Number(btn.getAttribute('data-kc-zoom')) === z);
+          });
+        } else {
+          renderKhoaChuiTab();
+        }
         return;
       }
 
@@ -4587,7 +4964,15 @@
       const kcFullBtn = e.target.closest('[data-kc-toggle-fullscreen]');
       if (kcFullBtn) {
         APP.kcFullscreen = !APP.kcFullscreen;
-        renderKhoaChuiTab();
+        const ws = document.getElementById('pk9-khoa-chui-workspace');
+        const fw = document.getElementById('pk9-khoa-chui-frame-wrap');
+        if (ws && fw) {
+          ws.classList.toggle('pk9-sheet-fullscreen', APP.kcFullscreen);
+          fw.style.height = APP.kcFullscreen ? 'calc(100vh - 58px)' : '76vh';
+          kcFullBtn.innerHTML = APP.kcFullscreen ? '🗗 Thu nhỏ khung' : '⛶ Toàn màn hình trong Web';
+        } else {
+          renderKhoaChuiTab();
+        }
         return;
       }
 
@@ -4600,7 +4985,15 @@
       const kcSubjBtn = e.target.closest('[data-kc-subj]');
       if (kcSubjBtn) {
         APP.kcSubject = kcSubjBtn.getAttribute('data-kc-subj') || 'ALL';
-        renderKhoaChuiTab();
+        const kcGrid = document.getElementById('pk9-kc-cards-grid');
+        if (kcGrid) {
+          document.querySelectorAll('[data-kc-subj]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-kc-subj') === APP.kcSubject);
+          });
+          kcGrid.innerHTML = buildKhoaChuiCardsHtml();
+        } else {
+          renderKhoaChuiTab();
+        }
         return;
       }
 
@@ -4663,6 +5056,108 @@
             renderCommunityTab();
           } else {
             toast(data?.message || 'Không thể xóa tài liệu này.', 'error');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ.', 'error');
+        }
+        return;
+      }
+
+      // --- ADMIN EXAM CATALOG MANAGER ---
+      const fillSampleExamBtn = e.target.closest('[data-fill-sample-exam-json]');
+      if (fillSampleExamBtn) {
+        const area = document.getElementById('pk9-admin-exam-json-input');
+        if (area) {
+          const sampleExam = {
+            id: `de-moi-${Date.now().toString(36)}`,
+            title: 'Đề Thi Thử Tốt Nghiệp THPT 2026 — Môn Hóa Học (Chuẩn GDPT 2018)',
+            subject: 'Hóa học',
+            grade: '2K9',
+            sourceOrg: 'Sở GD&ĐT',
+            durationMin: 50,
+            questions: [
+              {
+                id: 'p1_q1',
+                part: 1,
+                type: 'mcq',
+                prompt: 'Kim loại nào sau đây có tính dẫn điện tốt nhất ở điều kiện thường?',
+                choices: ['A. Đồng (Cu)', 'B. Bạc (Ag)', 'C. Vàng (Au)', 'D. Nhôm (Al)'],
+                answer: 1,
+                explanation: 'Bạc (Ag) dẫn điện tốt nhất trong tất cả các kim loại (Ag > Cu > Au > Al > Fe).'
+              },
+              {
+                id: 'p2_q1',
+                part: 2,
+                type: 'true_false',
+                prompt: 'Cho các phát biểu về carbohydrate:',
+                statements: [
+                  { id: 'a', text: 'a) Glucose và fructose là đồng phân cấu tạo của nhau.', answer: true },
+                  { id: 'b', text: 'b) Saccharose tham gia phản ứng tráng bạc trực tiếp.', answer: false },
+                  { id: 'c', text: 'c) Tinh bột và cellulose đều là polymer thiên nhiên.', answer: true },
+                  { id: 'd', text: 'd) Thủy phân hoàn toàn tinh bột thu được glucose.', answer: true }
+                ],
+                explanation: 'Saccharose không có nhóm -CHO mở vòng nên không tráng bạc trực tiếp.'
+              },
+              {
+                id: 'p3_q1',
+                part: 3,
+                type: 'short_answer',
+                prompt: 'Phân tử khối của ethyl acetate (CH3COOC2H5) bằng bao nhiêu?',
+                answer: ['88'],
+                explanation: 'M(CH3COOC2H5) = 12*4 + 8 + 16*2 = 88.'
+              }
+            ]
+          };
+          area.value = JSON.stringify(sampleExam, null, 2);
+          toast('📋 Đã điền mẫu JSON đề thi 3 phần chuẩn GDPT 2018!', 'info');
+        }
+        return;
+      }
+
+      const adminExamPubBtn = e.target.closest('[data-admin-exam-toggle-pub]');
+      if (adminExamPubBtn) {
+        const examId = adminExamPubBtn.getAttribute('data-admin-exam-toggle-pub');
+        const curPub = adminExamPubBtn.getAttribute('data-cur-pub') === '1';
+        const act = curPub ? 'unpublish' : 'publish';
+        try {
+          const resp = await fetch(`/api/exams?action=${act}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify({ exam_id: examId })
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data?.ok) {
+            toast(curPub ? '⏸ Đã tạm ẩn đề thi khỏi danh sách học sinh.' : '✅ Đã xuất bản đề thi lên Kho Luyện Đề!', 'success');
+            await fetchAdminDetail();
+            if (window.PK9_EXAM_CENTER?.reloadCatalog) await window.PK9_EXAM_CENTER.reloadCatalog();
+          } else {
+            toast(data?.message || 'Không thể cập nhật trạng thái đề thi.', 'error');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ.', 'error');
+        }
+        return;
+      }
+
+      const adminExamDelBtn = e.target.closest('[data-admin-exam-delete]');
+      if (adminExamDelBtn) {
+        const examId = adminExamDelBtn.getAttribute('data-admin-exam-delete');
+        if (!window.confirm(`Xác nhận xóa đề thi tùy chỉnh "${examId}" khỏi hệ thống?`)) return;
+        try {
+          const resp = await fetch('/api/exams?action=delete', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify({ exam_id: examId })
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data?.ok) {
+            toast('🗑️ Đã xóa đề thi tùy chỉnh.', 'info');
+            await fetchAdminDetail();
+            if (window.PK9_EXAM_CENTER?.reloadCatalog) await window.PK9_EXAM_CENTER.reloadCatalog();
+          } else {
+            toast(data?.message || 'Không thể xóa đề thi này.', 'error');
           }
         } catch {
           toast('Lỗi kết nối máy chủ.', 'error');
@@ -4807,45 +5302,127 @@
     document.addEventListener('input', e => {
       if (e.target.id === 'pk9-lecture-search-input') {
         APP.lectureSearch = e.target.value || '';
-        renderLecturesTab();
-        const el = document.getElementById('pk9-lecture-search-input');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const chListEl = document.getElementById('pk9-lecture-chapters-list');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+        if (chListEl && activeCourse && found?.topic) {
+          chListEl.innerHTML = buildLectureChaptersHtml(activeCourse, found.topic, found.chapter);
+        }
       } else if (e.target.id === 'pk9-teacher-pdf-search') {
         APP.teacherPdfSearch = e.target.value || '';
-        renderLecturesTab();
-        const el = document.getElementById('pk9-teacher-pdf-search');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const listEl = document.getElementById('pk9-teacher-pdf-list-wrap');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        if (listEl && activeCourse) {
+          listEl.innerHTML = buildTeacherPdfListHtml(activeCourse.teacherPdfs || []);
+        }
       } else if (e.target.id === 'pk9-lb-search-input') {
         APP.lbSearch = e.target.value || '';
-        renderLeaderboardTab();
-        const el = document.getElementById('pk9-lb-search-input');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const rowsEl = document.getElementById('pk9-lb-rows-body');
+        if (rowsEl) {
+          const isWeekly = APP.lbMode === 'weekly';
+          const isExamMode = APP.lbMode === 'exam';
+          const rawRows = isExamMode
+            ? (APP.lbData.exam_leaderboard || [])
+            : isWeekly
+              ? (APP.lbData.weekly_leaderboard?.length ? APP.lbData.weekly_leaderboard : APP.lbData.leaderboard || [])
+              : (APP.lbData.leaderboard || []);
+          rowsEl.innerHTML = buildLeaderboardRowsHtml(rawRows, isWeekly, isExamMode);
+        }
       } else if (e.target.id === 'pk9-doc-search-input') {
         APP.docSearch = e.target.value || '';
-        renderDocsTab();
-        const el = document.getElementById('pk9-doc-search-input');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const gridEl = document.getElementById('pk9-doc-cards-grid');
+        if (gridEl) {
+          gridEl.innerHTML = buildDocsCardsHtml();
+        }
       } else if (e.target.id === 'pk9-kc-search-input') {
         APP.kcSearch = e.target.value || '';
-        renderKhoaChuiTab();
-        const el = document.getElementById('pk9-kc-search-input');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const gridEl = document.getElementById('pk9-kc-cards-grid');
+        if (gridEl) {
+          gridEl.innerHTML = buildKhoaChuiCardsHtml();
+        }
       } else if (e.target.id === 'pk9-admin-user-search') {
         APP.adminUserSearch = e.target.value || '';
-        renderAdminTab();
-        const el = document.getElementById('pk9-admin-user-search');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const tbody = document.getElementById('pk9-admin-users-tbody');
+        if (tbody) {
+          tbody.innerHTML = buildAdminUsersRowsHtml(APP.adminDetailData?.users || []);
+        }
       } else if (e.target.id === 'pk9-admin-exam-search') {
         APP.adminExamSearch = e.target.value || '';
-        renderAdminTab();
-        const el = document.getElementById('pk9-admin-exam-search');
-        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        const tbody = document.getElementById('pk9-admin-attempts-tbody');
+        if (tbody) {
+          tbody.innerHTML = buildAdminExamAttemptsRowsHtml(APP.adminDetailData?.exam_attempts || []);
+        }
       } else if (e.target.id === 'pk9-cmd-input') {
         renderCommandResults(e.target.value || '');
       }
     });
 
     document.addEventListener('submit', async e => {
+      if (e.target.id === 'pk9-admin-import-exam-form') {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const rawJson = String(fd.get('exam_json') || '').trim();
+        const publishNow = fd.get('publish_now') !== null;
+        let parsedExam = null;
+        try {
+          parsedExam = JSON.parse(rawJson);
+        } catch (err) {
+          toast(`❌ JSON không hợp lệ: ${err.message}`, 'error');
+          return;
+        }
+        try {
+          const resp = await fetch('/api/exams?action=admin-import', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify({ exam: parsedExam, publish_now: publishNow })
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data?.ok) {
+            toast(`🎉 Đã nạp đề thi "${parsedExam.title || data.exam_id}" thành công!`, 'success');
+            e.target.reset();
+            await fetchAdminDetail();
+            if (window.PK9_EXAM_CENTER?.reloadCatalog) await window.PK9_EXAM_CENTER.reloadCatalog();
+          } else {
+            toast(data?.message || 'Không thể nạp đề thi.', 'error');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ.', 'error');
+        }
+        return;
+      }
+
+      if (e.target.id === 'pk9-forgot-form') {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const payload = Object.fromEntries(fd.entries());
+        try {
+          const resp = await fetch('/api/auth?action=forgot-password', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify(payload)
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok || !data?.ok) {
+            toast(data?.message || 'Không thể khôi phục mật khẩu.', 'error');
+            return;
+          }
+          APP.user = data.user;
+          APP.isAdmin = Boolean(data.user?.is_admin || data.user?.role === 'admin');
+          APP.csrf = data.csrf || APP.csrf;
+          closeAuthModal();
+          toast(data.message || 'Khôi phục mật khẩu thành công!', 'success');
+          await fetchAuthAndLeaderboard();
+          if (window.PK9_RPG?.loadMeta) {
+            await window.PK9_RPG.loadMeta(APP.user?.settings?.preferred_grade || '2K9');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ.', 'error');
+        }
+        return;
+      }
+
       if (e.target.id === 'pk9-admin-create-user-form') {
         e.preventDefault();
         const fd = new FormData(e.target);

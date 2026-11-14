@@ -23,7 +23,7 @@
   <meta property="og:site_name" content="HỌC CÙNG PHÚC K9" />
   <meta property="og:locale" content="vi_VN" />
   <meta property="og:title" content="HỌC CÙNG PHÚC K9 — Hệ Sinh Thái Luyện Thi & Kho Đề Nguồn Thật 9+" />
-  <meta property="og:description" content="258+ Video bài giảng đa môn theo từng lớp, Kho đề thi thật Sở/Bộ chấm điểm tự động & Bảng xếp hạng Học viên hàng tuần. Học miễn phí ngay!" />
+  <meta property="og:description" content="19.948+ Video bài giảng & PDF công khai (61 khóa 12 môn & ĐGNL), Kho đề thi thật Sở/Bộ chấm điểm tự động & Bảng xếp hạng Học viên hàng tuần. Học miễn phí ngay!" />
   <meta property="og:url" content="https://thanhphuc.vercel.app/" />
   <meta property="og:image" content="https://thanhphuc.vercel.app/assets/og-phuc-k9.jpg?v=2026" />
   <meta property="og:image:secure_url" content="https://thanhphuc.vercel.app/assets/og-phuc-k9.jpg?v=2026" />
@@ -33,7 +33,7 @@
   <meta property="og:image:alt" content="HỌC CÙNG PHÚC K9 — Hệ sinh thái luyện thi 9+" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="HỌC CÙNG PHÚC K9 — Hệ Sinh Thái Luyện Thi 9+" />
-  <meta name="twitter:description" content="258+ Video bài giảng, Kho đề thi thật Sở/Bộ chấm điểm tự động & Bảng xếp hạng Học viên hàng tuần." />
+  <meta name="twitter:description" content="19.948+ Video bài giảng & PDF, Kho đề thật Sở/Bộ chấm điểm tự động & Bảng xếp hạng Học viên hàng tuần." />
   <meta name="twitter:image" content="https://thanhphuc.vercel.app/assets/og-phuc-k9.jpg?v=2026" />
 
   <!-- Structured Data (SEO Brand Identity) -->
@@ -47,7 +47,7 @@
           "alternateName": ["Học Cùng Phúc K9", "hoc cung phuc k9", "Phúc K9"],
           "url": "https://thanhphuc.vercel.app/",
           "inLanguage": "vi-VN",
-          "description": "Hệ sinh thái luyện thi 9+: 258+ Video bài giảng đa môn, Kho đề nguồn thật Sở/Bộ chấm điểm tự động và Bảng xếp hạng Học viên hàng tuần."
+          "description": "Hệ sinh thái luyện thi 9+: 19.948+ Video bài giảng & PDF đa môn (61 khóa), Kho đề nguồn thật Sở/Bộ chấm điểm tự động và Bảng xếp hạng Học viên hàng tuần."
         },
         {
           "@type": "EducationalOrganization",
@@ -66,8 +66,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="/style.css?v=45" />
-  <link rel="stylesheet" href="/assets/exam-center.css?v=45" />
+  <link rel="stylesheet" href="/style.css?v=49" />
+  <link rel="stylesheet" href="/assets/exam-center.css?v=49" />
 
   <!-- MathJax Configuration for LaTeX Formulas -->
   <script>
@@ -152,7 +152,7 @@
             <span class="pk9-nav-icon">🏆</span>
             <span>BXH Tuần & BXH Top</span>
           </span>
-          <span class="pk9-nav-pill hot">Đua Top</span>
+          <span class="pk9-nav-pill" id="pk9-nav-lb-pill">🔒 Khóa</span>
         </button>
 
         <div class="pk9-nav-group-label">Tài nguyên & Công cụ</div>
@@ -293,8 +293,8 @@
           <button type="button" class="pk9-xp-chip pk9-hide-mob-xs" id="pk9-top-admin-btn" data-nav-tab="admin" title="Mở Trung tâm điều hành Admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.18),rgba(245,158,11,0.18));border-color:rgba(225,29,72,0.45);color:#e11d48;">
             🛡️ <span class="hide-xs">Admin Pro</span>
           </button>
-          <button type="button" class="pk9-xp-chip" id="pk9-top-xp-chip" data-nav-tab="leaderboard" title="Xem thứ hạng của bạn trên BXH Tuần & Top">
-            🔥 <span class="hide-xs">Chuỗi 1 ngày • </span>⚡ <b>100<span class="pk9-hide-mob-430"> XP</span></b>
+          <button type="button" class="pk9-xp-chip" id="pk9-top-xp-chip" data-nav-tab="leaderboard" title="Tài khoản Khách chưa mở khóa BXH — Đăng ký hoặc đăng nhập để đua Top">
+            🔒 <span class="hide-xs">Khách • </span><b>BXH <span class="pk9-hide-mob-430">Đang </span>Khóa</b>
           </button>
           <button type="button" class="pk9-icon-btn pk9-theme-btn" data-toggle-theme="1" title="Chuyển chế độ Sáng / Tối" aria-label="Đổi chế độ Sáng Tối">
             🌙
@@ -352,7 +352,90 @@
       <span>🏆</span>
       <span>BXH Top</span>
     </button>
+    <button type="button" class="pk9-mob-nav-btn" id="pk9-mob-hub-btn" data-open-mob-hub="1">
+      <span>⚡</span>
+      <span>Tiện ích</span>
+    </button>
   </nav>
+
+  <!-- MOBILE QUICK HUB BOTTOM SHEET (1-TAP ACCESS TO ALL RPG & STUDY TOOLS) -->
+  <div class="pk9-mob-hub-sheet" id="pk9-mob-hub-sheet" role="dialog" aria-modal="true" aria-label="Tiện ích & Học Vui RPG">
+    <div class="pk9-mob-hub-backdrop" data-close-mob-hub="1"></div>
+    <div class="pk9-mob-hub-panel">
+      <div class="pk9-mob-hub-handle"></div>
+      <div class="pk9-mob-hub-head">
+        <div>
+          <strong style="font-size:0.96rem;display:block;">⚡ Trung Tâm Tiện Ích &amp; Học Vui RPG</strong>
+          <div id="pk9-mob-hub-wallet" style="font-size:0.74rem;color:var(--pk9-text-muted);margin-top:0.15rem;">
+            🪙 160 Vàng • 💎 5 KC • 🔥 Chuỗi 1 ngày • ⚡ Cấp 1
+          </div>
+        </div>
+        <button type="button" class="pk9-icon-btn" data-close-mob-hub="1" aria-label="Đóng">✕</button>
+      </div>
+      <div class="pk9-mob-hub-grid">
+        <button type="button" class="pk9-mob-hub-tile hot" data-nav-tab="missions">
+          <span class="pk9-mob-hub-icon">⚡</span>
+          <span class="pk9-mob-hub-label">Luyện Nhiệm Vụ</span>
+          <span class="pk9-mob-hub-sub">Sổ ôn SRS • +Vàng</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="journey">
+          <span class="pk9-mob-hub-icon">🗺️</span>
+          <span class="pk9-mob-hub-label">Vượt Đảo RPG</span>
+          <span class="pk9-mob-hub-sub">Hành trình ải</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="shop">
+          <span class="pk9-mob-hub-icon">🛍️</span>
+          <span class="pk9-mob-hub-label">Cửa Hàng &amp; Đồ</span>
+          <span class="pk9-mob-hub-sub">Thay đồ • Vật phẩm</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="periodic">
+          <span class="pk9-mob-hub-icon">⚗️</span>
+          <span class="pk9-mob-hub-label">Bảng Tuần Hoàn</span>
+          <span class="pk9-mob-hub-sub">118 nguyên tố</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="idcard">
+          <span class="pk9-mob-hub-icon">🪪</span>
+          <span class="pk9-mob-hub-label">Thẻ Học Viên QR</span>
+          <span class="pk9-mob-hub-sub">Nhân vật &amp; Châm ngôn</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="flashcards">
+          <span class="pk9-mob-hub-icon">🃏</span>
+          <span class="pk9-mob-hub-label">Flashcards 3D</span>
+          <span class="pk9-mob-hub-sub">Lật thẻ công thức</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="docs">
+          <span class="pk9-mob-hub-icon">📚</span>
+          <span class="pk9-mob-hub-label">Thư Viện PDF</span>
+          <span class="pk9-mob-hub-sub">84+ Ebook &amp; Đề</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="archive">
+          <span class="pk9-mob-hub-icon">🗂️</span>
+          <span class="pk9-mob-hub-label">Kho Tổng Ôn</span>
+          <span class="pk9-mob-hub-sub">Tài liệu 2K8/2K9</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="planner">
+          <span class="pk9-mob-hub-icon">⏱️</span>
+          <span class="pk9-mob-hub-label">Bàn Pomodoro</span>
+          <span class="pk9-mob-hub-sub">Tập trung 25p/50p</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="ai">
+          <span class="pk9-mob-hub-icon">🤖</span>
+          <span class="pk9-mob-hub-label">Gia Sư AI 24/7</span>
+          <span class="pk9-mob-hub-sub">Giải bài chi tiết</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="community">
+          <span class="pk9-mob-hub-icon">🤝</span>
+          <span class="pk9-mob-hub-label">Cộng Đồng K9</span>
+          <span class="pk9-mob-hub-sub">Chia sẻ tài liệu</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-open-auth="profile" data-close-mob-hub="1">
+          <span class="pk9-mob-hub-icon">⚙️</span>
+          <span class="pk9-mob-hub-label">Tài Khoản &amp; PIN</span>
+          <span class="pk9-mob-hub-sub">Hồ sơ • Khôi phục</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- AUTH & PROFILE MODAL -->
   <div class="pk9-modal-backdrop" id="pk9-auth-modal" role="dialog" aria-modal="true">
@@ -381,8 +464,8 @@
   <script src="/assets/pk9-2k9-manifest.js"></script>
   <script src="/assets/pk9-2k8-curated.js"></script>
   <script src="/assets/pk9-2k8-dgnl.js"></script>
-  <script src="/assets/exam-center.js?v=45"></script>
-  <script src="/assets/pk9-rpg.js?v=45"></script>
-  <script src="/assets/pk9-app.js?v=45"></script>
+  <script src="/assets/exam-center.js?v=49"></script>
+  <script src="/assets/pk9-rpg.js?v=49"></script>
+  <script src="/assets/pk9-app.js?v=49"></script>
 </body>
 </html>

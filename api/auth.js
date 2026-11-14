@@ -235,11 +235,11 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (!['register', 'login', 'save-state', 'save-profile', 'change-password', 'logout'].includes(action)) {
+    if (!['register', 'login', 'forgot-password', 'save-state', 'save-profile', 'change-password', 'logout'].includes(action)) {
       return sendJson(res, 400, { ok: false, message: 'Hành động không hợp lệ.' });
     }
     if (req.method !== 'POST') return sendJson(res, 405, { ok: false, message: 'API này chỉ nhận POST cho action này.' });
-    if (!['register', 'login'].includes(action) && !requireCsrf(req, session, csrf)) {
+    if (!['register', 'login', 'forgot-password'].includes(action) && !requireCsrf(req, session, csrf)) {
       return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
     }
 
@@ -256,6 +256,8 @@ module.exports = async function handler(req, res) {
         ? String(body.preferred_grade).toUpperCase()
         : '2K9';
       const school = String(body.school || '').trim().slice(0, 80);
+      const recoveryEmail = String(body.recovery_email || '').trim().toLowerCase().slice(0, 120);
+      const recoveryPin = String(body.recovery_pin || '').trim();
       if (!validUsername(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập chỉ gồm chữ, số, dấu chấm, gạch ngang (3–40 ký tự).' });
       if (['guest', 'khach', 'khach_k9', 'anonymous', 'k9-guest'].includes(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập này được dành riêng cho hệ thống. Hãy chọn tên khác!' });
       if (isAdminUsername(username)) {
@@ -263,7 +265,11 @@ module.exports = async function handler(req, res) {
       }
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Họ và tên cần từ 2 đến 80 ký tự.' });
       if (password.length < 6 || password.length > 128) return sendJson(res, 422, { ok: false, message: 'Mật khẩu cần từ 6 đến 128 ký tự.' });
+      if (recoveryPin && (recoveryPin.length < 4 || recoveryPin.length > 32)) {
+        return sendJson(res, 422, { ok: false, message: 'Mã bảo mật khôi phục cần từ 4 đến 32 ký tự.' });
+      }
       const { salt, hash } = hashPassword(password);
+      const recPair = recoveryPin ? hashPassword(recoveryPin) : null;
       const now = new Date();
       const nowIso = now.toISOString();
       const wk = vnWeekKey(now);
@@ -274,6 +280,8 @@ module.exports = async function handler(req, res) {
         is_admin: false,
         salt,
         password_hash: hash,
+        recovery_salt: recPair ? recPair.salt : null,
+        recovery_hash: recPair ? recPair.hash : null,
         created_at: nowIso,
         last_active: nowIso,
         streak: 1,
@@ -282,7 +290,7 @@ module.exports = async function handler(req, res) {
         week_key: wk,
         badges: ['Tân Binh K9'],
         progress: { done: {}, resume: null, notes: {} },
-        settings: { preferred_grade: preferredGrade, school },
+        settings: { preferred_grade: preferredGrade, school, recovery_email: recoveryEmail || '' },
         google: { linked: false, email: null },
         avatar_data: null,
         avatar_url: null
@@ -348,6 +356,69 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    if (action === 'forgot-password') {
+      const username = normalizeUsername(body.username);
+      const recoveryInput = String(body.recovery_input || '').trim();
+      const recoveryPin = String(body.recovery_pin || recoveryInput || '').trim();
+      const recoveryEmail = String(body.recovery_email || recoveryInput || '').trim().toLowerCase();
+      const newPass = String(body.new_password || '');
+      const confirmPass = Object.prototype.hasOwnProperty.call(body, 'confirm_password')
+        ? String(body.confirm_password || '')
+        : newPass;
+      const clientIp = getClientIp(req);
+      const failKey = `phuc:auth:fail:${clientIp}:${username || '_'}`;
+      const fails = Number(await redis.get(failKey).catch(() => 0) || 0);
+      if (fails >= 10) {
+        return sendJson(res, 429, {
+          ok: false,
+          message: 'Bạn đã thử quá nhiều lần. Vui lòng thử lại sau 15 phút.',
+          csrf
+        });
+      }
+      if (!username || (!recoveryPin && !recoveryEmail) || newPass.length < 6 || newPass.length > 128) {
+        return sendJson(res, 422, { ok: false, message: 'Vui lòng nhập đầy đủ Tên đăng nhập, Mã PIN / Gmail khôi phục và Mật khẩu mới (tối thiểu 6 ký tự).', csrf });
+      }
+      if (newPass !== confirmPass) {
+        return sendJson(res, 422, { ok: false, message: 'Xác nhận mật khẩu mới chưa khớp.', csrf });
+      }
+      const user = parseUserRecord(await redis.get(`${USER_PREFIX}${username}`));
+      const savedEmail = String(user?.settings?.recovery_email || '').trim().toLowerCase();
+      const hasPin = Boolean(user?.recovery_hash && user?.recovery_salt);
+      if (!user || isAdminAccount(user) || (!hasPin && !savedEmail)) {
+        try { await redis.incr(failKey); await redis.expire(failKey, 900); } catch {}
+        return sendJson(res, 403, {
+          ok: false,
+          message: 'Tài khoản chưa cài đặt Mã PIN / Gmail khôi phục hoặc thông tin không đúng. Hãy liên hệ Admin để được cấp lại mật khẩu.',
+          csrf
+        });
+      }
+      const pinMatched = hasPin && recoveryPin
+        ? verifyPassword(recoveryPin, { salt: user.recovery_salt, password_hash: user.recovery_hash })
+        : false;
+      const emailMatched = savedEmail && recoveryEmail && recoveryEmail.includes('@')
+        ? recoveryEmail === savedEmail
+        : false;
+      if (!pinMatched && !emailMatched) {
+        try { await redis.incr(failKey); await redis.expire(failKey, 900); } catch {}
+        return sendJson(res, 403, { ok: false, message: 'Mã PIN khôi phục hoặc Gmail khôi phục không khớp.', csrf });
+      }
+      try { await redis.del(failKey); } catch {}
+      const { salt, hash } = hashPassword(newPass);
+      user.salt = salt;
+      user.password_hash = hash;
+      user.last_active = new Date().toISOString();
+      await redis.set(`${USER_PREFIX}${username}`, user);
+      await createSession(res, username, csrf);
+      return sendJson(res, 200, {
+        ok: true,
+        authenticated: true,
+        user: safeUser(user),
+        csrf,
+        is_admin: false,
+        message: 'Khôi phục mật khẩu thành công! Đã tự động đăng nhập.'
+      });
+    }
+
     if (action === 'save-profile') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
       const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
@@ -356,8 +427,20 @@ module.exports = async function handler(req, res) {
       const preferred = String(body.preferred_grade ?? user.settings?.preferred_grade ?? '2K9').toUpperCase();
       const school = String(body.school ?? user.settings?.school ?? '').trim().slice(0, 80);
       const bio = String(body.bio ?? user.settings?.bio ?? '').trim().slice(0, 120);
+      const recoveryEmail = Object.prototype.hasOwnProperty.call(body, 'recovery_email')
+        ? String(body.recovery_email || '').trim().toLowerCase().slice(0, 120)
+        : String(user.settings?.recovery_email || '');
+      const recoveryPin = String(body.recovery_pin || '').trim();
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Tên hiển thị cần từ 2 đến 80 ký tự.', csrf });
       if (!['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(preferred)) return sendJson(res, 422, { ok: false, message: 'Khối ưu tiên không hợp lệ.', csrf });
+      if (recoveryPin && (recoveryPin.length < 4 || recoveryPin.length > 32)) {
+        return sendJson(res, 422, { ok: false, message: 'Mã bảo mật khôi phục cần từ 4 đến 32 ký tự.', csrf });
+      }
+      if (recoveryPin) {
+        const recPair = hashPassword(recoveryPin);
+        user.recovery_salt = recPair.salt;
+        user.recovery_hash = recPair.hash;
+      }
       if (Object.prototype.hasOwnProperty.call(body, 'avatar_data')) {
         const a = String(body.avatar_data || '');
         if (a && (!/^data:image\/(jpeg|png|webp);base64,/.test(a) || a.length > 260000)) {
@@ -366,7 +449,7 @@ module.exports = async function handler(req, res) {
         user.avatar_data = a || null;
       }
       user.display_name = displayName;
-      user.settings = { ...(user.settings || {}), preferred_grade: preferred, school, bio };
+      user.settings = { ...(user.settings || {}), preferred_grade: preferred, school, bio, recovery_email: recoveryEmail };
       user.last_active = new Date().toISOString();
       await redis.set(`${USER_PREFIX}${session.username}`, user);
       try { await redis.sadd('phuc:users:index', session.username); } catch {}
