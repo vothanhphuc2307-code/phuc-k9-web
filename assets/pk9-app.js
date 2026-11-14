@@ -43,6 +43,7 @@
     user: null,
     csrf: '',
     isAdmin: false,
+    weakAdminPassword: false,
     doneMap: {},
     notesMap: {},
     resumeItem: null,
@@ -468,6 +469,7 @@
         const meData = await meResp.json();
         APP.csrf = meData.csrf || APP.csrf;
         APP.isAdmin = Boolean(meData.is_admin || meData.user?.is_admin || meData.user?.role === 'admin');
+        APP.weakAdminPassword = Boolean(meData.weak_password_warning);
         if (meData.authenticated && meData.user) {
           APP.user = meData.user;
           window.PK9_RPG_STATE = meData.user.rpg || window.PK9_RPG_STATE || null;
@@ -481,6 +483,7 @@
         } else {
           APP.user = null;
           APP.isAdmin = false;
+          APP.weakAdminPassword = false;
           window.PK9_RPG_STATE = null;
         }
       }
@@ -2469,6 +2472,11 @@
     } catch {}
   }
 
+  function safeCommunityLink(url) {
+    const raw = String(url || '').trim();
+    return (/^https?:\/\//i.test(raw) || raw.startsWith('/api/blob?')) ? raw : '';
+  }
+
   function renderCommunityTab() {
     const root = document.getElementById('tab-community');
     if (!root) return;
@@ -2483,28 +2491,44 @@
         </div>
 
         <div class="pk9-card">
-          <h4 style="margin:0 0 0.75rem;font-size:1rem;font-weight:800;">📤 Đóng góp tài liệu / link đề thi cho cộng đồng K9</h4>
+          <h4 style="margin:0 0 0.5rem;font-size:1rem;font-weight:800;">📤 Đóng góp tài liệu / link đề thi cho cộng đồng K9</h4>
+          ${!APP.user ? `
+            <p style="margin:0 0 0.75rem;font-size:0.83rem;color:#b45309;font-weight:700;">
+              🔒 Bạn đang ở chế độ Khách. Hãy <button type="button" class="pk9-admin-btn-xs" data-open-auth="login">Đăng nhập / Đăng ký</button> để đăng tài liệu lên máy chủ lưu vĩnh viễn.
+            </p>
+          ` : ''}
           <form id="pk9-community-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.75rem;">
-            <input type="text" name="title" class="pk9-input" placeholder="Tên tài liệu / đề thi..." required />
-            <input type="text" name="subject" class="pk9-input" placeholder="Môn học (VD: Toán 12, Sinh 12)" required />
-            <input type="url" name="url" class="pk9-input" placeholder="Link Google Drive / PDF / OneDrive..." required />
+            <input type="text" name="title" class="pk9-input" maxlength="180" placeholder="Tên tài liệu / đề thi..." required />
+            <input type="text" name="subject" class="pk9-input" maxlength="60" placeholder="Môn học (VD: Toán 12, Sinh 12)" required />
+            <input type="url" name="url" class="pk9-input" maxlength="600" placeholder="Link Google Drive / PDF / OneDrive (https://...)..." required />
             <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.35rem;">🚀 Chia sẻ lên Cộng đồng</button>
           </form>
         </div>
 
         <div class="pk9-exam-grid">
-          ${APP.communityItems.length ? APP.communityItems.map(item => `
+          ${APP.communityItems.length ? APP.communityItems.map(item => {
+            const href = safeCommunityLink(item.download_url || item.url);
+            const canDel = Boolean(item.id && APP.user && (APP.isAdmin || String(item.username || '').toLowerCase() === String(APP.user.username || '').toLowerCase()));
+            return `
             <article class="pk9-exam-card">
               <div>
-                <span class="pk9-badge pk9-badge-subj" style="margin-bottom:0.5rem;">${esc(item.subject || 'Tài liệu K9')}</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;margin-bottom:0.5rem;">
+                  <span class="pk9-badge pk9-badge-subj">${esc(item.subject || 'Tài liệu K9')}</span>
+                  ${canDel ? `<button type="button" class="pk9-admin-btn-xs danger" data-del-community-item="${esc(item.id)}">🗑️ Xóa</button>` : ''}
+                </div>
                 <h4>${esc(item.title)}</h4>
-                <div class="pk9-exam-origin">👤 Đóng góp bởi: ${esc(item.author || item.username || 'Học viên K9')}</div>
+                <div class="pk9-exam-origin">👤 Đóng góp bởi: ${esc(item.author || item.uploader || item.username || 'Học viên K9')}${item.created_label ? ` • ${esc(item.created_label)}` : ''}</div>
               </div>
-              <a href="${esc(item.url || '#')}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="margin-top:0.75rem;">
-                🔗 Mở tài liệu chia sẻ ↗
-              </a>
+              ${href ? `
+                <a href="${esc(href)}" target="_blank" rel="noopener noreferrer" class="pk9-btn-exam-ghost" style="margin-top:0.75rem;">
+                  🔗 Mở tài liệu chia sẻ ↗
+                </a>
+              ` : `
+                <span class="pk9-exam-origin" style="margin-top:0.75rem;">Link tài liệu chưa hợp lệ</span>
+              `}
             </article>
-          `).join('') : `
+          `;
+          }).join('') : `
             <div class="pk9-card" style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--pk9-text-muted);">
               Chưa có tài liệu cộng đồng nào được tải lên. Hãy là học viên đầu tiên chia sẻ tài liệu phía trên!
             </div>
@@ -2570,6 +2594,12 @@
     const root = document.getElementById('tab-ai');
     if (!root) return;
 
+    const samples = [
+      'Giải thích cách tính tích phân từng phần và ví dụ minh họa?',
+      'So sánh lực Lo-ren-xơ và lực từ tác dụng lên dây dẫn?',
+      'Cách viết đồng phân este C4H8O2 nhanh không bị sót?'
+    ];
+
     root.innerHTML = `
       <div class="pk9-exam-hub">
         <div class="pk9-sec-head" style="margin-top:0;">
@@ -2580,14 +2610,17 @@
         </div>
 
         <div class="pk9-card">
+          <div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.75rem;">
+            ${samples.map(s => `<button type="button" class="pk9-exam-chip" data-ai-suggest="${esc(s)}" style="font-size:0.78rem;">💡 ${esc(s)}</button>`).join('')}
+          </div>
           <div id="pk9-ai-messages" style="min-height:260px;max-height:420px;overflow-y:auto;padding:1rem;border-radius:1rem;background:var(--pk9-surface-2);margin-bottom:1rem;display:flex;flex-direction:column;gap:0.75rem;">
             <div style="align-self:flex-start;max-width:85%;padding:0.85rem 1.1rem;border-radius:1rem;background:var(--pk9-surface);border:1px solid var(--pk9-border);font-size:0.9rem;">
               👋 Xin chào! Mình là <b>Trợ lý AI Học Cùng Phúc K9</b>. Bạn cần giải thích công thức Toán 12, Vật lí 12, Hóa học 12 (IUPAC), Sinh học 12 hay chiến thuật làm đề GDPT 2018? Hãy nhập câu hỏi bên dưới nhé!
             </div>
           </div>
           <form id="pk9-ai-form" class="pk9-ai-form">
-            <input type="text" id="pk9-ai-input" class="pk9-input" style="margin-top:0;flex:1 1 min(100%, 200px);min-width:0;" placeholder="Nhập câu hỏi bài tập hoặc công thức cần giải thích..." required />
-            <button type="submit" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0 1.2rem;">Gửi câu hỏi 🚀</button>
+            <input type="text" id="pk9-ai-input" class="pk9-input" maxlength="2000" style="margin-top:0;flex:1 1 min(100%, 200px);min-width:0;" placeholder="Nhập câu hỏi bài tập hoặc công thức cần giải thích..." required />
+            <button type="submit" id="pk9-ai-submit-btn" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0 1.2rem;">Gửi câu hỏi 🚀</button>
           </form>
         </div>
       </div>
@@ -2709,10 +2742,10 @@
               <button type="button" class="pk9-btn-exam-primary" data-open-auth="login">
                 🔑 Đăng nhập tài khoản Admin
               </button>
-              <button type="button" class="pk9-btn-exam-ghost" data-quick-admin-login="1">
-                ⚡ Đăng nhập nhanh Admin Mặc định (admin / admin123)
-              </button>
             </div>
+            <p style="color:var(--pk9-text-muted);font-size:0.78rem;margin:0.85rem 0 0;">
+              🔒 Để bảo vệ dữ liệu học viên, tài khoản quản trị chỉ đăng nhập bằng mật khẩu đã cấu hình trên máy chủ.
+            </p>
           </div>
         </div>
       `;
@@ -2793,6 +2826,15 @@
             </div>
           </div>
         </section>
+
+        ${(APP.weakAdminPassword || d?.weak_admin_password) ? `
+          <div class="pk9-card" style="border:1.5px solid #ef4444;background:rgba(239,68,68,0.08);margin-bottom:0.85rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+            <div style="font-size:0.86rem;line-height:1.45;">
+              <b style="color:#dc2626;">⚠️ CẢNH BÁO BẢO MẬT QUẢN TRỊ:</b> Tài khoản <code>@admin</code> đang dùng mật khẩu mặc định dễ đoán. Hãy đổi mật khẩu mạnh ngay hoặc đặt biến <code>ADMIN_DEFAULT_PASSWORD</code> trên Vercel!
+            </div>
+            <button type="button" class="pk9-btn-exam-primary" data-open-auth="security" style="background:#dc2626;flex:0 0 auto;">🔑 Đổi mật khẩu ngay</button>
+          </div>
+        ` : ''}
 
         <!-- 8 REAL-TIME ACCURATE MULTI-DEVICE KPI CARDS -->
         <div class="pk9-admin-kpi-grid">
@@ -3561,6 +3603,12 @@
               <span>Storage Engine</span>
               <b>${esc(d?.storage_mode || 'Active')}</b>
             </div>
+            <div style="display:flex;justify-content:space-between;padding:0.45rem 0.65rem;background:var(--pk9-surface-2);border-radius:0.6rem;">
+              <span>Admin Security Guard</span>
+              ${(APP.weakAdminPassword || d?.weak_admin_password)
+                ? '<b style="color:#dc2626;">● MK mặc định (Cần đổi ngay!)</b>'
+                : '<b style="color:#10b981;">● Protected</b>'}
+            </div>
           </div>
         </div>
       </div>
@@ -3851,11 +3899,6 @@
         <button type="submit" class="pk9-btn-exam-primary" style="margin-top:0.5rem;padding:0.8rem;">
           ${isReg ? '🎉 Hoàn tất Đăng ký & Nhận +100 XP Lên BXH' : '🚀 Đăng nhập ngay'}
         </button>
-        ${!isReg ? `
-          <button type="button" class="pk9-btn-exam-ghost" data-quick-admin-login="1" style="margin-top:0.25rem;justify-content:center;border-color:rgba(225,29,72,0.35);color:#e11d48;">
-            🛡️ Đăng nhập nhanh Tài khoản Admin (Mở Dashboard Quản Trị)
-          </button>
-        ` : ''}
       </form>
     `;
   }
@@ -4367,6 +4410,7 @@
         } catch {}
         APP.user = null;
         APP.isAdmin = false;
+        APP.weakAdminPassword = false;
         APP.pendingAvatarData = undefined;
         APP.lbData = { locked: true, week_key: '', total_students: 0, leaderboard: [], weekly_leaderboard: [], exam_leaderboard: [], my_rank: null };
         window.PK9_RPG_STATE = null;
@@ -4589,34 +4633,39 @@
         return;
       }
 
-      // --- QUICK ADMIN LOGIN & ADMIN DASHBOARD ---
-      const quickAdminBtn = e.target.closest('[data-quick-admin-login]');
-      if (quickAdminBtn) {
+      // --- AI SUGGESTION CHIPS & COMMUNITY DELETE ---
+      const aiSuggestBtn = e.target.closest('[data-ai-suggest]');
+      if (aiSuggestBtn) {
+        const aiInput = document.getElementById('pk9-ai-input');
+        if (aiInput) {
+          aiInput.value = aiSuggestBtn.getAttribute('data-ai-suggest') || '';
+          aiInput.focus();
+        }
+        return;
+      }
+
+      const delCommBtn = e.target.closest('[data-del-community-item]');
+      if (delCommBtn) {
+        const itemId = delCommBtn.getAttribute('data-del-community-item');
+        if (!itemId) return;
+        if (!window.confirm('Xác nhận xóa tài liệu này khỏi Thư viện Cộng đồng?')) return;
         try {
-          const resp = await fetch('/api/auth?action=login', {
+          const resp = await fetch('/api/community?action=delete', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
-            body: JSON.stringify({ username: 'admin', password: 'admin123' })
+            body: JSON.stringify({ id: itemId })
           });
-          const data = await resp.json();
+          const data = await resp.json().catch(() => ({}));
           if (resp.ok && data?.ok) {
-            APP.user = data.user;
-            APP.isAdmin = true;
-            APP.csrf = data.csrf || APP.csrf;
-            closeAuthModal();
-            toast('🛡️ Đã đăng nhập tài khoản Admin! Đang mở Admin Command Center...', 'success');
-            await fetchAuthAndLeaderboard();
-          if (window.PK9_RPG?.loadMeta) {
-            await window.PK9_RPG.loadMeta(APP.user?.settings?.preferred_grade || '2K9');
-          }
-          if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
-            switchTab('admin');
+            APP.communityItems = APP.communityItems.filter(it => String(it.id || '') !== String(itemId));
+            toast('🗑️ Đã xóa tài liệu khỏi Thư viện Cộng đồng.', 'info');
+            renderCommunityTab();
           } else {
-            toast(data?.message || 'Không thể đăng nhập nhanh Admin.', 'error');
+            toast(data?.message || 'Không thể xóa tài liệu này.', 'error');
           }
         } catch {
-          toast('Lỗi kết nối máy chủ khi đăng nhập Admin.', 'error');
+          toast('Lỗi kết nối máy chủ.', 'error');
         }
         return;
       }
@@ -4734,13 +4783,22 @@
       const adminResetPwBtn = e.target.closest('[data-admin-reset-pw]');
       if (adminResetPwBtn) {
         const username = adminResetPwBtn.getAttribute('data-admin-reset-pw');
-        await runAdminAction({ sub_action: 'reset-password', username, new_password: '123456' });
+        const suggested = `K9@${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+        const nextPass = window.prompt(`Nhập mật khẩu mới cho @${username} (6–128 ký tự):`, suggested);
+        if (nextPass === null) return;
+        const cleanPass = String(nextPass).trim();
+        if (cleanPass.length < 6) {
+          toast('Mật khẩu mới cần ít nhất 6 ký tự.', 'error');
+          return;
+        }
+        await runAdminAction({ sub_action: 'reset-password', username, new_password: cleanPass });
         return;
       }
 
       const adminDelUserBtn = e.target.closest('[data-admin-del-user]');
       if (adminDelUserBtn) {
         const username = adminDelUserBtn.getAttribute('data-admin-del-user');
+        if (!window.confirm(`Xác nhận xóa vĩnh viễn tài khoản @${username}?`)) return;
         await runAdminAction({ sub_action: 'delete-user', username });
         return;
       }
@@ -4836,6 +4894,7 @@
           }
           APP.user = data.user;
           APP.isAdmin = Boolean(data.user?.is_admin || data.user?.role === 'admin');
+          APP.weakAdminPassword = Boolean(data.weak_password_warning);
           APP.csrf = data.csrf || APP.csrf;
           closeAuthModal();
           toast(data.message || 'Thành công!', 'success');
@@ -4845,7 +4904,11 @@
           }
           if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
           if (APP.isAdmin) {
-            toast('🛡️ Quyền Admin đã kích hoạt! Mở tab Admin Dashboard để theo dõi toàn bộ web.', 'info');
+            if (APP.weakAdminPassword) {
+              toast('⚠️ Mật khẩu @admin hiện vẫn là mặc định! Vui lòng đổi sang mật khẩu mạnh ngay.', 'error');
+            } else {
+              toast('🛡️ Quyền Admin đã kích hoạt! Mở tab Admin Dashboard để theo dõi toàn bộ web.', 'info');
+            }
           }
         } catch {
           toast('Lỗi kết nối máy chủ.', 'error');
@@ -4911,9 +4974,11 @@
           const data = await resp.json();
           if (resp.ok && data?.ok) {
             if (data.csrf) APP.csrf = data.csrf;
+            if (APP.isAdmin && new_password !== 'admin123') APP.weakAdminPassword = false;
             e.target.reset();
             toast(data.message || 'Đổi mật khẩu thành công!', 'success');
             renderAuthModalContent('profile');
+            if (APP.activeTab === 'admin') renderAdminTab();
           } else {
             toast(data?.message || 'Không thể đổi mật khẩu.', 'error');
           }
@@ -4925,56 +4990,99 @@
 
       if (e.target.id === 'pk9-community-form') {
         e.preventDefault();
-        const fd = new FormData(e.target);
+        if (!APP.user) {
+          toast('🔒 Vui lòng đăng nhập tài khoản để chia sẻ tài liệu lên Thư viện Cộng đồng!', 'error');
+          openAuthModal('login');
+          return;
+        }
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const fd = new FormData(form);
         const item = Object.fromEntries(fd.entries());
-        APP.communityItems.unshift({
-          ...item,
-          author: APP.user?.display_name || 'Học viên K9'
-        });
+        if (submitBtn) submitBtn.disabled = true;
         try {
-          await fetch('/api/community?action=create', {
+          const resp = await fetch('/api/community?action=create', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
             body: JSON.stringify(item)
           });
-        } catch {}
-        toast('🎉 Đã chia sẻ tài liệu lên Thư viện Cộng đồng!', 'success');
-        renderCommunityTab();
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data?.ok && data?.item) {
+            if (data.csrf) APP.csrf = data.csrf;
+            APP.communityItems.unshift(data.item);
+            form.reset();
+            toast('🎉 Đã chia sẻ & lưu tài liệu lên Thư viện Cộng đồng!', 'success');
+            renderCommunityTab();
+          } else {
+            toast(data?.message || 'Không thể lưu tài liệu lên máy chủ.', 'error');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ khi chia sẻ tài liệu.', 'error');
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+        return;
       }
 
       if (e.target.id === 'pk9-ai-form') {
         e.preventDefault();
         const input = document.getElementById('pk9-ai-input');
+        const submitBtn = document.getElementById('pk9-ai-submit-btn');
         const box = document.getElementById('pk9-ai-messages');
         const q = String(input?.value || '').trim();
         if (!q || !box) return;
         input.value = '';
+        if (submitBtn) submitBtn.disabled = true;
+
         box.insertAdjacentHTML('beforeend', `
-          <div style="align-self:flex-end;max-width:80%;padding:0.75rem 1rem;border-radius:1rem;background:var(--pk9-primary);color:#fff;font-size:0.9rem;font-weight:600;">
+          <div style="align-self:flex-end;max-width:80%;padding:0.75rem 1rem;border-radius:1rem;background:var(--pk9-primary);color:#fff;font-size:0.9rem;font-weight:600;white-space:pre-line;">
             ${esc(q)}
           </div>
         `);
-        let reply = 'Để giải quyết câu hỏi này nhanh và chính xác nhất: (1) Xác định dạng bài trong mục Lý thuyết & Công thức của khóa học tương ứng; (2) Áp dụng công thức trọng tâm và kiểm tra điều kiện xác định; (3) Rèn phản xạ thêm tại Phòng Luyện Đề Nguồn Thật.';
+
+        const pendingEl = document.createElement('div');
+        pendingEl.style.cssText = 'align-self:flex-start;max-width:85%;padding:0.85rem 1.1rem;border-radius:1rem;background:var(--pk9-surface);border:1px solid var(--pk9-border);font-size:0.9rem;white-space:pre-line;';
+        pendingEl.innerHTML = '🤖 <b>Trợ lý AI Phúc K9:</b>\n⏳ Đang phân tích đề bài và viết lời giải chi tiết...';
+        box.appendChild(pendingEl);
+        box.scrollTop = box.scrollHeight;
+
+        const curCourse = getCourseById(APP.activeCourseId);
+        const curTopic = findTopicInCourse(curCourse, APP.activeTopicId)?.topic;
+        let replyText = '';
+        let errReason = '';
         try {
           const resp = await fetch('/api/ai', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: q })
+            body: JSON.stringify({
+              message: q,
+              prompt: q,
+              context: {
+                grade: APP.user?.settings?.preferred_grade || APP.gradeFilter || '2K9',
+                title: curTopic?.title || curCourse?.title || '',
+                description: curCourse ? `${curCourse.subject || ''} - ${curCourse.teacher || ''}` : ''
+              }
+            })
           });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data?.reply || data?.answer || data?.text) {
-              reply = data.reply || data.answer || data.text;
-            }
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data?.ok) {
+            replyText = data.answer || data.reply || data.text || '';
+          } else {
+            errReason = data?.message || `Máy chủ AI phản hồi mã lỗi ${resp.status}.`;
           }
-        } catch {}
-        box.insertAdjacentHTML('beforeend', `
-          <div style="align-self:flex-start;max-width:85%;padding:0.85rem 1.1rem;border-radius:1rem;background:var(--pk9-surface);border:1px solid var(--pk9-border);font-size:0.9rem;white-space:pre-line;">
-            🤖 <b>Trợ lý AI Phúc K9:</b>\n${esc(reply)}
-          </div>
-        `);
+        } catch {
+          errReason = 'Không thể kết nối tới /api/ai.';
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+
+        if (replyText) {
+          pendingEl.innerHTML = `🤖 <b>Trợ lý AI Phúc K9:</b>\n${esc(replyText)}`;
+        } else {
+          pendingEl.innerHTML = `⚠️ <b>AI Tutor tạm chưa phản hồi trực tiếp</b> (${esc(errReason)})\n\n💡 Gợi ý tự tra nhanh:\n1) Tìm dạng toán/lý thuyết trong <b>Video Bài Giảng & Lý Thuyết</b>;\n2) Mở <b>Bảng Tuần Hoàn</b> hoặc <b>Flashcard 3D</b> nếu cần tra nhanh công thức;\n3) Thử làm đề tương ứng ở <b>Phòng Luyện Đề</b> để xem lời giải chi tiết.`;
+        }
         box.scrollTop = box.scrollHeight;
         typeset(box);
       }
