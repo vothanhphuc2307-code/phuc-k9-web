@@ -19,6 +19,8 @@
     quizAnswers: {},
     lbMode: 'weekly', // 'weekly' | 'top' | 'exam'
     lbSearch: '',
+    lbFetchedAt: 0,
+    lbLoading: false,
     lbData: {
       week_key: '',
       leaderboard: [],
@@ -348,7 +350,10 @@
     if (target === 'home') renderHomeTab();
     if (target === 'lectures') renderLecturesTab();
     if (target === 'exams' && window.PK9_EXAM_CENTER) window.PK9_EXAM_CENTER.render();
-    if (target === 'leaderboard') renderLeaderboardTab();
+    if (target === 'leaderboard') {
+      renderLeaderboardTab();
+      refreshLeaderboard({ quiet: true });
+    }
     if (target === 'docs') renderDocsTab();
     if (target === 'khoa-chui') renderKhoaChuiTab();
     if (target === 'archive') renderArchiveTab();
@@ -378,9 +383,56 @@
   // ==========================================================================
   // AUTH & LEADERBOARD FETCHING
   // ==========================================================================
+  async function refreshLeaderboard(opts = {}) {
+    if (APP.lbLoading && !opts.force) return APP.lbData;
+    if (!opts.force && APP.lbFetchedAt && (Date.now() - APP.lbFetchedAt) < 1500) {
+      return APP.lbData;
+    }
+    APP.lbLoading = true;
+    try {
+      const lbResp = await fetch(`/api/dashboard?action=leaderboard&_=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      if (lbResp.ok) {
+        const lbJson = await lbResp.json();
+        if (lbJson?.ok) {
+          APP.lbData = {
+            week_key: lbJson.week_key || '',
+            leaderboard: Array.isArray(lbJson.leaderboard) ? lbJson.leaderboard : [],
+            weekly_leaderboard: Array.isArray(lbJson.weekly_leaderboard) ? lbJson.weekly_leaderboard : [],
+            exam_leaderboard: Array.isArray(lbJson.exam_leaderboard) ? lbJson.exam_leaderboard : [],
+            my_rank: lbJson.my_rank || null
+          };
+          APP.lbFetchedAt = Date.now();
+          if (APP.user && lbJson.my_rank?.entry) {
+            APP.user.xp = Number(lbJson.my_rank.entry.xp ?? APP.user.xp ?? 0);
+            APP.user.weekly_xp = Number(lbJson.my_rank.entry.weeklyXp ?? APP.user.weekly_xp ?? 0);
+          }
+          if (!opts.skipUiSync) {
+            updateHeaderAuthUI();
+            if (APP.activeTab === 'home') renderHomeTab();
+            if (APP.activeTab === 'leaderboard') renderLeaderboardTab();
+          }
+          if (!opts.quiet) {
+            toast('🏆 Đã cập nhật Bảng Xếp Hạng mới nhất!', 'success');
+          }
+        }
+      }
+    } catch {
+      if (!opts.quiet) toast('Không thể tải Bảng Xếp Hạng mới nhất.', 'error');
+    } finally {
+      APP.lbLoading = false;
+    }
+    return APP.lbData;
+  }
+
   async function fetchAuthAndLeaderboard() {
     try {
-      const meResp = await fetch('/api/auth?action=me', { credentials: 'include' });
+      const meResp = await fetch(`/api/auth?action=me&_=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
       if (meResp.ok) {
         const meData = await meResp.json();
         APP.csrf = meData.csrf || APP.csrf;
@@ -404,7 +456,10 @@
     } catch {}
 
     try {
-      const cfgResp = await fetch('/api/dashboard?action=public-config', { credentials: 'include' });
+      const cfgResp = await fetch(`/api/dashboard?action=public-config&_=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
       if (cfgResp.ok) {
         const cfg = await cfgResp.json();
         APP.systemAnnouncement = cfg?.announcement || null;
@@ -413,21 +468,7 @@
       }
     } catch {}
 
-    try {
-      const lbResp = await fetch('/api/dashboard?action=leaderboard', { credentials: 'include' });
-      if (lbResp.ok) {
-        const lbJson = await lbResp.json();
-        if (lbJson?.ok) {
-          APP.lbData = {
-            week_key: lbJson.week_key || '',
-            leaderboard: Array.isArray(lbJson.leaderboard) ? lbJson.leaderboard : [],
-            weekly_leaderboard: Array.isArray(lbJson.weekly_leaderboard) ? lbJson.weekly_leaderboard : [],
-            exam_leaderboard: Array.isArray(lbJson.exam_leaderboard) ? lbJson.exam_leaderboard : [],
-            my_rank: lbJson.my_rank || null
-          };
-        }
-      }
-    } catch {}
+    await refreshLeaderboard({ force: true, quiet: true, skipUiSync: true });
 
     updateHeaderAuthUI();
     if (APP.activeTab === 'home') renderHomeTab();
@@ -438,6 +479,7 @@
       if (APP.isAdmin) fetchAdminDetail();
     }
   }
+  window.PK9_REFRESH_LEADERBOARD = refreshLeaderboard;
   window.PK9_REFRESH_AUTH_AND_LEADERBOARD = fetchAuthAndLeaderboard;
   window.PK9_GET_USER = () => APP.user;
   window.PK9_GET_CSRF = () => APP.csrf;
@@ -448,6 +490,7 @@
     if (APP.user && typeof extra.weekly_xp === 'number') APP.user.weekly_xp = extra.weekly_xp;
     updateHeaderAuthUI();
     if (APP.activeTab === 'home') renderHomeTab();
+    if (APP.activeTab === 'leaderboard') renderLeaderboardTab();
     if (APP.activeTab === 'flashcards') renderFlashcardsTab();
   };
 
@@ -481,10 +524,10 @@
 
     const doneCount = Object.values(APP.doneMap).filter(Boolean).length;
     const xpVal = APP.user
-      ? (APP.isAdmin ? Number(APP.user.xp || 0) : Math.max(100, Number(APP.user.xp || 100)))
+      ? Math.max(0, Number(APP.user.xp ?? 0))
       : doneCount * 20;
     const wkXpVal = APP.user
-      ? (APP.isAdmin ? Number(APP.user.weekly_xp || 0) : Math.max(50, Number(APP.user.weekly_xp || 50)))
+      ? Math.max(0, Number(APP.user.weekly_xp ?? 0))
       : doneCount * 20;
     const levelVal = Math.floor(xpVal / 100) + 1;
     const streakVal = APP.user ? Math.max(1, Number(APP.user.streak || 1)) : 1;
@@ -1569,7 +1612,9 @@
     const top3 = list.slice(0, 3);
     const myRank = APP.lbData.my_rank;
     const isExcludedAdmin = APP.isAdmin || Boolean(myRank?.excluded_from_leaderboard);
-    const maxMetric = Math.max(100, ...list.map(x => Number(APP.lbMode === 'weekly' ? x.weeklyXp : x.xp) || 100));
+    const maxMetric = APP.lbMode === 'exam'
+      ? Math.max(10, ...list.map(x => Number(x.bestScore) || 0))
+      : Math.max(100, ...list.map(x => Number(APP.lbMode === 'weekly' ? x.weeklyXp : x.xp) || 0));
     const podiumSlots = [
       { rank: 2, row: top3.find(x => x.rank === 2) || null, crown: '🥈', title: 'Á Quân #2' },
       { rank: 1, row: top3.find(x => x.rank === 1) || null, crown: '👑', title: 'Thủ Khoa #1' },
@@ -1616,15 +1661,15 @@
                   <div class="pk9-lb-myrank-grid" style="text-align:center;">
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
                       <strong style="display:block;font-size:1.2rem;color:#38bdf8;">#${myRank?.weeklyRank || '—'}</strong>
-                      <span style="font-size:0.72rem;">BXH Tuần</span>
+                      <span style="font-size:0.72rem;">Tuần (${Number(myRank?.entry?.weeklyXp ?? APP.user.weekly_xp ?? 0)} XP)</span>
                     </div>
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
                       <strong style="display:block;font-size:1.2rem;color:#34d399;">#${myRank?.topRank || '—'}</strong>
-                      <span style="font-size:0.72rem;">BXH Top</span>
+                      <span style="font-size:0.72rem;">Top (${Number(myRank?.entry?.xp ?? APP.user.xp ?? 0)} XP)</span>
                     </div>
                     <div style="background:rgba(15,23,42,0.45);padding:0.6rem;border-radius:0.8rem;">
-                      <strong style="display:block;font-size:1.2rem;color:#fbbf24;">${APP.user.xp ?? 100} XP</strong>
-                      <span style="font-size:0.72rem;">Tổng XP</span>
+                      <strong style="display:block;font-size:1.2rem;color:#fbbf24;">#${myRank?.examRank || '—'}</strong>
+                      <span style="font-size:0.72rem;">Đỉnh ${Number(myRank?.entry?.bestScore || 0).toFixed(1)}đ</span>
                     </div>
                   </div>
                 </div>
@@ -1655,9 +1700,14 @@
               🎯 BXH Cao Thủ Luyện Đề (${examRows.length})
             </button>
           </div>
-          <div class="pk9-exam-search">
-            <span class="pk9-exam-search-icon">🔍</span>
-            <input type="search" id="pk9-lb-search-input" placeholder="Tìm học viên, trường THPT..." value="${esc(APP.lbSearch)}" />
+          <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+            <div class="pk9-exam-search">
+              <span class="pk9-exam-search-icon">🔍</span>
+              <input type="search" id="pk9-lb-search-input" placeholder="Tìm học viên, trường THPT..." value="${esc(APP.lbSearch)}" />
+            </div>
+            <button type="button" class="pk9-btn-exam-ghost" data-refresh-leaderboard="1" style="padding:0.46rem 0.78rem;font-size:0.78rem;white-space:nowrap;">
+              🔄 Làm mới BXH
+            </button>
           </div>
         </div>
 
@@ -1711,15 +1761,17 @@
           <div class="pk9-lb-row" style="background:var(--pk9-surface-2);font-weight:800;font-size:0.78rem;color:var(--pk9-text-muted);text-transform:uppercase;">
             <div>Hạng</div>
             <div>Học viên & Trường</div>
-            <div>${APP.lbMode === 'weekly' ? 'XP Tuần Này' : 'Tổng XP & Level'}</div>
+            <div>${APP.lbMode === 'weekly' ? 'XP Tuần Này' : APP.lbMode === 'exam' ? 'Điểm Luyện Đề' : 'Tổng XP & Level'}</div>
             <div class="hide-mob">Thành tích Luyện đề</div>
             <div class="hide-mob">Chuỗi & Huy hiệu</div>
           </div>
           ${filtered.length ? filtered.map((row, idx) => {
-            const isMe = APP.user && row.username === APP.user.username;
+            const isMe = APP.user && String(row.username || '').toLowerCase() === String(APP.user.username || '').toLowerCase();
             const rankBadge = row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`;
-            const curVal = Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 0;
-            const pct = Math.min(100, Math.max(12, Math.round((curVal / maxMetric) * 100)));
+            const curVal = APP.lbMode === 'exam'
+              ? Number(row.bestScore || 0)
+              : Number(APP.lbMode === 'weekly' ? row.weeklyXp : row.xp) || 0;
+            const pct = Math.min(100, Math.max(curVal > 0 ? 12 : 4, Math.round((curVal / (maxMetric || 1)) * 100)));
             return `
               <div class="pk9-lb-row ${isMe ? 'me' : ''}" style="animation-delay:${Math.min(idx * 0.05, 0.4)}s;">
                 <div style="font-weight:900;font-size:0.95rem;color:${row.rank <= 3 ? '#d97706' : 'var(--pk9-text)'};">
@@ -1741,8 +1793,10 @@
                 <div>
                   <div style="font-weight:800;color:var(--pk9-primary);font-size:0.86rem;">
                     ${APP.lbMode === 'weekly'
-                      ? `🔥 ${row.weeklyXp} XP Tuần`
-                      : `⚡ ${row.xp} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${row.level})</span>`}
+                      ? `🔥 ${Number(row.weeklyXp || 0)} XP Tuần`
+                      : APP.lbMode === 'exam'
+                      ? `🎯 Đỉnh ${Number(row.bestScore || 0).toFixed(2)}đ <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(TB ${Number(row.avgScore || 0).toFixed(2)}đ)</span>`
+                      : `⚡ ${Number(row.xp || 0)} XP <span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Lv.${Number(row.level || 1)})</span>`}
                   </div>
                   <div class="pk9-topic-track" style="height:0.38rem;margin-top:0.28rem;">
                     <div class="pk9-topic-fill" style="width:${pct}%;"></div>
@@ -3934,18 +3988,31 @@
         APP.doneMap[tId] = !APP.doneMap[tId];
         await syncProgressToServer();
         if (APP.doneMap[tId]) {
-          toast('🎉 Đã hoàn thành bài giảng! +25 XP tích lũy vào BXH.', 'success');
+          let earnedMsg = '🎉 Đã hoàn thành bài giảng! +25 XP tích lũy vào BXH.';
           if (APP.user) {
             try {
-              await fetch('/api/dashboard?action=record-study', {
+              const recRes = await fetch('/api/dashboard?action=record-study', {
                 method: 'POST',
                 credentials: 'include',
+                cache: 'no-store',
                 headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
                 body: JSON.stringify({ type: 'lesson', item_id: tId })
               });
-              fetchAuthAndLeaderboard();
+              const recData = await recRes.json().catch(() => ({}));
+              if (recRes.ok && recData.ok) {
+                if (typeof recData.xp_total === 'number') APP.user.xp = recData.xp_total;
+                if (typeof recData.weekly_xp === 'number') APP.user.weekly_xp = recData.weekly_xp;
+                if (recData.rpg) APP.user.rpg = recData.rpg;
+                if (recData.xp_earned > 0) {
+                  earnedMsg = `🎉 Đã hoàn thành bài giảng! +${recData.xp_earned} XP (+${recData.gold_earned || 0} vàng) lên BXH!`;
+                } else if (recData.xp_earned === 0) {
+                  earnedMsg = '✅ Đã đánh dấu hoàn thành bài giảng (đã nhận XP trước đó).';
+                }
+                await fetchAuthAndLeaderboard();
+              }
             } catch {}
           }
+          toast(earnedMsg, 'success');
         }
         renderLecturesTab();
         updateHeaderAuthUI();
@@ -3977,6 +4044,13 @@
       if (lbModeBtn) {
         APP.lbMode = lbModeBtn.getAttribute('data-lb-mode');
         renderLeaderboardTab();
+        return;
+      }
+
+      const lbRefreshBtn = e.target.closest('[data-refresh-leaderboard]');
+      if (lbRefreshBtn) {
+        toast('🔄 Đang đồng bộ Bảng Xếp Hạng mới nhất...', 'info');
+        await refreshLeaderboard({ force: true });
         return;
       }
 
@@ -4059,18 +4133,32 @@
         await updateFlashcardItemState(itemId, { status: 'mastered' });
         APP.fcCardIdx += 1;
         APP.fcFlipped = false;
-        toast('⚡ Đã ghi nhớ thẻ công thức! (+20 XP · +15 Vàng)', 'success');
+        let fcMsg = '⚡ Đã ghi nhớ thẻ công thức! (+20 XP · +15 Vàng)';
         if (APP.user) {
           try {
-            await fetch('/api/dashboard?action=record-study', {
+            const recRes = await fetch('/api/dashboard?action=record-study', {
               method: 'POST',
               credentials: 'include',
+              cache: 'no-store',
               headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
               body: JSON.stringify({ type: 'flashcard', item_id: itemId })
             });
-            fetchAuthAndLeaderboard();
+            const recData = await recRes.json().catch(() => ({}));
+            if (recRes.ok && recData.ok) {
+              if (typeof recData.xp_total === 'number') APP.user.xp = recData.xp_total;
+              if (typeof recData.weekly_xp === 'number') APP.user.weekly_xp = recData.weekly_xp;
+              if (recData.rpg) APP.user.rpg = recData.rpg;
+              if (recData.xp_earned > 0) {
+                fcMsg = `⚡ Đã ghi nhớ thẻ! +${recData.xp_earned} XP · +${recData.gold_earned || 0} Vàng lên BXH!`;
+              } else if (recData.xp_earned === 0) {
+                fcMsg = '⚡ Đã ghi nhớ thẻ công thức (đã nhận XP thẻ này trước đó).';
+              }
+              await fetchAuthAndLeaderboard();
+              updateHeaderAuthUI();
+            }
           } catch {}
         }
+        toast(fcMsg, 'success');
         renderFlashcardsTab();
         return;
       }

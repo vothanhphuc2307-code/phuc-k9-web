@@ -315,6 +315,11 @@
     if (data.message) toast(data.message, 'success');
     if (data.journey) RPG_UI.journeyData = data.journey;
     applyRpgUpdate(data.rpg, { xp: data.xp, weekly_xp: data.weekly_xp });
+    if (['rpg-checkin', 'rpg-claim-mission', 'rpg-practice-finish', 'rpg-journey-submit', 'rpg-equip'].includes(action)) {
+      if (typeof window.PK9_REFRESH_LEADERBOARD === 'function') {
+        window.PK9_REFRESH_LEADERBOARD({ force: true, quiet: true });
+      }
+    }
     return { ok: true, data };
   }
 

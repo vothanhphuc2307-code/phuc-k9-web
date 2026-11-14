@@ -523,10 +523,10 @@
         goldEarned = Number(recData?.gold_earned || 0);
         diamondsEarned = Number(recData?.diamonds_earned || 0);
         if (recData?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
-          window.PK9_APPLY_RPG_UPDATE(recData.rpg);
+          window.PK9_APPLY_RPG_UPDATE(recData.rpg, { xp: recData.xp_total, weekly_xp: recData.weekly_xp });
         }
         if (typeof window.PK9_REFRESH_AUTH_AND_LEADERBOARD === 'function') {
-          window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
+          await window.PK9_REFRESH_AUTH_AND_LEADERBOARD();
         }
       }
     } catch {}
