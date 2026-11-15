@@ -1,5 +1,5 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, sendJson, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
+const { USER_PREFIX, getSession, sendJson, sendAdminGuardError, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
 const { normalizeScoring, questionNeedsReview, validateExamStructure } = require('../lib/exam-utils');
 const {
   vnWeekKey,
@@ -423,7 +423,7 @@ async function handler(req, res) {
 
       if (action === 'admin-list') {
         const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: 'exams:admin-list' });
-        if (!guard.ok) return sendJson(res, guard.status, { ok: false, banned: Boolean(guard.banned), auth_revoked: Boolean(guard.auth_revoked), message: guard.message });
+        if (!guard.ok) return sendAdminGuardError(res, guard);
         const seedIdSet = new Set(SEED.map(x => x.id));
         const ids = new Set(seedIdSet);
         try {
@@ -461,7 +461,7 @@ async function handler(req, res) {
 
       if (action === 'admin-get') {
         const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: 'exams:admin-get' });
-        if (!guard.ok) return sendJson(res, guard.status, { ok: false, banned: Boolean(guard.banned), auth_revoked: Boolean(guard.auth_revoked), message: guard.message });
+        if (!guard.ok) return sendAdminGuardError(res, guard);
         const e = await getExam(r, id);
         if (!e) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy đề.' });
         return sendJson(res, 200, { ok: true, exam: adminExam(e) });
@@ -505,7 +505,7 @@ async function handler(req, res) {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Hãy đăng nhập tài khoản quản trị.' });
       if (!csrfOk(req, session)) return sendJson(res, 403, { ok: false, message: 'CSRF không hợp lệ.' });
       const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: `exams:${action}` });
-      if (!guard.ok) return sendJson(res, guard.status, { ok: false, banned: Boolean(guard.banned), auth_revoked: Boolean(guard.auth_revoked), message: guard.message });
+      if (!guard.ok) return sendAdminGuardError(res, guard);
 
       if (action === 'admin-import') {
         let e = normalizeExamMeta(body.exam);

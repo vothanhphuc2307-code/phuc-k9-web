@@ -1,7 +1,7 @@
 const { handleUpload } = require('@vercel/blob/client');
 const { get: getBlob, del: delBlob } = require('@vercel/blob');
 const { getRedis } = require('../lib/redis');
-const { getSession, getUserByUsername, sendJson, isAdminAccount, requireAdminOrBanIntruder, rejectIfBanned } = require('../lib/auth');
+const { getSession, getUserByUsername, sendJson, sendAdminGuardError, isAdminAccount, requireAdminOrBanIntruder, rejectIfBanned } = require('../lib/auth');
 
 const ALLOWED_EXT = new Set(['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','jpg','jpeg','png','webp']);
 const ALLOWED_MIME = new Set([
@@ -10,13 +10,8 @@ const ALLOWED_MIME = new Set([
   'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','text/plain',
   'image/jpeg','image/png','image/webp','application/octet-stream'
 ]);
-const ADMIN_ENV = 'ADMIN_USERNAME';
 function clean(v, max) { return String(v == null ? '' : v).trim().slice(0, max); }
 function extOf(name) { const p = String(name || '').toLowerCase().split('.'); return p.length > 1 ? p.pop() : ''; }
-async function isVerifiedAdminUsername(username) {
-  const user = await getUserByUsername(username);
-  return Boolean(user && isAdminAccount(user));
-}
 function validLessonKey(v) { return /^[a-zA-Z0-9._:-]{1,180}$/.test(String(v||'')); }
 function parseJsonBody(req){ let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}} return body; }
 
@@ -105,7 +100,7 @@ module.exports = async function handler(req,res){
         const session=await getSession(req);
         if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi gắn PDF bài giảng.'});
         const guard=await requireAdminOrBanIntruder(getRedis(),req,res,session,{source:'blob:finalize-lesson-pdf'});
-        if(!guard.ok)return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message});
+        if(!guard.ok)return sendAdminGuardError(res,guard);
         const body=parseJsonBody(req);
         if(String(body?.kind||'')!=='lesson-pdf')return sendJson(res,400,{ok:false,message:'Yêu cầu finalization không hợp lệ.'});
         if(String(body?.csrf||'')!==String(session.csrf||''))return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.'});
@@ -162,7 +157,7 @@ module.exports = async function handler(req,res){
     const body=parseJsonBody(req); const requestedKind=clean(body?.kind,40)||'student-library';
     if(requestedKind==='lesson-pdf'){
       const guard=await requireAdminOrBanIntruder(getRedis(),req,res,session,{source:'blob:upload-lesson-pdf'});
-      if(!guard.ok)return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message});
+      if(!guard.ok)return sendAdminGuardError(res,guard);
     }
     const response=await handleUpload({
       request:req, body,

@@ -881,22 +881,170 @@
     return picked.map(prepareQuestionForRun);
   }
 
-  // Deterministic 21x21 QR SVG matrix (with authentic 3 finder squares & timing lines)
-  function buildQrSvg(codeText, size = 148) {
-    const N = 21;
+  // ========================================================================
+  // REAL ISO/IEC 18004 QR CODE ENCODER (BYTE MODE, ECC LEVEL M) &
+  // EXCLUSIVE STUDENT ID CARD BRAND LOGO ("THẺ HỌC VIÊN — HỌC CÙNG PHÚC K9")
+  // ========================================================================
+  const QR_GF_EXP = new Uint8Array(512);
+  const QR_GF_LOG = new Uint8Array(256);
+  (function initQrGf() {
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+      QR_GF_EXP[i] = x;
+      QR_GF_LOG[x] = i;
+      x <<= 1;
+      if (x & 0x100) x ^= 0x11d;
+    }
+    for (let i = 255; i < 512; i++) QR_GF_EXP[i] = QR_GF_EXP[i - 255];
+  })();
+
+  function qrGfMul(a, b) {
+    return (a === 0 || b === 0) ? 0 : QR_GF_EXP[QR_GF_LOG[a] + QR_GF_LOG[b]];
+  }
+
+  function qrRsComputeEc(dataBytes, ecLen) {
+    let poly = [1];
+    for (let i = 0; i < ecLen; i++) {
+      const next = new Array(poly.length + 1).fill(0);
+      const root = QR_GF_EXP[i];
+      for (let j = 0; j < poly.length; j++) {
+        next[j] ^= poly[j];
+        next[j + 1] ^= qrGfMul(poly[j], root);
+      }
+      poly = next;
+    }
+    const gen = poly.slice(1);
+    const rem = new Uint8Array(ecLen);
+    for (let i = 0; i < dataBytes.length; i++) {
+      const factor = dataBytes[i] ^ rem[0];
+      for (let j = 0; j < ecLen - 1; j++) rem[j] = rem[j + 1];
+      rem[ecLen - 1] = 0;
+      if (factor !== 0) {
+        for (let j = 0; j < ecLen; j++) rem[j] ^= qrGfMul(gen[j], factor);
+      }
+    }
+    return Array.from(rem);
+  }
+
+  // ISO/IEC 18004 ECC Level M (format indicator 00) table for Versions 1..10:
+  // [version, totalDataBytes, ecBytesPerBlock, g1Blocks, g1DataBytes, g2Blocks, g2DataBytes, alignCoords]
+  const QR_VERSION_TABLE_M = [
+    null,
+    [1, 16, 10, 1, 16, 0, 0, []],
+    [2, 28, 16, 1, 28, 0, 0, [6, 18]],
+    [3, 44, 26, 1, 44, 0, 0, [6, 22]],
+    [4, 64, 18, 2, 32, 0, 0, [6, 26]],
+    [5, 86, 24, 2, 43, 0, 0, [6, 30]],
+    [6, 108, 16, 4, 27, 0, 0, [6, 34]],
+    [7, 124, 18, 4, 31, 0, 0, [6, 22, 38]],
+    [8, 154, 22, 2, 38, 2, 39, [6, 24, 42]],
+    [9, 182, 22, 3, 36, 2, 37, [6, 26, 46]],
+    [10, 216, 26, 4, 43, 1, 44, [6, 28, 50]]
+  ];
+
+  const QR_VERSION_INFO_BITS = {
+    7: 0x07C94,
+    8: 0x085BC,
+    9: 0x09A99,
+    10: 0x0A4D3
+  };
+
+  function encodeQrMatrix(rawText) {
+    const str = String(rawText || 'https://thanhphuc.vercel.app');
+    const utf8 = typeof TextEncoder !== 'undefined'
+      ? Array.from(new TextEncoder().encode(str))
+      : unescape(encodeURIComponent(str)).split('').map(c => c.charCodeAt(0));
+
+    let spec = QR_VERSION_TABLE_M[10];
+    for (let v = 1; v <= 10; v++) {
+      const cand = QR_VERSION_TABLE_M[v];
+      const headerBits = v <= 9 ? 12 : 20; // 4 mode bits + 8 or 16 count bits
+      const maxBytes = Math.floor((cand[1] * 8 - headerBits) / 8);
+      if (utf8.length <= maxBytes) {
+        spec = cand;
+        break;
+      }
+    }
+
+    const [version, totalDataBytes, ecPerBlock, g1Blocks, g1Data, g2Blocks, g2Data, align] = spec;
+    const countBits = version <= 9 ? 8 : 16;
+    const maxLen = Math.floor((totalDataBytes * 8 - (4 + countBits)) / 8);
+    const payload = utf8.slice(0, maxLen);
+
+    const bits = [];
+    function pushBits(val, len) {
+      for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1);
+    }
+    pushBits(0b0100, 4); // Byte mode
+    pushBits(payload.length, countBits);
+    for (let i = 0; i < payload.length; i++) pushBits(payload[i], 8);
+
+    const totalDataBits = totalDataBytes * 8;
+    const termLen = Math.min(4, totalDataBits - bits.length);
+    for (let i = 0; i < termLen; i++) bits.push(0);
+    while (bits.length % 8 !== 0) bits.push(0);
+
+    const dataCodewords = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let b = 0;
+      for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+      dataCodewords.push(b);
+    }
+    const padBytes = [0xec, 0x11];
+    let padIdx = 0;
+    while (dataCodewords.length < totalDataBytes) {
+      dataCodewords.push(padBytes[padIdx % 2]);
+      padIdx++;
+    }
+
+    // Split into blocks & compute Reed-Solomon EC
+    const dataBlocks = [];
+    const ecBlocks = [];
+    let offset = 0;
+    for (let b = 0; b < g1Blocks; b++) {
+      const blk = dataCodewords.slice(offset, offset + g1Data);
+      offset += g1Data;
+      dataBlocks.push(blk);
+      ecBlocks.push(qrRsComputeEc(blk, ecPerBlock));
+    }
+    for (let b = 0; b < g2Blocks; b++) {
+      const blk = dataCodewords.slice(offset, offset + g2Data);
+      offset += g2Data;
+      dataBlocks.push(blk);
+      ecBlocks.push(qrRsComputeEc(blk, ecPerBlock));
+    }
+
+    const interleaved = [];
+    const maxDataLen = Math.max(g1Data, g2Data);
+    for (let i = 0; i < maxDataLen; i++) {
+      for (let b = 0; b < dataBlocks.length; b++) {
+        if (i < dataBlocks[b].length) interleaved.push(dataBlocks[b][i]);
+      }
+    }
+    for (let i = 0; i < ecPerBlock; i++) {
+      for (let b = 0; b < ecBlocks.length; b++) {
+        interleaved.push(ecBlocks[b][i]);
+      }
+    }
+
+    const N = 17 + version * 4;
     const grid = Array.from({ length: N }, () => Array(N).fill(false));
-    const fixed = Array.from({ length: N }, () => Array(N).fill(false));
+    const isFunc = Array.from({ length: N }, () => Array(N).fill(false));
+
+    function setFunc(r, c, dark) {
+      if (r < 0 || r >= N || c < 0 || c >= N) return;
+      grid[r][c] = Boolean(dark);
+      isFunc[r][c] = true;
+    }
 
     function drawFinder(r0, c0) {
       for (let r = -1; r <= 7; r++) {
         for (let c = -1; c <= 7; c++) {
           const rr = r0 + r, cc = c0 + c;
           if (rr < 0 || rr >= N || cc < 0 || cc >= N) continue;
-          fixed[rr][cc] = true;
-          if (r === -1 || r === 7 || c === -1 || c === 7) grid[rr][cc] = false;
-          else if (r === 0 || r === 6 || c === 0 || c === 6) grid[rr][cc] = true;
-          else if (r >= 2 && r <= 4 && c >= 2 && c <= 4) grid[rr][cc] = true;
-          else grid[rr][cc] = false;
+          const dark = !(r === -1 || r === 7 || c === -1 || c === 7) &&
+            (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+          setFunc(rr, cc, dark);
         }
       }
     }
@@ -904,39 +1052,220 @@
     drawFinder(0, N - 7);
     drawFinder(N - 7, 0);
 
-    for (let i = 8; i < N - 8; i++) {
-      fixed[6][i] = true; grid[6][i] = i % 2 === 0;
-      fixed[i][6] = true; grid[i][6] = i % 2 === 0;
-    }
-
-    let seed = 2166136261;
-    const s = String(codeText || 'PHUCK9');
-    for (let i = 0; i < s.length; i++) {
-      seed ^= s.charCodeAt(i);
-      seed = Math.imul(seed, 16777619) >>> 0;
-    }
-
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
-        if (fixed[r][c]) continue;
-        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-        grid[r][c] = ((seed >>> 24) & 1) === 1;
-      }
-    }
-
-    const cell = size / (N + 2);
-    let rects = '';
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
-        if (grid[r][c]) {
-          const x = ((c + 1) * cell).toFixed(2);
-          const y = ((r + 1) * cell).toFixed(2);
-          const w = (cell + 0.15).toFixed(2);
-          rects += `<rect x="${x}" y="${y}" width="${w}" height="${w}" fill="#0f172a"/>`;
+    // Alignment patterns
+    for (let i = 0; i < align.length; i++) {
+      for (let j = 0; j < align.length; j++) {
+        const ar = align[i], ac = align[j];
+        if ((ar < 9 && ac < 9) || (ar < 9 && ac > N - 10) || (ar > N - 10 && ac < 9)) continue;
+        for (let r = -2; r <= 2; r++) {
+          for (let c = -2; c <= 2; c++) {
+            const dark = Math.max(Math.abs(r), Math.abs(c)) !== 1;
+            setFunc(ar + r, ac + c, dark);
+          }
         }
       }
     }
-    return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" class="pk9-qr-svg" role="img" aria-label="Mã QR học viên">${'<rect width="100%" height="100%" rx="10" fill="#ffffff"/>'}${rects}</svg>`;
+
+    // Timing lines
+    for (let i = 8; i < N - 8; i++) {
+      if (!isFunc[6][i]) setFunc(6, i, i % 2 === 0);
+      if (!isFunc[i][6]) setFunc(i, 6, i % 2 === 0);
+    }
+
+    // Dark module & reserved format areas
+    setFunc(N - 8, 8, true);
+    for (let i = 0; i < 9; i++) {
+      if (!isFunc[8][i]) setFunc(8, i, false);
+      if (!isFunc[i][8]) setFunc(i, 8, false);
+    }
+    for (let i = 0; i < 8; i++) {
+      if (!isFunc[8][N - 1 - i]) setFunc(8, N - 1 - i, false);
+      if (!isFunc[N - 1 - i][8]) setFunc(N - 1 - i, 8, false);
+    }
+
+    // Version info for v7..10
+    if (version >= 7 && QR_VERSION_INFO_BITS[version]) {
+      const vBits = QR_VERSION_INFO_BITS[version];
+      for (let i = 0; i < 18; i++) {
+        const bit = ((vBits >>> i) & 1) === 1;
+        const a = Math.floor(i / 3);
+        const b = N - 11 + (i % 3);
+        setFunc(a, b, bit);
+        setFunc(b, a, bit);
+      }
+    }
+
+    // Place codeword bits in zig-zag order
+    const streamBits = [];
+    for (let i = 0; i < interleaved.length; i++) {
+      for (let b = 7; b >= 0; b--) streamBits.push((interleaved[i] >>> b) & 1);
+    }
+
+    let bitIdx = 0;
+    let upward = true;
+    for (let right = N - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let vert = 0; vert < N; vert++) {
+        const r = upward ? (N - 1 - vert) : vert;
+        for (let j = 0; j < 2; j++) {
+          const c = right - j;
+          if (!isFunc[r][c]) {
+            grid[r][c] = bitIdx < streamBits.length ? streamBits[bitIdx] === 1 : false;
+            bitIdx++;
+          }
+        }
+      }
+      upward = !upward;
+    }
+
+    function maskCond(mask, r, c) {
+      if (mask === 0) return (r + c) % 2 === 0;
+      if (mask === 1) return r % 2 === 0;
+      if (mask === 2) return c % 3 === 0;
+      if (mask === 3) return (r + c) % 3 === 0;
+      if (mask === 4) return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+      if (mask === 5) return ((r * c) % 2) + ((r * c) % 3) === 0;
+      if (mask === 6) return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
+      return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
+    }
+
+    function applyFormatBits(targetGrid, mask) {
+      const data5 = (0b00 << 3) | mask; // ECC Level M = 00
+      let rem = data5 << 10;
+      for (let i = 14; i >= 10; i--) {
+        if ((rem >>> i) & 1) rem ^= (0x537 << (i - 10));
+      }
+      const fmt = ((data5 << 10) | rem) ^ 0x5412;
+      const bit = idx => ((fmt >>> idx) & 1) === 1;
+
+      for (let i = 0; i <= 5; i++) targetGrid[8][i] = bit(14 - i);
+      targetGrid[8][7] = bit(8);
+      targetGrid[8][8] = bit(7);
+      targetGrid[7][8] = bit(6);
+      for (let i = 0; i <= 5; i++) targetGrid[5 - i][8] = bit(5 - i);
+
+      for (let i = 0; i <= 6; i++) targetGrid[N - 1 - i][8] = bit(14 - i);
+      targetGrid[N - 8][8] = true;
+      for (let i = 0; i <= 7; i++) targetGrid[8][N - 8 + i] = bit(7 - i);
+    }
+
+    function scorePenalty(g) {
+      let penalty = 0;
+      for (let r = 0; r < N; r++) {
+        let runLen = 1;
+        for (let c = 1; c < N; c++) {
+          if (g[r][c] === g[r][c - 1]) {
+            runLen++;
+            if (runLen === 5) penalty += 3;
+            else if (runLen > 5) penalty += 1;
+          } else runLen = 1;
+        }
+      }
+      for (let c = 0; c < N; c++) {
+        let runLen = 1;
+        for (let r = 1; r < N; r++) {
+          if (g[r][c] === g[r - 1][c]) {
+            runLen++;
+            if (runLen === 5) penalty += 3;
+            else if (runLen > 5) penalty += 1;
+          } else runLen = 1;
+        }
+      }
+      for (let r = 0; r < N - 1; r++) {
+        for (let c = 0; c < N - 1; c++) {
+          const v = g[r][c];
+          if (v === g[r][c + 1] && v === g[r + 1][c] && v === g[r + 1][c + 1]) penalty += 3;
+        }
+      }
+      return penalty;
+    }
+
+    let bestGrid = null;
+    let bestScore = Infinity;
+    for (let mask = 0; mask < 8; mask++) {
+      const cand = grid.map((row, r) => row.map((val, c) => isFunc[r][c] ? val : (maskCond(mask, r, c) ? !val : val)));
+      applyFormatBits(cand, mask);
+      const sc = scorePenalty(cand);
+      if (sc < bestScore) {
+        bestScore = sc;
+        bestGrid = cand;
+      }
+    }
+
+    return { N, version, grid: bestGrid };
+  }
+
+  // Real scannable ISO/IEC 18004 QR Code SVG with 4-module quiet zone
+  function buildQrSvg(codeText, size = 148) {
+    const { N, grid } = encodeQrMatrix(codeText || 'https://thanhphuc.vercel.app');
+    const quiet = 4;
+    const totalModules = N + quiet * 2;
+    let pathD = '';
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        if (grid[r][c]) {
+          pathD += `M${c + quiet},${r + quiet}h1v1h-1z`;
+        }
+      }
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalModules} ${totalModules}" width="${size}" height="${size}" shape-rendering="crispEdges" class="pk9-qr-svg" role="img" aria-label="Mã QR Thẻ Học Viên Phúc K9"><rect width="${totalModules}" height="${totalModules}" rx="2.2" fill="#ffffff"/><path d="${pathD}" fill="#0f172a"/></svg>`;
+  }
+
+  // Dedicated Brand Logo / Royal Crest exclusively for "THẺ HỌC VIÊN — HỌC CÙNG PHÚC K9"
+  function buildStudentCardLogoSvg(size = 46) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}" class="pk9-student-card-logo" role="img" aria-label="Logo Thẻ Học Viên Học Cùng Phúc K9">
+      <defs>
+        <linearGradient id="pk9CardShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0f172a"/>
+          <stop offset="50%" stop-color="#1e3a8a"/>
+          <stop offset="100%" stop-color="#0284c7"/>
+        </linearGradient>
+        <linearGradient id="pk9CardGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fef08a"/>
+          <stop offset="45%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+        <linearGradient id="pk9CardCyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient>
+      </defs>
+      <!-- Outer Royal Gold Seal Ring -->
+      <circle cx="60" cy="58" r="52" fill="url(#pk9CardShieldGrad)" stroke="url(#pk9CardGoldGrad)" stroke-width="4"/>
+      <circle cx="60" cy="58" r="46" fill="none" stroke="rgba(56,189,248,0.45)" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <!-- Academic Shield -->
+      <path d="M60 14 L94 27 L94 56 C94 79 78 95 60 103 C42 95 26 79 26 56 L26 27 Z" fill="url(#pk9CardShieldGrad)" stroke="url(#pk9CardGoldGrad)" stroke-width="3"/>
+      <!-- Atomic Science Orbit Rings -->
+      <ellipse cx="60" cy="54" rx="25" ry="9" fill="none" stroke="url(#pk9CardCyanGrad)" stroke-width="1.6" opacity="0.78" transform="rotate(-28 60 54)"/>
+      <ellipse cx="60" cy="54" rx="25" ry="9" fill="none" stroke="url(#pk9CardCyanGrad)" stroke-width="1.6" opacity="0.78" transform="rotate(28 60 54)"/>
+      <!-- Graduation Cap at Top of Shield -->
+      <polygon points="60,21 82,30 60,39 38,30" fill="url(#pk9CardGoldGrad)"/>
+      <path d="M47,34 L47,41 C47,44 73,44 73,41 L73,34" fill="#1e293b" stroke="url(#pk9CardGoldGrad)" stroke-width="1.4"/>
+      <path d="M79,31 L83,42" stroke="#fef08a" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="83" cy="43" r="2.2" fill="#f59e0b"/>
+      <!-- Bold K9 Monogram -->
+      <text x="60" y="68" text-anchor="middle" font-family="'Be Vietnam Pro', system-ui, sans-serif" font-weight="900" font-size="25" fill="#ffffff" letter-spacing="0.5">K9</text>
+      <!-- Open Knowledge Book Base + 3 Stars -->
+      <path d="M42,76 Q51,72 60,77 Q69,72 78,76 L78,82 Q69,78 60,83 Q51,78 42,82 Z" fill="url(#pk9CardGoldGrad)"/>
+      <!-- Bottom Official Ribbon "THẺ HỌC VIÊN" -->
+      <rect x="14" y="92" width="92" height="20" rx="10" fill="url(#pk9CardGoldGrad)" stroke="#0f172a" stroke-width="2"/>
+      <text x="60" y="105.5" text-anchor="middle" font-family="'Be Vietnam Pro', system-ui, sans-serif" font-weight="900" font-size="9.5" fill="#0f172a" letter-spacing="0.7">THẺ HỌC VIÊN K9</text>
+    </svg>`;
+  }
+
+  function buildStudentCardQrUrl(user, rpg) {
+    const rawOrigin = (window.location && window.location.origin && /^https?:\/\//i.test(window.location.origin))
+      ? window.location.origin
+      : 'https://thanhphuc.vercel.app';
+    const origin = rawOrigin.replace(/\/+$/, '');
+    const uname = (user?.username || '').trim().toLowerCase();
+    const sbd = (rpg?.sbd || 'K9-STUDENT').trim();
+    const grade = (user?.settings?.preferred_grade || '2K9').trim();
+    if (uname && uname !== 'guest' && uname !== 'khach_k9') {
+      return `${origin}/?card=${encodeURIComponent(uname)}&sbd=${encodeURIComponent(sbd)}`;
+    }
+    const disp = (user?.display_name || 'Học Viên Phúc K9').trim();
+    return `${origin}/?card=guest&sbd=${encodeURIComponent(sbd)}&g=${encodeURIComponent(grade)}&n=${encodeURIComponent(disp)}`;
   }
 
   function renderCurrencyStrip(rpg) {
@@ -1599,7 +1928,7 @@
   }
 
   // ========================================================================
-  // TAB E: NHÂN VẬT, THẺ HỌC VIÊN QR & TẢI ẢNH PNG
+  // TAB E: NHÂN VẬT, THẺ HỌC VIÊN QR (QUÉT MỞ THẺ THƯƠNG HIỆU HỌC CÙNG PHÚC K9) & TẢI ẢNH PNG
   // ========================================================================
   function renderIdCardTab() {
     const root = document.getElementById('tab-idcard');
@@ -1613,7 +1942,7 @@
     const grade = user?.settings?.preferred_grade || '2K9';
     const school = user?.settings?.school || 'Hệ Sinh Thái Học Cùng Phúc K9';
     const sbd = rpg.sbd || 'K9-STUDENT';
-    const qrPayload = `PHUCK9:${username}:${sbd}:${grade}`;
+    const qrPayload = buildStudentCardQrUrl(user, rpg);
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
@@ -1647,33 +1976,55 @@
               <button type="button" class="pk9-btn-exam-primary" data-rpg-checkin="1">
                 ${rpg.checkin?.checked_today ? `✅ Đã Điểm Danh (${rpg.checkin?.total_days || 1} ngày)` : '🎁 Điểm Danh Quà 24h'}
               </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-open-scanned-card="1" data-card-u="${esc(username)}" data-card-sbd="${esc(sbd)}" data-card-name="${esc(displayName)}" data-card-grade="${esc(grade)}">
+                🪪 Mở Thẻ Học Viên (Khi Quét QR)
+              </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-copy-card-url="${esc(qrPayload)}">
+                🔗 Sao Chép Link Thẻ QR
+              </button>
               <button type="button" class="pk9-btn-exam-ghost" data-download-idcard="1">
                 ⬇️ Tải Ảnh Thẻ Học Viên (.PNG)
               </button>
             </div>
           </div>
 
-          <!-- STUDENT QR ID CARD -->
+          <!-- STUDENT QR ID CARD WITH DEDICATED BRAND LOGO -->
           <div class="pk9-student-idcard ${esc(eq.cardbg?.cssClass || 'pk9-cardbg-ocean')}" id="pk9-idcard-preview">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-              <div style="min-width:0;">
-                <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.06em;opacity:0.9;">THẺ HỌC VIÊN ĐIỆN TỬ • PHÚC K9</div>
+            <div class="pk9-idcard-brand-head">
+              <div class="pk9-idcard-logo-wrap">
+                ${buildStudentCardLogoSvg(48)}
+              </div>
+              <div style="min-width:0;flex:1;">
+                <div class="pk9-idcard-brand-kicker">THƯƠNG HIỆU ĐỘC QUYỀN • HỌC CÙNG PHÚC K9</div>
+                <div class="pk9-idcard-brand-sub">THẺ HỌC VIÊN ĐIỆN TỬ CHÍNH THỨC • STUDENT ID</div>
                 <div class="pk9-idcard-name">${esc(displayName)}</div>
               </div>
-              <span style="font-size:1.75rem;flex-shrink:0;">${eq.outfit?.icon || '🧑‍🎓'}</span>
+              <div class="pk9-idcard-avatar-pill" title="Nhân vật học viên">
+                <span>${eq.outfit?.icon || '🧑‍🎓'}</span>
+                ${eq.pet?.icon ? `<small>${eq.pet.icon}</small>` : ''}
+              </div>
             </div>
+
             <div class="pk9-idcard-body">
-              <button type="button" class="pk9-qr-wrap pk9-qr-zoom-trigger" data-zoom-qr="1" data-qr-code="${esc(qrPayload)}" data-qr-name="${esc(displayName)}" data-qr-sbd="${esc(sbd)}" title="Chạm để phóng to mã QR">
-                ${buildQrSvg(qrPayload, 118)}
-                <span class="pk9-qr-zoom-hint">🔍 Phóng to QR</span>
+              <button type="button" class="pk9-qr-wrap pk9-qr-zoom-trigger" data-zoom-qr="1" data-qr-code="${esc(qrPayload)}" data-qr-name="${esc(displayName)}" data-qr-sbd="${esc(sbd)}" data-qr-u="${esc(username)}" data-qr-grade="${esc(grade)}" title="Quét bằng Camera / Zalo hoặc chạm để phóng to mã QR">
+                ${buildQrSvg(qrPayload, 126)}
+                <span class="pk9-qr-zoom-hint">📱 Quét mở Thẻ • Phóng to</span>
               </button>
               <div class="pk9-idcard-meta">
-                <div>SBD: <b style="font-size:0.94rem;">${esc(sbd)}</b></div>
-                <div>Khối: <b>${esc(grade)}</b> • <b>${esc(tier.name)}</b></div>
-                <div>Trường: ${esc(school)}</div>
-                <div>Tuần Hoàn: <b>${rpg.periodic?.unlocked_count || 3}/118</b> • Câu: <b>${rpg.questions_conquered || 0}</b></div>
-                ${rpg.motto ? `<div style="margin-top:0.35rem;font-style:italic;opacity:0.92;">“${esc(rpg.motto)}”</div>` : ''}
+                <div><span style="opacity:0.8;">Mã SBD:</span> <b style="font-size:0.95rem;color:#fef08a;">${esc(sbd)}</b></div>
+                <div><span style="opacity:0.8;">Tài khoản:</span> <b>@${esc(username)}</b></div>
+                <div><span style="opacity:0.8;">Khối:</span> <b>${esc(grade)}</b> • <b>${tier.icon} ${esc(tier.name)}</b></div>
+                <div><span style="opacity:0.8;">Đơn vị:</span> ${esc(school)}</div>
+                <div><span style="opacity:0.8;">Tuần Hoàn:</span> <b>${rpg.periodic?.unlocked_count || 3}/118</b> • <span style="opacity:0.8;">Câu:</span> <b>${rpg.questions_conquered || 0}</b></div>
+                ${rpg.motto ? `<div style="margin-top:0.32rem;font-style:italic;opacity:0.94;">“${esc(rpg.motto)}”</div>` : ''}
               </div>
+            </div>
+
+            <div class="pk9-idcard-brand-foot">
+              <span>✓ ĐÃ CẤP MÃ QR XÁC THỰC BỞI HỌC CÙNG PHÚC K9</span>
+              <button type="button" class="pk9-idcard-preview-open-btn" data-open-scanned-card="1" data-card-u="${esc(username)}" data-card-sbd="${esc(sbd)}" data-card-name="${esc(displayName)}" data-card-grade="${esc(grade)}">
+                👁️ Xem giao diện khi quét ›
+              </button>
             </div>
           </div>
         </div>
@@ -1686,53 +2037,274 @@
     const user = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
     const eq = rpg.equipped_details || {};
     const displayName = user?.display_name || 'Học Viên Phúc K9';
+    const username = user?.username || 'khach_k9';
     const sbd = rpg.sbd || 'K9-STUDENT';
     const grade = user?.settings?.preferred_grade || '2K9';
+    const school = user?.settings?.school || 'Hệ Sinh Thái Học Cùng Phúc K9';
     const tier = rpg.tier?.name || 'Bậc Đồng';
+    const qrUrl = buildStudentCardQrUrl(user, rpg);
+
     const canvas = document.createElement('canvas');
-    canvas.width = 900;
-    canvas.height = 520;
+    canvas.width = 960;
+    canvas.height = 540;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const grad = ctx.createLinearGradient(0, 0, 900, 520);
+    const grad = ctx.createLinearGradient(0, 0, 960, 540);
     const bgId = eq.cardbg?.id || 'cardbg-ocean';
-    if (bgId === 'cardbg-emerald') { grad.addColorStop(0, '#064e3b'); grad.addColorStop(1, '#059669'); }
-    else if (bgId === 'cardbg-sunset') { grad.addColorStop(0, '#9a3412'); grad.addColorStop(1, '#db2777'); }
-    else if (bgId === 'cardbg-cyber') { grad.addColorStop(0, '#312e81'); grad.addColorStop(1, '#7c3aed'); }
-    else { grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#2563eb'); }
+    if (bgId === 'cardbg-emerald') { grad.addColorStop(0, '#064e3b'); grad.addColorStop(0.6, '#059669'); grad.addColorStop(1, '#0d9488'); }
+    else if (bgId === 'cardbg-sunset') { grad.addColorStop(0, '#7c2d12'); grad.addColorStop(0.55, '#ea580c'); grad.addColorStop(1, '#db2777'); }
+    else if (bgId === 'cardbg-cyber') { grad.addColorStop(0, '#1e1b4b'); grad.addColorStop(0.6, '#6d28d9'); grad.addColorStop(1, '#ec4899'); }
+    else { grad.addColorStop(0, '#0f172a'); grad.addColorStop(0.6, '#1d4ed8'); grad.addColorStop(1, '#0d9488'); }
 
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 900, 520);
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.fillRect(32, 32, 836, 456);
+    ctx.fillRect(0, 0, 960, 540);
 
+    // Card inner border & glass panel
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.fillRect(28, 28, 904, 484);
+    ctx.strokeStyle = 'rgba(254,240,138,0.55)';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(28, 28, 904, 484);
+
+    // Brand header text (to the right of the Student Card Logo at 52,46)
+    ctx.fillStyle = '#fef08a';
+    ctx.font = 'bold 18px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('THƯƠNG HIỆU ĐỘC QUYỀN • HỆ SINH THÁI HỌC CÙNG PHÚC K9', 152, 74);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px "Be Vietnam Pro", sans-serif';
-    ctx.fillText('HỆ SINH THÁI HỌC CÙNG PHÚC K9 • THẺ HỌC VIÊN', 62, 86);
-    ctx.font = 'bold 42px "Be Vietnam Pro", sans-serif';
-    ctx.fillText(displayName, 62, 152);
-    ctx.font = '24px "Be Vietnam Pro", sans-serif';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(`SBD: ${sbd}  |  Khối: ${grade}  |  ${tier}`, 62, 206);
-    ctx.fillText(`Vàng: ${rpg.gold}  |  Kim cương: ${rpg.diamonds}  |  Bảng tuần hoàn: ${rpg.periodic?.unlocked_count || 3}/118`, 62, 252);
-    if (rpg.motto) ctx.fillText(`“${rpg.motto}”`, 62, 310);
+    ctx.font = 'bold 26px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('THẺ HỌC VIÊN ĐIỆN TỬ CHÍNH THỨC', 152, 108);
 
-    // Draw deterministic QR grid on right
-    const qrSvgStr = buildQrSvg(`PHUCK9:${user?.username || 'guest'}:${sbd}:${grade}`, 220);
-    const blob = new Blob([qrSvgStr], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 610, 145, 220, 220);
-      URL.revokeObjectURL(url);
+    // Divider line
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(52, 138);
+    ctx.lineTo(908, 138);
+    ctx.stroke();
+
+    // Student details on left
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(displayName, 54, 194);
+
+    ctx.fillStyle = '#fef08a';
+    ctx.font = 'bold 23px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(`MÃ SBD: ${sbd}   •   @${username}`, 54, 236);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '22px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(`Khối lớp: ${grade}   |   Hạng: ${tier}`, 54, 280);
+    ctx.fillText(`Đơn vị: ${school}`, 54, 318);
+    ctx.fillText(`Bảng Tuần Hoàn: ${rpg.periodic?.unlocked_count || 3}/118 nguyên tố   |   Câu chinh phục: ${rpg.questions_conquered || 0}`, 54, 356);
+    if (rpg.motto) {
+      ctx.fillStyle = '#bae6fd';
+      ctx.font = 'italic 21px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(`“${rpg.motto.slice(0, 65)}”`, 54, 402);
+    }
+
+    // Footer verification badge
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.28)';
+    ctx.fillRect(54, 436, 540, 44);
+    ctx.strokeStyle = 'rgba(110, 231, 183, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(54, 436, 540, 44);
+    ctx.fillStyle = '#ecfdf5';
+    ctx.font = 'bold 17px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('✓ THẺ HỌC VIÊN XÁC THỰC BỞI HỌC CÙNG PHÚC K9 • QUÉT QR ĐỂ MỞ THẺ', 70, 464);
+
+    // White QR card container on right
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(654, 162, 236, 266);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('QUÉT QR MỞ THẺ HỌC VIÊN', 678, 412);
+
+    const qrSvgStr = buildQrSvg(qrUrl, 216);
+    const logoSvgStr = buildStudentCardLogoSvg(82);
+
+    const loadSvgImg = svgText => new Promise(resolve => {
+      const b = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const u = URL.createObjectURL(b);
+      const im = new Image();
+      im.onload = () => { URL.revokeObjectURL(u); resolve(im); };
+      im.onerror = () => { URL.revokeObjectURL(u); resolve(null); };
+      im.src = u;
+    });
+
+    Promise.all([loadSvgImg(logoSvgStr), loadSvgImg(qrSvgStr)]).then(([logoImg, qrImg]) => {
+      if (logoImg) ctx.drawImage(logoImg, 52, 42, 82, 82);
+      if (qrImg) ctx.drawImage(qrImg, 664, 170, 216, 216);
       const a = document.createElement('a');
-      a.download = `the-hoc-vien-${sbd}.png`;
+      a.download = `the-hoc-vien-phuck9-${sbd}.png`;
       a.href = canvas.toDataURL('image/png');
       a.click();
-      toast('Đã tải ảnh Thẻ Học Viên QR (.png) thành công!', 'success');
+      toast('Đã tải ảnh Thẻ Học Viên Học Cùng Phúc K9 (.png) thành công!', 'success');
+    });
+  }
+
+  // Render & open the branded Digital Student ID Card modal when scanning QR (/?card=...) or clicking preview
+  async function openScannedStudentCardModal(params = {}) {
+    const localUser = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
+    const localRpg = getRpgState();
+    const rawU = String(params.username || params.u || params.card || localUser?.username || 'guest').trim();
+    const rawSbd = String(params.sbd || localRpg?.sbd || 'K9-STUDENT').trim();
+    const rawName = String(params.name || params.n || localUser?.display_name || 'Học Viên Phúc K9').trim();
+    const rawGrade = String(params.grade || params.g || localUser?.settings?.preferred_grade || '2K9').trim();
+
+    const old = document.getElementById('pk9-scanned-card-modal');
+    if (old) old.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'pk9-scanned-card-modal';
+    modal.className = 'pk9-qr-zoom-modal pk9-scanned-card-modal';
+    modal.innerHTML = `
+      <div class="pk9-scanned-card-dialog">
+        <div style="padding:2rem 1rem;text-align:center;color:#e2e8f0;">
+          <div style="margin-bottom:0.65rem;">${buildStudentCardLogoSvg(64)}</div>
+          <div style="font-weight:900;font-size:1rem;">Đang xác thực Thẻ Học Viên Học Cùng Phúc K9...</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    let apiData = null;
+    try {
+      const qs = new URLSearchParams({
+        action: 'student-card',
+        u: rawU,
+        sbd: rawSbd,
+        n: rawName,
+        g: rawGrade
+      });
+      const r = await fetch(`/api/dashboard?${qs.toString()}`, { credentials: 'include' });
+      if (r.ok) apiData = await r.json();
+    } catch {}
+
+    const card = apiData?.card || {
+      username: rawU || 'khach_k9',
+      display_name: rawName,
+      sbd: rawSbd,
+      grade: rawGrade,
+      school: localUser?.settings?.school || 'Hệ Sinh Thái Học Cùng Phúc K9',
+      xp: Number(localUser?.xp || 100),
+      level: Math.floor(Math.max(100, Number(localUser?.xp || 100)) / 100) + 1,
+      streak: Math.max(1, Number(localUser?.streak || localRpg?.checkin?.streak || 1)),
+      tier: localRpg?.tier || { name: 'Bậc Đồng', icon: '🥉' },
+      equipped_details: localRpg?.equipped_details || {},
+      periodic_unlocked: Number(localRpg?.periodic?.unlocked_count || 3),
+      questions_conquered: Number(localRpg?.questions_conquered || 0),
+      motto: localRpg?.motto || 'Mỗi ngày tiến bộ 1% cùng Phúc K9!',
+      badges: ['Học Viên Phúc K9']
     };
-    img.src = url;
+    const isVerified = Boolean(apiData?.verified || (localUser?.username && localUser.username.toLowerCase() === String(card.username || '').toLowerCase()));
+    const eq = card.equipped_details || {};
+    const tier = card.tier || { name: 'Bậc Đồng', icon: '🥉' };
+    const cardQrUrl = buildStudentCardQrUrl(
+      { username: isVerified ? card.username : 'guest', display_name: card.display_name, settings: { preferred_grade: card.grade } },
+      { sbd: card.sbd }
+    );
+
+    modal.innerHTML = `
+      <div class="pk9-scanned-card-dialog" role="dialog" aria-modal="true" aria-label="Thẻ Học Viên Điện Tử Học Cùng Phúc K9">
+        <button type="button" class="pk9-scanned-close-x" data-close-scanned-card="1" aria-label="Đóng">✕</button>
+
+        <div class="pk9-scanned-brand-banner">
+          <div class="pk9-scanned-crest-glow">
+            ${buildStudentCardLogoSvg(66)}
+          </div>
+          <div class="pk9-scanned-brand-titles">
+            <span class="pk9-scanned-kicker">HỆ SINH THÁI GIÁO DỤC • HỌC CÙNG PHÚC K9</span>
+            <h3 class="pk9-scanned-main-title">THẺ HỌC VIÊN ĐIỆN TỬ</h3>
+            <div class="pk9-scanned-seal ${isVerified ? 'is-verified' : 'is-preview'}">
+              ${isVerified
+                ? `✓ ĐÃ XÁC THỰC CHÍNH THỨC • SBD: ${esc(card.sbd)}`
+                : `🪪 THẺ HỌC VIÊN TRẢI NGHIỆM • SBD: ${esc(card.sbd)}`}
+            </div>
+          </div>
+        </div>
+
+        <!-- OFFICIAL STUDENT ID PASS -->
+        <div class="pk9-student-idcard pk9-scanned-idcard-pass ${esc(eq.cardbg?.cssClass || 'pk9-cardbg-ocean')}" id="pk9-scanned-card-pass">
+          <div class="pk9-idcard-brand-head">
+            <div class="pk9-idcard-logo-wrap">
+              ${buildStudentCardLogoSvg(44)}
+            </div>
+            <div style="min-width:0;flex:1;">
+              <div class="pk9-idcard-brand-kicker">HỌC CÙNG PHÚC K9 • OFFICIAL STUDENT ID</div>
+              <div class="pk9-idcard-name" style="font-size:1.22rem;">${esc(card.display_name)}</div>
+              <div style="font-size:0.76rem;opacity:0.9;">@${esc(card.username)} ${eq.title ? `• ${eq.title.icon} ${esc(eq.title.name)}` : ''}</div>
+            </div>
+            <div class="pk9-rpg-avatar-box ${esc(eq.frame?.cssClass || 'pk9-frame-bronze')}" style="width:54px;height:54px;flex-shrink:0;">
+              <span class="pk9-rpg-outfit">${eq.outfit?.icon || '🧑‍🎓'}</span>
+              ${eq.pet?.icon ? `<span class="pk9-rpg-pet-badge">${eq.pet.icon}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="pk9-scanned-stats-grid">
+            <div class="pk9-scanned-stat-box">
+              <span>MÃ SỐ HỌC VIÊN</span>
+              <strong style="color:#fef08a;">${esc(card.sbd)}</strong>
+            </div>
+            <div class="pk9-scanned-stat-box">
+              <span>KHỐI LỚP & HẠNG</span>
+              <strong>${esc(card.grade)} • ${tier.icon || '🥉'} ${esc(tier.name)}</strong>
+            </div>
+            <div class="pk9-scanned-stat-box">
+              <span>CẤP ĐỘ & CHUỖI HỌC</span>
+              <strong>Lv.${Number(card.level || 1)} (${Number(card.xp || 100)} EXP) • 🔥 ${Number(card.streak || 1)}d</strong>
+            </div>
+            <div class="pk9-scanned-stat-box">
+              <span>THÀNH TÍCH K9</span>
+              <strong>⚗️ ${Number(card.periodic_unlocked || 3)}/118 • 🎯 ${Number(card.questions_conquered || 0)} câu</strong>
+            </div>
+          </div>
+
+          <div style="font-size:0.79rem;margin-top:0.55rem;opacity:0.95;">
+            🏫 <b>Đơn vị / Trường:</b> ${esc(card.school || 'Hệ Sinh Thái Học Cùng Phúc K9')}
+          </div>
+          ${card.motto ? `<div class="pk9-scanned-motto">“${esc(card.motto)}”</div>` : ''}
+
+          <div class="pk9-scanned-qr-footer">
+            <div class="pk9-qr-wrap" style="padding:0.35rem;border-radius:0.65rem;flex-shrink:0;">
+              ${buildQrSvg(cardQrUrl, 96)}
+            </div>
+            <div style="min-width:0;flex:1;font-size:0.74rem;line-height:1.45;">
+              <div style="font-weight:900;color:#fef08a;margin-bottom:0.15rem;">🛡️ CHỨNG NHẬN THẺ HỌC VIÊN PHÚC K9</div>
+              <div>Thẻ học viên điện tử mang thương hiệu <b>HỌC CÙNG PHÚC K9</b>. Quét mã QR bằng Camera điện thoại hoặc Zalo để kiểm tra và mở thẻ trực tuyến.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pk9-scanned-modal-actions">
+          <button type="button" class="pk9-btn-exam-ghost" data-copy-card-url="${esc(cardQrUrl)}">
+            🔗 Sao chép Link Thẻ
+          </button>
+          <button type="button" class="pk9-btn-exam-ghost" data-download-idcard="1">
+            ⬇️ Tải Thẻ (.PNG)
+          </button>
+          <button type="button" class="pk9-btn-exam-primary" data-close-scanned-card="1">
+            🚀 Vào Học Cùng Phúc K9
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function checkUrlForScannedStudentCard() {
+    try {
+      const search = window.location && window.location.search ? window.location.search : '';
+      if (!search) return;
+      const params = new URLSearchParams(search);
+      const cardParam = params.get('card') || params.get('student_card');
+      if (!cardParam) return;
+      openScannedStudentCardModal({
+        username: cardParam,
+        sbd: params.get('sbd') || '',
+        name: params.get('n') || params.get('name') || '',
+        grade: params.get('g') || params.get('grade') || ''
+      });
+    } catch {}
   }
 
   function startQuizSession(mode, opts = {}) {
@@ -1916,15 +2488,41 @@
       if (qrTrigger) {
         const old = document.getElementById('pk9-qr-zoom-modal');
         if (old) old.remove();
+        const qrUrl = qrTrigger.getAttribute('data-qr-code') || buildStudentCardQrUrl(window.PK9_GET_USER ? window.PK9_GET_USER() : null, getRpgState());
+        const qrName = qrTrigger.getAttribute('data-qr-name') || 'Thẻ Học Viên Phúc K9';
+        const qrSbd = qrTrigger.getAttribute('data-qr-sbd') || 'K9-STUDENT';
+        const qrU = qrTrigger.getAttribute('data-qr-u') || 'guest';
+        const qrGrade = qrTrigger.getAttribute('data-qr-grade') || '2K9';
         const modal = document.createElement('div');
         modal.id = 'pk9-qr-zoom-modal';
         modal.className = 'pk9-qr-zoom-modal';
         modal.innerHTML = `
           <div class="pk9-qr-zoom-card">
-            <div style="font-weight:900;font-size:1rem;margin-bottom:0.2rem;color:#0f172a;">${esc(qrTrigger.getAttribute('data-qr-name') || 'Thẻ Học Viên')}</div>
-            <div style="font-size:0.8rem;color:#475569;margin-bottom:0.75rem;">SBD: <b>${esc(qrTrigger.getAttribute('data-qr-sbd') || 'K9')}</b></div>
-            ${buildQrSvg(qrTrigger.getAttribute('data-qr-code') || 'PHUCK9', 230)}
-            <button type="button" class="pk9-btn-exam-primary" data-close-qr-zoom="1" style="margin-top:0.85rem;width:100%;">✕ Đóng</button>
+            <div style="display:flex;align-items:center;justify-content:center;gap:0.55rem;margin-bottom:0.45rem;">
+              ${buildStudentCardLogoSvg(42)}
+              <div style="text-align:left;">
+                <div style="font-size:0.66rem;font-weight:900;color:#1d4ed8;letter-spacing:0.05em;">HỌC CÙNG PHÚC K9</div>
+                <div style="font-weight:900;font-size:0.98rem;color:#0f172a;line-height:1.2;">${esc(qrName)}</div>
+              </div>
+            </div>
+            <div style="font-size:0.78rem;color:#475569;margin-bottom:0.65rem;">Mã SBD: <b style="color:#0f172a;">${esc(qrSbd)}</b> • Khối <b>${esc(qrGrade)}</b></div>
+            <div style="display:inline-flex;padding:0.45rem;background:#ffffff;border:2px solid #e2e8f0;border-radius:0.9rem;box-shadow:0 8px 20px rgba(15,23,42,0.08);">
+              ${buildQrSvg(qrUrl, 232)}
+            </div>
+            <div style="font-size:0.72rem;color:#64748b;margin-top:0.55rem;line-height:1.4;">
+              📱 Đưa Camera điện thoại hoặc Zalo vào mã QR để mở trực tiếp <b>Thẻ Học Viên Học Cùng Phúc K9</b>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr;gap:0.42rem;margin-top:0.75rem;">
+              <button type="button" class="pk9-btn-exam-primary" data-open-scanned-card="1" data-card-u="${esc(qrU)}" data-card-sbd="${esc(qrSbd)}" data-card-name="${esc(qrName)}" data-card-grade="${esc(qrGrade)}" style="width:100%;">
+                🪪 Mở Thẻ Học Viên (Như Khi Quét QR)
+              </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-copy-card-url="${esc(qrUrl)}" style="width:100%;color:#0f172a;border-color:#cbd5e1;">
+                🔗 Sao chép Link Thẻ Học Viên
+              </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-close-qr-zoom="1" style="width:100%;color:#475569;border-color:#e2e8f0;">
+                ✕ Đóng
+              </button>
+            </div>
           </div>
         `;
         document.body.appendChild(modal);
@@ -1933,6 +2531,50 @@
       if (e.target.closest('[data-close-qr-zoom]') || (e.target && e.target.id === 'pk9-qr-zoom-modal')) {
         const modal = document.getElementById('pk9-qr-zoom-modal');
         if (modal) modal.remove();
+        return;
+      }
+
+      const openScannedBtn = e.target.closest('[data-open-scanned-card]');
+      if (openScannedBtn) {
+        const zModal = document.getElementById('pk9-qr-zoom-modal');
+        if (zModal) zModal.remove();
+        openScannedStudentCardModal({
+          username: openScannedBtn.getAttribute('data-card-u') || '',
+          sbd: openScannedBtn.getAttribute('data-card-sbd') || '',
+          name: openScannedBtn.getAttribute('data-card-name') || '',
+          grade: openScannedBtn.getAttribute('data-card-grade') || ''
+        });
+        return;
+      }
+
+      if (e.target.closest('[data-close-scanned-card]') || (e.target && e.target.id === 'pk9-scanned-card-modal')) {
+        const sModal = document.getElementById('pk9-scanned-card-modal');
+        if (sModal) sModal.remove();
+        try {
+          if (window.location?.search && (window.location.search.includes('card=') || window.location.search.includes('student_card='))) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('card');
+            url.searchParams.delete('student_card');
+            url.searchParams.delete('sbd');
+            url.searchParams.delete('n');
+            url.searchParams.delete('g');
+            window.history.replaceState({}, '', url.pathname + (url.search || '') + (url.hash || ''));
+          }
+        } catch {}
+        return;
+      }
+
+      const copyUrlBtn = e.target.closest('[data-copy-card-url]');
+      if (copyUrlBtn) {
+        const urlToCopy = copyUrlBtn.getAttribute('data-copy-card-url') || buildStudentCardQrUrl(window.PK9_GET_USER ? window.PK9_GET_USER() : null, getRpgState());
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(urlToCopy);
+          }
+          toast('🔗 Đã sao chép đường dẫn Thẻ Học Viên Học Cùng Phúc K9!', 'success');
+        } catch {
+          toast(`Link Thẻ Học Viên: ${urlToCopy}`, 'info');
+        }
         return;
       }
 
@@ -1972,6 +2614,11 @@
     buildQuestionPool,
     selectNonRepeatingQuestions,
     resetSeenQuestions,
+    encodeQrMatrix,
+    buildQrSvg,
+    buildStudentCardLogoSvg,
+    buildStudentCardQrUrl,
+    openScannedStudentCard: openScannedStudentCardModal,
     getState: getRpgState,
     loadMeta: loadRpgMeta,
     rpgPost,
@@ -1991,8 +2638,10 @@
 
   bindEvents();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => loadRpgMeta());
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRpgMeta().then(() => checkUrlForScannedStudentCard());
+    });
   } else {
-    loadRpgMeta();
+    loadRpgMeta().then(() => checkUrlForScannedStudentCard());
   }
 })(window, document);

@@ -1,5 +1,5 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, requireAdminOrBanIntruder, rejectIfBanned } = require('../lib/auth');
+const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, sendAdminGuardError, requireAdminOrBanIntruder, rejectIfBanned } = require('../lib/auth');
 
 function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
 function nowIso(){return new Date().toISOString()}
@@ -48,7 +48,7 @@ module.exports = async function handler(req,res){
 
     if(action==='admin-list' && req.method==='GET'){
       const guard=await requireAdminOrBanIntruder(redis,req,res,session,{source:'premium:admin-list'});
-      if(!guard.ok) return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message,csrf});
+      if(!guard.ok) return sendAdminGuardError(res,guard,{csrf});
       const rows=[]; let cursor=0;
       do{
         const scan=await redis.scan(cursor,{match:'phuc:premium:req:*',count:100});
@@ -65,7 +65,7 @@ module.exports = async function handler(req,res){
 
     if(action==='admin-set' && req.method==='POST'){
       const guard=await requireAdminOrBanIntruder(redis,req,res,session,{source:'premium:admin-set'});
-      if(!guard.ok) return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message,csrf});
+      if(!guard.ok) return sendAdminGuardError(res,guard,{csrf});
       const target=cleanName(body.username).toLowerCase();
       if(!target) return sendJson(res,422,{ok:false,message:'Thiếu username.',csrf});
       const user=await redis.get(`${USER_PREFIX}${target}`);
@@ -79,7 +79,7 @@ module.exports = async function handler(req,res){
 
     if(action==='admin-gift' && req.method==='POST'){
       const guard=await requireAdminOrBanIntruder(redis,req,res,session,{source:'premium:admin-gift'});
-      if(!guard.ok) return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message,csrf});
+      if(!guard.ok) return sendAdminGuardError(res,guard,{csrf});
       const target=cleanName(body.username).toLowerCase();
       if(!target) return sendJson(res,422,{ok:false,message:'Thiếu username học viên.',csrf});
       const user=await redis.get(`${USER_PREFIX}${target}`);

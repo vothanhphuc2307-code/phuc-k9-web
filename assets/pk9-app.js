@@ -78,6 +78,7 @@
   let _serverSuperAdminVerified = false;
   let _clientBanLock = null;
   let _intrusionReporting = false;
+  let _intrusionBurstUntil = 0;
   let _adminDomGuardInstalled = false;
 
   function isClientVerifiedAdmin() {
@@ -183,14 +184,58 @@
     renderBanOverlay(_clientBanLock);
   }
 
-  async function reportClientAdminIntrusion(sourceLabel = 'DevTools Admin Bypass') {
-    const adminPane = document.getElementById('tab-admin');
-    if (adminPane) {
-      adminPane.classList.remove('active');
-      adminPane.innerHTML = '';
+  function renderAdminWarningModal(warnInfo = {}) {
+    const existing = document.getElementById('pk9-admin-warn-overlay');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.id = 'pk9-admin-warn-overlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    el.innerHTML = `
+      <div style="max-width:490px;width:100%;background:var(--pk9-surface,#fff);color:var(--pk9-text,#0f172a);border-radius:1.25rem;padding:1.65rem;text-align:center;border:2.5px solid #f59e0b;box-shadow:0 24px 60px rgba(0,0,0,0.4);">
+        <div style="font-size:3rem;margin-bottom:0.4rem;">⚠️</div>
+        <h2 style="margin:0 0 0.5rem;font-size:1.18rem;font-weight:900;color:#d97706;">
+          ${esc(warnInfo.warning_title || 'CẢNH BÁO BẢO MẬT — LẦN DUY NHẤT (1/1)')}
+        </h2>
+        <p style="margin:0 0 0.85rem;font-size:0.88rem;line-height:1.55;">
+          ${esc(warnInfo.message || 'Phát hiện hành vi mở hoặc can thiệp khu vực Quản trị (Admin) dù tài khoản của bạn không có quyền Quản trị.')}
+        </p>
+        <div style="padding:0.75rem 0.9rem;border-radius:0.8rem;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);font-size:0.82rem;line-height:1.5;color:#b91c1c;margin-bottom:1.1rem;font-weight:700;">
+          🚨 LƯU Ý QUAN TRỌNG: Tài khoản của bạn hiện <u>CHƯA BỊ KHÓA</u> ở lần đầu tiên này. Nếu tiếp tục tái phạm thêm <b>1 lần nữa</b> (mở tab Admin, chỉnh DevTools hoặc gọi API Admin), tài khoản và thiết bị sẽ bị <b>BAN VĨNH VIỄN</b> ngay lập tức!
+        </div>
+        <button type="button" id="pk9-warn-dismiss" style="width:100%;padding:0.72rem 1rem;border-radius:0.8rem;border:none;background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff;font-weight:900;cursor:pointer;font-size:0.9rem;">
+          ✅ Tôi đã hiểu — Quay lại học bình thường
+        </button>
+      </div>
+    `;
+    document.body.appendChild(el);
+    const btn = el.querySelector('#pk9-warn-dismiss');
+    if (btn) {
+      btn.onclick = () => {
+        el.remove();
+        _intrusionBurstUntil = 0;
+      };
     }
-    if (!APP.user || isClientVerifiedAdmin() || _intrusionReporting) return;
+  }
+
+  function handleAdminWarningResponse(info = {}) {
+    if (APP.user) {
+      APP.user.admin_warnings = Math.max(1, Number(info.warning_count || 1));
+    }
+    enforceAdminDomHidden();
+    if (APP.activeTab === 'admin') {
+      APP.activeTab = 'home';
+      document.querySelectorAll('.pk9-tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-home'));
+      document.querySelectorAll('[data-nav-tab]').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === 'home'));
+      renderHomeTab();
+    }
+    renderAdminWarningModal(info);
+  }
+
+  async function reportClientAdminIntrusion(sourceLabel = 'DevTools Admin Bypass') {
+    enforceAdminDomHidden();
+    if (!APP.user || isClientVerifiedAdmin() || _intrusionReporting || Date.now() < _intrusionBurstUntil) return;
     _intrusionReporting = true;
+    _intrusionBurstUntil = Date.now() + 1800;
     try {
       const resp = await fetch('/api/dashboard?action=security-intrusion', {
         method: 'POST',
@@ -202,9 +247,17 @@
         body: JSON.stringify({ source: sourceLabel, visitor_id: getVisitorClientId() })
       });
       const data = await resp.json().catch(() => ({}));
-      handleBannedResponse(data);
+      if (data?.warning && !data?.banned) {
+        handleAdminWarningResponse(data);
+      } else if (data?.banned) {
+        _intrusionBurstUntil = 0;
+        handleBannedResponse(data);
+      } else {
+        toast(data?.message || '🔒 Khu vực Admin chỉ dành riêng cho tài khoản chủ @phucadmin!', 'error');
+      }
     } catch {
-      handleBannedResponse({ ban_reason: 'Truy cập trái phép khu vực Admin!' });
+      enforceAdminDomHidden();
+      toast('🔒 Khu vực Admin chỉ dành riêng cho tài khoản chủ @phucadmin!', 'error');
     } finally {
       _intrusionReporting = false;
     }
@@ -214,11 +267,15 @@
     if (isClientVerifiedAdmin()) return;
     ['pk9-nav-admin-group', 'pk9-nav-admin-btn', 'pk9-top-admin-btn'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
+      if (el) {
+        el.style.display = 'none';
+        el.classList.remove('active');
+      }
     });
     const adminPane = document.getElementById('tab-admin');
     if (adminPane) {
       adminPane.classList.remove('active');
+      adminPane.style.display = '';
       if (adminPane.innerHTML.trim()) adminPane.innerHTML = '';
     }
   }
@@ -229,12 +286,14 @@
     const observer = new MutationObserver(() => {
       if (isClientVerifiedAdmin()) return;
       const pane = document.getElementById('tab-admin');
+      const grp = document.getElementById('pk9-nav-admin-group');
       const navBtn = document.getElementById('pk9-nav-admin-btn');
       const topBtn = document.getElementById('pk9-top-admin-btn');
-      const forcedPane = Boolean(pane && pane.classList.contains('active'));
+      const forcedPane = Boolean(pane && (pane.classList.contains('active') || (pane.style.display && pane.style.display !== 'none') || pane.children.length > 0));
+      const forcedGrp = Boolean(grp && grp.style.display && grp.style.display !== 'none');
       const forcedNav = Boolean(navBtn && navBtn.style.display && navBtn.style.display !== 'none');
       const forcedTop = Boolean(topBtn && topBtn.style.display && topBtn.style.display !== 'none');
-      if (forcedPane || forcedNav || forcedTop) {
+      if (forcedPane || forcedGrp || forcedNav || forcedTop) {
         enforceAdminDomHidden();
         if (APP.user) {
           reportClientAdminIntrusion('DevTools DOM Un-hide Admin');
@@ -243,7 +302,7 @@
     });
     ['tab-admin', 'pk9-nav-admin-group', 'pk9-nav-admin-btn', 'pk9-top-admin-btn'].forEach(id => {
       const targetEl = document.getElementById(id);
-      if (targetEl) observer.observe(targetEl, { attributes: true, attributeFilter: ['class', 'style'] });
+      if (targetEl) observer.observe(targetEl, { attributes: true, attributeFilter: ['class', 'style', 'hidden'], childList: id === 'tab-admin' });
     });
   }
 
@@ -3006,6 +3065,10 @@
       if (resp && (resp.status === 401 || resp.status === 403)) {
         const errData = await resp.json().catch(() => ({}));
         APP.adminLoading = false;
+        if (errData?.warning && !errData?.banned) {
+          handleAdminWarningResponse(errData);
+          return;
+        }
         if (errData?.banned) {
           handleBannedResponse(errData);
           return;
@@ -3059,6 +3122,10 @@
         body: JSON.stringify(payload)
       });
       const data = await resp.json().catch(() => ({}));
+      if (resp.status === 403 && data?.warning && !data?.banned) {
+        handleAdminWarningResponse(data);
+        return false;
+      }
       if (resp.status === 403 && data?.banned) {
         handleBannedResponse(data);
         return false;
@@ -3589,14 +3656,18 @@
 
       const viewerIsSuper = Boolean(d?.viewer_is_super_admin || isClientVerifiedSuperAdmin());
       const bannedTotal = users.filter(x => x.banned).length;
+      const warnedTotal = users.filter(x => !x.banned && Number(x.admin_warnings || 0) > 0).length;
       return `
         ${viewerIsSuper ? `
           <div class="pk9-card" style="margin-bottom:1rem;border:1.5px solid rgba(225,29,72,0.35);background:linear-gradient(135deg,rgba(234,179,8,0.12),rgba(225,29,72,0.08));display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;padding:0.85rem 1rem;">
             <div>
               <div style="font-weight:900;font-size:0.95rem;color:#be123c;">👑 Đang hoạt động với quyền Super Admin độc quyền (@phucadmin)</div>
-              <div style="font-size:0.8rem;color:var(--pk9-text-muted);">Bạn có toàn quyền bấm nút <b>🛡️ Phân quyền</b> (Học viên / VIP / Admin phụ) và <b>🚫 Ban vĩnh viễn / ✅ Gỡ Ban</b> từng tài khoản. Mọi tài khoản lạ cố mở tab Admin đều tự động bị Ban vĩnh viễn!</div>
+              <div style="font-size:0.8rem;color:var(--pk9-text-muted);">Bạn có toàn quyền bấm <b>🛡️ Phân quyền</b>, <b>🚫 Ban vĩnh viễn / ✅ Gỡ Ban</b>. Tài khoản thường cố mở Admin sẽ bị <b>⚠️ Cảnh báo 1 lần duy nhất</b>, tái phạm lần sau sẽ tự động <b>🚫 Ban vĩnh viễn</b>!</div>
             </div>
-            <span class="pk9-badge" style="background:#e11d48;color:#fff;">🚫 Đã Ban: ${bannedTotal}</span>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+              ${warnedTotal > 0 ? `<span class="pk9-badge" style="background:#f59e0b;color:#fff;">⚠️ Cảnh báo: ${warnedTotal}</span>` : ''}
+              <span class="pk9-badge" style="background:#e11d48;color:#fff;">🚫 Đã Ban: ${bannedTotal}</span>
+            </div>
           </div>
         ` : ''}
         <div class="pk9-card" style="margin-bottom:1.25rem;">
@@ -3674,6 +3745,7 @@
               { k: 'admin', label: '🛡️ Quản trị viên' },
               { k: 'vip', label: '💎 Học viên VIP' },
               { k: 'student', label: '🎓 Học viên chuẩn' },
+              { k: 'warned', label: `⚠️ Bị cảnh báo (${warnedTotal})` },
               { k: 'banned', label: `🚫 Đã Ban (${bannedTotal})` }
             ].map(f => `
               <button type="button" class="pk9-exam-chip ${APP.adminUserRoleFilter === f.k ? 'active' : ''}" data-admin-role-filter="${f.k}">
@@ -3995,6 +4067,8 @@
     const filtered = (users || []).filter(u => {
       if (roleFilter === 'banned') {
         if (!u.banned) return false;
+      } else if (roleFilter === 'warned') {
+        if (u.banned || Number(u.admin_warnings || 0) <= 0) return false;
       } else if (roleFilter !== 'ALL') {
         if (u.banned || (u.role || 'student') !== roleFilter) return false;
       }
@@ -4030,7 +4104,7 @@
         <td>
           <div style="font-weight:800;">${esc(u.display_name)}</div>
           <div style="font-size:0.74rem;color:var(--pk9-text-muted);">@${esc(u.username)} • ${esc(u.school || 'Chưa cập nhật trường')}</div>
-          ${rowIsBanned && u.ban_reason ? `<div style="font-size:0.7rem;color:#dc2626;margin-top:0.15rem;">🚫 ${esc(u.ban_reason)}</div>` : ''}
+          ${rowIsBanned && u.ban_reason ? `<div style="font-size:0.7rem;color:#dc2626;margin-top:0.15rem;">🚫 ${esc(u.ban_reason)}</div>` : (!rowIsBanned && Number(u.admin_warnings || 0) > 0 ? `<div style="font-size:0.7rem;color:#d97706;margin-top:0.15rem;font-weight:700;">⚠️ Đã bị cảnh báo 1/1 (tái phạm sẽ tự Ban)</div>` : '')}
         </td>
         <td>
           <span class="pk9-admin-role-pill ${esc(roleCls)}" style="${rowIsSuper ? 'background:linear-gradient(135deg,#eab308,#e11d48);color:#fff;' : rowIsBanned ? 'background:#dc2626;color:#fff;' : ''}">
@@ -4067,6 +4141,7 @@
                 ? `<button type="button" class="pk9-btn-exam-ghost" data-admin-unban-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#10b981;border-color:#10b981;">✅ Gỡ Ban</button>`
                 : `<button type="button" class="pk9-btn-exam-ghost" data-admin-ban-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#dc2626;border-color:rgba(220,38,38,0.45);">🚫 Ban vĩnh viễn</button>`
               }
+              ${(!rowIsBanned && Number(u.admin_warnings || 0) > 0) ? `<button type="button" class="pk9-btn-exam-ghost" data-admin-clear-warn="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#d97706;">🧹 Xóa cảnh báo</button>` : ''}
               <button type="button" class="pk9-btn-exam-ghost" data-admin-reset-pw="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#f59e0b;">🔑 Đổi MK</button>
               <button type="button" class="pk9-btn-exam-ghost" data-admin-del-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#ef4444;">🗑️</button>
             ` : ''}
@@ -5622,6 +5697,13 @@
         return;
       }
 
+      const adminClearWarnBtn = e.target.closest('[data-admin-clear-warn]');
+      if (adminClearWarnBtn) {
+        const username = adminClearWarnBtn.getAttribute('data-admin-clear-warn');
+        await runAdminAction({ sub_action: 'clear-warnings', username });
+        return;
+      }
+
       const adminToggleRoleBtn = e.target.closest('[data-admin-toggle-role]');
       if (adminToggleRoleBtn) {
         const username = adminToggleRoleBtn.getAttribute('data-admin-toggle-role');
@@ -5749,7 +5831,7 @@
           const resp = await fetch('/api/auth?action=forgot-password', {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf, 'x-pk9-visitor': getVisitorClientId() },
             body: JSON.stringify(payload)
           });
           const data = await resp.json().catch(() => ({}));
@@ -5758,7 +5840,8 @@
             return;
           }
           APP.user = data.user;
-          APP.isAdmin = Boolean(data.user?.is_admin || data.user?.role === 'admin');
+          _serverAdminVerified = Boolean(data.user && data.user.is_admin && (data.user.username === 'phucadmin' || (data.user.is_admin && String(data.user.admin_granted_by || '').toLowerCase() === 'phucadmin')));
+          _serverSuperAdminVerified = Boolean(_serverAdminVerified && data.user?.username === 'phucadmin');
           APP.csrf = data.csrf || APP.csrf;
           closeAuthModal();
           toast(data.message || 'Khôi phục mật khẩu thành công!', 'success');
@@ -6332,7 +6415,8 @@
         .then(async r => {
           if (r.status === 403) {
             const d = await r.json().catch(() => ({}));
-            if (d?.banned) handleBannedResponse(d);
+            if (d?.warning && !d?.banned) handleAdminWarningResponse(d);
+            else if (d?.banned) handleBannedResponse(d);
             return null;
           }
           return r.ok ? r.json() : null;
