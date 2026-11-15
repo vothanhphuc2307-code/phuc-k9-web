@@ -1,5 +1,5 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, sendJson, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername } = require('../lib/auth');
+const { USER_PREFIX, getSession, sendJson, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
 const { normalizeScoring, questionNeedsReview, validateExamStructure } = require('../lib/exam-utils');
 const {
   vnWeekKey,
@@ -46,8 +46,8 @@ const clean = (v, max = 400) => String(v ?? '').replace(/[\u0000-\u001f]/g, '').
 
 async function isAdminSession(session) {
   if (!session?.username) return false;
-  if (isAdminUsername(session.username)) return true;
   const u = await getUserByUsername(session.username);
+  if (!u && isAdminUsername(session.username)) return true;
   return isAdminAccount(u);
 }
 function csrfOk(req, session) {
@@ -381,6 +381,10 @@ async function handler(req, res) {
       }
 
       const session = await getSession(req);
+    if (session?.username && !['admin-import', 'publish', 'unpublish', 'delete'].includes(action)) {
+      const ban = await rejectIfBanned(r, req, res, session.username);
+      if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.' });
+    }
       const id = clean(u.searchParams.get('id'), 200);
 
       if (action === 'get') {
@@ -418,7 +422,8 @@ async function handler(req, res) {
       }
 
       if (action === 'admin-list') {
-        if (!(await isAdminSession(session))) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
+        const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: 'exams:admin-list' });
+        if (!guard.ok) return sendJson(res, guard.status, { ok: false, banned: Boolean(guard.banned), auth_revoked: Boolean(guard.auth_revoked), message: guard.message });
         const seedIdSet = new Set(SEED.map(x => x.id));
         const ids = new Set(seedIdSet);
         try {
@@ -455,7 +460,8 @@ async function handler(req, res) {
       }
 
       if (action === 'admin-get') {
-        if (!(await isAdminSession(session))) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
+        const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: 'exams:admin-get' });
+        if (!guard.ok) return sendJson(res, guard.status, { ok: false, banned: Boolean(guard.banned), auth_revoked: Boolean(guard.auth_revoked), message: guard.message });
         const e = await getExam(r, id);
         if (!e) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy đề.' });
         return sendJson(res, 200, { ok: true, exam: adminExam(e) });
@@ -488,13 +494,18 @@ async function handler(req, res) {
 
     if (req.method !== 'POST') return sendJson(res, 405, { ok: false, message: 'Method không được hỗ trợ.' });
     const session = await getSession(req);
+    if (session?.username && !['admin-import', 'publish', 'unpublish', 'delete'].includes(action)) {
+      const ban = await rejectIfBanned(r, req, res, session.username);
+      if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.' });
+    }
     const body = await parseBody(req);
 
     // Admin actions require authenticated admin + CSRF
     if (['admin-import', 'publish', 'unpublish', 'delete'].includes(action)) {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Hãy đăng nhập tài khoản quản trị.' });
       if (!csrfOk(req, session)) return sendJson(res, 403, { ok: false, message: 'CSRF không hợp lệ.' });
-      if (!(await isAdminSession(session))) return sendJson(res, 403, { ok: false, message: 'Chỉ admin.' });
+      const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: `exams:${action}` });
+      if (!guard.ok) return sendJson(res, guard.status, { ok: false, banned: Boolean(guard.banned), auth_revoked: Boolean(guard.auth_revoked), message: guard.message });
 
       if (action === 'admin-import') {
         let e = normalizeExamMeta(body.exam);
@@ -689,7 +700,7 @@ async function handler(req, res) {
           const uProfile = await redisJsonGet(r, `${USER_PREFIX}${normUser}`);
           if (uProfile) {
             const baseKey = `phuc:xp:exam:${normUser}:${a.id}`;
-            const isAdm = isAdminAccount(uProfile) || isAdminUsername(normUser);
+            const isAdm = isAdminAccount(uProfile);
             const candidateXp = isAdm ? 0 : calcExamXp(result.score);
             const granted = !!(await r.set(baseKey, JSON.stringify({
               xp_earned: candidateXp,

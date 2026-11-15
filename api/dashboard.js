@@ -1,7 +1,12 @@
 const { getRedis } = require('../lib/redis');
 const {
-  USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie,
-  hashPassword, verifyPassword, safeUser, normalizeUsername, isAdminUsername, isAdminAccount
+  USER_PREFIX, SUPER_ADMIN_USERNAME, BANNED_USERS_SET,
+  getSession, getCsrf, requireCsrf, sendJson, parseCookies, setCookie,
+  hashPassword, verifyPassword, safeUser, normalizeUsername,
+  isSuperAdminUsername, isSuperAdminAccount, isReservedAdminUsername,
+  isAdminUsername, isAdminAccount,
+  getBanRecord, banUserPermanently, unbanUserAccount, rejectIfBanned,
+  requireAdminOrBanIntruder, getClientIp, getRequestVisitorId
 } = require('../lib/auth');
 const crypto = require('crypto');
 const {
@@ -33,13 +38,17 @@ async function loadJourneyLeaders(redis, grade = '2K9') {
     ? String(grade).toUpperCase()
     : '2K9';
   try {
-    const raw = await redis.zrange(`phuc:rpg:journey_week:${wk}:${safeGrade}`, 0, 14, { rev: true, withScores: true }).catch(() => []);
+    const [raw, bannedRaw] = await Promise.all([
+      redis.zrange(`phuc:rpg:journey_week:${wk}:${safeGrade}`, 0, 14, { rev: true, withScores: true }).catch(() => []),
+      redis.smembers(BANNED_USERS_SET).catch(() => [])
+    ]);
+    const bannedSet = new Set((bannedRaw || []).map(x => normalizeUsername(x)).filter(Boolean));
     const pairs = parseZrangePairs(raw);
     const out = [];
     for (const pair of pairs) {
       const uname = normalizeUsername(pair.name || '');
       const score = Number(pair.count || 0);
-      if (!uname || isAdminUsername(uname) || isGuestUsername(uname)) continue;
+      if (!uname || isAdminUsername(uname) || isGuestUsername(uname) || bannedSet.has(uname)) continue;
       let meta = await redis.get(`phuc:rpg:journey_meta:${uname}`).catch(() => null);
       if (typeof meta === 'string') {
         try { meta = JSON.parse(meta); } catch { meta = null; }
@@ -68,13 +77,14 @@ const MAX_ATTEMPTS = 5000;
 
 async function isSessionAdmin(redis, session) {
   if (!session?.username) return false;
-  if (isAdminUsername(session.username)) return true;
+  const uName = normalizeUsername(session.username);
   try {
-    const u = await redis.get(`${USER_PREFIX}${session.username}`);
+    const u = await redis.get(`${USER_PREFIX}${uName}`);
     const obj = typeof u === 'string' ? JSON.parse(u) : u;
-    return isAdminAccount(obj);
+    if (!obj && isSuperAdminUsername(uName)) return true;
+    return Boolean(obj && !obj.banned && isAdminAccount(obj));
   } catch {
-    return false;
+    return isSuperAdminUsername(uName);
   }
 }
 function clean(s, max = 140) {
@@ -318,9 +328,37 @@ async function trackVisitor(req, res, redis, session = null) {
   const nowIso = new Date().toISOString();
   const rawEv = String(body?.event || 'pageview').toLowerCase();
   const event = rawEv === 'heartbeat' ? 'heartbeat' : rawEv === 'tab' ? 'tab' : 'pageview';
-  const activeTab = clean(body?.tab || 'home', 40) || 'home';
+  const requestedTab = clean(body?.tab || 'home', 40) || 'home';
   const pathName = clean(body?.path || '/', 220) || '/';
   const sessionId = clean(body?.session_id || '', 64);
+
+  let activeTab = requestedTab;
+  let banDetected = null;
+  if (session?.username) {
+    const existingBan = await getBanRecord(redis, session.username, '');
+    if (existingBan) {
+      banDetected = existingBan;
+      activeTab = 'blocked';
+    } else if (requestedTab === 'admin' || pathName.includes('admin')) {
+      const adminOk = await isSessionAdmin(redis, session);
+      if (!adminOk && !isSuperAdminUsername(session.username)) {
+        activeTab = 'blocked';
+        const resBan = await banUserPermanently(redis, session.username, {
+          reason: 'Xâm nhập trái phép khu vực Quản trị (Admin Pro)',
+          bannedBy: 'security-guard',
+          visitorId: vid,
+          ip: rawIp
+        });
+        banDetected = resBan?.ban || { banned: true, reason: 'Xâm nhập trái phép khu vực Quản trị (Admin Pro)' };
+      }
+    }
+  } else if (requestedTab === 'admin') {
+    activeTab = 'home';
+  }
+  if (banDetected) {
+    try { await redis.del(`phuc:visitors:online:${vid}`); } catch {}
+    return { vid, agent, banned: true, ban_reason: banDetected.reason || 'Tài khoản bị khóa vĩnh viễn.' };
+  }
 
   try {
     await redis.sadd('phuc:visitors:all', vid);
@@ -743,9 +781,15 @@ async function handleRpgRequest(redis, req, res, session, action) {
     try { body = JSON.parse(body || '{}'); } catch { body = {}; }
   }
 
+  if (action !== 'rpg-state') {
+    const ban = await rejectIfBanned(redis, req, res, session.username);
+    if (ban) {
+      return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.' });
+    }
+  }
   const u = await getUser(redis, session.username);
   if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy tài khoản.' });
-  const isAdm = isAdminAccount(u) || isAdminUsername(session.username);
+  const isAdm = isAdminAccount(u);
   ensureUserRpgState(u);
 
   const sub = action.slice(4);
@@ -910,6 +954,16 @@ module.exports = async function handler(req, res) {
 
     if (action === 'track-visitor' && (req.method === 'POST' || req.method === 'GET')) {
       const tracked = await trackVisitor(req, res, redis, session);
+      if (tracked?.banned) {
+        await rejectIfBanned(redis, req, res, session?.username || '');
+        return sendJson(res, 403, {
+          ok: false,
+          banned: true,
+          auth_revoked: true,
+          ban_reason: tracked.ban_reason || 'Tài khoản đã bị khóa vĩnh viễn.',
+          message: 'CẢNH BÁO BẢO MẬT: Tài khoản bị khóa vĩnh viễn do xâm nhập trái phép khu vực Admin!'
+        });
+      }
       if (tracked?.ignored) {
         return sendJson(res, 200, { ok: true, ignored: true, reason: tracked.reason });
       }
@@ -926,6 +980,12 @@ module.exports = async function handler(req, res) {
       const now = new Date();
       const currentWeek = vnWeekKey(now);
       const normSessionUser = session?.username ? normalizeUsername(session.username) : '';
+      if (normSessionUser && !isGuestUsername(normSessionUser)) {
+        const lbBan = await rejectIfBanned(redis, req, res, normSessionUser);
+        if (lbBan) {
+          return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: lbBan.reason, locked: true, leaderboard: [], weekly_leaderboard: [], exam_leaderboard: [], message: 'Tài khoản đã bị khóa vĩnh viễn.' });
+        }
+      }
       const sessionUserObj = (!normSessionUser || isGuestUsername(normSessionUser))
         ? null
         : await getUser(redis, normSessionUser);
@@ -944,9 +1004,10 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const [rawAttempts, deletedRaw] = await Promise.all([
+      const [rawAttempts, deletedRaw, bannedRaw] = await Promise.all([
         listAttempts(redis),
-        redis.smembers('phuc:users:deleted').catch(() => [])
+        redis.smembers('phuc:users:deleted').catch(() => []),
+        redis.smembers(BANNED_USERS_SET).catch(() => [])
       ]);
       const extraUsernames = [
         normSessionUser,
@@ -955,11 +1016,12 @@ module.exports = async function handler(req, res) {
       const dbUsers = await collectAllUsers(redis, extraUsernames);
       const attempts = await listAllAttempts(redis, dbUsers, rawAttempts);
       const deletedSet = new Set((deletedRaw || []).map(x => normalizeUsername(x)).filter(Boolean));
+      const bannedSet = new Set((bannedRaw || []).map(x => normalizeUsername(x)).filter(Boolean));
       const stats = new Map();
 
       for (const a of attempts) {
         const u = normalizeUsername(a.username);
-        if (!u || isGuestUsername(u) || deletedSet.has(u)) continue;
+        if (!u || isGuestUsername(u) || deletedSet.has(u) || bannedSet.has(u)) continue;
         const cur = stats.get(u) || {
           username: u,
           display_name: clean(a.display_name, 50) || u,
@@ -998,7 +1060,10 @@ module.exports = async function handler(req, res) {
 
       for (const u of dbUsers) {
         const normU = normalizeUsername(u.username);
-        if (!normU || deletedSet.has(normU)) continue;
+        if (!normU || deletedSet.has(normU) || u.banned || bannedSet.has(normU)) {
+          if (normU) excludedUsernames.add(normU);
+          continue;
+        }
         if (isAdminAccount(u)) {
           excludedUsernames.add(normU);
           continue;
@@ -1138,6 +1203,8 @@ module.exports = async function handler(req, res) {
       }
 
       const normUser = normalizeUsername(session.username);
+      const exBan = await rejectIfBanned(redis, req, res, normUser);
+      if (exBan) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: exBan.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.' });
       const uProfile = await getUser(redis, normUser);
       if (!uProfile) {
         return sendJson(res, 401, { ok: false, auth_required: true, message: 'Tài khoản không hợp lệ hoặc chưa đăng ký. Vui lòng đăng nhập lại!' });
@@ -1302,11 +1369,13 @@ module.exports = async function handler(req, res) {
       const itemId = clean(body.item_id || body.lesson_id || `study-${Date.now()}`, 120);
       const xpReward = studyType === 'flashcard' ? 20 : studyType === 'quiz' ? 30 : 25;
       const normUser = normalizeUsername(session.username);
+      const studyBan = await rejectIfBanned(redis, req, res, normUser);
+      if (studyBan) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: studyBan.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.' });
       const key = `phuc:xp:study:${normUser}:${studyType}:${itemId}`;
       let xpEarned = 0, goldEarned = 0, duplicate = false;
       const u = await getUser(redis, normUser);
       if (!u) return sendJson(res, 401, { ok: false, auth_required: true, message: 'Không tìm thấy tài khoản.' });
-      const isAdm = isAdminAccount(u) || isAdminUsername(normUser);
+      const isAdm = isAdminAccount(u);
       const wk = vnWeekKey();
       if (u.week_key !== wk) {
         u.week_key = wk;
@@ -1376,8 +1445,47 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 200, { ok: true, attempts });
     }
 
+    if (action === 'security-intrusion' && req.method === 'POST') {
+      const cookies = parseCookies(req);
+      const vid = getRequestVisitorId(req) || String(cookies.phuc_visitor || '').trim();
+      let body = req.body || {};
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body || '{}'); } catch { body = {}; }
+      }
+      const detail = clean(body.detail || body.source || 'DevTools Admin Tamper', 160);
+      if (!session?.username) {
+        return sendJson(res, 403, { ok: false, banned: false, auth_required: true, message: 'Yêu cầu đăng nhập đúng tài khoản quản trị @phucadmin.' });
+      }
+      if (await isSessionAdmin(redis, session)) {
+        return sendJson(res, 200, { ok: true, admin: true });
+      }
+      const banRes = await banUserPermanently(redis, session.username, {
+        reason: `Giả mạo / xâm nhập giao diện Admin (${detail})`,
+        bannedBy: 'security-guard',
+        visitorId: vid,
+        ip: getClientIp(req)
+      });
+      await rejectIfBanned(redis, req, res, session.username);
+      return sendJson(res, 403, {
+        ok: false,
+        banned: true,
+        auth_revoked: true,
+        ban_reason: banRes?.ban?.reason || 'Tài khoản bị khóa vĩnh viễn do xâm nhập khu vực Admin.',
+        message: 'CẢNH BÁO BẢO MẬT: Tài khoản của bạn đã bị khóa vĩnh viễn khỏi hệ thống do cố tình truy cập trái phép trang Admin!'
+      });
+    }
+
     if (action === 'overview' && req.method === 'GET') {
-      if (!session || !(await isSessionAdmin(redis, session))) return sendJson(res, 403, { ok: false, message: 'Không có quyền quản trị.' });
+      const guard = await requireAdminOrBanIntruder(redis, req, res, session, { source: 'dashboard:overview' });
+      if (!guard.ok) {
+        return sendJson(res, guard.status, {
+          ok: false,
+          banned: Boolean(guard.banned),
+          auth_revoked: Boolean(guard.auth_revoked),
+          ban_reason: guard.ban_reason || '',
+          message: guard.message
+        });
+      }
       const allUsers = await collectAllUsers(redis);
       const start = todayStart();
       const users = allUsers.length;
@@ -1415,14 +1523,23 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'admin-detail' && req.method === 'GET') {
-      if (!session || !(await isSessionAdmin(redis, session))) {
-        return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản Quản Trị Viên (Admin) mới có quyền truy cập Trung tâm điều hành.' });
+      const guard = await requireAdminOrBanIntruder(redis, req, res, session, { source: 'dashboard:admin-detail' });
+      if (!guard.ok) {
+        return sendJson(res, guard.status, {
+          ok: false,
+          banned: Boolean(guard.banned),
+          auth_revoked: Boolean(guard.auth_revoked),
+          ban_reason: guard.ban_reason || '',
+          message: guard.message
+        });
       }
-      const [allUsers, attempts, snap] = await Promise.all([
+      const [allUsers, attempts, snap, bannedRaw] = await Promise.all([
         collectAllUsers(redis),
         listAttempts(redis),
-        collectTrafficSnapshot(redis, { detailed: true })
+        collectTrafficSnapshot(redis, { detailed: true }),
+        redis.smembers(BANNED_USERS_SET).catch(() => [])
       ]);
+      const bannedSet = new Set((bannedRaw || []).map(x => normalizeUsername(x)).filter(Boolean));
       const start = todayStart();
       const now = new Date();
       const currentWeek = vnWeekKey(now);
@@ -1503,11 +1620,22 @@ module.exports = async function handler(req, res) {
 
         const ast = attemptStatsByUser.get(u.username) || { count: 0, best: 0, sum: 0, lastExamAt: '' };
         const li = levelInfo(xp);
+        const normU = normalizeUsername(u.username);
+        const isAdmUser = isAdminAccount(u);
+        const isSuperUser = isSuperAdminAccount(u);
+        const isBannedUser = !isSuperAdminUsername(normU) && Boolean(u.banned || bannedSet.has(normU));
         return {
           username: u.username,
           display_name: u.display_name || u.username,
-          role: isAdminAccount(u) ? 'admin' : (u.role || 'student'),
-          is_vip: Boolean(u.is_vip || u.role === 'vip' || isAdminAccount(u)),
+          role: isAdmUser ? 'admin' : (u.role === 'vip' ? 'vip' : 'student'),
+          is_admin: isAdmUser,
+          is_super_admin: isSuperUser,
+          admin_granted_by: u.admin_granted_by || '',
+          banned: isBannedUser,
+          ban_reason: isBannedUser ? String(u.ban_reason || 'Vi phạm bảo mật hệ thống') : '',
+          banned_at: isBannedUser ? String(u.banned_at || '') : '',
+          banned_by: isBannedUser ? String(u.banned_by || '') : '',
+          is_vip: Boolean(u.is_vip || u.role === 'vip' || isAdmUser),
           school: u.settings?.school || '',
           grade: g,
           xp,
@@ -1545,7 +1673,7 @@ module.exports = async function handler(req, res) {
 
       const activeTodayCount = allUsers.filter(u => u?.last_active && new Date(u.last_active).getTime() >= start).length;
       const avgExamScore = attempts.length ? Math.round((totalScoreAll / attempts.length) * 100) / 100 : 0;
-      const defaultAdminRec = allUsers.find(u => normalizeUsername(u?.username) === 'admin');
+      const defaultAdminRec = allUsers.find(u => normalizeUsername(u?.username) === SUPER_ADMIN_USERNAME);
       const curAdminRec = allUsers.find(u => normalizeUsername(u?.username) === normalizeUsername(session.username));
       const weakAdminPassword = Boolean(
         (defaultAdminRec && verifyPassword('admin123', defaultAdminRec)) ||
@@ -1554,12 +1682,16 @@ module.exports = async function handler(req, res) {
 
       return sendJson(res, 200, {
         ok: true,
+        viewer_username: normalizeUsername(session.username),
+        viewer_is_super_admin: Boolean(guard.isSuperAdmin),
+        super_admin_username: SUPER_ADMIN_USERNAME,
         server_time: now.toISOString(),
         week_key: currentWeek,
         storage_mode: redis.__isMemoryFallback ? 'Memory Fallback (Local Dev)' : 'Upstash Redis Cloud',
         weak_admin_password: weakAdminPassword,
         kpis: {
           total_users: allUsers.length,
+          banned_users: enrichedUsers.filter(u => u.banned).length,
           active_today: activeTodayCount,
           online_now: snap.online,
           unique_visitors: snap.visitorsAll,
@@ -1612,9 +1744,17 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'admin-action' && req.method === 'POST') {
-      if (!session || !(await isSessionAdmin(redis, session))) {
-        return sendJson(res, 403, { ok: false, message: 'Không có quyền quản trị.' });
+      const guard = await requireAdminOrBanIntruder(redis, req, res, session, { source: 'dashboard:admin-action' });
+      if (!guard.ok) {
+        return sendJson(res, guard.status, {
+          ok: false,
+          banned: Boolean(guard.banned),
+          auth_revoked: Boolean(guard.auth_revoked),
+          ban_reason: guard.ban_reason || '',
+          message: guard.message
+        });
       }
+      const isCallerSuperAdmin = Boolean(guard.isSuperAdmin);
       const csrf = session.csrf || await getCsrf(req, res);
       if (!requireCsrf(req, session, csrf)) {
         return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
@@ -1624,16 +1764,19 @@ module.exports = async function handler(req, res) {
         try { body = JSON.parse(body || '{}'); } catch { body = {}; }
       }
       const subAction = String(body.sub_action || '').toLowerCase();
-      const targetUsername = String(body.username || '').trim().toLowerCase();
+      const targetUsername = normalizeUsername(body.username || '');
 
       async function logAdminAudit(eventTitle, detail) {
         try {
+          const nowIso = new Date().toISOString();
           await redis.lpush('phuc:admin:audit', JSON.stringify({
             id: `aud-${Date.now()}`,
             admin: session.username,
+            actor: session.username,
             event: eventTitle,
             detail,
-            created_at: new Date().toISOString()
+            at: nowIso,
+            created_at: nowIso
           }));
           await redis.ltrim('phuc:admin:audit', 0, 99);
         } catch {}
@@ -1642,6 +1785,9 @@ module.exports = async function handler(req, res) {
       if (subAction === 'grant-xp') {
         const u = await getUser(redis, targetUsername);
         if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
+        if (isSuperAdminUsername(targetUsername) && !isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ @phucadmin mới được thao tác tài khoản chủ.' });
+        }
         const delta = Math.round(Number(body.amount || 0));
         const wk = vnWeekKey();
         if (u.week_key !== wk) {
@@ -1657,24 +1803,86 @@ module.exports = async function handler(req, res) {
       }
 
       if (subAction === 'set-role') {
+        if (!isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản chủ @phucadmin mới có quyền Phân quyền hệ thống!' });
+        }
+        if (isSuperAdminUsername(targetUsername)) {
+          return sendJson(res, 400, { ok: false, message: 'Không thể hạ cấp hoặc đổi vai trò tài khoản Super Admin @phucadmin.' });
+        }
         const u = await getUser(redis, targetUsername);
         if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
         const newRole = String(body.role || 'student').toLowerCase();
+        if (!['student', 'vip', 'admin'].includes(newRole)) {
+          return sendJson(res, 422, { ok: false, message: 'Vai trò phân quyền không hợp lệ (chỉ student / vip / admin).' });
+        }
         u.role = newRole;
         u.is_admin = newRole === 'admin';
         u.is_vip = newRole === 'vip' || newRole === 'admin';
+        if (newRole === 'admin') {
+          u.admin_granted_by = SUPER_ADMIN_USERNAME;
+          u.admin_granted_at = new Date().toISOString();
+          u.banned = false;
+          u.ban_reason = '';
+        } else {
+          delete u.admin_granted_by;
+          delete u.admin_granted_at;
+        }
         const badgeSet = new Set(Array.isArray(u.badges) ? u.badges : ['Thành Viên K9']);
-        if (newRole === 'admin') badgeSet.add('Quản Trị Viên K9');
+        if (newRole === 'admin') {
+          badgeSet.add('Quản Trị Viên K9');
+        } else {
+          badgeSet.delete('Quản Trị Viên K9');
+          badgeSet.delete('Quản Trị Viên Tối Cao');
+        }
         if (newRole === 'vip') badgeSet.add('Học Viên VIP Pro');
+        else if (newRole === 'student') badgeSet.delete('Học Viên VIP Pro');
         u.badges = Array.from(badgeSet);
         await redis.set(`${USER_PREFIX}${targetUsername}`, u);
-        await logAdminAudit('Phân quyền tài khoản', `@${targetUsername} → ${newRole.toUpperCase()}`);
-        return sendJson(res, 200, { ok: true, message: `Đã chuyển vai trò của @${targetUsername} thành ${newRole.toUpperCase()}.`, user: safeUser(u) });
+        await logAdminAudit('🛡️ Phân quyền tài khoản', `@${targetUsername} → ${newRole.toUpperCase()} (bởi @${session.username})`);
+        return sendJson(res, 200, { ok: true, message: `Đã phân quyền cho @${targetUsername} → ${newRole.toUpperCase()}.`, user: safeUser(u) });
+      }
+
+      if (subAction === 'ban-user') {
+        if (!isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản chủ @phucadmin mới có quyền Ban vĩnh viễn người dùng!' });
+        }
+        if (!targetUsername || isSuperAdminUsername(targetUsername)) {
+          return sendJson(res, 400, { ok: false, message: 'Không thể ban tài khoản Super Admin @phucadmin.' });
+        }
+        const reason = clean(body.reason || 'Vi phạm quy định hoặc xâm nhập trái phép', 220);
+        const banRes = await banUserPermanently(redis, targetUsername, {
+          reason,
+          bannedBy: session.username
+        });
+        const fresh = await getUser(redis, targetUsername);
+        return sendJson(res, 200, {
+          ok: true,
+          message: `Đã khóa (Ban) vĩnh viễn tài khoản @${targetUsername}.`,
+          ban: banRes?.ban || null,
+          user: fresh ? safeUser(fresh) : null
+        });
+      }
+
+      if (subAction === 'unban-user') {
+        if (!isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản chủ @phucadmin mới có quyền Gỡ Ban!' });
+        }
+        if (!targetUsername) return sendJson(res, 422, { ok: false, message: 'Thiếu username cần gỡ ban.' });
+        await unbanUserAccount(redis, targetUsername, { unbannedBy: session.username });
+        const fresh = await getUser(redis, targetUsername);
+        return sendJson(res, 200, {
+          ok: true,
+          message: `Đã mở khóa (Gỡ Ban) cho tài khoản @${targetUsername}.`,
+          user: fresh ? safeUser(fresh) : null
+        });
       }
 
       if (subAction === 'reset-password') {
         const u = await getUser(redis, targetUsername);
         if (!u) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy học viên.' });
+        if ((isSuperAdminUsername(targetUsername) || isAdminAccount(u)) && !isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ @phucadmin mới được đặt lại mật khẩu cho Quản trị viên.' });
+        }
         const newPass = String(body.new_password || '').trim();
         if (newPass.length < 6 || newPass.length > 128) {
           return sendJson(res, 422, { ok: false, message: 'Vui lòng nhập mật khẩu mới rõ ràng (6–128 ký tự).' });
@@ -1693,7 +1901,14 @@ module.exports = async function handler(req, res) {
         const pass = String(body.password || '123456');
         const grade = ['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(String(body.grade || '').toUpperCase()) ? String(body.grade).toUpperCase() : '2K9';
         const school = clean(body.school || 'THPT Chuyên Phúc K9', 80);
-        const role = String(body.role || 'student').toLowerCase();
+        const rawRole = String(body.role || 'student').toLowerCase();
+        const role = ['student', 'vip', 'admin'].includes(rawRole) ? rawRole : 'student';
+        if (role === 'admin' && !isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản chủ @phucadmin mới có quyền tạo tài khoản Admin.' });
+        }
+        if (isSuperAdminUsername(uname)) {
+          return sendJson(res, 400, { ok: false, message: 'Tên tài khoản @phucadmin được hệ thống giữ riêng.' });
+        }
         const xp = role === 'admin' ? Math.max(0, Number(body.xp ?? 0)) : Math.max(100, Number(body.xp || 200));
         if (!uname || uname.length < 3) return sendJson(res, 422, { ok: false, message: 'Username cần ít nhất 3 ký tự.' });
         const existing = await getUser(redis, uname);
@@ -1706,6 +1921,7 @@ module.exports = async function handler(req, res) {
           role,
           is_admin: role === 'admin',
           is_vip: role === 'vip' || role === 'admin',
+          ...(role === 'admin' ? { admin_granted_by: SUPER_ADMIN_USERNAME, admin_granted_at: nowIso } : {}),
           salt,
           password_hash: hash,
           created_at: nowIso,
@@ -1727,8 +1943,11 @@ module.exports = async function handler(req, res) {
       }
 
       if (subAction === 'delete-user') {
-        if (targetUsername === session.username) {
-          return sendJson(res, 400, { ok: false, message: 'Không thể tự xóa tài khoản Admin đang đăng nhập.' });
+        if (!isCallerSuperAdmin) {
+          return sendJson(res, 403, { ok: false, message: 'Chỉ tài khoản chủ @phucadmin mới được xóa tài khoản.' });
+        }
+        if (targetUsername === normalizeUsername(session.username) || isSuperAdminUsername(targetUsername)) {
+          return sendJson(res, 400, { ok: false, message: 'Không thể tự xóa tài khoản Super Admin @phucadmin.' });
         }
         await redis.del(`${USER_PREFIX}${targetUsername}`);
         try {

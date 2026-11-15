@@ -42,7 +42,6 @@
     pomoMode: 25,
     user: null,
     csrf: '',
-    isAdmin: false,
     weakAdminPassword: false,
     doneMap: {},
     notesMap: {},
@@ -75,7 +74,178 @@
     isStandalone: false
   };
 
-  window.PK9_AUTH = APP;
+  let _serverAdminVerified = false;
+  let _serverSuperAdminVerified = false;
+  let _clientBanLock = null;
+  let _intrusionReporting = false;
+  let _adminDomGuardInstalled = false;
+
+  function isClientVerifiedAdmin() {
+    if (!_serverAdminVerified || !APP.user || APP.user.banned) return false;
+    const uname = String(APP.user.username || '').trim().toLowerCase();
+    if (uname === 'phucadmin') return true;
+    return Boolean(
+      APP.user.is_admin === true &&
+      APP.user.role === 'admin' &&
+      String(APP.user.admin_granted_by || '').trim().toLowerCase() === 'phucadmin'
+    );
+  }
+
+  function isClientVerifiedSuperAdmin() {
+    return Boolean(
+      isClientVerifiedAdmin() &&
+      _serverSuperAdminVerified &&
+      String(APP.user?.username || '').trim().toLowerCase() === 'phucadmin'
+    );
+  }
+
+  Object.defineProperty(APP, 'isAdmin', {
+    get: () => isClientVerifiedAdmin(),
+    set: () => {},
+    enumerable: true,
+    configurable: false
+  });
+  Object.defineProperty(APP, 'isSuperAdmin', {
+    get: () => isClientVerifiedSuperAdmin(),
+    set: () => {},
+    enumerable: true,
+    configurable: false
+  });
+
+  Object.defineProperty(window, 'PK9_AUTH', {
+    value: Object.freeze({
+      get csrf() { return APP.csrf || ''; },
+      get isLoggedIn() { return Boolean(APP.user); },
+      get username() { return APP.user?.username || ''; }
+    }),
+    writable: false,
+    configurable: false
+  });
+
+  function renderBanOverlay(banInfo) {
+    const info = banInfo || _clientBanLock;
+    const existing = document.getElementById('pk9-ban-overlay');
+    if (!info) {
+      if (existing) existing.remove();
+      return;
+    }
+    const el = existing || document.createElement('div');
+    el.id = 'pk9-ban-overlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    el.innerHTML = `
+      <div style="max-width:480px;width:100%;background:var(--pk9-surface,#fff);color:var(--pk9-text,#0f172a);border-radius:1.25rem;padding:1.75rem;text-align:center;border:2px solid #ef4444;box-shadow:0 24px 60px rgba(0,0,0,0.45);">
+        <div style="font-size:3rem;margin-bottom:0.5rem;">🚫</div>
+        <h2 style="margin:0 0 0.5rem;font-size:1.25rem;font-weight:900;color:#dc2626;">TÀI KHOẢN ĐÃ BỊ KHÓA VĨNH VIỄN</h2>
+        <p style="margin:0 0 0.85rem;font-size:0.9rem;line-height:1.5;">
+          ${esc(info.reason || info.ban_reason || info.message || 'Hệ thống bảo mật đã khóa vĩnh viễn tài khoản do phát hiện hành vi truy cập trái phép khu vực Quản trị (Admin).')}
+        </p>
+        <div style="padding:0.65rem 0.85rem;border-radius:0.75rem;background:rgba(239,68,68,0.1);font-size:0.8rem;color:#b91c1c;margin-bottom:1.15rem;">
+          🛡️ Chỉ tài khoản Super Admin <b>@phucadmin</b> mới có quyền xem xét mở khóa (Gỡ Ban).
+        </div>
+        <div style="display:flex;gap:0.55rem;justify-content:center;flex-wrap:wrap;">
+          <button type="button" id="pk9-ban-switch-login" style="padding:0.65rem 1rem;border-radius:0.75rem;border:none;background:#2563eb;color:#fff;font-weight:800;cursor:pointer;font-size:0.85rem;">
+            🔑 Đăng nhập tài khoản khác
+          </button>
+        </div>
+      </div>
+    `;
+    if (!existing) document.body.appendChild(el);
+    const loginSwitchBtn = el.querySelector('#pk9-ban-switch-login');
+    if (loginSwitchBtn) {
+      loginSwitchBtn.onclick = () => {
+        el.remove();
+        openAuthModal('login');
+      };
+    }
+  }
+
+  function handleBannedResponse(info = {}) {
+    _serverAdminVerified = false;
+    _serverSuperAdminVerified = false;
+    APP.user = null;
+    APP.weakAdminPassword = false;
+    APP.adminDetailData = null;
+    if (APP.adminLiveTimer) {
+      clearInterval(APP.adminLiveTimer);
+      APP.adminLiveTimer = null;
+    }
+    const adminPane = document.getElementById('tab-admin');
+    if (adminPane) {
+      adminPane.innerHTML = '';
+      adminPane.classList.remove('active');
+    }
+    _clientBanLock = {
+      banned: true,
+      reason: info.ban_reason || info.reason || info.message || 'Truy cập trái phép khu vực Quản trị (Admin Dashboard).'
+    };
+    try { localStorage.setItem('pk9_ban_notice', JSON.stringify(_clientBanLock)); } catch {}
+    updateHeaderAuthUI();
+    renderBanOverlay(_clientBanLock);
+  }
+
+  async function reportClientAdminIntrusion(sourceLabel = 'DevTools Admin Bypass') {
+    const adminPane = document.getElementById('tab-admin');
+    if (adminPane) {
+      adminPane.classList.remove('active');
+      adminPane.innerHTML = '';
+    }
+    if (!APP.user || isClientVerifiedAdmin() || _intrusionReporting) return;
+    _intrusionReporting = true;
+    try {
+      const resp = await fetch('/api/dashboard?action=security-intrusion', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-pk9-visitor': getVisitorClientId()
+        },
+        body: JSON.stringify({ source: sourceLabel, visitor_id: getVisitorClientId() })
+      });
+      const data = await resp.json().catch(() => ({}));
+      handleBannedResponse(data);
+    } catch {
+      handleBannedResponse({ ban_reason: 'Truy cập trái phép khu vực Admin!' });
+    } finally {
+      _intrusionReporting = false;
+    }
+  }
+
+  function enforceAdminDomHidden() {
+    if (isClientVerifiedAdmin()) return;
+    ['pk9-nav-admin-group', 'pk9-nav-admin-btn', 'pk9-top-admin-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const adminPane = document.getElementById('tab-admin');
+    if (adminPane) {
+      adminPane.classList.remove('active');
+      if (adminPane.innerHTML.trim()) adminPane.innerHTML = '';
+    }
+  }
+
+  function installAdminDomGuard() {
+    if (_adminDomGuardInstalled || typeof MutationObserver !== 'function') return;
+    _adminDomGuardInstalled = true;
+    const observer = new MutationObserver(() => {
+      if (isClientVerifiedAdmin()) return;
+      const pane = document.getElementById('tab-admin');
+      const navBtn = document.getElementById('pk9-nav-admin-btn');
+      const topBtn = document.getElementById('pk9-top-admin-btn');
+      const forcedPane = Boolean(pane && pane.classList.contains('active'));
+      const forcedNav = Boolean(navBtn && navBtn.style.display && navBtn.style.display !== 'none');
+      const forcedTop = Boolean(topBtn && topBtn.style.display && topBtn.style.display !== 'none');
+      if (forcedPane || forcedNav || forcedTop) {
+        enforceAdminDomHidden();
+        if (APP.user) {
+          reportClientAdminIntrusion('DevTools DOM Un-hide Admin');
+        }
+      }
+    });
+    ['tab-admin', 'pk9-nav-admin-group', 'pk9-nav-admin-btn', 'pk9-top-admin-btn'].forEach(id => {
+      const targetEl = document.getElementById(id);
+      if (targetEl) observer.observe(targetEl, { attributes: true, attributeFilter: ['class', 'style'] });
+    });
+  }
 
   function esc(str) {
     return String(str ?? '').replace(/[&<>"']/g, m => ({
@@ -334,6 +504,17 @@
       }
     }
 
+    if (target === 'admin' && !isClientVerifiedAdmin()) {
+      enforceAdminDomHidden();
+      if (APP.user) {
+        reportClientAdminIntrusion('switchTab(admin) Unauthorized');
+      } else {
+        toast('🔒 Khu vực Admin chỉ dành riêng cho tài khoản chủ @phucadmin!', 'error');
+        openAuthModal('login');
+      }
+      return;
+    }
+
     APP.activeTab = target;
 
     if (options.courseId) {
@@ -386,13 +567,18 @@
       window.PK9_RPG.renderTab(target);
     }
     if (target === 'admin') {
+      if (!isClientVerifiedAdmin()) {
+        enforceAdminDomHidden();
+        return;
+      }
       renderAdminTab();
       fetchAdminDetail();
     }
 
     syncAdminLivePolling();
     if (prevTab !== target && typeof trackAnalyticsEvent === 'function') {
-      trackAnalyticsEvent('tab', target);
+      const safeReportTab = (target === 'admin' && !isClientVerifiedAdmin()) ? 'home' : target;
+      trackAnalyticsEvent('tab', safeReportTab);
     }
 
     if (!options.keepScroll) {
@@ -481,15 +667,27 @@
     try {
       const meResp = await fetch(`/api/auth?action=me&_=${Date.now()}`, {
         credentials: 'include',
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: { 'x-pk9-visitor': getVisitorClientId() }
       });
+      if (meResp.status === 403) {
+        const banData = await meResp.json().catch(() => ({}));
+        if (banData?.banned) {
+          handleBannedResponse(banData);
+          return;
+        }
+      }
       if (meResp.ok) {
         const meData = await meResp.json();
         APP.csrf = meData.csrf || APP.csrf;
-        APP.isAdmin = Boolean(meData.is_admin || meData.user?.is_admin || meData.user?.role === 'admin');
-        APP.weakAdminPassword = Boolean(meData.weak_password_warning);
         if (meData.authenticated && meData.user) {
+          _clientBanLock = null;
+          try { localStorage.removeItem('pk9_ban_notice'); } catch {}
+          renderBanOverlay(null);
           APP.user = meData.user;
+          _serverAdminVerified = Boolean(meData.is_admin && (meData.user.username === 'phucadmin' || (meData.user.is_admin && String(meData.user.admin_granted_by || '').toLowerCase() === 'phucadmin')));
+          _serverSuperAdminVerified = Boolean(_serverAdminVerified && meData.is_super_admin && meData.user.username === 'phucadmin');
+          APP.weakAdminPassword = Boolean(_serverAdminVerified && meData.weak_password_warning);
           window.PK9_RPG_STATE = meData.user.rpg || window.PK9_RPG_STATE || null;
           if (meData.user.progress?.done) {
             APP.doneMap = { ...APP.doneMap, ...meData.user.progress.done };
@@ -500,9 +698,13 @@
           saveLocalProgress();
         } else {
           APP.user = null;
-          APP.isAdmin = false;
+          _serverAdminVerified = false;
+          _serverSuperAdminVerified = false;
           APP.weakAdminPassword = false;
           window.PK9_RPG_STATE = null;
+          if (meData.device_banned) {
+            renderBanOverlay({ ban_reason: meData.ban_reason || 'Thiết bị đã bị khóa vĩnh viễn do xâm nhập khu vực Quản trị.' });
+          }
         }
       }
     } catch {}
@@ -523,17 +725,22 @@
     await refreshLeaderboard({ force: true, quiet: true, skipUiSync: true });
 
     updateHeaderAuthUI();
+    enforceAdminDomHidden();
     if (APP.activeTab === 'home') renderHomeTab();
     if (APP.activeTab === 'leaderboard') renderLeaderboardTab();
     if (APP.activeTab === 'khoa-chui') renderKhoaChuiTab();
     if (APP.activeTab === 'admin') {
-      renderAdminTab();
-      if (APP.isAdmin) fetchAdminDetail();
+      if (isClientVerifiedAdmin()) {
+        renderAdminTab();
+        fetchAdminDetail();
+      } else {
+        switchTab('home', { force: true, keepScroll: true });
+      }
     }
   }
   window.PK9_REFRESH_LEADERBOARD = refreshLeaderboard;
   window.PK9_REFRESH_AUTH_AND_LEADERBOARD = fetchAuthAndLeaderboard;
-  window.PK9_GET_USER = () => APP.user;
+  window.PK9_GET_USER = () => (APP.user ? { ...APP.user } : null);
   window.PK9_GET_CSRF = () => APP.csrf;
   window.PK9_OPEN_AUTH = mode => openAuthModal(mode);
   window.PK9_ON_RPG_SYNC = (rpg, extra = {}) => {
@@ -637,10 +844,10 @@
             ${avatarThumb}
             <div style="min-width:0;flex:1;">
               <div style="font-weight:800;font-size:0.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${esc(APP.user.display_name)} ${APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
+                ${esc(APP.user.display_name)} ${APP.isSuperAdmin ? '<span class="pk9-badge" style="background:linear-gradient(135deg,#eab308,#e11d48);color:#fff;font-size:0.65rem;">👑 SUPER ADMIN</span>' : APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
               </div>
               <div style="font-size:0.72rem;color:var(--pk9-text-muted);">
-                ${APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • 🪙${rpgInfo.gold ?? 180} · 💎${rpgInfo.diamonds ?? 5}`}
+                ${APP.isSuperAdmin ? `👑 Chủ Hệ Thống • Chuỗi ${streakVal} ngày` : APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • 🪙${rpgInfo.gold ?? 180} · 💎${rpgInfo.diamonds ?? 5}`}
               </div>
             </div>
           </div>
@@ -2782,17 +2989,40 @@
   }
 
   async function fetchAdminDetail(opts = {}) {
-    if (!APP.isAdmin) return;
+    if (!isClientVerifiedAdmin()) return;
     if (!opts.silent && !APP.adminDetailData) APP.adminLoading = true;
     try {
+      const vid = getVisitorClientId();
       const [resp, exResp] = await Promise.all([
-        fetch('/api/dashboard?action=admin-detail', { credentials: 'include' }),
-        fetch('/api/exams?action=admin-list', { credentials: 'include' }).catch(() => null)
+        fetch('/api/dashboard?action=admin-detail', {
+          credentials: 'include',
+          headers: { 'x-pk9-visitor': vid }
+        }),
+        fetch('/api/exams?action=admin-list', {
+          credentials: 'include',
+          headers: { 'x-pk9-visitor': vid }
+        }).catch(() => null)
       ]);
+      if (resp && (resp.status === 401 || resp.status === 403)) {
+        const errData = await resp.json().catch(() => ({}));
+        APP.adminLoading = false;
+        if (errData?.banned) {
+          handleBannedResponse(errData);
+          return;
+        }
+        _serverAdminVerified = false;
+        _serverSuperAdminVerified = false;
+        APP.adminDetailData = null;
+        updateHeaderAuthUI();
+        enforceAdminDomHidden();
+        switchTab('home', { force: true, keepScroll: true });
+        return;
+      }
       if (resp && resp.ok) {
         const data = await resp.json();
         if (data?.ok) {
           APP.adminDetailData = data;
+          _serverSuperAdminVerified = Boolean(data.viewer_is_super_admin && APP.user?.username === 'phucadmin');
           if (data.announcement !== undefined) APP.systemAnnouncement = data.announcement;
           if (Array.isArray(data.custom_khoa_chui)) APP.customKhoaChui = data.custom_khoa_chui;
           renderSystemAnnouncementBar();
@@ -2806,21 +3036,33 @@
       }
     } catch {}
     APP.adminLoading = false;
-    if (APP.activeTab === 'admin') {
+    if (APP.activeTab === 'admin' && isClientVerifiedAdmin()) {
       const editingAdminInput = opts.silent && document.activeElement?.closest('#tab-admin input, #tab-admin select, #tab-admin textarea');
       if (!editingAdminInput) renderAdminTab();
     }
   }
 
   async function runAdminAction(payload) {
+    if (!isClientVerifiedAdmin()) {
+      enforceAdminDomHidden();
+      return false;
+    }
     try {
       const resp = await fetch('/api/dashboard?action=admin-action', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': APP.csrf,
+          'x-pk9-visitor': getVisitorClientId()
+        },
         body: JSON.stringify(payload)
       });
-      const data = await resp.json();
+      const data = await resp.json().catch(() => ({}));
+      if (resp.status === 403 && data?.banned) {
+        handleBannedResponse(data);
+        return false;
+      }
       if (resp.ok && data?.ok) {
         toast(data.message || 'Đã thực thi lệnh Quản trị thành công!', 'success');
         await fetchAdminDetail();
@@ -2840,26 +3082,10 @@
     const root = document.getElementById('tab-admin');
     if (!root) return;
 
-    if (!APP.user || !APP.isAdmin) {
-      root.innerHTML = `
-        <div class="pk9-exam-hub">
-          <div class="pk9-card" style="max-width:620px;margin:2rem auto;text-align:center;padding:2.2rem;">
-            <div style="font-size:3rem;margin-bottom:0.5rem;">🛡️</div>
-            <h2 style="margin:0 0 0.5rem;font-size:1.35rem;font-weight:900;">Khu Vực Quản Trị Viên Hệ Sinh Thái Phúc K9</h2>
-            <p style="color:var(--pk9-text-muted);font-size:0.9rem;margin:0 0 1.25rem;">
-              Vui lòng đăng nhập bằng tài khoản <b>Admin</b> để mở khóa <b>Dashboard Quản Trị Siêu Chi Tiết</b> (Theo dõi lưu lượng truy cập thời gian thực, quản lý học viên, giám sát bài thi, điều khiển Khóa Chui Tham Khảo & phát thông báo toàn hệ thống).
-            </p>
-            <div style="display:flex;justify-content:center;gap:0.75rem;flex-wrap:wrap;">
-              <button type="button" class="pk9-btn-exam-primary" data-open-auth="login">
-                🔑 Đăng nhập tài khoản Admin
-              </button>
-            </div>
-            <p style="color:var(--pk9-text-muted);font-size:0.78rem;margin:0.85rem 0 0;">
-              🔒 Để bảo vệ dữ liệu học viên, tài khoản quản trị chỉ đăng nhập bằng mật khẩu đã cấu hình trên máy chủ.
-            </p>
-          </div>
-        </div>
-      `;
+    if (!isClientVerifiedAdmin()) {
+      root.innerHTML = '';
+      root.classList.remove('active');
+      enforceAdminDomHidden();
       return;
     }
 
@@ -2941,7 +3167,7 @@
         ${(APP.weakAdminPassword || d?.weak_admin_password) ? `
           <div class="pk9-card" style="border:1.5px solid #ef4444;background:rgba(239,68,68,0.08);margin-bottom:0.85rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
             <div style="font-size:0.86rem;line-height:1.45;">
-              <b style="color:#dc2626;">⚠️ CẢNH BÁO BẢO MẬT QUẢN TRỊ:</b> Tài khoản <code>@admin</code> đang dùng mật khẩu mặc định dễ đoán. Hãy đổi mật khẩu mạnh ngay hoặc đặt biến <code>ADMIN_DEFAULT_PASSWORD</code> trên Vercel!
+              <b style="color:#dc2626;">⚠️ CẢNH BÁO BẢO MẬT QUẢN TRỊ:</b> Tài khoản quản trị <code>@phucadmin</code> đang dùng mật khẩu mặc định dễ đoán. Hãy đổi mật khẩu mạnh ngay hoặc đặt biến <code>ADMIN_DEFAULT_PASSWORD</code> trên Vercel!
             </div>
             <button type="button" class="pk9-btn-exam-primary" data-open-auth="security" style="background:#dc2626;flex:0 0 auto;">🔑 Đổi mật khẩu ngay</button>
           </div>
@@ -3361,9 +3587,20 @@
         ? users.find(u => u.username === APP.adminSelectedStudent)
         : null;
 
+      const viewerIsSuper = Boolean(d?.viewer_is_super_admin || isClientVerifiedSuperAdmin());
+      const bannedTotal = users.filter(x => x.banned).length;
       return `
+        ${viewerIsSuper ? `
+          <div class="pk9-card" style="margin-bottom:1rem;border:1.5px solid rgba(225,29,72,0.35);background:linear-gradient(135deg,rgba(234,179,8,0.12),rgba(225,29,72,0.08));display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;padding:0.85rem 1rem;">
+            <div>
+              <div style="font-weight:900;font-size:0.95rem;color:#be123c;">👑 Đang hoạt động với quyền Super Admin độc quyền (@phucadmin)</div>
+              <div style="font-size:0.8rem;color:var(--pk9-text-muted);">Bạn có toàn quyền bấm nút <b>🛡️ Phân quyền</b> (Học viên / VIP / Admin phụ) và <b>🚫 Ban vĩnh viễn / ✅ Gỡ Ban</b> từng tài khoản. Mọi tài khoản lạ cố mở tab Admin đều tự động bị Ban vĩnh viễn!</div>
+            </div>
+            <span class="pk9-badge" style="background:#e11d48;color:#fff;">🚫 Đã Ban: ${bannedTotal}</span>
+          </div>
+        ` : ''}
         <div class="pk9-card" style="margin-bottom:1.25rem;">
-          <h4 style="margin:0 0 0.75rem;font-size:1rem;font-weight:900;">➕ Tạo Nhanh Tài Khoản Học Viên / VIP / Admin Mới</h4>
+          <h4 style="margin:0 0 0.75rem;font-size:1rem;font-weight:900;">➕ Tạo Nhanh Tài Khoản ${viewerIsSuper ? 'Học Viên / VIP / Admin' : 'Học Viên / VIP'} Mới</h4>
           <form id="pk9-admin-create-user-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.65rem;align-items:end;">
             <div>
               <label style="font-size:0.74rem;font-weight:800;">Username</label>
@@ -3387,7 +3624,7 @@
                 <select name="role" class="pk9-input">
                   <option value="student">Học viên</option>
                   <option value="vip">VIP Pro</option>
-                  <option value="admin">Admin</option>
+                  ${viewerIsSuper ? '<option value="admin">Admin phụ</option>' : ''}
                 </select>
                 <input type="number" name="xp" class="pk9-input" value="500" style="width:90px;" />
               </div>
@@ -3434,9 +3671,10 @@
           <div class="pk9-exam-tabs">
             ${[
               { k: 'ALL', label: `Tất cả (${users.length})` },
-              { k: 'admin', label: '🛡️ Quản trị viên (Admin)' },
+              { k: 'admin', label: '🛡️ Quản trị viên' },
               { k: 'vip', label: '💎 Học viên VIP' },
-              { k: 'student', label: '🎓 Học viên chuẩn' }
+              { k: 'student', label: '🎓 Học viên chuẩn' },
+              { k: 'banned', label: `🚫 Đã Ban (${bannedTotal})` }
             ].map(f => `
               <button type="button" class="pk9-exam-chip ${APP.adminUserRoleFilter === f.k ? 'active' : ''}" data-admin-role-filter="${f.k}">
                 ${f.label}
@@ -3453,13 +3691,15 @@
           <table class="pk9-admin-table">
             <thead>
               <tr>
+                <th>#</th>
                 <th>Học viên / Tài khoản</th>
-                <th>Vai trò & Khối</th>
+                <th>Phân quyền & Trạng thái</th>
+                <th>Khối</th>
                 <th>XP & Chuỗi</th>
                 <th>Tiến độ Video</th>
                 <th>Luyện đề & Điểm</th>
                 <th>Hoạt động cuối</th>
-                <th>Thao tác Quản trị</th>
+                <th>Thao tác & Phân quyền</th>
               </tr>
             </thead>
             <tbody id="pk9-admin-users-tbody">
@@ -3753,10 +3993,15 @@
     const q = (APP.adminUserSearch || '').trim().toLowerCase();
     const roleFilter = APP.adminUserRoleFilter || 'ALL';
     const filtered = (users || []).filter(u => {
-      if (roleFilter !== 'ALL' && (u.role || 'student') !== roleFilter) return false;
+      if (roleFilter === 'banned') {
+        if (!u.banned) return false;
+      } else if (roleFilter !== 'ALL') {
+        if (u.banned || (u.role || 'student') !== roleFilter) return false;
+      }
       if (!q) return true;
       return `${u.username} ${u.display_name} ${u.school} ${u.grade}`.toLowerCase().includes(q);
     });
+    const viewerIsSuper = Boolean(APP.adminDetailData?.viewer_is_super_admin || isClientVerifiedSuperAdmin());
     if (!filtered.length) {
       return `
         <tr>
@@ -3766,17 +4011,32 @@
         </tr>
       `;
     }
-    return filtered.map((u, idx) => `
-      <tr style="${APP.adminSelectedStudent === u.username ? 'background:rgba(37,99,235,0.08);' : ''}">
+    return filtered.map((u, idx) => {
+      const rowIsSuper = Boolean(u.is_super_admin || String(u.username || '').toLowerCase() === 'phucadmin');
+      const rowIsBanned = Boolean(u.banned);
+      const roleLabel = rowIsBanned
+        ? '🚫 ĐÃ BAN'
+        : rowIsSuper
+          ? '👑 SUPER ADMIN'
+          : u.role === 'admin'
+            ? '🛡️ ADMIN PHỤ'
+            : u.role === 'vip'
+              ? '💎 VIP PRO'
+              : '🎓 Học viên';
+      const roleCls = rowIsBanned ? 'admin' : (u.role || 'student');
+      return `
+      <tr style="${rowIsBanned ? 'background:rgba(239,68,68,0.08);' : (APP.adminSelectedStudent === u.username ? 'background:rgba(37,99,235,0.08);' : '')}">
         <td><b>${idx + 1}</b></td>
         <td>
           <div style="font-weight:800;">${esc(u.display_name)}</div>
           <div style="font-size:0.74rem;color:var(--pk9-text-muted);">@${esc(u.username)} • ${esc(u.school || 'Chưa cập nhật trường')}</div>
+          ${rowIsBanned && u.ban_reason ? `<div style="font-size:0.7rem;color:#dc2626;margin-top:0.15rem;">🚫 ${esc(u.ban_reason)}</div>` : ''}
         </td>
         <td>
-          <span class="pk9-admin-role-pill ${esc(u.role || 'student')}">
-            ${u.role === 'admin' ? '🛡️ ADMIN' : u.role === 'vip' ? '💎 VIP' : '🎓 Học viên'}
+          <span class="pk9-admin-role-pill ${esc(roleCls)}" style="${rowIsSuper ? 'background:linear-gradient(135deg,#eab308,#e11d48);color:#fff;' : rowIsBanned ? 'background:#dc2626;color:#fff;' : ''}">
+            ${roleLabel}
           </span>
+          ${(!rowIsSuper && u.role === 'admin' && u.admin_granted_by) ? `<div style="font-size:0.68rem;color:var(--pk9-text-muted);margin-top:0.18rem;">Cấp bởi @${esc(u.admin_granted_by)}</div>` : ''}
         </td>
         <td><span class="pk9-badge pk9-badge-grade">${esc(u.grade || '2K9')}</span></td>
         <td>
@@ -3795,20 +4055,26 @@
           ${u.last_active ? new Date(u.last_active).toLocaleString('vi-VN') : 'Mới tạo'}
         </td>
         <td>
-          <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+          <div style="display:flex;gap:0.3rem;flex-wrap:wrap;align-items:center;">
             <button type="button" class="pk9-btn-exam-ghost" data-admin-inspect-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;">🔍 Chi tiết</button>
             <button type="button" class="pk9-btn-exam-ghost" data-admin-grant-xp="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#10b981;">⚡ +200 XP</button>
-            <button type="button" class="pk9-btn-exam-ghost" data-admin-toggle-role="${esc(u.username)}" data-cur-role="${esc(u.role || 'student')}" style="padding:0.25rem 0.5rem;font-size:0.72rem;">
-              ${u.role === 'student' ? '💎 Lên VIP' : u.role === 'vip' ? '🛡️ Lên Admin' : '🎓 Về Học viên'}
-            </button>
-            <button type="button" class="pk9-btn-exam-ghost" data-admin-reset-pw="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#f59e0b;">🔑 Đổi MK</button>
-            ${u.username !== 'admin' ? `
+            ${rowIsSuper ? `
+              <span class="pk9-badge" style="background:rgba(234,179,8,0.18);color:#b45309;font-size:0.7rem;">👑 Toàn quyền</span>
+              ${viewerIsSuper ? `<button type="button" class="pk9-btn-exam-ghost" data-admin-reset-pw="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#f59e0b;">🔑 Đổi MK</button>` : ''}
+            ` : viewerIsSuper ? `
+              <button type="button" class="pk9-btn-exam-primary" data-admin-open-role="${esc(u.username)}" data-cur-role="${esc(u.role || 'student')}" data-display-name="${esc(u.display_name || u.username)}" style="padding:0.26rem 0.55rem;font-size:0.72rem;background:linear-gradient(135deg,#2563eb,#7c3aed);">🛡️ Phân quyền</button>
+              ${rowIsBanned
+                ? `<button type="button" class="pk9-btn-exam-ghost" data-admin-unban-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#10b981;border-color:#10b981;">✅ Gỡ Ban</button>`
+                : `<button type="button" class="pk9-btn-exam-ghost" data-admin-ban-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#dc2626;border-color:rgba(220,38,38,0.45);">🚫 Ban vĩnh viễn</button>`
+              }
+              <button type="button" class="pk9-btn-exam-ghost" data-admin-reset-pw="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#f59e0b;">🔑 Đổi MK</button>
               <button type="button" class="pk9-btn-exam-ghost" data-admin-del-user="${esc(u.username)}" style="padding:0.25rem 0.5rem;font-size:0.72rem;color:#ef4444;">🗑️</button>
             ` : ''}
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function buildAdminExamAttemptsRowsHtml(attempts) {
@@ -4787,8 +5053,11 @@
           });
         } catch {}
         APP.user = null;
-        APP.isAdmin = false;
+        _serverAdminVerified = false;
+        _serverSuperAdminVerified = false;
         APP.weakAdminPassword = false;
+        APP.adminDetailData = null;
+        enforceAdminDomHidden();
         APP.pendingAvatarData = undefined;
         APP.lbData = { locked: true, week_key: '', total_students: 0, leaderboard: [], weekly_leaderboard: [], exam_leaderboard: [], my_rank: null };
         window.PK9_RPG_STATE = null;
@@ -5286,6 +5555,73 @@
         return;
       }
 
+      const adminOpenRoleBtn = e.target.closest('[data-admin-open-role]');
+      if (adminOpenRoleBtn) {
+        if (!isClientVerifiedSuperAdmin()) {
+          toast('Chỉ tài khoản Super Admin @phucadmin mới có quyền Phân quyền!', 'error');
+          return;
+        }
+        const username = adminOpenRoleBtn.getAttribute('data-admin-open-role');
+        const cur = adminOpenRoleBtn.getAttribute('data-cur-role') || 'student';
+        const dispName = adminOpenRoleBtn.getAttribute('data-display-name') || username;
+        const oldModal = document.getElementById('pk9-role-assign-modal');
+        if (oldModal) oldModal.remove();
+        const modal = document.createElement('div');
+        modal.id = 'pk9-role-assign-modal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;';
+        modal.innerHTML = `
+          <div style="max-width:440px;width:100%;background:var(--pk9-surface,#fff);color:var(--pk9-text,#0f172a);border-radius:1rem;padding:1.25rem;box-shadow:0 20px 50px rgba(0,0,0,0.3);border:1px solid var(--pk9-border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+              <h3 style="margin:0;font-size:1.05rem;font-weight:900;">🛡️ Phân Quyền Tài Khoản</h3>
+              <button type="button" id="pk9-role-modal-close" class="pk9-btn-exam-ghost" style="padding:0.2rem 0.5rem;">✕</button>
+            </div>
+            <p style="margin:0 0 0.85rem;font-size:0.85rem;color:var(--pk9-text-muted);">
+              Chọn vai trò mới cho <b>${esc(dispName)}</b> (<code>@${esc(username)}</code>):
+            </p>
+            <div style="display:grid;gap:0.55rem;">
+              ${[
+                { r: 'student', title: '🎓 Học viên chuẩn', desc: 'Học bài, làm đề thi và đua BXH bình thường.' },
+                { r: 'vip', title: '💎 Học viên VIP Pro', desc: 'Học viên ưu tiên VIP + mở khóa huy hiệu VIP Pro.' },
+                { r: 'admin', title: '🛡️ Cấp quyền Admin phụ', desc: 'Mở quyền xem Admin Dashboard (chỉ @phucadmin mới cấp/gỡ được).' }
+              ].map(opt => `
+                <button type="button" data-pick-role="${opt.r}" style="text-align:left;padding:0.7rem 0.85rem;border-radius:0.75rem;border:1.5px solid ${cur === opt.r ? 'var(--pk9-primary)' : 'var(--pk9-border)'};background:${cur === opt.r ? 'rgba(37,99,235,0.08)' : 'transparent'};cursor:pointer;">
+                  <div style="font-weight:800;font-size:0.88rem;color:var(--pk9-text);">${opt.title} ${cur === opt.r ? '• (Hiện tại)' : ''}</div>
+                  <div style="font-size:0.76rem;color:var(--pk9-text-muted);margin-top:0.15rem;">${opt.desc}</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#pk9-role-modal-close')?.addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', ev => { if (ev.target === modal) modal.remove(); });
+        modal.querySelectorAll('[data-pick-role]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const nextRole = btn.getAttribute('data-pick-role') || 'student';
+            modal.remove();
+            await runAdminAction({ sub_action: 'set-role', username, role: nextRole });
+          });
+        });
+        return;
+      }
+
+      const adminBanUserBtn = e.target.closest('[data-admin-ban-user]');
+      if (adminBanUserBtn) {
+        const username = adminBanUserBtn.getAttribute('data-admin-ban-user');
+        const reason = window.prompt(`Nhập lý do khóa (Ban) vĩnh viễn tài khoản @${username}:`, 'Xâm nhập trái phép khu vực Admin / Vi phạm quy định web');
+        if (reason === null) return;
+        await runAdminAction({ sub_action: 'ban-user', username, reason: reason.trim() || 'Vi phạm quy định hệ thống' });
+        return;
+      }
+
+      const adminUnbanUserBtn = e.target.closest('[data-admin-unban-user]');
+      if (adminUnbanUserBtn) {
+        const username = adminUnbanUserBtn.getAttribute('data-admin-unban-user');
+        if (!window.confirm(`Xác nhận mở khóa (Gỡ Ban) cho tài khoản @${username}?`)) return;
+        await runAdminAction({ sub_action: 'unban-user', username });
+        return;
+      }
+
       const adminToggleRoleBtn = e.target.closest('[data-admin-toggle-role]');
       if (adminToggleRoleBtn) {
         const username = adminToggleRoleBtn.getAttribute('data-admin-toggle-role');
@@ -5474,17 +5810,30 @@
           const resp = await fetch(`/api/auth?action=${mode}`, {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': APP.csrf,
+              'x-pk9-visitor': getVisitorClientId()
+            },
             body: JSON.stringify(payload)
           });
           const data = await resp.json();
           if (!resp.ok || !data?.ok) {
+            if (data?.banned) {
+              closeAuthModal();
+              handleBannedResponse(data);
+              return;
+            }
             toast(data?.message || 'Không thể xác thực tài khoản.', 'error');
             return;
           }
+          _clientBanLock = null;
+          try { localStorage.removeItem('pk9_ban_notice'); } catch {}
+          renderBanOverlay(null);
           APP.user = data.user;
-          APP.isAdmin = Boolean(data.user?.is_admin || data.user?.role === 'admin');
-          APP.weakAdminPassword = Boolean(data.weak_password_warning);
+          _serverAdminVerified = Boolean(data.is_admin && (data.user?.username === 'phucadmin' || (data.user?.is_admin && String(data.user?.admin_granted_by || '').toLowerCase() === 'phucadmin')));
+          _serverSuperAdminVerified = Boolean(_serverAdminVerified && data.is_super_admin && data.user?.username === 'phucadmin');
+          APP.weakAdminPassword = Boolean(_serverAdminVerified && data.weak_password_warning);
           APP.csrf = data.csrf || APP.csrf;
           closeAuthModal();
           toast(data.message || 'Thành công!', 'success');
@@ -5495,9 +5844,9 @@
           if (APP.activeTab === 'journey' && window.PK9_RPG) window.PK9_RPG.renderTab('journey');
           if (APP.isAdmin) {
             if (APP.weakAdminPassword) {
-              toast('⚠️ Mật khẩu @admin hiện vẫn là mặc định! Vui lòng đổi sang mật khẩu mạnh ngay.', 'error');
+              toast('⚠️ Mật khẩu Admin hiện yếu! Vui lòng đổi sang mật khẩu mạnh ngay.', 'error');
             } else {
-              toast('🛡️ Quyền Admin đã kích hoạt! Mở tab Admin Dashboard để theo dõi toàn bộ web.', 'info');
+              toast(APP.isSuperAdmin ? '👑 Đã kích hoạt Super Admin @phucadmin!' : '🛡️ Quyền Admin đã kích hoạt!', 'info');
             }
           }
         } catch {
@@ -5956,12 +6305,14 @@
       const isMob = typeof navigator.userAgentData?.mobile === 'boolean'
         ? navigator.userAgentData.mobile
         : (coarse && minW <= 900);
+      const requestedTab = tabOverride || APP.activeTab || 'home';
+      const safeReportTab = (requestedTab === 'admin' && !isClientVerifiedAdmin()) ? 'home' : requestedTab;
       const payload = {
         visitor_id: vid,
         session_id: sid,
         event,
         path: location.pathname || '/',
-        tab: tabOverride || APP.activeTab || 'home',
+        tab: safeReportTab,
         ref: event === 'pageview' ? (document.referrer || '') : '',
         mobile: isMob,
         platform_hint: navigator.userAgentData?.platform || navigator.platform || '',
@@ -5975,10 +6326,17 @@
         method: 'POST',
         credentials: 'include',
         keepalive: event === 'heartbeat',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-pk9-visitor': vid },
         body: JSON.stringify(payload)
       })
-        .then(r => (r.ok ? r.json() : null))
+        .then(async r => {
+          if (r.status === 403) {
+            const d = await r.json().catch(() => ({}));
+            if (d?.banned) handleBannedResponse(d);
+            return null;
+          }
+          return r.ok ? r.json() : null;
+        })
         .then(d => {
           if (d?.visitor_id && /^[a-f0-9-]{20,80}$/i.test(d.visitor_id)) {
             try { localStorage.setItem('pk9_visitor_id', d.visitor_id); } catch {}
@@ -6001,16 +6359,22 @@
     bindEvents();
     renderHomeTab();
     updateHeaderAuthUI();
+    enforceAdminDomHidden();
     await fetchAuthAndLeaderboard();
+    installAdminDomGuard();
+    try {
+      const cachedBan = JSON.parse(localStorage.getItem('pk9_ban_notice') || 'null');
+      if (!APP.user && cachedBan?.banned) renderBanOverlay(cachedBan);
+    } catch {}
     loadCommunityItems();
 
     // Ghi nhận lượt truy cập thực & thiết bị (Mobile / Desktop / Tablet / WebView) vào Admin Dashboard
-    trackAnalyticsEvent('pageview', APP.activeTab || 'home');
+    trackAnalyticsEvent('pageview', (APP.activeTab === 'admin' && !isClientVerifiedAdmin()) ? 'home' : (APP.activeTab || 'home'));
     if (!telemetryBooted) {
       telemetryBooted = true;
       setInterval(() => {
         if (document.visibilityState === 'visible') {
-          trackAnalyticsEvent('heartbeat', APP.activeTab || 'home');
+          trackAnalyticsEvent('heartbeat', (APP.activeTab === 'admin' && !isClientVerifiedAdmin()) ? 'home' : (APP.activeTab || 'home'));
           if (APP.user && (APP.activeTab === 'leaderboard' || APP.activeTab === 'home')) {
             refreshLeaderboard({ force: true, quiet: true });
           }
@@ -6018,7 +6382,7 @@
       }, 30000);
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-          trackAnalyticsEvent('heartbeat', APP.activeTab || 'home');
+          trackAnalyticsEvent('heartbeat', (APP.activeTab === 'admin' && !isClientVerifiedAdmin()) ? 'home' : (APP.activeTab || 'home'));
           if (APP.user) {
             refreshLeaderboard({ force: true, quiet: true });
           }

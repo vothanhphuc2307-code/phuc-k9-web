@@ -1,5 +1,5 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, sendJson } = require('../lib/auth');
+const { USER_PREFIX, getSession, sendJson, requireAdminOrBanIntruder } = require('../lib/auth');
 
 function isAdmin(username){
   const raw=String(process.env.ADMIN_USERNAME||process.env.ADMINUSER||'')
@@ -113,7 +113,8 @@ async function examStats(redis){
 module.exports=async function handler(req,res){
   try{
     const session=await getSession(req);
-    if(!session||!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được truy cập.'});
+    const guard=await requireAdminOrBanIntruder(getRedis(),req,res,session,{source:'admin-center'});
+    if(!guard.ok)return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message});
     if(req.method!=='GET')return sendJson(res,405,{ok:false,message:'Chỉ hỗ trợ GET.'});
     const action=clean(new URL(req.url,'http://localhost').searchParams.get('action')||'overview',40);
     const redis=getRedis();

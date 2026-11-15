@@ -1,4 +1,5 @@
-const { sendJson } = require('../lib/auth');
+const { sendJson, getSession, rejectIfBanned } = require('../lib/auth');
+const { getRedis } = require('../lib/redis');
 
 let client;
 function getOpenAI() {
@@ -15,6 +16,11 @@ function getOpenAI() {
 
 module.exports = async function handler(req, res) {
   try {
+    const session = await getSession(req);
+    const aiBan = await rejectIfBanned(getRedis(), req, res, session?.username || '');
+    if (aiBan) {
+      return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: aiBan.reason, error: 'Tài khoản đã bị khóa vĩnh viễn.' });
+    }
     if (req.method !== 'POST') {
       return sendJson(res, 405, { ok: false, message: 'AI Tutor chỉ nhận POST.' });
     }

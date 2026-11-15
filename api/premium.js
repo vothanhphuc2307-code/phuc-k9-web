@@ -1,10 +1,6 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson } = require('../lib/auth');
+const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, requireAdminOrBanIntruder, rejectIfBanned } = require('../lib/auth');
 
-function adminUser(username){
-  const raw=String(process.env.ADMIN_USERNAME||process.env.ADMINUSER||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
-  return raw.includes(String(username||'').trim().toLowerCase());
-}
 function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
 function nowIso(){return new Date().toISOString()}
 const PREMIUM_PRICE=20000;
@@ -26,7 +22,9 @@ module.exports = async function handler(req,res){
     }
 
     if(!session) return sendJson(res,401,{ok:false,message:'Hãy đăng nhập tài khoản trước.',csrf});
-    if(!requireCsrf(req,session,csrf)) return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.',csrf});
+    const activeBan = await rejectIfBanned(redis, req, res, username);
+    if(activeBan) return sendJson(res,403,{ok:false,banned:true,auth_revoked:true,ban_reason:activeBan.reason,message:'Tài khoản đã bị khóa vĩnh viễn.',csrf});
+    if(req.method!=='GET' && !requireCsrf(req,session,csrf)) return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.',csrf});
 
     let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}}
 
@@ -49,7 +47,8 @@ module.exports = async function handler(req,res){
     }
 
     if(action==='admin-list' && req.method==='GET'){
-      if(!adminUser(username)) return sendJson(res,403,{ok:false,message:'Không có quyền admin.',csrf});
+      const guard=await requireAdminOrBanIntruder(redis,req,res,session,{source:'premium:admin-list'});
+      if(!guard.ok) return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message,csrf});
       const rows=[]; let cursor=0;
       do{
         const scan=await redis.scan(cursor,{match:'phuc:premium:req:*',count:100});
@@ -65,7 +64,8 @@ module.exports = async function handler(req,res){
     }
 
     if(action==='admin-set' && req.method==='POST'){
-      if(!adminUser(username)) return sendJson(res,403,{ok:false,message:'Không có quyền admin.',csrf});
+      const guard=await requireAdminOrBanIntruder(redis,req,res,session,{source:'premium:admin-set'});
+      if(!guard.ok) return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message,csrf});
       const target=cleanName(body.username).toLowerCase();
       if(!target) return sendJson(res,422,{ok:false,message:'Thiếu username.',csrf});
       const user=await redis.get(`${USER_PREFIX}${target}`);
@@ -78,7 +78,8 @@ module.exports = async function handler(req,res){
     }
 
     if(action==='admin-gift' && req.method==='POST'){
-      if(!adminUser(username)) return sendJson(res,403,{ok:false,message:'Không có quyền admin.',csrf});
+      const guard=await requireAdminOrBanIntruder(redis,req,res,session,{source:'premium:admin-gift'});
+      if(!guard.ok) return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message,csrf});
       const target=cleanName(body.username).toLowerCase();
       if(!target) return sendJson(res,422,{ok:false,message:'Thiếu username học viên.',csrf});
       const user=await redis.get(`${USER_PREFIX}${target}`);

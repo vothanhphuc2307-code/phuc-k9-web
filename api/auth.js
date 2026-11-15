@@ -1,19 +1,43 @@
 const { getRedis } = require('../lib/redis');
 const {
-  USER_PREFIX, parseCookies, clearCookie, setCookie, sendJson, normalizeUsername,
-  validUsername, hashPassword, verifyPassword, safeUser, createSession, getSession,
-  getCsrf, requireCsrf, isAdminUsername, isAdminAccount
+  USER_PREFIX, SUPER_ADMIN_USERNAME, parseCookies, clearCookie, clearAuthCookies, setCookie,
+  sendJson, normalizeUsername, validUsername, hashPassword, verifyPassword, safeUser,
+  createSession, getSession, getCsrf, requireCsrf, isSuperAdminAccount, isReservedAdminUsername,
+  isAdminUsername, isAdminAccount, rejectIfBanned, getBanRecord, getRequestVisitorId
 } = require('../lib/auth');
 const crypto = require('crypto');
 const { ensureUserRpgState } = require('../lib/rpg');
 
 async function ensureDefaultAdmin(redis) {
   try {
-    const envAdminPass = String(process.env.ADMIN_DEFAULT_PASSWORD || '').trim();
+    const envAdminPass = String(process.env.ADMIN_DEFAULT_PASSWORD || process.env.SUPER_ADMIN_PASSWORD || '').trim();
     const isProd = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
-    const existing = parseUserRecord(await redis.get(`${USER_PREFIX}admin`));
+
+    // Strip stale unauthorized admin flags from legacy generic @admin if present
+    try {
+      const legacyAdmin = parseUserRecord(await redis.get(`${USER_PREFIX}admin`));
+      if (legacyAdmin && (legacyAdmin.is_admin || legacyAdmin.role === 'admin') && normalizeUsername(legacyAdmin.admin_granted_by) !== SUPER_ADMIN_USERNAME) {
+        legacyAdmin.is_admin = false;
+        if (legacyAdmin.role === 'admin') legacyAdmin.role = 'student';
+        delete legacyAdmin.admin_granted_by;
+        await redis.set(`${USER_PREFIX}admin`, legacyAdmin);
+      }
+    } catch {}
+
+    const targetAdmin = SUPER_ADMIN_USERNAME; // 'phucadmin'
+    const existing = parseUserRecord(await redis.get(`${USER_PREFIX}${targetAdmin}`));
     if (existing) {
       let dirty = false;
+      if (!existing.is_admin || existing.role !== 'admin') {
+        existing.is_admin = true;
+        existing.role = 'admin';
+        dirty = true;
+      }
+      if (existing.banned) {
+        existing.banned = false;
+        existing.ban_reason = '';
+        dirty = true;
+      }
       if (existing.xp === 9999 && existing.weekly_xp === 1200) {
         existing.xp = 0;
         existing.weekly_xp = 0;
@@ -28,27 +52,29 @@ async function ensureDefaultAdmin(redis) {
         dirty = true;
       }
       if (dirty) {
-        await redis.set(`${USER_PREFIX}admin`, existing);
+        await redis.set(`${USER_PREFIX}${targetAdmin}`, existing);
       }
+      try { await redis.sadd('phuc:users:index', targetAdmin); } catch {}
       return existing;
     }
 
-    // In production (Vercel), NEVER seed @admin with a predictable hardcoded password.
+    // In production (Vercel), NEVER seed @phucadmin with a predictable hardcoded password.
     if (isProd && (envAdminPass.length < 8 || envAdminPass === 'admin123')) {
-      console.warn('[security] ADMIN_DEFAULT_PASSWORD is not configured strongly in production; default @admin account not auto-seeded.');
+      console.warn('[security] ADMIN_DEFAULT_PASSWORD is not configured strongly in production; @phucadmin account not auto-seeded.');
       return null;
     }
 
-    const seedPassword = envAdminPass || 'admin123';
+    const seedPassword = envAdminPass || 'PhucAdmin@2026';
     const { salt, hash } = hashPassword(seedPassword);
     const now = new Date();
     const nowIso = now.toISOString();
     const wk = vnWeekKey(now);
     const adminAcc = {
-      username: 'admin',
-      display_name: 'Quản Trị Viên Phúc K9',
+      username: targetAdmin,
+      display_name: 'Phúc Admin (Chủ Hệ Thống)',
       role: 'admin',
       is_admin: true,
+      is_super_admin: true,
       salt,
       password_hash: hash,
       created_at: nowIso,
@@ -64,8 +90,8 @@ async function ensureDefaultAdmin(redis) {
       avatar_data: null,
       avatar_url: null
     };
-    await redis.set(`${USER_PREFIX}admin`, adminAcc);
-    try { await redis.sadd('phuc:users:index', 'admin'); } catch {}
+    await redis.set(`${USER_PREFIX}${targetAdmin}`, adminAcc);
+    try { await redis.sadd('phuc:users:index', targetAdmin); } catch {}
     return adminAcc;
   } catch {
     return null;
@@ -219,18 +245,48 @@ module.exports = async function handler(req, res) {
     if (action === 'google-callback' && req.method === 'GET') return await googleCallback(req, res, redis);
 
     if (action === 'me' && req.method === 'GET') {
-      if (!session) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
+      if (!session) {
+        const devBan = await getBanRecord(redis, '', getRequestVisitorId(req));
+        return sendJson(res, 200, {
+          ok: true,
+          authenticated: false,
+          device_banned: Boolean(devBan),
+          ban_reason: devBan?.reason || '',
+          user: null,
+          csrf,
+          is_admin: false,
+          is_super_admin: false
+        });
+      }
+      const ban = await rejectIfBanned(redis, req, res, session.username);
+      if (ban) {
+        return sendJson(res, 403, {
+          ok: false,
+          authenticated: false,
+          banned: true,
+          auth_revoked: true,
+          ban_reason: ban.reason || 'Tài khoản bị khóa vĩnh viễn.',
+          banned_at: ban.banned_at || '',
+          user: null,
+          is_admin: false,
+          is_super_admin: false,
+          csrf,
+          message: `Tài khoản đã bị khóa vĩnh viễn: ${ban.reason || 'Vi phạm bảo mật hệ thống'}`
+        });
+      }
       setCookie(res, 'phuc_csrf', session.csrf || csrf, { httpOnly: false, maxAge: 60 * 60 * 24 * 30 });
       const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
-      if (!user) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false });
+      if (!user) return sendJson(res, 200, { ok: true, authenticated: false, user: null, csrf, is_admin: false, is_super_admin: false });
       const fresh = await touchUser(redis, user);
       const isAdm = isAdminAccount(fresh);
+      const isSuper = isSuperAdminAccount(fresh);
       return sendJson(res, 200, {
         ok: true,
         authenticated: true,
         user: safeUser(fresh),
         csrf: session.csrf || csrf,
         is_admin: isAdm,
+        is_super_admin: isSuper,
         weak_password_warning: isAdm && hasWeakDefaultAdminPassword(fresh)
       });
     }
@@ -260,8 +316,18 @@ module.exports = async function handler(req, res) {
       const recoveryPin = String(body.recovery_pin || '').trim();
       if (!validUsername(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập chỉ gồm chữ, số, dấu chấm, gạch ngang (3–40 ký tự).' });
       if (['guest', 'khach', 'khach_k9', 'anonymous', 'k9-guest'].includes(username)) return sendJson(res, 422, { ok: false, message: 'Tên đăng nhập này được dành riêng cho hệ thống. Hãy chọn tên khác!' });
-      if (isAdminUsername(username)) {
+      if (isReservedAdminUsername(username) || isAdminUsername(username)) {
         return sendJson(res, 403, { ok: false, message: 'Tên đăng nhập này thuộc quyền Quản trị viên hệ thống, không thể tự đăng ký công khai.' });
+      }
+      const regBan = await rejectIfBanned(redis, req, res, username);
+      if (regBan) {
+        return sendJson(res, 403, {
+          ok: false,
+          banned: true,
+          ban_reason: regBan.reason,
+          message: `Thiết bị/tài khoản này đã bị khóa vĩnh viễn: ${regBan.reason}`,
+          csrf
+        });
       }
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Họ và tên cần từ 2 đến 80 ký tự.' });
       if (password.length < 6 || password.length > 128) return sendJson(res, 422, { ok: false, message: 'Mật khẩu cần từ 6 đến 128 ký tự.' });
@@ -333,12 +399,26 @@ module.exports = async function handler(req, res) {
         } catch {}
         return sendJson(res, 401, { ok: false, message: 'Tên đăng nhập hoặc mật khẩu không đúng.', csrf });
       }
+      const loginBan = await rejectIfBanned(redis, req, res, username);
+      if (loginBan) {
+        return sendJson(res, 403, {
+          ok: false,
+          authenticated: false,
+          banned: true,
+          auth_revoked: true,
+          ban_reason: loginBan.reason || 'Tài khoản bị khóa vĩnh viễn.',
+          banned_at: loginBan.banned_at || '',
+          message: `Tài khoản @${username} đã bị khóa vĩnh viễn: ${loginBan.reason || 'Vi phạm bảo mật hệ thống.'}`,
+          csrf
+        });
+      }
       try { await redis.del(failKey); } catch {}
       const now = new Date();
       user.streak = updateStreak(user, now);
       user.last_active = now.toISOString();
       ensureWeeklyState(user, now);
       const isAdm = isAdminAccount(user);
+      const isSuper = isSuperAdminAccount(user);
       if (!isAdm && (typeof user.xp !== 'number' || Number.isNaN(user.xp))) user.xp = 100;
       ensureUserRpgState(user, now);
       await redis.set(`${USER_PREFIX}${username}`, user);
@@ -351,8 +431,9 @@ module.exports = async function handler(req, res) {
         user: safeUser(user),
         csrf,
         is_admin: isAdm,
+        is_super_admin: isSuper,
         weak_password_warning: weakWarn,
-        message: isAdm ? 'Đăng nhập quyền Quản Trị Viên (Admin) thành công!' : 'Đăng nhập thành công.'
+        message: isSuper ? 'Đăng nhập Super Admin @phucadmin thành công!' : (isAdm ? 'Đăng nhập quyền Quản Trị Viên (Admin) thành công!' : 'Đăng nhập thành công.')
       });
     }
 
@@ -421,6 +502,8 @@ module.exports = async function handler(req, res) {
 
     if (action === 'save-profile') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
+      const ban = await rejectIfBanned(redis, req, res, session.username);
+      if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.', csrf });
       const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
       const displayName = String(body.display_name ?? user.display_name ?? '').trim();
@@ -458,6 +541,8 @@ module.exports = async function handler(req, res) {
 
     if (action === 'change-password') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
+      const ban = await rejectIfBanned(redis, req, res, session.username);
+      if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.', csrf });
       const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
       const currentPass = String(body.current_password || '');
@@ -484,6 +569,8 @@ module.exports = async function handler(req, res) {
 
     if (action === 'save-state') {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Phiên đăng nhập đã hết.', csrf });
+      const ban = await rejectIfBanned(redis, req, res, session.username);
+      if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.', csrf });
       const user = parseUserRecord(await redis.get(`${USER_PREFIX}${session.username}`));
       if (!user) return sendJson(res, 401, { ok: false, message: 'Không tìm thấy tài khoản.', csrf });
       const now = new Date();
@@ -507,8 +594,7 @@ module.exports = async function handler(req, res) {
     if (action === 'logout') {
       const cookies = parseCookies(req);
       if (cookies.phuc_session) await redis.del(`phuc:session:${cookies.phuc_session}`);
-      clearCookie(res, 'phuc_session');
-      clearCookie(res, 'phuc_csrf');
+      clearAuthCookies(res);
       return sendJson(res, 200, { ok: true, authenticated: false, user: null, message: 'Đã đăng xuất.' });
     }
 

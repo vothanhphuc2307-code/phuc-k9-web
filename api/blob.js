@@ -1,7 +1,7 @@
 const { handleUpload } = require('@vercel/blob/client');
 const { get: getBlob, del: delBlob } = require('@vercel/blob');
 const { getRedis } = require('../lib/redis');
-const { getSession, getUserByUsername, sendJson } = require('../lib/auth');
+const { getSession, getUserByUsername, sendJson, isAdminAccount, requireAdminOrBanIntruder, rejectIfBanned } = require('../lib/auth');
 
 const ALLOWED_EXT = new Set(['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','jpg','jpeg','png','webp']);
 const ALLOWED_MIME = new Set([
@@ -13,7 +13,10 @@ const ALLOWED_MIME = new Set([
 const ADMIN_ENV = 'ADMIN_USERNAME';
 function clean(v, max) { return String(v == null ? '' : v).trim().slice(0, max); }
 function extOf(name) { const p = String(name || '').toLowerCase().split('.'); return p.length > 1 ? p.pop() : ''; }
-function isAdmin(username) { const allowed = String(process.env[ADMIN_ENV] || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean); return !!allowed.length && allowed.includes(String(username||'').trim().toLowerCase()); }
+async function isVerifiedAdminUsername(username) {
+  const user = await getUserByUsername(username);
+  return Boolean(user && isAdminAccount(user));
+}
 function validLessonKey(v) { return /^[a-zA-Z0-9._:-]{1,180}$/.test(String(v||'')); }
 function parseJsonBody(req){ let body=req.body||{}; if(typeof body==='string'){try{body=JSON.parse(body||'{}')}catch{body={}}} return body; }
 
@@ -101,7 +104,8 @@ module.exports = async function handler(req,res){
       if(u.searchParams.get('action')==='finalize-lesson-pdf'){
         const session=await getSession(req);
         if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi gắn PDF bài giảng.'});
-        if(!isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được gắn PDF bài giảng.'});
+        const guard=await requireAdminOrBanIntruder(getRedis(),req,res,session,{source:'blob:finalize-lesson-pdf'});
+        if(!guard.ok)return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message});
         const body=parseJsonBody(req);
         if(String(body?.kind||'')!=='lesson-pdf')return sendJson(res,400,{ok:false,message:'Yêu cầu finalization không hợp lệ.'});
         if(String(body?.csrf||'')!==String(session.csrf||''))return sendJson(res,403,{ok:false,message:'CSRF token không hợp lệ.'});
@@ -153,8 +157,13 @@ module.exports = async function handler(req,res){
     }
     if(req.method!=='POST') return sendJson(res,405,{ok:false,message:'Blob endpoint chỉ nhận POST.'});
     const session=await getSession(req); if(!session)return sendJson(res,401,{ok:false,message:'Bạn cần đăng nhập trước khi upload.'});
+    const uploadBan=await rejectIfBanned(getRedis(),req,res,session.username);
+    if(uploadBan)return sendJson(res,403,{ok:false,banned:true,auth_revoked:true,ban_reason:uploadBan.reason,message:'Tài khoản đã bị khóa vĩnh viễn.'});
     const body=parseJsonBody(req); const requestedKind=clean(body?.kind,40)||'student-library';
-    if(requestedKind==='lesson-pdf' && !isAdmin(session.username))return sendJson(res,403,{ok:false,message:'Chỉ admin mới được upload PDF bài giảng.'});
+    if(requestedKind==='lesson-pdf'){
+      const guard=await requireAdminOrBanIntruder(getRedis(),req,res,session,{source:'blob:upload-lesson-pdf'});
+      if(!guard.ok)return sendJson(res,guard.status,{ok:false,banned:Boolean(guard.banned),auth_revoked:Boolean(guard.auth_revoked),message:guard.message});
+    }
     const response=await handleUpload({
       request:req, body,
       onBeforeGenerateToken:async(pathname,clientPayload)=>{
@@ -163,7 +172,7 @@ module.exports = async function handler(req,res){
         if(String(payload.csrf||'')!==String(session.csrf||''))throw new Error('CSRF token không hợp lệ.');
         const filename=clean(payload.original_name,180); const ext=extOf(filename); const mime=clean(payload.mime,120)||'application/octet-stream';
         if(requestedKind==='lesson-pdf' || payload.kind==='lesson-pdf'){
-          if(!isAdmin(session.username))throw new Error('Chỉ admin mới được upload PDF bài giảng.');
+          if(!isAdminAccount(user))throw new Error('Chỉ admin mới được upload PDF bài giảng.');
           if(!validLessonKey(payload.lessonKey))throw new Error('Mã bài giảng không hợp lệ.');
           if(ext!=='pdf'||mime!=='application/pdf')throw new Error('Chỉ cho phép PDF.');
           return {allowedContentTypes:['application/pdf'],maximumSizeInBytes:25*1024*1024,addRandomSuffix:true,tokenPayload:JSON.stringify({kind:'lesson-pdf',username:session.username,lessonKey:clean(payload.lessonKey,180),lessonTitle:clean(payload.lessonTitle,240),original_name:filename,mime:'application/pdf',csrf:session.csrf})};
@@ -175,7 +184,7 @@ module.exports = async function handler(req,res){
       onUploadCompleted:async({blob,tokenPayload})=>{
         const meta=JSON.parse(tokenPayload||'{}'); const redis=getRedis();
         if(meta.kind==='lesson-pdf'){
-          const user=await getUserByUsername(meta.username); if(!user||!isAdmin(meta.username))throw new Error('Không xác minh được quyền admin.');
+          const user=await getUserByUsername(meta.username); if(!user||!isAdminAccount(user))throw new Error('Không xác minh được quyền admin.');
           const key=meta.lessonKey; const oldRaw=await redis.get(`phuc:lesson-pdf:${key}`); let old=null; if(oldRaw){try{old=typeof oldRaw==='string'?JSON.parse(oldRaw):oldRaw}catch{}}
           const bytes=Number(blob.size||0); const sizeLabel=bytes<1024*1024?`${Math.max(1,Math.round(bytes/1024))} KB`:`${(bytes/(1024*1024)).toFixed(1)} MB`; const now=new Date().toISOString();
           const item={lessonKey:key,lessonTitle:meta.lessonTitle,original_name:meta.original_name,mime:'application/pdf',size:bytes,size_label:sizeLabel,pathname:blob.pathname,url:blob.url,updated_at:now,updated_by:user.display_name||user.username};

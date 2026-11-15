@@ -1,7 +1,7 @@
 const { getRedis } = require('../lib/redis');
 const {
   USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson,
-  isAdminUsername, isAdminAccount
+  isAdminUsername, isAdminAccount, rejectIfBanned
 } = require('../lib/auth');
 
 function text(v, max = 500) {
@@ -55,6 +55,10 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'POST' && (action === 'create' || action === 'delete')) {
       const session = await getSession(req);
+      if (session?.username) {
+        const ban = await rejectIfBanned(redis, req, res, session.username);
+        if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.', csrf });
+      }
       const csrf = session?.csrf || await getCsrf(req, res);
       if (!session?.username) {
         return sendJson(res, 401, { ok: false, message: 'Vui lòng đăng nhập để chia sẻ hoặc quản lý tài liệu cộng đồng.', csrf });
@@ -113,7 +117,7 @@ module.exports = async function handler(req, res) {
         if (!targetId) {
           return sendJson(res, 422, { ok: false, message: 'Thiếu ID tài liệu cần xóa.', csrf });
         }
-        const isAdm = isAdminUsername(session.username) || isAdminAccount(userObj);
+        const isAdm = isAdminAccount(userObj);
         const raw = await redis.lrange('phuc:student-library', 0, 499);
         const items = (raw || []).map(asItem).filter(Boolean);
         const match = items.find(it => String(it.id || '') === targetId);
