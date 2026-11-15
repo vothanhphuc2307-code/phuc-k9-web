@@ -3767,3 +3767,255 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
   color: #059669;
 }
 
+/* ==========================================================================
+ * v54 — EXCLUSIVE STUDENT ID CARD BRANDING & SCANNED QR CARD MODAL
+ * ========================================================================== */
+.pk9-idcard-brand-head {
+  display: flex;
+  align-items: center;
+  gap: 0.72rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pk9-idcard-logo-wrap {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.32));
+}
+
+.pk9-idcard-brand-kicker {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fef08a;
+  text-transform: uppercase;
+}
+
+.pk9-idcard-brand-sub {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  opacity: 0.88;
+  margin-top: 0.08rem;
+}
+
+.pk9-idcard-avatar-pill {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(254, 240, 138, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.pk9-idcard-avatar-pill small {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  font-size: 0.88rem;
+  background: #0f172a;
+  border-radius: 999px;
+  padding: 0.05rem 0.18rem;
+}
+
+.pk9-idcard-brand-foot {
+  margin-top: 0.88rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #ecfdf5;
+}
+
+.pk9-idcard-preview-open-btn {
+  appearance: none;
+  border: 1px solid rgba(254, 240, 138, 0.65);
+  background: rgba(15, 23, 42, 0.42);
+  color: #fef08a;
+  border-radius: 999px;
+  padding: 0.26rem 0.68rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pk9-idcard-preview-open-btn:hover {
+  background: rgba(254, 240, 138, 0.2);
+}
+
+.pk9-scanned-card-modal {
+  padding: 0.85rem;
+  overflow-y: auto;
+}
+
+.pk9-scanned-card-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(165deg, #0f172a 0%, #1e293b 100%);
+  border: 1.5px solid rgba(254, 240, 138, 0.42);
+  border-radius: 1.35rem;
+  padding: 1.15rem;
+  color: #f8fafc;
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.6);
+  margin: auto;
+}
+
+.pk9-scanned-close-x {
+  position: absolute;
+  top: 0.78rem;
+  right: 0.78rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pk9-scanned-brand-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+  padding-right: 1.8rem;
+}
+
+.pk9-scanned-crest-glow {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.45));
+}
+
+.pk9-scanned-kicker {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  color: #38bdf8;
+}
+
+.pk9-scanned-main-title {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.pk9-scanned-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+}
+
+.pk9-scanned-seal.is-verified {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  color: #6ee7b7;
+}
+
+.pk9-scanned-seal.is-preview {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  color: #fde68a;
+}
+
+.pk9-scanned-idcard-pass {
+  padding: 1.05rem;
+  border: 1.5px solid rgba(254, 240, 138, 0.45);
+}
+
+.pk9-scanned-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.48rem;
+  margin-top: 0.78rem;
+}
+
+.pk9-scanned-stat-box {
+  background: rgba(15, 23, 42, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.72rem;
+  padding: 0.45rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.pk9-scanned-stat-box span {
+  font-size: 0.6rem;
+  font-weight: 800;
+  opacity: 0.78;
+  letter-spacing: 0.04em;
+}
+
+.pk9-scanned-stat-box strong {
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.pk9-scanned-motto {
+  margin-top: 0.48rem;
+  padding: 0.42rem 0.65rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.pk9-scanned-qr-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.24);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pk9-scanned-modal-actions {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.48rem;
+}
+
+.pk9-scanned-modal-actions > button {
+  width: 100%;
+  justify-content: center;
+  font-size: 0.76rem;
+  padding: 0.5rem 0.45rem;
+}
+
+@media (max-width: 640px) {
+  .pk9-scanned-card-dialog {
+    padding: 0.88rem;
+    border-radius: 1.1rem;
+  }
+  .pk9-scanned-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pk9-scanned-modal-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
