@@ -70,6 +70,7 @@
     adminSelectedStudent: null,
     // Mobile UX & PWA Install State
     mobileSelectorsCollapsed: false,
+    sidebarCollapsed: false,
     deferredInstallPrompt: null,
     isStandalone: false
   };
@@ -899,44 +900,58 @@
           ? `<img class="${esc(eqFrame)}" src="${esc(safeAvatar)}" alt="${esc(APP.user.display_name || '')}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
           : `<div class="${esc(eqFrame)}" style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${rpgInfo.equipped_details?.outfit?.icon || esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}</div>`;
         sideCard.innerHTML = `
-          <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.55rem;">
-            ${avatarThumb}
-            <div style="min-width:0;flex:1;">
-              <div style="font-weight:800;font-size:0.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${esc(APP.user.display_name)} ${APP.isSuperAdmin ? '<span class="pk9-badge" style="background:linear-gradient(135deg,#eab308,#e11d48);color:#fff;font-size:0.65rem;">👑 SUPER ADMIN</span>' : APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
-              </div>
-              <div style="font-size:0.72rem;color:var(--pk9-text-muted);">
-                ${APP.isSuperAdmin ? `👑 Chủ Hệ Thống • Chuỗi ${streakVal} ngày` : APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • 🪙${rpgInfo.gold ?? 180} · 💎${rpgInfo.diamonds ?? 5}`}
+          <div class="pk9-sf-compact-only">
+            <button type="button" class="pk9-icon-btn pk9-sf-mini-btn" data-open-auth="profile" title="${esc(APP.user.display_name || APP.user.username)} — Cài đặt tài khoản">
+              ${safeAvatar
+                ? `<img src="${esc(safeAvatar)}" alt="${esc(APP.user.display_name || '')}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`
+                : `<span>${APP.isSuperAdmin ? '👑' : APP.isAdmin ? '🛡️' : (rpgInfo.equipped_details?.outfit?.icon || esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase()))}</span>`}
+            </button>
+          </div>
+          <div class="pk9-sf-expanded-only">
+            <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.55rem;">
+              ${avatarThumb}
+              <div style="min-width:0;flex:1;">
+                <div style="font-weight:800;font-size:0.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${esc(APP.user.display_name)} ${APP.isSuperAdmin ? '<span class="pk9-badge" style="background:linear-gradient(135deg,#eab308,#e11d48);color:#fff;font-size:0.65rem;">👑 SUPER ADMIN</span>' : APP.isAdmin ? '<span class="pk9-badge" style="background:#e11d48;color:#fff;font-size:0.65rem;">ADMIN</span>' : ''}
+                </div>
+                <div style="font-size:0.72rem;color:var(--pk9-text-muted);">
+                  ${APP.isSuperAdmin ? `👑 Chủ Hệ Thống • Chuỗi ${streakVal} ngày` : APP.isAdmin ? `🛡️ Quản trị viên • Chuỗi ${streakVal} ngày` : `Lv.${levelVal} • ${xpVal} XP • 🪙${rpgInfo.gold ?? 180} · 💎${rpgInfo.diamonds ?? 5}`}
+                </div>
               </div>
             </div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:0.74rem;font-weight:700;padding-top:0.45rem;border-top:1px dashed var(--pk9-border);">
-            ${APP.isAdmin
-              ? `<span style="color:#e11d48;">🚫 Không tính leo Top BXH</span>`
-              : `<span>🏆 Top Tuần: <b>#${myRank?.weeklyRank || '—'}</b></span><span>🌟 Top Tổng: <b>#${myRank?.topRank || '—'}</b></span>`}
-          </div>
-          <button type="button" class="pk9-btn-exam-ghost" data-open-auth="profile" style="width:100%;justify-content:center;padding:0.42rem;margin-top:0.55rem;font-size:0.78rem;">
-            ⚙️ Cài đặt tài khoản
-          </button>
-          ${APP.isAdmin ? `
-            <button type="button" class="pk9-auth-btn" data-nav-tab="admin" style="width:100%;justify-content:center;padding:0.45rem;margin-top:0.42rem;background:linear-gradient(135deg,#e11d48,#d97706);">
-              🛡️ Mở Admin Dashboard Chi Tiết
+            <div style="display:flex;justify-content:space-between;font-size:0.74rem;font-weight:700;padding-top:0.45rem;border-top:1px dashed var(--pk9-border);">
+              ${APP.isAdmin
+                ? `<span style="color:#e11d48;">🚫 Không tính leo Top BXH</span>`
+                : `<span>🏆 Top Tuần: <b>#${myRank?.weeklyRank || '—'}</b></span><span>🌟 Top Tổng: <b>#${myRank?.topRank || '—'}</b></span>`}
+            </div>
+            <button type="button" class="pk9-btn-exam-ghost" data-open-auth="profile" style="width:100%;justify-content:center;padding:0.42rem;margin-top:0.55rem;font-size:0.78rem;">
+              ⚙️ Cài đặt tài khoản
             </button>
-          ` : ''}
+            ${APP.isAdmin ? `
+              <button type="button" class="pk9-auth-btn" data-nav-tab="admin" style="width:100%;justify-content:center;padding:0.45rem;margin-top:0.42rem;background:linear-gradient(135deg,#e11d48,#d97706);">
+                🛡️ Mở Admin Dashboard Chi Tiết
+              </button>
+            ` : ''}
+          </div>
         `;
       } else {
         sideCard.innerHTML = `
-          <div style="font-weight:800;font-size:0.83rem;margin-bottom:0.3rem;">🔒 Đua BXH Đang Bị Khóa</div>
-          <div style="font-size:0.75rem;color:var(--pk9-text-muted);margin-bottom:0.65rem;">
-            Tài khoản Khách chưa thể đua BXH. Đăng ký hoặc đăng nhập để mở khóa <b>BXH Tuần & Top</b> và nhận <b>+100 XP</b>!
+          <div class="pk9-sf-compact-only">
+            <button type="button" class="pk9-auth-btn pk9-sf-mini-btn" data-open-auth="login" title="Đăng nhập / Đăng ký (+100 XP)">🔑</button>
           </div>
-          <div style="display:flex;gap:0.4rem;">
-            <button type="button" class="pk9-auth-btn" data-open-auth="register" style="flex:1;justify-content:center;padding:0.46rem 0.4rem;font-size:0.76rem;">
-              ✨ Đăng ký
-            </button>
-            <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login" style="flex:1;justify-content:center;padding:0.44rem 0.4rem;font-size:0.76rem;">
-              🔑 Đăng nhập
-            </button>
+          <div class="pk9-sf-expanded-only">
+            <div style="font-weight:800;font-size:0.83rem;margin-bottom:0.3rem;">🔒 Đua BXH Đang Bị Khóa</div>
+            <div style="font-size:0.75rem;color:var(--pk9-text-muted);margin-bottom:0.65rem;">
+              Tài khoản Khách chưa thể đua BXH. Đăng ký hoặc đăng nhập để mở khóa <b>BXH Tuần & Top</b> và nhận <b>+100 XP</b>!
+            </div>
+            <div style="display:flex;gap:0.4rem;">
+              <button type="button" class="pk9-auth-btn" data-open-auth="register" style="flex:1;justify-content:center;padding:0.46rem 0.4rem;font-size:0.76rem;">
+                ✨ Đăng ký
+              </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login" style="flex:1;justify-content:center;padding:0.44rem 0.4rem;font-size:0.76rem;">
+                🔑 Đăng nhập
+              </button>
+            </div>
           </div>
         `;
       }
@@ -5165,6 +5180,12 @@
         return;
       }
 
+      const togglePcSidebarBtn = e.target.closest('[data-toggle-pc-sidebar]');
+      if (togglePcSidebarBtn) {
+        applyPcSidebarCollapsed(!APP.sidebarCollapsed);
+        return;
+      }
+
       const mobMenuBtn = e.target.closest('[data-toggle-mobile-sidebar]');
       if (mobMenuBtn) {
         const sb = document.getElementById('pk9-sidebar');
@@ -6430,12 +6451,43 @@
     } catch {}
   }
 
+  function applyPcSidebarCollapsed(collapsed, { persist = true } = {}) {
+    const next = Boolean(collapsed);
+    APP.sidebarCollapsed = next;
+    const shell = document.querySelector('.pk9-shell');
+    const sb = document.getElementById('pk9-sidebar');
+    if (shell) shell.classList.toggle('sidebar-collapsed', next);
+    if (sb) sb.classList.toggle('pc-collapsed', next);
+    document.querySelectorAll('[data-toggle-pc-sidebar]').forEach((btn) => {
+      btn.setAttribute('aria-expanded', next ? 'false' : 'true');
+      btn.setAttribute('title', next ? 'Mở rộng thanh bên (PC)' : 'Thu gọn thanh bên (PC)');
+      btn.setAttribute('aria-label', next ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên');
+      btn.classList.toggle('is-collapsed', next);
+    });
+    if (persist) {
+      try { localStorage.setItem('pk9_pc_sidebar_collapsed', next ? '1' : '0'); } catch {}
+    }
+  }
+
   async function initApp() {
     try {
       const savedTheme = localStorage.getItem('pk9_theme');
       if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
       }
+      const themeBtn = document.querySelector('[data-toggle-theme]');
+      if (themeBtn) {
+        themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+      }
+      const savedSidebarCollapsed = localStorage.getItem('pk9_pc_sidebar_collapsed') === '1';
+      applyPcSidebarCollapsed(savedSidebarCollapsed, { persist: false });
+      document.querySelectorAll('#pk9-sidebar .pk9-nav-item').forEach((btn) => {
+        if (!btn.getAttribute('title')) {
+          const labelSpan = btn.querySelector('.pk9-nav-item-left > span:not(.pk9-nav-icon)');
+          const txt = (labelSpan?.textContent || btn.textContent || '').trim();
+          if (txt) btn.setAttribute('title', txt);
+        }
+      });
     } catch {}
 
     initMobileAndPwaHelpers();
