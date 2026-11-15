@@ -5174,9 +5174,16 @@
 
       const themeBtn = e.target.closest('[data-toggle-theme]');
       if (themeBtn) {
-        const isDark = document.documentElement.classList.toggle('dark');
-        try { localStorage.setItem('pk9_theme', isDark ? 'dark' : 'light'); } catch {}
-        themeBtn.textContent = isDark ? '☀️' : '🌙';
+        const applyTheme = () => {
+          const isDark = document.documentElement.classList.toggle('dark');
+          try { localStorage.setItem('pk9_theme', isDark ? 'dark' : 'light'); } catch {}
+          themeBtn.textContent = isDark ? '☀️' : '🌙';
+        };
+        if (typeof runSmoothVisualTransition === 'function') {
+          runSmoothVisualTransition(applyTheme);
+        } else {
+          applyTheme();
+        }
         return;
       }
 
@@ -6469,6 +6476,102 @@
     }
   }
 
+  function runSmoothVisualTransition(updateDomFn) {
+    if (typeof updateDomFn !== 'function') return;
+    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced && typeof document.startViewTransition === 'function') {
+      try {
+        document.startViewTransition(() => {
+          updateDomFn();
+        });
+        return;
+      } catch {}
+    }
+    updateDomFn();
+  }
+
+  function initSmoothMotionHelpers() {
+    if (window.__pk9MotionBooted) return;
+    window.__pk9MotionBooted = true;
+    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    // 1) Desktop pointer-only RAF-throttled spotlight glow (--mx / --my)
+    const finePointer = typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (finePointer) {
+      let pendingEv = null;
+      let rafId = 0;
+      let lastCard = null;
+      const flushSpotlight = () => {
+        rafId = 0;
+        if (!pendingEv) return;
+        const card = pendingEv.target?.closest?.('.pk9-card, .pk9-exam-card, .pk9-shop-card');
+        if (lastCard && lastCard !== card) {
+          lastCard.style.removeProperty('--mx');
+          lastCard.style.removeProperty('--my');
+        }
+        if (card) {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty('--mx', `${Math.round(pendingEv.clientX - rect.left)}px`);
+          card.style.setProperty('--my', `${Math.round(pendingEv.clientY - rect.top)}px`);
+        }
+        lastCard = card || null;
+        pendingEv = null;
+      };
+      document.addEventListener('pointermove', (ev) => {
+        pendingEv = ev;
+        if (!rafId) rafId = requestAnimationFrame(flushSpotlight);
+      }, { passive: true });
+      document.addEventListener('pointerleave', () => {
+        if (lastCard) {
+          lastCard.style.removeProperty('--mx');
+          lastCard.style.removeProperty('--my');
+          lastCard = null;
+        }
+      }, { passive: true });
+    }
+
+    // 2) Passive IntersectionObserver scroll reveal for below-fold cards (never hides initial cards)
+    if (typeof IntersectionObserver !== 'undefined') {
+      const revealSelector = '.pk9-grid-3 > .pk9-card, .pk9-grid-4 > .pk9-card, .pk9-exam-grid > .pk9-exam-card, .pk9-shop-grid > .pk9-shop-card';
+      const io = new IntersectionObserver((entries) => {
+        for (const ent of entries) {
+          if (ent.isIntersecting) {
+            ent.target.classList.remove('pk9-scroll-wait');
+            ent.target.classList.add('pk9-inview');
+            io.unobserve(ent.target);
+          }
+        }
+      }, { rootMargin: '0px 0px -36px 0px', threshold: 0.04 });
+
+      const scanCards = () => {
+        const vh = window.innerHeight || 800;
+        document.querySelectorAll(revealSelector).forEach((el) => {
+          if (el.dataset.pk9Obs === '1') return;
+          el.dataset.pk9Obs = '1';
+          const rect = el.getBoundingClientRect();
+          if (rect.top > vh + 40) {
+            el.classList.add('pk9-scroll-wait');
+            io.observe(el);
+          }
+        });
+      };
+
+      const contentRoot = document.getElementById('main-content');
+      if (contentRoot && typeof MutationObserver !== 'undefined') {
+        let scanQueued = 0;
+        new MutationObserver(() => {
+          if (scanQueued) return;
+          scanQueued = requestAnimationFrame(() => {
+            scanQueued = 0;
+            scanCards();
+          });
+        }).observe(contentRoot, { childList: true, subtree: true });
+      }
+      scanCards();
+    }
+  }
+
   async function initApp() {
     try {
       const savedTheme = localStorage.getItem('pk9_theme');
@@ -6491,6 +6594,7 @@
     } catch {}
 
     initMobileAndPwaHelpers();
+    initSmoothMotionHelpers();
     loadLocalProgress();
     bindEvents();
     renderHomeTab();

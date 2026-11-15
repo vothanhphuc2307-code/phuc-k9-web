@@ -101,7 +101,7 @@
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s var(--pk9-ease-snappy, cubic-bezier(0.22, 1, 0.36, 1)), border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .pk9-exam-chip:hover {
@@ -158,7 +158,15 @@
   gap: 1.15rem;
 }
 
+.pk9-exam-grid > .pk9-exam-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+
 .pk9-exam-card {
+  position: relative;
+  isolation: isolate;
+  contain: layout style;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -166,8 +174,7 @@
   border: 1px solid var(--pk9-border, #e2e8f0);
   border-radius: 1.35rem;
   padding: 1.35rem;
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
-  position: relative;
+  transition: transform 0.34s var(--pk9-ease-snappy, cubic-bezier(0.22, 1, 0.36, 1)), border-color 0.28s ease;
   overflow: hidden;
   min-width: 0;
   max-width: 100%;
@@ -184,20 +191,40 @@
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, rgba(127, 192, 222, 0.85), rgba(212, 175, 55, 0.95), transparent);
   opacity: 0;
-  transform: scaleX(0.42);
-  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scaleX(0.42) translateZ(0);
+  transition: opacity 0.28s ease, transform 0.36s var(--pk9-ease-snappy, cubic-bezier(0.22, 1, 0.36, 1));
   pointer-events: none;
 }
 
-.pk9-exam-card:hover {
-  transform: translateY(-6px);
+.pk9-exam-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   box-shadow: 0 20px 42px -14px rgba(5, 11, 20, 0.24), 0 0 24px rgba(212, 175, 55, 0.14);
-  border-color: rgba(212, 175, 55, 0.52);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
 }
 
-.pk9-exam-card:hover::before {
-  opacity: 1;
-  transform: scaleX(1);
+@media (hover: hover) and (pointer: fine) {
+  .pk9-exam-card:hover {
+    transform: translate3d(0, -6px, 0);
+    border-color: rgba(212, 175, 55, 0.52);
+  }
+  .pk9-exam-card:hover::before,
+  .pk9-exam-card:hover::after {
+    opacity: 1;
+  }
+  .pk9-exam-card:hover::before {
+    transform: scaleX(1) translateZ(0);
+  }
+}
+
+.pk9-exam-card:active {
+  transform: scale(0.985) translateZ(0);
+  transition-duration: 0.08s;
 }
 
 .pk9-exam-card-badges {
@@ -320,7 +347,7 @@
   font-size: 0.85rem;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: transform 0.18s var(--pk9-ease-snappy, cubic-bezier(0.22, 1, 0.36, 1)), border-color 0.18s ease, color 0.18s ease, background-color 0.18s ease;
 }
 
 .pk9-btn-exam-ghost:hover {
