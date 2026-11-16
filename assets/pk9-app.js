@@ -1369,7 +1369,7 @@
     if (topic.videoId) {
       return {
         kind: 'youtube',
-        embedUrl: `https://www.youtube-nocookie.com/embed/${topic.videoId}?rel=0&modestbranding=1`,
+        embedUrl: `https://www.youtube-nocookie.com/embed/${topic.videoId}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1`,
         externalUrl: `https://www.youtube.com/watch?v=${topic.videoId}`,
         codeLabel: topic.videoId
       };
@@ -1379,7 +1379,7 @@
     if (yt) {
       return {
         kind: 'youtube',
-        embedUrl: `https://www.youtube-nocookie.com/embed/${yt[1]}?rel=0&modestbranding=1`,
+        embedUrl: `https://www.youtube-nocookie.com/embed/${yt[1]}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1`,
         externalUrl: `https://www.youtube.com/watch?v=${yt[1]}`,
         codeLabel: yt[1]
       };
@@ -1459,11 +1459,33 @@
         </div>
         ${activePreviewUrl ? `
           <div class="pk9-inline-pdf-wrap">
-            <iframe
-              src="${esc(toDrivePreviewUrl(activePreviewUrl))}"
-              title="${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}"
-              allow="autoplay"
-            ></iframe>
+            <div class="pk9-pdf-brand-bar">
+              <div class="pk9-brand-bar-left">
+                <img src="/assets/phuc-k9-favicon.png" alt="Logo Phúc K9" class="pk9-brand-crest-img" />
+                <div style="min-width:0;flex:1;">
+                  <div class="pk9-brand-pill-tag">HỌC CÙNG PHÚC K9 • TÀI LIỆU PDF ĐỘC QUYỀN</div>
+                  <div style="font-size:0.75rem;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}</div>
+                </div>
+              </div>
+              <div class="pk9-brand-bar-actions">
+                <button type="button" class="pk9-brand-mini-btn" data-open-inapp-url="${esc(activePreviewUrl)}" data-open-inapp-title="${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}" data-open-inapp-sub="Tài liệu PDF chính thức • Học Cùng Phúc K9">🔍 Phóng to</button>
+                <button type="button" class="pk9-brand-mini-btn" data-reload-inline-pdf="1">🔄 Tải lại</button>
+                ${toDirectDownloadUrl(activePreviewUrl) ? `<a href="${esc(toDirectDownloadUrl(activePreviewUrl))}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn">⬇️ Tải PDF</a>` : ''}
+                <button type="button" class="pk9-brand-mini-btn" data-close-inline-pdf="1" style="border-color:rgba(248,113,113,0.45);color:#fca5a5;">✕ Thu gọn</button>
+              </div>
+            </div>
+            <div class="pk9-inline-pdf-frame-inner">
+              <iframe
+                id="pk9-inline-pdf-iframe"
+                src="${esc(toDrivePreviewUrl(activePreviewUrl))}"
+                title="${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}"
+                allow="autoplay"
+              ></iframe>
+              <div class="pk9-player-watermark is-pdf" aria-hidden="true">
+                <img src="/assets/phuc-k9-favicon.png" alt="" />
+                <span>HỌC CÙNG PHÚC K9 • PDF</span>
+              </div>
+            </div>
           </div>
         ` : ''}
       </div>
@@ -1739,17 +1761,81 @@
           const tsList = parseVideoTimestampNotes(APP.notesMap[activeTopic.id] || '');
           return `
           <div class="pk9-video-stage" id="pk9-video-stage">
+            <div class="pk9-studio-brand-bar">
+              <div class="pk9-brand-bar-left">
+                <img src="/assets/phuc-k9-favicon.png" alt="Học Cùng Phúc K9" class="pk9-brand-crest-img" />
+                <div style="min-width:0;flex:1;">
+                  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                    <span class="pk9-brand-pill-tag">HỌC CÙNG PHÚC K9 • STUDIO ĐỘC QUYỀN</span>
+                    <span class="pk9-brand-sub-pill">${vid.kind === 'youtube' ? '🎬 VIDEO HD' : vid.kind === 'drive' ? '🎬 DRIVE PLAYER' : '📄 TÀI LIỆU PDF'}</span>
+                    ${vid.kind === 'youtube' ? `<span class="pk9-brand-time-pill" id="pk9-yt-time-readout" title="Thời lượng đang phát">⏱ 00:00</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="pk9-brand-bar-actions">
+                <button type="button" class="pk9-brand-mini-btn ${APP.theaterMode ? 'active' : ''}" data-toggle-theater="1">
+                  🖥️ ${APP.theaterMode ? 'Thu nhỏ' : 'Rạp chiếu'}
+                </button>
+                ${(vid.externalUrl || frameSrc) ? `
+                  <button type="button" class="pk9-brand-mini-btn" data-open-inapp-url="${esc(vid.externalUrl || frameSrc)}" data-open-inapp-title="${esc(activeTopic.title)}" data-open-inapp-sub="${esc(course.teacher || '')} • Học Cùng Phúc K9">
+                    🔍 Toàn màn hình
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
             ${frameSrc ? `
               <div class="pk9-video-frame-wrap">
                 <iframe
                   id="pk9-lecture-iframe"
                   data-vid-kind="${esc(vid.kind)}"
+                  data-yt-slot="lecture"
                   data-yt-base="${esc(frameSrc)}"
                   src="${esc(frameSrc)}"
                   title="${esc(activeTopic.title)}"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowfullscreen
                 ></iframe>
+                <div class="pk9-player-watermark ${vid.kind === 'none' ? 'is-pdf' : ''}" aria-hidden="true">
+                  <img src="/assets/phuc-k9-favicon.png" alt="" />
+                  <span>HỌC CÙNG PHÚC K9</span>
+                </div>
+              </div>
+
+              <div class="pk9-player-control-dock" id="pk9-player-control-dock">
+                ${vid.kind === 'youtube' ? `
+                  <div class="pk9-ctrl-group">
+                    <button type="button" class="pk9-ctrl-btn" data-yt-slot="lecture" data-yt-seek="-30" title="Tua lùi 30 giây">⏮ -30s</button>
+                    <button type="button" class="pk9-ctrl-btn" data-yt-slot="lecture" data-yt-seek="-10" title="Tua lùi 10 giây">⏪ -10s</button>
+                    <button type="button" class="pk9-ctrl-btn primary" data-yt-slot="lecture" data-yt-toggle="1" title="Phát hoặc Tạm dừng">⏯ Phát / Dừng</button>
+                    <button type="button" class="pk9-ctrl-btn" data-yt-slot="lecture" data-yt-seek="10" title="Tua tới 10 giây">⏩ +10s</button>
+                    <button type="button" class="pk9-ctrl-btn" data-yt-slot="lecture" data-yt-seek="30" title="Tua tới 30 giây">⏭ +30s</button>
+                  </div>
+                  <div class="pk9-ctrl-group">
+                    <span class="pk9-hide-mob-430" style="font-size:0.7rem;font-weight:800;color:#94a3b8;margin-right:0.15rem;">⚡ Tốc độ:</span>
+                    ${[0.75, 1, 1.25, 1.5, 2].map(spd => `
+                      <button type="button" class="pk9-ctrl-speed-pill ${spd === 1 ? 'active' : ''}" data-yt-slot="lecture" data-yt-rate="${spd}">${spd}x</button>
+                    `).join('')}
+                    <button type="button" class="pk9-ctrl-btn" data-yt-mark-note="${esc(activeTopic.id)}" title="Lấy mốc giây hiện tại chèn vào Ghi chú">📌 +Mốc</button>
+                  </div>
+                ` : vid.kind === 'drive' ? `
+                  <div class="pk9-ctrl-group">
+                    <button type="button" class="pk9-ctrl-btn primary" data-reload-lecture-iframe="1">🔄 Tải lại phát</button>
+                    <button type="button" class="pk9-ctrl-btn" data-toggle-theater="1">🖥️ Chế độ rạp</button>
+                    <span class="pk9-brand-sub-pill">⌨️ Phím J / L trong video để tua ±10s</span>
+                  </div>
+                  <div class="pk9-ctrl-group">
+                    ${vid.externalUrl ? `<a href="${esc(vid.externalUrl)}" target="_blank" rel="noopener" class="pk9-brand-mini-btn">🎬 Mở gốc Drive ↗</a>` : ''}
+                  </div>
+                ` : `
+                  <div class="pk9-ctrl-group">
+                    <button type="button" class="pk9-ctrl-btn primary" data-open-inapp-url="${esc(activeTopic.pdfUrl || '')}" data-open-inapp-title="${esc(activeTopic.title)}" data-open-inapp-sub="Tài liệu PDF • Học Cùng Phúc K9">🔍 Đọc toàn màn hình</button>
+                    <button type="button" class="pk9-ctrl-btn" data-reload-lecture-iframe="1">🔄 Tải lại PDF</button>
+                  </div>
+                  <div class="pk9-ctrl-group">
+                    ${activeTopic.pdfUrl && toDirectDownloadUrl(activeTopic.pdfUrl) ? `<a href="${esc(toDirectDownloadUrl(activeTopic.pdfUrl))}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn">⬇️ Tải PDF</a>` : ''}
+                  </div>
+                `}
               </div>
             ` : ''}
 
@@ -1832,6 +1918,87 @@
       `}
     `;
     typeset(root);
+    bindYtBridgeForSlot('lecture');
+  }
+
+  const YT_BRIDGE_STATE = {
+    lecture: { time: 0, rate: 1, playing: false, ready: false, lastShownSec: -1 },
+    modal: { time: 0, rate: 1, playing: false, ready: false, lastShownSec: -1 }
+  };
+  let _ytMsgListenerBound = false;
+
+  function formatMmSs(secVal) {
+    const s = Math.max(0, Math.floor(Number(secVal || 0)));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const rem = s % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return h > 0 ? `${h}:${pad(m)}:${pad(rem)}` : `${pad(m)}:${pad(rem)}`;
+  }
+
+  function sendYtCommand(slotKey, func, args = []) {
+    const ifrId = slotKey === 'modal' ? 'pk9-inapp-viewer-iframe' : 'pk9-lecture-iframe';
+    const ifr = document.getElementById(ifrId);
+    if (!ifr || !ifr.contentWindow) return false;
+    try {
+      ifr.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function updateYtReadout(slotKey, sec) {
+    const st = YT_BRIDGE_STATE[slotKey];
+    if (!st) return;
+    st.time = Math.max(0, Number(sec || 0));
+    const whole = Math.floor(st.time);
+    if (whole === st.lastShownSec) return;
+    st.lastShownSec = whole;
+    const elId = slotKey === 'modal' ? 'pk9-yt-modal-time-readout' : 'pk9-yt-time-readout';
+    const el = document.getElementById(elId);
+    if (el) el.textContent = `⏱ ${formatMmSs(whole)}`;
+  }
+
+  function bindYtBridgeForSlot(slotKey) {
+    if (!_ytMsgListenerBound) {
+      _ytMsgListenerBound = true;
+      window.addEventListener('message', ev => {
+        if (!ev.origin || !/youtube(-nocookie)?\.com$/i.test(new URL(ev.origin).hostname)) return;
+        let msg = ev.data;
+        if (typeof msg === 'string') {
+          if (!msg.includes('infoDelivery') && !msg.includes('initialDelivery')) return;
+          try { msg = JSON.parse(msg); } catch { return; }
+        }
+        if (!msg || typeof msg !== 'object') return;
+        const info = msg.info;
+        if (!info || typeof info !== 'object') return;
+        const slot = YT_BRIDGE_STATE[msg.id] ? msg.id : 'lecture';
+        const st = YT_BRIDGE_STATE[slot];
+        st.ready = true;
+        if (typeof info.currentTime === 'number') updateYtReadout(slot, info.currentTime);
+        if (typeof info.playerState === 'number') st.playing = info.playerState === 1;
+        if (typeof info.playbackRate === 'number') st.rate = info.playbackRate;
+      });
+    }
+    const st = YT_BRIDGE_STATE[slotKey];
+    if (st) {
+      st.time = 0;
+      st.lastShownSec = -1;
+      st.playing = false;
+      st.ready = false;
+    }
+    const ifrId = slotKey === 'modal' ? 'pk9-inapp-viewer-iframe' : 'pk9-lecture-iframe';
+    const ifr = document.getElementById(ifrId);
+    if (!ifr) return;
+    const pingListening = () => {
+      if (!ifr.contentWindow) return;
+      try {
+        ifr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: slotKey }), '*');
+      } catch {}
+    };
+    ifr.addEventListener('load', pingListening, { once: true });
+    pingListening();
   }
 
   function collectCourseAllPdfs(course, flatTopicsOut = []) {
@@ -2502,9 +2669,11 @@
     }
 
     let embedUrl = String(rawUrl || '').trim();
-    const ytMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+    let isYtModal = false;
+    const ytMatch = embedUrl.match(/(?:youtube\.com\/(?:watch\?v=|live\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
     if (ytMatch) {
-      embedUrl = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&autoplay=1`;
+      isYtModal = true;
+      embedUrl = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1&autoplay=1`;
     } else if (embedUrl.includes('docs.google.com/spreadsheets/d/')) {
       const m = embedUrl.match(/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
       const gidMatch = embedUrl.match(/gid=([0-9]+)/);
@@ -2516,42 +2685,68 @@
 
     overlay.innerHTML = `
       <div class="pk9-inapp-viewer-box">
-        <div class="pk9-sheet-toolbar">
-          <div style="min-width:0;flex:1;">
-            <div style="font-size:0.72rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">
-              💎 TRÌNH XEM TRỰC TIẾP TRONG WEB • HỌC CÙNG PHÚC K9
+        <div class="pk9-sheet-toolbar" style="background:linear-gradient(135deg,#071022 0%,#102442 75%,#0d2b3e 100%);color:#f8fafc;border-bottom:1px solid rgba(250,204,21,0.32);">
+          <div style="display:flex;align-items:center;gap:0.65rem;min-width:0;flex:1;">
+            <img src="/assets/phuc-k9-favicon.png" alt="Logo Học Cùng Phúc K9" class="pk9-brand-crest-img" style="width:36px;height:36px;border-radius:10px;" />
+            <div style="min-width:0;flex:1;">
+              <div style="font-size:0.7rem;font-weight:900;color:#fde047;letter-spacing:0.05em;text-transform:uppercase;">
+                HỌC CÙNG PHÚC K9 • ${isYtModal ? 'STUDIO VIDEO ĐỘC QUYỀN' : 'TRÌNH ĐỌC PDF & TÀI LIỆU ĐỘC QUYỀN'}
+              </div>
+              <div style="font-weight:900;font-size:0.96rem;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${esc(title || 'Khóa Chui Tham Khảo')}
+              </div>
+              ${subTitle ? `<div style="font-size:0.74rem;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(subTitle)}</div>` : ''}
             </div>
-            <div style="font-weight:900;font-size:0.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              ${esc(title || 'Khóa Chui Tham Khảo')}
-            </div>
-            ${subTitle ? `<div style="font-size:0.76rem;color:var(--pk9-text-muted);">${esc(subTitle)}</div>` : ''}
           </div>
-          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:0.42rem;flex-wrap:wrap;">
             ${!/youtube\.com|youtu\.be|spreadsheets/i.test(rawUrl || '') && toDirectDownloadUrl(rawUrl) ? `
-              <a href="${esc(toDirectDownloadUrl(rawUrl))}" download target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;background:#0ea5e9;color:#fff;border-color:#0ea5e9;">⬇️ Tải về</a>
+              <a href="${esc(toDirectDownloadUrl(rawUrl))}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn" style="background:#0284c7;border-color:#38bdf8;">⬇️ Tải về</a>
             ` : ''}
             ${rawUrl ? `
-              <a href="${esc(rawUrl)}" target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;">↗️ Mở gốc</a>
+              <a href="${esc(rawUrl)}" target="_blank" rel="noopener" class="pk9-brand-mini-btn">↗️ Mở gốc</a>
             ` : ''}
-            <button type="button" class="pk9-admin-btn-xs" data-reload-inapp-iframe="1">🔄 Tải lại</button>
-            <button type="button" class="pk9-btn-exam-primary" data-close-inapp-viewer="1" style="padding:0.42rem 0.95rem;background:#ef4444;">
-              ✕ Đóng cửa sổ
+            <button type="button" class="pk9-brand-mini-btn" data-reload-inapp-iframe="1">🔄 Tải lại</button>
+            <button type="button" class="pk9-btn-exam-primary" data-close-inapp-viewer="1" style="padding:0.38rem 0.85rem;background:#e11d48;font-size:0.78rem;">
+              ✕ Đóng
             </button>
           </div>
         </div>
+        ${isYtModal ? `
+          <div class="pk9-player-control-dock" id="pk9-modal-control-dock" style="padding:0.45rem 1rem;">
+            <div class="pk9-ctrl-group">
+              <span class="pk9-brand-time-pill" id="pk9-yt-modal-time-readout">⏱ 00:00</span>
+              <button type="button" class="pk9-ctrl-btn" data-yt-slot="modal" data-yt-seek="-30">⏮ -30s</button>
+              <button type="button" class="pk9-ctrl-btn" data-yt-slot="modal" data-yt-seek="-10">⏪ -10s</button>
+              <button type="button" class="pk9-ctrl-btn primary" data-yt-slot="modal" data-yt-toggle="1">⏯ Phát / Dừng</button>
+              <button type="button" class="pk9-ctrl-btn" data-yt-slot="modal" data-yt-seek="10">⏩ +10s</button>
+              <button type="button" class="pk9-ctrl-btn" data-yt-slot="modal" data-yt-seek="30">⏭ +30s</button>
+            </div>
+            <div class="pk9-ctrl-group">
+              ${[0.75, 1, 1.25, 1.5, 2].map(spd => `
+                <button type="button" class="pk9-ctrl-speed-pill ${spd === 1 ? 'active' : ''}" data-yt-slot="modal" data-yt-rate="${spd}">${spd}x</button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
         <div style="flex:1;background:#ffffff;position:relative;">
           <iframe
             id="pk9-inapp-viewer-iframe"
+            data-yt-slot="modal"
             src="${esc(embedUrl)}"
             title="${esc(title)}"
-            style="width:100%;height:100%;border:0;"
+            style="width:100%;height:100%;border:0;display:block;"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowfullscreen
           ></iframe>
+          <div class="pk9-player-watermark ${isYtModal ? '' : 'is-pdf'}" aria-hidden="true">
+            <img src="/assets/phuc-k9-favicon.png" alt="" />
+            <span>HỌC CÙNG PHÚC K9</span>
+          </div>
         </div>
       </div>
     `;
     overlay.classList.add('open');
+    bindYtBridgeForSlot('modal');
   }
   window.PK9_OPEN_INAPP_VIEWER = openInAppViewer;
 
@@ -4930,17 +5125,47 @@
           APP.inlinePdfUrl = url;
           APP.inlinePdfTitle = title;
         }
-        const pdfSlot = document.getElementById('pk9-inline-pdf-viewer-slot');
+        const attachWrap = document.getElementById('pk9-topic-pdf-attachments-wrap');
         const activeCourse = getCourseById(APP.activeCourseId);
         const found = findTopicInCourse(activeCourse, APP.activeTopicId);
-        if (pdfSlot && activeCourse && found?.topic && document.getElementById('pk9-video-stage')) {
-          pdfSlot.innerHTML = buildInlinePdfSlotHtml();
-          const attachWrap = document.getElementById('pk9-topic-pdf-attachments-wrap');
-          if (attachWrap) attachWrap.innerHTML = buildTopicPdfAttachmentsHtml(found.topic);
-          const drawerList = document.getElementById('pk9-teacher-pdf-list-wrap');
-          if (drawerList) drawerList.innerHTML = buildTeacherPdfListHtml(activeCourse.teacherPdfs || []);
+        if (attachWrap && activeCourse && found?.topic && document.getElementById('pk9-video-stage')) {
+          attachWrap.innerHTML = renderTopicPdfAttachments(found.topic);
         } else {
           renderLecturesTab();
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-close-inline-pdf]')) {
+        APP.inlinePdfUrl = '';
+        APP.inlinePdfTitle = '';
+        const attachWrap = document.getElementById('pk9-topic-pdf-attachments-wrap');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+        if (attachWrap && activeCourse && found?.topic) {
+          attachWrap.innerHTML = renderTopicPdfAttachments(found.topic);
+        } else {
+          renderLecturesTab();
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-reload-inline-pdf]')) {
+        const pdfIfr = document.getElementById('pk9-inline-pdf-iframe');
+        if (pdfIfr && pdfIfr.src) {
+          const s = pdfIfr.src;
+          pdfIfr.src = s;
+          toast('🔄 Đã tải lại file PDF!', 'info');
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-reload-lecture-iframe]')) {
+        const vidIfr = document.getElementById('pk9-lecture-iframe');
+        if (vidIfr && vidIfr.src) {
+          const s = vidIfr.src;
+          vidIfr.src = s;
+          toast('🔄 Đã tải lại trình phát bài giảng!', 'info');
         }
         return;
       }
@@ -4968,11 +5193,13 @@
       const theaterBtn = e.target.closest('[data-toggle-theater]');
       if (theaterBtn) {
         APP.theaterMode = !APP.theaterMode;
-        const layoutGrid = document.getElementById('pk9-lecture-layout-grid');
-        if (layoutGrid && document.getElementById('pk9-video-stage')) {
-          layoutGrid.classList.toggle('theater', APP.theaterMode);
-          theaterBtn.classList.toggle('active', APP.theaterMode);
-          theaterBtn.innerHTML = `🖥️ ${APP.theaterMode ? 'Thu nhỏ' : 'Rạp chiếu phim'}`;
+        const studioEl = document.getElementById('pk9-lecture-studio') || document.getElementById('pk9-lecture-layout-grid');
+        if (studioEl && document.getElementById('pk9-video-stage')) {
+          studioEl.classList.toggle('theater', APP.theaterMode);
+          document.querySelectorAll('#pk9-video-stage [data-toggle-theater]').forEach(btn => {
+            btn.classList.toggle('active', APP.theaterMode);
+            btn.innerHTML = `🖥️ ${APP.theaterMode ? 'Thu nhỏ' : 'Rạp chiếu'}`;
+          });
         } else {
           renderLecturesTab();
         }
@@ -5051,6 +5278,71 @@
         return;
       }
 
+      const ytSeekBtn = e.target.closest('[data-yt-seek]');
+      if (ytSeekBtn) {
+        const slot = ytSeekBtn.getAttribute('data-yt-slot') || 'lecture';
+        const delta = Number(ytSeekBtn.getAttribute('data-yt-seek') || 0);
+        const st = YT_BRIDGE_STATE[slot] || YT_BRIDGE_STATE.lecture;
+        const target = Math.max(0, Math.round((st.time || 0) + delta));
+        updateYtReadout(slot, target);
+        sendYtCommand(slot, 'seekTo', [target, true]);
+        sendYtCommand(slot, 'playVideo', []);
+        st.playing = true;
+        toast(`${delta < 0 ? '⏪' : '⏩'} Đã tua ${delta > 0 ? `+${delta}s` : `${delta}s`} (${formatMmSs(target)})`, 'info');
+        return;
+      }
+
+      const ytToggleBtn = e.target.closest('[data-yt-toggle]');
+      if (ytToggleBtn) {
+        const slot = ytToggleBtn.getAttribute('data-yt-slot') || 'lecture';
+        const st = YT_BRIDGE_STATE[slot] || YT_BRIDGE_STATE.lecture;
+        if (st.playing) {
+          sendYtCommand(slot, 'pauseVideo', []);
+          st.playing = false;
+        } else {
+          sendYtCommand(slot, 'playVideo', []);
+          st.playing = true;
+        }
+        return;
+      }
+
+      const ytRateBtn = e.target.closest('[data-yt-rate]');
+      if (ytRateBtn) {
+        const slot = ytRateBtn.getAttribute('data-yt-slot') || 'lecture';
+        const rate = Number(ytRateBtn.getAttribute('data-yt-rate') || 1);
+        const st = YT_BRIDGE_STATE[slot] || YT_BRIDGE_STATE.lecture;
+        st.rate = rate;
+        sendYtCommand(slot, 'setPlaybackRate', [rate]);
+        const scope = slot === 'modal' ? '#pk9-modal-control-dock' : '#pk9-player-control-dock';
+        document.querySelectorAll(`${scope} [data-yt-rate]`).forEach(b => {
+          b.classList.toggle('active', Number(b.getAttribute('data-yt-rate')) === rate);
+        });
+        toast(`⚡ Tốc độ phát: ${rate}x`, 'info');
+        return;
+      }
+
+      const ytMarkBtn = e.target.closest('[data-yt-mark-note]');
+      if (ytMarkBtn) {
+        const stamp = formatMmSs(YT_BRIDGE_STATE.lecture.time || 0);
+        APP.studySubtab = 'notes';
+        const bodyEl = document.getElementById('pk9-study-body');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+        if (bodyEl && found?.topic) {
+          document.querySelectorAll('.pk9-study-subtab').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-study-subtab') === 'notes');
+          });
+          bodyEl.innerHTML = renderTopicSubtabContent(found.topic);
+        }
+        const timeInp = document.getElementById('pk9-ts-time-input');
+        if (timeInp) {
+          timeInp.value = stamp;
+          document.getElementById('pk9-ts-label-input')?.focus();
+        }
+        toast(`📌 Đã chép mốc ${stamp} vào ô Ghi chú bên dưới!`, 'success');
+        return;
+      }
+
       const seekBtn = e.target.closest('[data-seek-video]');
       if (seekBtn) {
         const sec = Math.max(0, Number(seekBtn.getAttribute('data-seek-video') || 0));
@@ -5061,9 +5353,15 @@
           const kind = ifr.getAttribute('data-vid-kind');
           const base = ifr.getAttribute('data-yt-base') || '';
           if (kind === 'youtube' && base) {
-            const sep = base.includes('?') ? '&' : '?';
-            const cleanBase = base.replace(/([?&])(start|autoplay)=[^&]*/g, '').replace(/[?&]$/, '');
-            ifr.src = `${cleanBase}${cleanBase.includes('?') ? '&' : '?'}start=${sec}&autoplay=1`;
+            if (YT_BRIDGE_STATE.lecture.ready) {
+              updateYtReadout('lecture', sec);
+              sendYtCommand('lecture', 'seekTo', [sec, true]);
+              sendYtCommand('lecture', 'playVideo', []);
+              YT_BRIDGE_STATE.lecture.playing = true;
+            } else {
+              const cleanBase = base.replace(/([?&])(start|autoplay)=[^&]*/g, '').replace(/[?&]$/, '');
+              ifr.src = `${cleanBase}${cleanBase.includes('?') ? '&' : '?'}start=${sec}&autoplay=1`;
+            }
             stage?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             toast(`▶ Đã tua video tới mốc ${label || `${sec}s`}!`, 'info');
           } else {
