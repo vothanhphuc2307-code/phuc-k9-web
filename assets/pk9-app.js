@@ -875,7 +875,7 @@
 
     if (xpChip) {
       if (!APP.user) {
-        xpChip.innerHTML = `🔒 <span class="hide-xs">Khách • </span><b>BXH Khóa</b>`;
+        xpChip.innerHTML = `🔒 <span class="hide-xs">Khách • </span><b>BXH<span class="pk9-hide-mob-430"> Khóa</span></b>`;
         xpChip.title = 'Tài khoản Khách không được đua BXH — Đăng ký hoặc đăng nhập để mở khóa!';
       } else if (APP.isAdmin) {
         xpChip.innerHTML = `<span class="hide-xs">🛡️ Quản trị viên • Chuỗi </span>🔥<b>${streakVal}<span class="pk9-hide-mob-430">d</span></b><span class="hide-xs"> (Ngoài BXH)</span>`;
@@ -6673,13 +6673,13 @@
     if (btn) {
       btn.classList.toggle('installed', standalone);
       if (standalone) {
-        btn.innerHTML = '✓ <span class="pk9-hide-mob-xs">Đã cài App</span><span class="pk9-show-mob-xs">App</span>';
+        btn.innerHTML = '✓ <span class="pk9-hide-compact">Đã cài </span><span>App</span>';
         btn.title = 'Đang chạy ở chế độ ứng dụng độc lập';
       } else if (APP.deferredInstallPrompt) {
-        btn.innerHTML = '📲 <span class="pk9-hide-mob-xs">Cài App Ngay</span><span class="pk9-show-mob-xs">App</span>';
+        btn.innerHTML = '📲 <span class="pk9-hide-compact">Cài </span><span>App</span>';
         btn.title = 'Cài đặt web thành ứng dụng trên điện thoại';
       } else {
-        btn.innerHTML = '📲 <span class="pk9-hide-mob-xs">Tải App</span><span class="pk9-show-mob-xs">App</span>';
+        btn.innerHTML = '📲 <span class="pk9-hide-compact">Tải </span><span>App</span>';
         btn.title = 'Hướng dẫn cài ứng dụng lên màn hình chính';
       }
     }
@@ -6800,8 +6800,13 @@
 
     const scrollTopBtn = document.getElementById('pk9-mob-scroll-top');
     if (scrollTopBtn) {
+      let scrollRaf = 0;
       const onScroll = () => {
-        scrollTopBtn.classList.toggle('visible', window.scrollY > 360);
+        if (scrollRaf) return;
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = 0;
+          scrollTopBtn.classList.toggle('visible', window.scrollY > 360);
+        });
       };
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
