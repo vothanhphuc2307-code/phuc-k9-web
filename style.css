@@ -189,6 +189,8 @@ html.dark .pk9-ambient-fx {
   z-index: 1;
   display: grid;
   grid-template-columns: var(--pk9-sidebar-w) minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   transition: grid-template-columns 0.32s var(--pk9-ease);
 }
@@ -199,8 +201,6 @@ html.dark .pk9-ambient-fx {
   top: 0;
   height: 100vh;
   background: var(--pk9-surface);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border-right: 1px solid var(--pk9-border);
   display: flex;
   flex-direction: column;
@@ -425,6 +425,8 @@ html.dark .pk9-nav-item.active {
 .pk9-main-wrap {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -433,20 +435,21 @@ html.dark .pk9-nav-item.active {
   top: 0;
   height: var(--pk9-topbar-h);
   z-index: 40;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid var(--pk9-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0 1.5rem;
+  gap: 0.85rem;
+  padding: 0 1.35rem;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 html.dark .pk9-topbar {
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.95);
 }
 
 .pk9-topbar-left {
@@ -515,8 +518,19 @@ html.dark .pk9-topbar {
   min-width: 0;
 }
 
-.pk9-show-mob-xs {
+.pk9-show-mob-xs,
+.pk9-show-compact {
   display: none;
+}
+
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+code {
+  overflow-wrap: anywhere;
 }
 
 .pk9-xp-chip {
@@ -706,9 +720,17 @@ html.dark .pk9-install-chip.installed {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1.35fr 0.95fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.95fr);
   gap: 2rem;
   align-items: center;
+}
+
+.pk9-hero-grid > *,
+.pk9-lecture-studio > *,
+.pk9-journey-layout > *,
+.pk9-idcard-layout > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pk9-hero-brand-row {
@@ -829,8 +851,7 @@ html.dark .pk9-install-chip.installed {
   padding: 0.82rem 1.3rem;
   border-radius: 999px;
   border: 1px solid rgba(127, 192, 222, 0.34);
-  background: rgba(15, 32, 46, 0.66);
-  backdrop-filter: blur(12px);
+  background: rgba(15, 32, 46, 0.78);
   color: #f4f1e9;
   font-weight: 700;
   font-size: 0.9rem;
@@ -1167,6 +1188,9 @@ html.dark .pk9-install-chip.installed {
   border-radius: 0.8rem;
   background: var(--pk9-surface-2);
   border: 1px solid var(--pk9-border);
+  min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
 }
 
 /* Video Lecture Studio Workspace */
@@ -1175,10 +1199,13 @@ html.dark .pk9-install-chip.installed {
   grid-template-columns: 340px minmax(0, 1fr);
   gap: 1.35rem;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .pk9-lecture-studio.theater {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .pk9-course-sidebar {
@@ -1238,7 +1265,7 @@ html.dark .pk9-install-chip.installed {
   line-height: 1.45;
   text-align: left;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: background-color 0.16s ease, color 0.16s ease;
 }
 
 .pk9-topic-btn:hover {
@@ -1531,7 +1558,7 @@ html.dark .pk9-topic-btn.active {
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
 }
 
 .pk9-pdf-action-btn:hover {
@@ -1622,7 +1649,7 @@ html.dark .pk9-topic-btn.active {
   font-size: 0.88rem;
   border-bottom: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .pk9-study-subtab.active {
@@ -1808,17 +1835,21 @@ html.dark .pk9-podium-card.rank-3 {
   border: 1px solid var(--pk9-border);
   border-radius: 1.35rem;
   overflow: hidden;
+  max-width: 100%;
   box-shadow: var(--pk9-shadow-sm);
 }
 
 .pk9-lb-row {
   display: grid;
-  grid-template-columns: 64px 1.6fr 1.15fr 1fr 1fr;
+  grid-template-columns: 64px minmax(0, 1.6fr) minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.75rem;
   align-items: center;
   padding: 0.95rem 1.25rem;
   border-bottom: 1px solid var(--pk9-border);
-  transition: background 0.18s ease, transform 0.18s ease;
+  min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
+  transition: background-color 0.18s ease, transform 0.18s ease;
   animation: pk9FadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
@@ -1841,8 +1872,7 @@ html.dark .pk9-podium-card.rank-3 {
   position: fixed;
   inset: 0;
   z-index: 90;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.62);
 }
 
 .pk9-sidebar-backdrop.open {
@@ -1992,8 +2022,7 @@ html.dark .pk9-podium-card.rank-3 {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.72);
   display: none;
   align-items: center;
   justify-content: center;
@@ -2071,8 +2100,6 @@ html.dark .pk9-podium-card.rank-3 {
   max-width: 100vw;
   min-height: calc(60px + env(safe-area-inset-bottom, 0px));
   background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--pk9-border);
   z-index: 90;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -2286,7 +2313,9 @@ html.dark .pk9-mob-nav-btn.active {
     display: none;
   }
   .pk9-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
   }
   .pk9-sidebar {
     position: fixed;
@@ -2315,11 +2344,13 @@ html.dark .pk9-mob-nav-btn.active {
   }
   .pk9-hero-grid,
   .pk9-lecture-studio {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   /* On mobile/tablet, put the Video Stage FIRST so students don't scroll past chapters to see video */
   .pk9-video-stage {
     order: -1;
+    min-width: 0;
+    max-width: 100%;
   }
   .pk9-course-sidebar {
     position: static;
@@ -2353,12 +2384,54 @@ html.dark .pk9-mob-nav-btn.active {
     padding: 0 0.7rem;
     gap: 0.45rem;
   }
-  .pk9-cmd-trigger {
+  .pk9-topbar-left {
+    gap: 0.42rem;
+    flex: 1 1 0%;
     min-width: 0;
-    padding: 0.45rem 0.72rem;
   }
-  .pk9-kbd {
-    display: none;
+  .pk9-cmd-trigger {
+    flex: 1 1 115px;
+    min-width: 100px;
+    max-width: 420px;
+    padding: 0.42rem 0.68rem;
+  }
+  .pk9-kbd,
+  .pk9-topbar .hide-xs,
+  .pk9-hide-mob-430,
+  .pk9-hide-compact {
+    display: none !important;
+  }
+  .pk9-topbar .pk9-xp-chip {
+    padding: 0.34rem 0.6rem;
+    font-size: 0.77rem;
+  }
+  .pk9-topbar .pk9-auth-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.79rem;
+    flex: 0 1 auto;
+    max-width: 165px;
+  }
+}
+
+@media (max-width: 820px) {
+  .pk9-hide-tablet-sm {
+    display: none !important;
+  }
+  .pk9-topbar {
+    padding: 0 0.6rem;
+    gap: 0.36rem;
+  }
+  .pk9-cmd-trigger {
+    flex: 1 1 105px;
+    min-width: 96px;
+    padding: 0.4rem 0.62rem;
+    font-size: 0.8rem;
+  }
+  .pk9-topbar-actions {
+    gap: 0.34rem;
+  }
+  .pk9-score-buckets-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -2445,12 +2518,13 @@ html.dark .pk9-mob-nav-btn.active {
   }
   .pk9-topbar {
     height: 50px;
-    padding: 0 0.45rem;
-    gap: 0.28rem;
+    padding: 0 0.5rem;
+    gap: 0.32rem;
   }
   .pk9-topbar-left {
-    flex: 0 0 auto;
-    gap: 0.25rem;
+    flex: 1 1 0%;
+    min-width: 0;
+    gap: 0.28rem;
   }
   .pk9-topbar-menu-btn,
   .pk9-theme-btn {
@@ -2465,29 +2539,23 @@ html.dark .pk9-mob-nav-btn.active {
     flex-shrink: 0;
   }
   .pk9-cmd-trigger {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    max-width: 30px;
-    flex: 0 0 30px;
-    padding: 0;
-    justify-content: center;
-    font-size: 0.85rem;
-  }
-  .pk9-cmd-placeholder {
-    display: none !important;
+    flex: 1 1 84px;
+    min-width: 78px;
+    max-width: 320px;
+    padding: 0.34rem 0.55rem;
+    font-size: 0.76rem;
   }
   .pk9-topbar-actions {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     justify-content: flex-end;
-    gap: 0.24rem;
+    gap: 0.26rem;
     min-width: 0;
   }
   .pk9-xp-chip,
   .pk9-install-chip {
-    padding: 0.25rem 0.4rem;
-    font-size: 0.68rem;
-    gap: 0.18rem;
+    padding: 0.26rem 0.44rem;
+    font-size: 0.7rem;
+    gap: 0.2rem;
     line-height: 1.15;
     white-space: nowrap;
     flex-shrink: 0;
@@ -2497,18 +2565,18 @@ html.dark .pk9-mob-nav-btn.active {
     display: none !important;
   }
   .pk9-auth-btn {
-    padding: 0.26rem 0.48rem;
-    font-size: 0.69rem;
-    gap: 0.22rem;
+    padding: 0.28rem 0.52rem;
+    font-size: 0.72rem;
+    gap: 0.24rem;
     line-height: 1.15;
     white-space: nowrap;
-    flex: 0 1 104px;
+    flex: 0 1 auto;
     min-width: 0;
-    max-width: 104px;
+    max-width: 132px;
     overflow: hidden;
   }
   .pk9-auth-name {
-    max-width: 64px;
+    max-width: 92px;
   }
   .pk9-hero {
     padding: 0.85rem 0.8rem;
@@ -2807,7 +2875,93 @@ html.dark .pk9-mob-nav-btn.active {
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 520px) {
+  .pk9-topbar {
+    padding: 0 0.42rem;
+    gap: 0.24rem;
+  }
+  .pk9-topbar-left {
+    flex: 0 0 auto;
+    gap: 0.24rem;
+  }
+  .pk9-cmd-trigger {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    flex: 0 0 30px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+  .pk9-cmd-placeholder {
+    display: none !important;
+  }
+  .pk9-topbar-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.22rem;
+  }
+  .pk9-auth-btn {
+    padding: 0.28rem 0.5rem;
+    font-size: 0.7rem;
+    flex: 0 0 auto;
+    max-width: 118px;
+  }
+  .pk9-auth-name {
+    max-width: 82px;
+  }
+  .pk9-studio-brand-bar,
+  .pk9-pdf-brand-bar {
+    padding: 0.42rem 0.55rem;
+  }
+  .pk9-brand-sub-pill {
+    display: none;
+  }
+}
+
+@media (max-width: 440px) {
+  .pk9-topbar {
+    padding: 0 0.36rem;
+    gap: 0.2rem;
+  }
+  .pk9-topbar-left {
+    gap: 0.2rem;
+  }
+  .pk9-topbar-menu-btn,
+  .pk9-theme-btn,
+  .pk9-cmd-trigger {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    max-width: 28px;
+    flex: 0 0 28px;
+    font-size: 0.8rem;
+  }
+  .pk9-mobile-brand-pill {
+    width: 26px;
+    height: 26px;
+  }
+  .pk9-topbar-actions {
+    gap: 0.2rem;
+  }
+  .pk9-xp-chip,
+  .pk9-install-chip {
+    padding: 0.23rem 0.38rem;
+    font-size: 0.67rem;
+  }
+  .pk9-auth-btn {
+    padding: 0.26rem 0.48rem;
+    font-size: 0.69rem;
+    flex: 0 0 auto;
+    max-width: 112px;
+  }
+  .pk9-auth-name {
+    max-width: 78px;
+  }
+}
+
+@media (max-width: 365px) {
   .pk9-topbar {
     padding: 0 0.35rem;
     gap: 0.2rem;
@@ -2840,11 +2994,11 @@ html.dark .pk9-mob-nav-btn.active {
   .pk9-auth-btn {
     padding: 0.22rem 0.4rem;
     font-size: 0.66rem;
-    flex: 0 1 82px;
-    max-width: 82px;
+    flex: 0 1 92px;
+    max-width: 92px;
   }
   .pk9-auth-name {
-    max-width: 48px;
+    max-width: 58px;
   }
 }
 
@@ -2880,7 +3034,7 @@ html.dark .pk9-mob-nav-btn.active {
   overflow: hidden;
   box-shadow: var(--pk9-shadow-md);
   margin-bottom: 1.5rem;
-  transition: all 0.25s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, border-radius 0.25s ease;
 }
 
 .pk9-sheet-workspace.fullscreen-focus {
@@ -3040,7 +3194,7 @@ html.dark .pk9-mob-nav-btn.active {
   padding: 0.6rem 1.05rem;
   border-radius: 0.8rem;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -3150,7 +3304,7 @@ html.dark .pk9-mob-nav-btn.active {
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
 }
 
 .pk9-admin-btn-xs:hover {
@@ -3451,8 +3605,10 @@ html.dark .pk9-wallet-pill.diamond { color: #c4b5fd; }
 
 .pk9-shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr));
   gap: 0.85rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pk9-shop-card {
@@ -3462,6 +3618,9 @@ html.dark .pk9-wallet-pill.diamond { color: #c4b5fd; }
   padding: 0.95rem;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .pk9-shop-card.equipped {
@@ -3488,22 +3647,28 @@ html.dark .pk9-wallet-pill.diamond { color: #c4b5fd; }
 
 .pk9-journey-layout {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 1rem;
   align-items: start;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pk9-idcard-layout {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pk9-student-idcard {
   border-radius: 1.25rem;
   padding: 1.35rem;
   color: #ffffff;
+  min-width: 0;
+  max-width: 100%;
   box-shadow: 0 20px 40px -18px rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.22);
 }
@@ -3546,9 +3711,12 @@ html.dark .pk9-wallet-pill.diamond { color: #c4b5fd; }
 .pk9-pt-detail-badge strong { font-size: 1.55rem; line-height: 1.1; }
 
 .pk9-pt-scroll {
+  display: block;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 0.45rem;
 }
@@ -3559,6 +3727,18 @@ html.dark .pk9-wallet-pill.diamond { color: #c4b5fd; }
   grid-auto-rows: 52px;
   gap: 4px;
   min-width: 890px;
+}
+
+@media (max-width: 1280px) {
+  .pk9-pt-grid {
+    grid-template-columns: repeat(18, minmax(38px, 1fr));
+    grid-auto-rows: 46px;
+    gap: 3px;
+    min-width: 734px;
+  }
+  .pk9-pt-sym {
+    font-size: 0.8rem;
+  }
 }
 
 .pk9-pt-cell {
@@ -3697,8 +3877,7 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3725,13 +3904,19 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
 @media (max-width: 640px) {
   .pk9-rpg-home-banner {
     grid-template-columns: 1fr;
-    padding: 0.72rem;
-    gap: 0.65rem;
+    padding: 0.9rem;
+    gap: 0.7rem;
     border-radius: 0.95rem;
   }
   .pk9-rpg-home-avatar-col {
-    gap: 0.65rem;
-    align-items: flex-start;
+    gap: 0.72rem;
+    align-items: center;
+  }
+  .pk9-rpg-home-banner .pk9-avatar-stage.is-lg,
+  .pk9-card .pk9-avatar-stage.is-lg {
+    width: 70px;
+    height: 70px;
+    margin: 15px 12px 13px 16px;
   }
   .pk9-rpg-avatar-box {
     width: 48px;
@@ -3965,8 +4150,7 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
 .pk9-mob-hub-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.56);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.68);
 }
 
 .pk9-mob-hub-panel {
@@ -4150,7 +4334,7 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
   font-size: 0.73rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .pk9-weekly-task-chip.warn {
@@ -4254,7 +4438,7 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
   font-size: 0.68rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .pk9-idcard-preview-open-btn:hover {
@@ -4438,28 +4622,36 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
 @media (min-width: 1025px) and (max-width: 1380px) {
   .pk9-topbar {
     padding: 0 1rem;
-    gap: 0.6rem;
+    gap: 0.55rem;
   }
   .pk9-topbar-actions {
-    gap: 0.4rem;
+    gap: 0.38rem;
   }
   .pk9-xp-chip {
-    padding: 0.36rem 0.65rem;
-    font-size: 0.78rem;
+    padding: 0.36rem 0.62rem;
+    font-size: 0.77rem;
   }
   .pk9-auth-btn {
-    padding: 0.44rem 0.78rem;
-    font-size: 0.81rem;
+    padding: 0.42rem 0.76rem;
+    font-size: 0.8rem;
   }
   .pk9-auth-btn .hide-xs,
-  #pk9-top-xp-chip .hide-xs {
+  #pk9-top-xp-chip .hide-xs,
+  .pk9-topbar .pk9-hide-mob-430 {
     display: none;
   }
 }
 
-@media (min-width: 1025px) and (max-width: 1180px) {
-  .pk9-cmd-trigger .pk9-kbd {
+@media (min-width: 1025px) and (max-width: 1240px) {
+  .pk9-cmd-trigger .pk9-kbd,
+  #pk9-top-khoa-chui-btn .hide-xs,
+  .pk9-topbar .pk9-hide-compact {
     display: none;
+  }
+  .pk9-cmd-trigger {
+    flex: 1 1 130px;
+    min-width: 120px;
+    padding: 0.44rem 0.72rem;
   }
 }
 
@@ -4552,16 +4744,14 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
   }
 }
 
-/* Frosted Topbar, Sidebar Polish & Glow Beam Indicator */
+/* Solid High-Contrast Topbar, Sidebar Polish & Glow Beam Indicator (Zero Blur Jank) */
 .pk9-topbar {
-  background: rgba(255, 255, 255, 0.84);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 6px 24px -16px rgba(10, 22, 42, 0.14);
 }
 
 html.dark .pk9-topbar {
-  background: rgba(5, 11, 20, 0.88);
+  background: rgba(5, 11, 20, 0.95);
   border-bottom-color: rgba(127, 192, 222, 0.18);
   box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.72);
 }
@@ -4675,7 +4865,7 @@ html.dark .pk9-shop-card::after {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .pk9-card {
+  .pk9-card:hover {
     background-image: radial-gradient(
       260px circle at var(--mx, -999px) var(--my, -999px),
       rgba(212, 175, 55, 0.085),
@@ -4836,8 +5026,8 @@ html.dark .pk9-shop-card::after {
   animation: pk9CardReveal 0.36s var(--pk9-ease-snappy) forwards;
 }
 
-/* Mobile GPU Turbo Mode (Smooth 60fps Scroll on iOS & Android) */
-@media (max-width: 768px) {
+/* Tablet & Mobile GPU Turbo Mode (Smooth 60fps Scroll on iOS, Android & Shrunk Windows) */
+@media (max-width: 1024px) {
   .pk9-topbar,
   .pk9-mobile-bottom-nav,
   .pk9-hero-stats-card,
@@ -4846,10 +5036,10 @@ html.dark .pk9-shop-card::after {
     -webkit-backdrop-filter: none;
   }
   .pk9-topbar {
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(255, 255, 255, 0.97);
   }
   html.dark .pk9-topbar {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(5, 11, 20, 0.96);
   }
   .pk9-hero-orb-1,
   .pk9-hero-orb-2 {
