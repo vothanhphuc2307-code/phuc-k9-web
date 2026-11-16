@@ -60,7 +60,9 @@ async function loadJourneyLeaders(redis, grade = '2K9') {
         display_name: meta?.display_name || uname,
         grade: meta?.grade || safeGrade,
         outfit_icon: meta?.outfit_icon || '🧑‍🎓',
+        outfit_id: meta?.outfit_id || 'outfit-scholar',
         frame_class: meta?.frame_class || 'pk9-frame-bronze',
+        aura_class: meta?.aura_class || 'pk9-aura-spark',
         best_score: score,
         islands_cleared: Number(meta?.islands_cleared || 0),
         stars_total: Number(meta?.stars_total || 0),
@@ -909,7 +911,9 @@ async function handleRpgRequest(redis, req, res, session, action) {
           display_name: u.display_name || u.username,
           grade,
           outfit_icon: snap.equipped_details?.outfit?.icon || '🧑‍🎓',
+          outfit_id: snap.equipped_details?.outfit?.id || 'outfit-scholar',
           frame_class: snap.equipped_details?.frame?.cssClass || 'pk9-frame-bronze',
+          aura_class: snap.equipped_details?.aura?.cssClass || '',
           islands_cleared: islands.filter(x => Number(x?.stars || 0) > 0).length,
           stars_total: islands.reduce((s, x) => s + Number(x?.stars || 0), 0)
         };
@@ -1168,9 +1172,12 @@ module.exports = async function handler(req, res) {
           badges: computeBadges({ ...u, xp: baseXp }, x),
           rpg_tier: rpgSnap.tier?.name || 'Bậc Đồng',
           rpg_frame: rpgSnap.equipped_details?.frame?.cssClass || 'pk9-frame-bronze',
+          rpg_aura: rpgSnap.equipped_details?.aura?.cssClass || '',
           rpg_title: rpgSnap.equipped_details?.title?.name || '',
           rpg_pet: rpgSnap.equipped_details?.pet?.icon || '',
+          rpg_pet_id: rpgSnap.equipped_details?.pet?.id || '',
           rpg_outfit: rpgSnap.equipped_details?.outfit?.icon || '',
+          rpg_outfit_id: rpgSnap.equipped_details?.outfit?.id || 'outfit-scholar',
           isRegisteredUser: true,
           updatedAt: x.updatedAt || u.last_active || u.created_at || ''
         });
@@ -2132,9 +2139,10 @@ module.exports = async function handler(req, res) {
           streak: 1,
           tier: { id: 'bronze', name: 'Bậc Đồng', icon: '🥉' },
           equipped_details: {
-            outfit: { id: 'outfit-scholar', name: 'Áo Học Giả K9', icon: '🧑‍🎓' },
-            frame: { id: 'frame-bronze', name: 'Khung Đồng K9', icon: '🥉', cssClass: 'pk9-frame-bronze' },
-            title: { id: 'title-tanbinh', name: 'Tân Binh K9', icon: '🌱' },
+            outfit: { id: 'outfit-scholar', name: 'Áo Blouse Thủ Khoa', icon: '🧑‍🎓' },
+            frame: { id: 'frame-bronze', name: 'Khung Tân Binh Đồng', icon: '🥉', cssClass: 'pk9-frame-bronze' },
+            aura: { id: 'aura-none', name: 'Khí Tức Khởi Nguyên', icon: '✨', cssClass: 'pk9-aura-spark' },
+            title: { id: 'title-tanbinh', name: 'Tân Binh Bứt Phá', icon: '⚡' },
             pet: null,
             cardbg: { id: 'cardbg-ocean', name: 'Thẻ Đại Dương', icon: '🌊', cssClass: 'pk9-cardbg-ocean' }
           },

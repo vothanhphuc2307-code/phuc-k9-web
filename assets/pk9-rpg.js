@@ -557,6 +557,7 @@
 
     shopTab: 'shop', // 'shop' | 'inventory'
     shopCat: 'ALL',
+    shopPreview: {}, // { outfit?, aura?, frame?, pet?, title?, cardbg? }
 
     ptMode: 'lookup', // 'lookup' | 'gacha'
     ptSearch: '',
@@ -598,15 +599,16 @@
       gold: 180,
       diamonds: 5,
       tier: { name: 'Bậc Đồng', icon: '🥉', color: '#b45309' },
-      equipped: { outfit: 'outfit-scholar', frame: 'frame-bronze', title: 'title-tanbinh', cardbg: 'cardbg-ocean', pet: null },
+      equipped: { outfit: 'outfit-scholar', aura: 'aura-none', frame: 'frame-bronze', title: 'title-tanbinh', cardbg: 'cardbg-ocean', pet: null },
       equipped_details: {
         outfit: { id: 'outfit-scholar', name: 'Áo Blouse Thủ Khoa', icon: '🧑‍🎓' },
+        aura: { id: 'aura-none', name: 'Khí Tức Khởi Nguyên', icon: '✨', cssClass: 'pk9-aura-spark' },
         frame: { id: 'frame-bronze', name: 'Khung Tân Binh Đồng', icon: '🥉', cssClass: 'pk9-frame-bronze' },
         title: { id: 'title-tanbinh', name: 'Tân Binh Bứt Phá', icon: '⚡' },
         cardbg: { id: 'cardbg-ocean', name: 'Nền Đại Dương Xanh', icon: '🌊', cssClass: 'pk9-cardbg-ocean' },
         pet: null
       },
-      inventory: ['outfit-scholar', 'frame-bronze', 'title-tanbinh', 'cardbg-ocean'],
+      inventory: ['outfit-scholar', 'aura-none', 'frame-bronze', 'title-tanbinh', 'cardbg-ocean'],
       consumables: { xp_boost: 0, gold_charm: 0 },
       checkin: { checked_today: false, total_days: 0 },
       daily: { date: '', practice_count: 0, srs_count: 0, exam_count: 0, study_count: 0, gold_earned_today: 0, xp_earned_today: 0, claimed: {} },
@@ -1412,15 +1414,27 @@
     return `
       <div class="pk9-rpg-home-banner">
         <div class="pk9-rpg-home-avatar-col">
+          ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+            size: 'md',
+            outfitId: eq.outfit?.id || 'outfit-scholar',
+            frameClass: eq.frame?.cssClass || 'pk9-frame-bronze',
+            auraClass: eq.aura ? (eq.aura.cssClass || eq.aura.id) : '',
+            petId: eq.pet?.id || '',
+            petIcon: eq.pet?.icon || '',
+            petName: eq.pet?.name || '',
+            navTab: 'idcard',
+            title: 'Xem Nhân vật 3D & Thẻ QR'
+          }) : `
           <div class="pk9-rpg-avatar-box ${esc(eq.frame?.cssClass || 'pk9-frame-bronze')}" data-nav-tab="idcard" title="Xem Nhân vật & Thẻ QR">
             <span class="pk9-rpg-outfit">${eq.outfit?.icon || '🧑‍🎓'}</span>
             ${eq.pet?.icon ? `<span class="pk9-rpg-pet-badge" title="${esc(eq.pet.name)}">${eq.pet.icon}</span>` : ''}
-          </div>
+          </div>`}
           <div style="min-width:0;">
             <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
               <strong style="font-size:0.96rem;">${esc(user?.display_name || 'Khách Học Tập K9')}</strong>
               <span class="pk9-badge pk9-badge-subj">${tier.icon} ${esc(tier.name)}</span>
               ${eq.title ? `<span class="pk9-badge pk9-badge-code">${eq.title.icon} ${esc(eq.title.name)}</span>` : ''}
+              ${eq.aura && eq.aura.id !== 'aura-none' ? `<span class="pk9-badge pk9-badge-hot">${eq.aura.icon} ${esc(eq.aura.name)}</span>` : ''}
             </div>
             <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
               ${user ? `SBD: <b>${esc(rpg.sbd || 'K9')}</b> • Đã chinh phục <b>${rpg.questions_conquered || 0}</b> câu hỏi • Bảng tuần hoàn: <b>${ptUnlocked}/118</b>` : '🔒 <b>Chế độ Khách (BXH đang khóa)</b> — Đăng ký miễn phí để mở khóa BXH, giữ 180 Vàng & 5 Kim cương!'}
@@ -1709,21 +1723,51 @@
   }
 
   // ========================================================================
-  // TAB B: CỬA HÀNG & TÚI ĐỒ (SHOP & INVENTORY)
+  // TAB B: CỬA HÀNG 3D & TÚI ĐỒ ANIME / SIÊU ANH HÙNG (SHOP & INVENTORY)
   // ========================================================================
+  function resolvePreviewLoadout(rpg) {
+    const eq = rpg.equipped_details || {};
+    const catalogMap = new Map((RPG_UI.catalog || []).map(x => [x.id, x]));
+    const pv = RPG_UI.shopPreview || {};
+    const pick = (cat, fallback) => {
+      if (pv[cat] && catalogMap.has(pv[cat])) return catalogMap.get(pv[cat]);
+      return fallback || null;
+    };
+    return {
+      outfit: pick('outfit', eq.outfit || { id: 'outfit-scholar', name: 'Áo Blouse Thủ Khoa', icon: '🧑‍🎓' }),
+      aura: pick('aura', eq.aura),
+      frame: pick('frame', eq.frame || { id: 'frame-bronze', name: 'Khung Tân Binh Đồng', icon: '🥉', cssClass: 'pk9-frame-bronze' }),
+      pet: pick('pet', eq.pet),
+      title: pick('title', eq.title),
+      cardbg: pick('cardbg', eq.cardbg || { id: 'cardbg-ocean', name: 'Nền Đại Dương Xanh', icon: '🌊', cssClass: 'pk9-cardbg-ocean' })
+    };
+  }
+
   function renderShopTab() {
     const root = document.getElementById('tab-shop');
     if (!root) return;
     const rpg = getRpgState();
+    const curUser = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
+    const isAdminFull = Boolean(rpg.admin_full_unlock || (curUser?.is_admin && (curUser?.username === 'phucadmin' || curUser?.role === 'admin')));
     const items = RPG_UI.catalog.length ? RPG_UI.catalog : [];
     const invSet = new Set(rpg.inventory || []);
+    if (isAdminFull) {
+      for (const it of items) {
+        if (!it.consumable) invSet.add(it.id);
+      }
+    }
     const eq = rpg.equipped || {};
+    const previewLoadout = resolvePreviewLoadout(rpg);
+    const pv = RPG_UI.shopPreview || {};
+    const isPreviewing = Object.values(pv).some(Boolean);
+    const models = window.PK9_RPG_MODELS;
 
     const cats = [
-      { id: 'ALL', label: '🔥 Tất cả' },
-      { id: 'outfit', label: '👕 Trang phục' },
-      { id: 'frame', label: '🖼️ Khung Avatar' },
-      { id: 'pet', label: '🐾 Thú cưng' },
+      { id: 'ALL', label: `🌟 Tất cả (${items.length})` },
+      { id: 'outfit', label: '👕 Trang phục 3D' },
+      { id: 'aura', label: '🌀 Hào quang Aura' },
+      { id: 'frame', label: '🖼️ Khung Anime' },
+      { id: 'pet', label: '🐾 Linh thú 3D' },
       { id: 'title', label: '🏅 Danh hiệu' },
       { id: 'cardbg', label: '🪪 Nền Thẻ QR' },
       { id: 'consumable', label: '⚡ Vật phẩm' }
@@ -1735,30 +1779,77 @@
       return true;
     });
 
+    const slotsMeta = [
+      { key: 'outfit', label: 'Trang phục 3D', val: previewLoadout.outfit },
+      { key: 'aura', label: 'Hào quang Aura', val: previewLoadout.aura },
+      { key: 'frame', label: 'Khung Anime', val: previewLoadout.frame },
+      { key: 'pet', label: 'Linh thú 3D', val: previewLoadout.pet },
+      { key: 'title', label: 'Danh hiệu', val: previewLoadout.title },
+      { key: 'cardbg', label: 'Nền Thẻ QR', val: previewLoadout.cardbg }
+    ];
+
     root.innerHTML = `
       <div class="pk9-exam-hub">
         <div class="pk9-exam-hero">
           <div class="pk9-exam-hero-grid">
             <div>
-              <h2 style="margin:0 0 0.45rem;font-size:1.5rem;font-weight:900;">🛍️ Cửa Hàng Trang Bị & 🎒 Túi Đồ Học Viên</h2>
+              <h2 style="margin:0 0 0.45rem;font-size:1.5rem;font-weight:900;">🛍️ Siêu Thị 3D Trang Bị & Hào Quang Anime Phúc K9</h2>
               <p style="margin:0;color:rgba(255,255,255,0.88);font-size:0.9rem;">
-                Dùng Vàng & Kim cương kiếm từ việc học để mở khóa Khung Avatar nổi bật trên BXH, Thú cưng, Danh hiệu, Nền Thẻ QR và Bùa Nhân Đôi EXP!
+                Mở khóa mô hình Chiến binh 3D, Hào quang Siêu Anh Hùng & Anime, Khung xoay đa tầng, Linh thú 3D và Thẻ QR Holographic!
               </p>
+              ${isAdminFull ? `<div style="margin-top:0.55rem;"><span class="pk9-badge" style="background:linear-gradient(135deg,#eab308,#e11d48);color:#fff;font-weight:900;padding:0.28rem 0.72rem;">👑 ĐẶC QUYỀN ADMIN: MỞ KHÓA FULL VẬT PHẨM & 118 NGUYÊN TỐ — KHÔNG CẦN CÀY ĐIỂM</span></div>` : ''}
             </div>
             <div>${renderCurrencyStrip(rpg)}</div>
           </div>
         </div>
 
-        <div class="pk9-card" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.75rem;">
-          <div>
-            <div style="font-weight:900;font-size:0.95rem;">💱 Quầy Quy Đổi Vàng ⇄ Kim Cương</div>
-            <div style="font-size:0.78rem;color:var(--pk9-text-muted);">Tỉ giá chuẩn: <b>1 💎 = 50 🪙 Vàng</b> • <b>100 🪙 Vàng = 2 💎</b></div>
+        <!-- LIVE 3D HERO DRESSING ROOM PEDESTAL -->
+        <section class="pk9-shop-wardrobe-stage" aria-label="Sân khấu nhân vật 3D">
+          <div class="pk9-wardrobe-pedestal-wrap ${esc(previewLoadout.cardbg?.cssClass || '')}">
+            <div class="pk9-pedestal-model-3d">
+              ${models?.renderHeroSceneSvg ? models.renderHeroSceneSvg(previewLoadout, { size: 214 }) : `<span style="font-size:4.2rem;">${previewLoadout.outfit?.icon || '🧑‍🎓'}</span>`}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.35rem;margin-top:0.25rem;z-index:3;">
+              ${previewLoadout.title ? `<span class="pk9-badge pk9-badge-code" style="font-size:0.7rem;">${previewLoadout.title.icon || '🏅'} ${esc(previewLoadout.title.name)}</span>` : ''}
+              ${previewLoadout.aura ? `<span class="pk9-badge pk9-badge-hot" style="font-size:0.7rem;">${previewLoadout.aura.icon || '🌀'} ${esc(previewLoadout.aura.name)}</span>` : ''}
+            </div>
           </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button type="button" class="pk9-btn-exam-ghost" data-rpg-convert="diamond_to_gold">💎 Đổi 1 Kim cương → +50 Vàng</button>
-            <button type="button" class="pk9-btn-exam-ghost" data-rpg-convert="gold_to_diamond">🪙 Đổi 100 Vàng → +2 Kim cương</button>
+
+          <div class="pk9-wardrobe-details">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.6rem;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.06em;color:#7dd3fc;text-transform:uppercase;">
+                  ${isPreviewing ? '👁️ CHẾ ĐỘ MẶC THỬ 3D TRỰC TIẾP' : '⚡ TẠO HÌNH NHÂN VẬT 3D ĐANG TRANG BỊ'}
+                </div>
+                <h3 style="margin:0.15rem 0 0;font-size:1.12rem;font-weight:900;color:#ffffff;">
+                  ${esc(previewLoadout.outfit?.name || 'Chiến Binh K9')}
+                </h3>
+              </div>
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                ${isPreviewing ? `<button type="button" class="pk9-btn-exam-primary" data-rpg-try-clear="1" style="padding:0.36rem 0.72rem;font-size:0.76rem;">↩️ Về đồ đang mặc</button>` : ''}
+                ${rpg.equipped?.aura ? `<button type="button" class="pk9-btn-exam-ghost" data-rpg-unequip="aura" style="padding:0.34rem 0.65rem;font-size:0.74rem;color:#e2e8f0;border-color:rgba(148,163,184,0.35);">Tắt Aura</button>` : ''}
+                ${rpg.equipped?.pet ? `<button type="button" class="pk9-btn-exam-ghost" data-rpg-unequip="pet" style="padding:0.34rem 0.65rem;font-size:0.74rem;color:#e2e8f0;border-color:rgba(148,163,184,0.35);">Cất Pet</button>` : ''}
+              </div>
+            </div>
+
+            <div class="pk9-loadout-grid">
+              ${slotsMeta.map(s => `
+                <button type="button" class="pk9-loadout-slot ${pv[s.key] ? 'is-previewing' : ''}" data-rpg-try-slot="${s.key}" title="Lọc nhanh danh mục ${esc(s.label)}">
+                  <span class="pk9-loadout-kicker">${esc(s.label)}</span>
+                  <span class="pk9-loadout-val">${s.val ? `${s.val.icon || '✨'} ${esc(s.val.name)}` : '— Chưa đeo —'}</span>
+                </button>
+              `).join('')}
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.65rem;padding-top:0.55rem;border-top:1px dashed rgba(148,163,184,0.28);font-size:0.78rem;color:#cbd5e1;">
+              <span>💡 Bấm <b>“👁️ Thử 3D”</b> ở bất kỳ thẻ nào bên dưới để phối đồ & xem Aura tỏa sáng trước khi mua!</span>
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                <button type="button" class="pk9-btn-exam-ghost" data-rpg-convert="diamond_to_gold" style="padding:0.32rem 0.62rem;font-size:0.73rem;color:#fde047;border-color:rgba(250,204,21,0.38);">💎 1 → +50 🪙</button>
+                <button type="button" class="pk9-btn-exam-ghost" data-rpg-convert="gold_to_diamond" style="padding:0.32rem 0.62rem;font-size:0.73rem;color:#93c5fd;border-color:rgba(96,165,250,0.38);">🪙 100 → +2 💎</button>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
 
         <div class="pk9-exam-toolbar">
           <div class="pk9-exam-tabs">
@@ -1772,22 +1863,27 @@
           ${list.map(it => {
             const owned = !it.consumable && invSet.has(it.id);
             const equipped = owned && eq[it.category] === it.id;
-            const priceLabel = it.price === 0 ? 'Miễn phí' : it.currency === 'diamonds' ? `💎 ${it.price} Kim cương` : `🪙 ${it.price} Vàng`;
+            const isPreviewed = pv[it.category] === it.id;
+            const priceLabel = isAdminFull
+              ? (it.consumable ? '👑 Miễn phí (Admin)' : '👑 Đã mở (Admin)')
+              : (it.price === 0 ? 'Miễn phí' : it.currency === 'diamonds' ? `💎 ${it.price} Kim cương` : `🪙 ${it.price} Vàng`);
             return `
-              <article class="pk9-shop-card ${equipped ? 'equipped' : ''}">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
-                  <div class="pk9-shop-icon ${esc(it.cssClass || '')}">${it.icon}</div>
-                  <span class="pk9-badge pk9-rarity-${esc(it.rarity || 'common')}">${esc((it.rarity || 'common').toUpperCase())}</span>
-                </div>
-                <div style="font-weight:900;font-size:0.95rem;margin-top:0.55rem;">${esc(it.name)}</div>
-                <div style="font-size:0.78rem;color:var(--pk9-text-muted);line-height:1.45;flex:1;margin:0.25rem 0 0.7rem;">${esc(it.desc)}</div>
+              <article class="pk9-shop-card has-3d-stage ${equipped ? 'equipped' : ''} ${isPreviewed ? 'is-previewed' : ''}">
+                ${models?.renderCatalogStageHtml ? models.renderCatalogStageHtml(it, isPreviewed) : `
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
+                    <div class="pk9-shop-icon ${esc(it.cssClass || '')}">${it.icon}</div>
+                    <span class="pk9-badge pk9-rarity-${esc(it.rarity || 'common')}">${esc((it.rarity || 'common').toUpperCase())}</span>
+                  </div>
+                `}
+                <div style="font-weight:900;font-size:0.93rem;margin-top:0.2rem;line-height:1.3;">${esc(it.name)}</div>
+                <div style="font-size:0.76rem;color:var(--pk9-text-muted);line-height:1.45;flex:1;margin:0.1rem 0 0.45rem;">${esc(it.desc)}</div>
                 <div class="pk9-shop-foot">
-                  <span class="pk9-shop-price" style="font-weight:800;font-size:0.82rem;color:${it.currency === 'diamonds' ? '#7c3aed' : '#d97706'};">${priceLabel}</span>
+                  <span class="pk9-shop-price" style="font-weight:800;font-size:0.8rem;color:${isAdminFull ? '#eab308' : (it.currency === 'diamonds' ? '#a855f7' : '#d97706')};">${priceLabel}</span>
                   ${it.consumable ? `
-                    <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-buy="${esc(it.id)}">🛒 Mua & Dùng</button>
+                    <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-buy="${esc(it.id)}">${isAdminFull ? '👑 Nhận miễn phí' : '🛒 Mua & Dùng'}</button>
                   ` : equipped ? `
-                    ${it.category === 'pet'
-                      ? `<button type="button" class="pk9-btn-exam-ghost pk9-shop-act-btn" data-rpg-unequip="pet">✓ Đang mặc (Tháo)</button>`
+                    ${(it.category === 'pet' || it.category === 'aura')
+                      ? `<button type="button" class="pk9-btn-exam-ghost pk9-shop-act-btn" data-rpg-unequip="${esc(it.category)}">✓ Đang bật (Tháo)</button>`
                       : `<span class="pk9-badge pk9-badge-verified">✓ Đang trang bị</span>`}
                   ` : owned ? `
                     <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-equip="${esc(it.id)}">⚡ Trang bị</button>
@@ -1840,13 +1936,17 @@
             <div>
               <h2 style="margin:0 0 0.45rem;font-size:1.5rem;font-weight:900;">⚗️ Bảng Tuần Hoàn 118 Nguyên Tố Hóa Học (IUPAC)</h2>
               <p style="margin:0;color:rgba(255,255,255,0.88);font-size:0.9rem;">
-                Đã mở khóa <b>${unlockedSet.size} / 118</b> nguyên tố • 🎫 Vé chọn đích danh: <b>${tickets}</b> (Mở thêm <b>${rpg.periodic?.next_ticket_in || 10}</b> ô được tặng +1 Vé chọn & +1 💎). Bấm sang <b>Tra cứu 118 ô</b> bất cứ lúc nào khi ôn bài!
+                ${unlockedSet.size >= 118
+                  ? `🏆 Đã mở khóa trọn bộ <b>118 / 118</b> nguyên tố Hóa học IUPAC • Bấm vào từng ô để xem cấu hình e & mẹo giải nhanh!`
+                  : `Đã mở khóa <b>${unlockedSet.size} / 118</b> nguyên tố • 🎫 Vé chọn đích danh: <b>${tickets}</b> (Mở thêm <b>${rpg.periodic?.next_ticket_in ?? 10}</b> ô được tặng +1 Vé chọn & +1 💎). Bấm sang <b>Tra cứu 118 ô</b> bất cứ lúc nào khi ôn bài!`}
               </p>
             </div>
             <div class="pk9-pt-hero-actions">
               ${renderCurrencyStrip(rpg)}
               <div class="pk9-pt-hero-btns">
-                <button type="button" class="pk9-btn-hero-main" data-pt-gacha="random" style="padding:0.5rem 0.9rem;font-size:0.82rem;">🎲 Mở Ngẫu Nhiên (120 🪙)</button>
+                ${unlockedSet.size >= 118
+                  ? `<span class="pk9-badge pk9-badge-verified" style="padding:0.45rem 0.85rem;font-size:0.8rem;">🏆 Đã mở đủ 118/118 nguyên tố</span>`
+                  : `<button type="button" class="pk9-btn-hero-main" data-pt-gacha="random" style="padding:0.5rem 0.9rem;font-size:0.82rem;">🎲 Mở Ngẫu Nhiên (120 🪙)</button>`}
                 ${tickets > 0 && RPG_UI.ptMode === 'gacha' && !unlockedSet.has(sel.z) ? `
                   <button type="button" class="pk9-btn-hero-sec" data-pt-gacha="ticket" data-pt-z="${sel.z}" style="padding:0.5rem 0.9rem;font-size:0.82rem;">🎫 Dùng Vé Mở Ô #${sel.z}</button>
                 ` : ''}
@@ -2046,15 +2146,25 @@
               <h3 style="margin:0;font-size:1.12rem;font-weight:900;">🧑‍🎓 Nhân Vật & Chỉ Số Học Viên</h3>
               <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="shop" style="padding:0.35rem 0.7rem;font-size:0.78rem;">🛍️ Thay đồ</button>
             </div>
-            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:1.15rem;flex-wrap:wrap;">
+              ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+                size: 'lg',
+                outfitId: eq.outfit?.id || 'outfit-scholar',
+                frameClass: eq.frame?.cssClass || 'pk9-frame-bronze',
+                auraClass: eq.aura ? (eq.aura.cssClass || eq.aura.id) : '',
+                petId: eq.pet?.id || '',
+                petIcon: eq.pet?.icon || '',
+                petName: eq.pet?.name || '',
+                title: 'Nhân vật 3D Phúc K9'
+              }) : `
               <div class="pk9-rpg-avatar-box lg ${esc(eq.frame?.cssClass || 'pk9-frame-bronze')}">
                 <span class="pk9-rpg-outfit">${eq.outfit?.icon || '🧑‍🎓'}</span>
                 ${eq.pet?.icon ? `<span class="pk9-rpg-pet-badge">${eq.pet.icon}</span>` : ''}
-              </div>
+              </div>`}
               <div style="min-width:0;flex:1;">
                 <div style="font-size:1.15rem;font-weight:900;">${esc(displayName)}</div>
                 <div style="font-size:0.82rem;color:var(--pk9-text-muted);margin:0.15rem 0 0.45rem;">
-                  ${tier.icon} <b>${esc(tier.name)}</b> ${eq.title ? `• ${eq.title.icon} ${esc(eq.title.name)}` : ''}
+                  ${tier.icon} <b>${esc(tier.name)}</b> ${eq.title ? `• ${eq.title.icon} ${esc(eq.title.name)}` : ''} ${eq.aura && eq.aura.id !== 'aura-none' ? `• ${eq.aura.icon} ${esc(eq.aura.name)}` : ''}
                 </div>
                 ${tier.nextTier ? `<div style="font-size:0.78rem;color:var(--pk9-primary);margin-bottom:0.45rem;">Còn <b>${tier.nextTier.remainingXp} EXP</b> → ${esc(tier.nextTier.name)}</div>` : ''}
                 ${renderCurrencyStrip(rpg)}
@@ -2093,10 +2203,18 @@
                 <div class="pk9-idcard-brand-sub">THẺ HỌC VIÊN ĐIỆN TỬ CHÍNH THỨC • STUDENT ID</div>
                 <div class="pk9-idcard-name">${esc(displayName)}</div>
               </div>
+              ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+                size: 'sm',
+                outfitId: eq.outfit?.id || 'outfit-scholar',
+                frameClass: eq.frame?.cssClass || 'pk9-frame-bronze',
+                auraClass: eq.aura ? (eq.aura.cssClass || eq.aura.id) : '',
+                petId: eq.pet?.id || '',
+                petIcon: eq.pet?.icon || ''
+              }) : `
               <div class="pk9-idcard-avatar-pill" title="Nhân vật học viên">
                 <span>${eq.outfit?.icon || '🧑‍🎓'}</span>
                 ${eq.pet?.icon ? `<small>${eq.pet.icon}</small>` : ''}
-              </div>
+              </div>`}
             </div>
 
             <div class="pk9-idcard-body">
@@ -2147,8 +2265,12 @@
     const grad = ctx.createLinearGradient(0, 0, 960, 540);
     const bgId = eq.cardbg?.id || 'cardbg-ocean';
     if (bgId === 'cardbg-emerald') { grad.addColorStop(0, '#064e3b'); grad.addColorStop(0.6, '#059669'); grad.addColorStop(1, '#0d9488'); }
+    else if (bgId === 'cardbg-sakura') { grad.addColorStop(0, '#1e1b4b'); grad.addColorStop(0.55, '#4c1d95'); grad.addColorStop(1, '#be185d'); }
     else if (bgId === 'cardbg-sunset') { grad.addColorStop(0, '#7c2d12'); grad.addColorStop(0.55, '#ea580c'); grad.addColorStop(1, '#db2777'); }
+    else if (bgId === 'cardbg-crimson') { grad.addColorStop(0, '#18080b'); grad.addColorStop(0.55, '#7f1d1d'); grad.addColorStop(1, '#be123c'); }
     else if (bgId === 'cardbg-cyber') { grad.addColorStop(0, '#1e1b4b'); grad.addColorStop(0.6, '#6d28d9'); grad.addColorStop(1, '#ec4899'); }
+    else if (bgId === 'cardbg-starlight') { grad.addColorStop(0, '#060919'); grad.addColorStop(0.55, '#1e1b4b'); grad.addColorStop(1, '#312e81'); }
+    else if (bgId === 'cardbg-royal') { grad.addColorStop(0, '#09090b'); grad.addColorStop(0.55, '#1c1917'); grad.addColorStop(1, '#78350f'); }
     else { grad.addColorStop(0, '#0f172a'); grad.addColorStop(0.6, '#1d4ed8'); grad.addColorStop(1, '#0d9488'); }
 
     ctx.fillStyle = grad;
@@ -2329,10 +2451,19 @@
               <div class="pk9-idcard-name" style="font-size:1.22rem;">${esc(card.display_name)}</div>
               <div style="font-size:0.76rem;opacity:0.9;">@${esc(card.username)} ${eq.title ? `• ${eq.title.icon} ${esc(eq.title.name)}` : ''}</div>
             </div>
+            ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+              size: 'md',
+              outfitId: eq.outfit?.id || 'outfit-scholar',
+              frameClass: eq.frame?.cssClass || 'pk9-frame-bronze',
+              auraClass: eq.aura ? (eq.aura.cssClass || eq.aura.id) : '',
+              petId: eq.pet?.id || '',
+              petIcon: eq.pet?.icon || '',
+              petName: eq.pet?.name || ''
+            }) : `
             <div class="pk9-rpg-avatar-box ${esc(eq.frame?.cssClass || 'pk9-frame-bronze')}" style="width:54px;height:54px;flex-shrink:0;">
               <span class="pk9-rpg-outfit">${eq.outfit?.icon || '🧑‍🎓'}</span>
               ${eq.pet?.icon ? `<span class="pk9-rpg-pet-badge">${eq.pet.icon}</span>` : ''}
-            </div>
+            </div>`}
           </div>
 
           <div class="pk9-scanned-stats-grid">
@@ -2555,12 +2686,48 @@
       const shopCat = e.target.closest('[data-shop-cat]');
       if (shopCat) { RPG_UI.shopCat = shopCat.getAttribute('data-shop-cat'); renderShopTab(); return; }
 
+      const tryBtn = e.target.closest('[data-rpg-try]');
+      if (tryBtn) {
+        const id = tryBtn.getAttribute('data-rpg-try');
+        const it = (RPG_UI.catalog || []).find(x => x.id === id);
+        if (it) {
+          RPG_UI.shopPreview[it.category] = RPG_UI.shopPreview[it.category] === id ? null : id;
+          renderShopTab();
+        }
+        return;
+      }
+      if (e.target.closest('[data-rpg-try-clear]')) {
+        RPG_UI.shopPreview = {};
+        renderShopTab();
+        return;
+      }
+      const trySlotBtn = e.target.closest('[data-rpg-try-slot]');
+      if (trySlotBtn) {
+        RPG_UI.shopTab = 'shop';
+        RPG_UI.shopCat = trySlotBtn.getAttribute('data-rpg-try-slot') || 'ALL';
+        renderShopTab();
+        return;
+      }
+
       const buyBtn = e.target.closest('[data-rpg-buy]');
-      if (buyBtn) { await rpgPost('rpg-buy', { item_id: buyBtn.getAttribute('data-rpg-buy') }); return; }
+      if (buyBtn) {
+        const res = await rpgPost('rpg-buy', { item_id: buyBtn.getAttribute('data-rpg-buy') });
+        if (res.ok) RPG_UI.shopPreview = {};
+        return;
+      }
       const equipBtn = e.target.closest('[data-rpg-equip]');
-      if (equipBtn) { await rpgPost('rpg-equip', { item_id: equipBtn.getAttribute('data-rpg-equip') }); return; }
+      if (equipBtn) {
+        const res = await rpgPost('rpg-equip', { item_id: equipBtn.getAttribute('data-rpg-equip') });
+        if (res.ok) RPG_UI.shopPreview = {};
+        return;
+      }
       const unequipBtn = e.target.closest('[data-rpg-unequip]');
-      if (unequipBtn) { await rpgPost('rpg-equip', { unequip: unequipBtn.getAttribute('data-rpg-unequip') }); return; }
+      if (unequipBtn) {
+        const cat = unequipBtn.getAttribute('data-rpg-unequip');
+        const res = await rpgPost('rpg-equip', { unequip: cat });
+        if (res.ok && cat) delete RPG_UI.shopPreview[cat];
+        return;
+      }
       const convBtn = e.target.closest('[data-rpg-convert]');
       if (convBtn) { await rpgPost('rpg-convert', { direction: convBtn.getAttribute('data-rpg-convert'), amount: 1 }); return; }
 

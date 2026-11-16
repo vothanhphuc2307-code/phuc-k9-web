@@ -912,7 +912,16 @@
         const eqFrame = rpgInfo.equipped_details?.frame?.cssClass || 'pk9-frame-bronze';
         const avatarThumb = safeAvatar
           ? `<img class="${esc(eqFrame)}" src="${esc(safeAvatar)}" alt="${esc(APP.user.display_name || '')}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
-          : `<div class="${esc(eqFrame)}" style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${rpgInfo.equipped_details?.outfit?.icon || esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}</div>`;
+          : (window.PK9_RPG_MODELS?.renderAvatarStageHtml
+              ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+                  size: 'sm',
+                  outfitId: rpgInfo.equipped_details?.outfit?.id || 'outfit-scholar',
+                  frameClass: eqFrame,
+                  auraClass: rpgInfo.equipped_details?.aura?.cssClass || '',
+                  petId: rpgInfo.equipped_details?.pet?.id || '',
+                  petIcon: rpgInfo.equipped_details?.pet?.icon || ''
+                })
+              : `<div class="${esc(eqFrame)}" style="width:38px;height:38px;border-radius:50%;background:${APP.isAdmin ? 'linear-gradient(135deg,#e11d48,#f59e0b)' : 'linear-gradient(135deg,#2563eb,#0d9488)'};color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${rpgInfo.equipped_details?.outfit?.icon || esc((APP.user.display_name || APP.user.username || 'K').slice(0, 1).toUpperCase())}</div>`);
         sideCard.innerHTML = `
           <div class="pk9-sf-compact-only">
             <button type="button" class="pk9-icon-btn pk9-sf-mini-btn" data-open-auth="profile" title="${esc(APP.user.display_name || APP.user.username)} — Cài đặt tài khoản">
@@ -1284,8 +1293,15 @@
             return `
               <div class="pk9-podium-card rank-${r}">
                 <div class="pk9-podium-crown">${crown}</div>
-                <div class="pk9-lb-avatar ${esc(row.rpg_frame || 'pk9-frame-bronze')}">${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
-                <div style="font-weight:900;font-size:1.02rem;">Hạng #${r} • ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''}</div>
+                ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+                  size: 'md',
+                  outfitId: row.rpg_outfit_id || 'outfit-scholar',
+                  frameClass: row.rpg_frame || 'pk9-frame-bronze',
+                  auraClass: row.rpg_aura || '',
+                  petId: row.rpg_pet_id || '',
+                  petIcon: row.rpg_pet || ''
+                }) : `<div class="pk9-lb-avatar ${esc(row.rpg_frame || 'pk9-frame-bronze')}">${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>`}
+                <div style="font-weight:900;font-size:1.02rem;margin-top:0.35rem;">Hạng #${r} • ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''}</div>
                 <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')}</div>
                 <div style="display:flex;justify-content:center;gap:0.4rem;flex-wrap:wrap;">
                   <span class="pk9-badge pk9-badge-subj">🔥 +${Number(row.weeklyXp || 0)} XP Tuần</span>
@@ -2265,8 +2281,15 @@
             return `
               <div class="pk9-podium-card rank-${r}">
                 <div class="pk9-podium-crown">${slot.crown}</div>
-                <div class="pk9-lb-avatar ${esc(row.rpg_frame || 'pk9-frame-bronze')}">${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>
-                <div style="font-weight:900;font-size:1.06rem;">${slot.title} • ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''}</div>
+                ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+                  size: 'lg',
+                  outfitId: row.rpg_outfit_id || 'outfit-scholar',
+                  frameClass: row.rpg_frame || 'pk9-frame-bronze',
+                  auraClass: row.rpg_aura || '',
+                  petId: row.rpg_pet_id || '',
+                  petIcon: row.rpg_pet || ''
+                }) : `<div class="pk9-lb-avatar ${esc(row.rpg_frame || 'pk9-frame-bronze')}">${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}</div>`}
+                <div style="font-weight:900;font-size:1.06rem;margin-top:0.45rem;">${slot.title} • ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''}</div>
                 <div style="font-size:0.79rem;color:var(--pk9-text-muted);margin:0.2rem 0 0.65rem;">
                   🏫 ${esc(row.school || 'Học viên đã đăng ký')} • Khối ${esc(row.grade || '2K9')} ${row.rpg_tier ? `• <b>${esc(row.rpg_tier)}</b>` : ''}
                 </div>
@@ -2338,9 +2361,17 @@
             ${rankBadge}
           </div>
           <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+            ${window.PK9_RPG_MODELS?.renderAvatarStageHtml ? window.PK9_RPG_MODELS.renderAvatarStageHtml({
+              size: 'sm',
+              outfitId: row.rpg_outfit_id || 'outfit-scholar',
+              frameClass: row.rpg_frame || 'pk9-frame-bronze',
+              auraClass: row.rpg_aura || '',
+              petId: row.rpg_pet_id || '',
+              petIcon: row.rpg_pet || ''
+            }) : `
             <div class="${esc(row.rpg_frame || 'pk9-frame-bronze')}" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0d9488);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">
               ${row.rpg_outfit ? esc(row.rpg_outfit) : esc((row.display_name || 'K').slice(0, 1).toUpperCase())}
-            </div>
+            </div>`}
             <div style="min-width:0;">
               <div style="font-weight:800;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 ${esc(row.display_name)} ${row.rpg_pet ? esc(row.rpg_pet) : ''} (@${esc(row.username)}) ${isMe ? '<span class="pk9-badge pk9-badge-subj">Bạn</span>' : ''}
