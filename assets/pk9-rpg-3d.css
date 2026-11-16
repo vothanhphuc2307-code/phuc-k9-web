@@ -30,10 +30,10 @@
 }
 
 @keyframes pk9LightningSnap {
-  0%, 72%, 100% { opacity: 0.28; }
-  76%, 80% { opacity: 1; filter: drop-shadow(0 0 8px #fef08a); }
-  84%, 88% { opacity: 0.4; }
-  92% { opacity: 0.95; }
+  0%, 72%, 100% { opacity: 0.34; transform: scale(1) translateZ(0); }
+  76%, 80% { opacity: 1; transform: scale(1.035) translateZ(0); }
+  84%, 88% { opacity: 0.48; transform: scale(1) translateZ(0); }
+  92% { opacity: 0.96; transform: scale(1.02) translateZ(0); }
 }
 
 /* ---------- ENHANCED ANIME AVATAR FRAMES (SAFE FOR <img> AND <div>) ---------- */
@@ -221,7 +221,6 @@
   height: 220px;
   transform-style: preserve-3d;
   animation: pk9Float3D 4.2s ease-in-out infinite;
-  will-change: transform;
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   align-items: center;
@@ -334,6 +333,16 @@
 .pk9-shop-card.has-3d-stage {
   padding: 0.78rem;
   gap: 0.4rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 312px;
+  contain: layout style paint;
+}
+
+.pk9-shop-card.pk9-offscreen *,
+.pk9-shop-wardrobe-stage.pk9-offscreen *,
+.pk9-tab-pane:not(.active) *,
+html.pk9-doc-hidden * {
+  animation-play-state: paused !important;
 }
 
 .pk9-shop-card.is-previewed {
@@ -382,7 +391,6 @@
   height: 132px;
   transform-style: preserve-3d;
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -390,6 +398,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .pk9-shop-card:hover .pk9-shop-stage-svg {
+    will-change: transform;
     transform: translateY(-4px) rotateY(14deg) rotateX(6deg) scale(1.07);
   }
 }
@@ -410,12 +419,11 @@
 .pk9-shop-cat-pill {
   font-size: 0.62rem;
   font-weight: 800;
-  color: rgba(226, 232, 240, 0.92);
-  background: rgba(15, 23, 42, 0.72);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: rgba(226, 232, 240, 0.94);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   padding: 0.14rem 0.42rem;
   border-radius: 999px;
-  backdrop-filter: blur(4px);
 }
 
 .pk9-shop-stage-topbar .pk9-badge {
@@ -429,14 +437,13 @@
   bottom: 7px;
   z-index: 5;
   border: 1px solid rgba(250, 204, 21, 0.55);
-  background: rgba(15, 23, 42, 0.84);
+  background: rgba(15, 23, 42, 0.92);
   color: #fde047;
   font-size: 0.66rem;
   font-weight: 800;
   padding: 0.18rem 0.48rem;
   border-radius: 999px;
   cursor: pointer;
-  backdrop-filter: blur(4px);
   transition: background 0.18s ease, transform 0.18s ease;
 }
 

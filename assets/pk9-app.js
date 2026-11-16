@@ -6695,7 +6695,12 @@
     const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) return;
 
-    // 1) Desktop pointer-only RAF-throttled spotlight glow (--mx / --my)
+    // 0) Pause CSS animations automatically when browser tab is backgrounded
+    document.addEventListener('visibilitychange', () => {
+      document.documentElement.classList.toggle('pk9-doc-hidden', document.hidden);
+    }, { passive: true });
+
+    // 1) Desktop pointer-only RAF-throttled spotlight glow (--mx / --my) — skip heavy SVG shop cards
     const finePointer = typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     if (finePointer) {
       let pendingEv = null;
@@ -6704,7 +6709,7 @@
       const flushSpotlight = () => {
         rafId = 0;
         if (!pendingEv) return;
-        const card = pendingEv.target?.closest?.('.pk9-card, .pk9-exam-card, .pk9-shop-card');
+        const card = pendingEv.target?.closest?.('.pk9-card, .pk9-exam-card');
         if (lastCard && lastCard !== card) {
           lastCard.style.removeProperty('--mx');
           lastCard.style.removeProperty('--my');
@@ -6730,9 +6735,9 @@
       }, { passive: true });
     }
 
-    // 2) Passive IntersectionObserver scroll reveal for below-fold cards (never hides initial cards)
+    // 2) Passive IntersectionObserver scroll reveal for active-tab below-fold cards (batched reads, zero layout thrash)
     if (typeof IntersectionObserver !== 'undefined') {
-      const revealSelector = '.pk9-grid-3 > .pk9-card, .pk9-grid-4 > .pk9-card, .pk9-exam-grid > .pk9-exam-card, .pk9-shop-grid > .pk9-shop-card';
+      const revealSelector = '.pk9-tab-pane.active .pk9-grid-3 > .pk9-card, .pk9-tab-pane.active .pk9-grid-4 > .pk9-card, .pk9-tab-pane.active .pk9-exam-grid > .pk9-exam-card';
       const io = new IntersectionObserver((entries) => {
         for (const ent of entries) {
           if (ent.isIntersecting) {
@@ -6745,26 +6750,31 @@
 
       const scanCards = () => {
         const vh = window.innerHeight || 800;
+        const candidates = [];
         document.querySelectorAll(revealSelector).forEach((el) => {
-          if (el.dataset.pk9Obs === '1') return;
+          if (el.dataset.pk9Obs !== '1') candidates.push(el);
+        });
+        if (!candidates.length) return;
+        const tops = candidates.map(el => el.getBoundingClientRect().top);
+        for (let i = 0; i < candidates.length; i++) {
+          const el = candidates[i];
           el.dataset.pk9Obs = '1';
-          const rect = el.getBoundingClientRect();
-          if (rect.top > vh + 40) {
+          if (tops[i] > vh + 40) {
             el.classList.add('pk9-scroll-wait');
             io.observe(el);
           }
-        });
+        }
       };
 
       const contentRoot = document.getElementById('main-content');
       if (contentRoot && typeof MutationObserver !== 'undefined') {
-        let scanQueued = 0;
+        let scanTimer = 0;
         new MutationObserver(() => {
-          if (scanQueued) return;
-          scanQueued = requestAnimationFrame(() => {
-            scanQueued = 0;
+          if (scanTimer) return;
+          scanTimer = setTimeout(() => {
+            scanTimer = 0;
             scanCards();
-          });
+          }, 90);
         }).observe(contentRoot, { childList: true, subtree: true });
       }
       scanCards();

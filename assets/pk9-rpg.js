@@ -1897,6 +1897,32 @@
         </div>
       </div>
     `;
+    observeShopViewportCards(root);
+  }
+
+  let _shopViewportObs = null;
+  function observeShopViewportCards(root) {
+    if (_shopViewportObs) {
+      _shopViewportObs.disconnect();
+      _shopViewportObs = null;
+    }
+    if (typeof IntersectionObserver !== 'function' || !root) return;
+    const targets = root.querySelectorAll('.pk9-shop-card.has-3d-stage, .pk9-shop-wardrobe-stage');
+    if (!targets.length) return;
+    const vh = window.innerHeight || 800;
+    const rects = Array.from(targets, el => el.getBoundingClientRect());
+    targets.forEach((el, i) => {
+      const r = rects[i];
+      if (r.bottom < -160 || r.top > vh + 160) {
+        el.classList.add('pk9-offscreen');
+      }
+    });
+    _shopViewportObs = new IntersectionObserver(entries => {
+      for (const ent of entries) {
+        ent.target.classList.toggle('pk9-offscreen', !ent.isIntersecting);
+      }
+    }, { rootMargin: '160px 0px', threshold: 0.01 });
+    targets.forEach(el => _shopViewportObs.observe(el));
   }
 
   // ========================================================================
