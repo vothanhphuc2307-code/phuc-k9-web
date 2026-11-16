@@ -1,13 +1,13 @@
 /* ============================================================================
  * HỌC CÙNG PHÚC K9 — PRODUCTION SERVICE WORKER (NETWORK-FIRST + SMART CACHE)
  * ============================================================================ */
-const CACHE_NAME = 'phuc-k9-ecosystem-v56';
+const CACHE_NAME = 'phuc-k9-ecosystem-v57';
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/style.css?v=56',
-  '/assets/exam-center.css?v=56',
+  '/style.css?v=57',
+  '/assets/exam-center.css?v=57',
   '/assets/pk9-curriculum.js',
   '/assets/pk9-2k9-manifest.js',
   '/assets/2k9-teachers/toan.json',
@@ -21,9 +21,10 @@ const CORE_ASSETS = [
   '/assets/2k9-teachers/dgnl.json',
   '/assets/pk9-2k8-curated.js',
   '/assets/pk9-2k8-dgnl.js',
-  '/assets/exam-center.js?v=56',
-  '/assets/pk9-rpg.js?v=56',
-  '/assets/pk9-app.js?v=56',
+  '/assets/pk9-exam-tools.js?v=57',
+  '/assets/exam-center.js?v=57',
+  '/assets/pk9-rpg.js?v=57',
+  '/assets/pk9-app.js?v=57',
   '/favicon.ico',
   '/assets/logo-phuc-k9.png',
   '/assets/phuc-k9-favicon.png',
@@ -61,5 +62,18 @@ self.addEventListener('fetch', event => {
         return resp;
       })
       .catch(() => caches.match(req).then(hit => hit || caches.match('/index.html')))
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification?.close?.();
+  const targetUrl = event.notification?.data?.url || '/?tab=missions';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      for (const client of clients) {
+        if (client.url && 'focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })
   );
 });
