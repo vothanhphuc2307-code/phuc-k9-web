@@ -12,11 +12,13 @@
     activeTopicId: '',
     showTeacherPdfDrawer: false,
     teacherPdfSearch: '',
+    teacherPickerSearch: '',
     openChaptersMap: {},
     studySubtab: 'theory', // 'theory' | 'types' | 'quiz' | 'notes'
     theaterMode: false,
     lectureSearch: '',
     quizAnswers: {},
+    _suspendedLectureVideo: null,
     lbMode: 'weekly', // 'weekly' | 'top' | 'exam'
     lbSearch: '',
     lbFetchedAt: 0,
@@ -603,6 +605,7 @@
     const sidebar = document.getElementById('pk9-sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
     document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
+    closeInAppViewer();
 
     if (target === 'home') {
       renderHomeTab();
@@ -1492,6 +1495,73 @@
     `;
   }
 
+  function getSubjectAccent(subjectName = '') {
+    const s = String(subjectName || '').toLowerCase();
+    if (s.includes('toán')) return { bg: 'linear-gradient(135deg,#2563eb,#0ea5e9)', chip: 'rgba(37,99,235,0.12)', hex: '#2563eb' };
+    if (s.includes('lí') || s.includes('lý')) return { bg: 'linear-gradient(135deg,#d97706,#f59e0b)', chip: 'rgba(217,119,6,0.12)', hex: '#d97706' };
+    if (s.includes('hóa')) return { bg: 'linear-gradient(135deg,#059669,#10b981)', chip: 'rgba(5,150,105,0.12)', hex: '#059669' };
+    if (s.includes('sinh')) return { bg: 'linear-gradient(135deg,#0d9488,#14b8a6)', chip: 'rgba(13,148,136,0.12)', hex: '#0d9488' };
+    if (s.includes('anh')) return { bg: 'linear-gradient(135deg,#4f46e5,#8b5cf6)', chip: 'rgba(79,70,229,0.12)', hex: '#4f46e5' };
+    if (s.includes('văn')) return { bg: 'linear-gradient(135deg,#e11d48,#f43f5e)', chip: 'rgba(225,29,72,0.12)', hex: '#e11d48' };
+    if (s.includes('sử')) return { bg: 'linear-gradient(135deg,#c2410c,#ea580c)', chip: 'rgba(194,65,12,0.12)', hex: '#c2410c' };
+    if (s.includes('địa')) return { bg: 'linear-gradient(135deg,#0284c7,#06b6d4)', chip: 'rgba(2,132,199,0.12)', hex: '#0284c7' };
+    return { bg: 'linear-gradient(135deg,#7c3aed,#ec4899)', chip: 'rgba(124,58,237,0.12)', hex: '#7c3aed' };
+  }
+
+  function getTeacherMonogram(name = '') {
+    const clean = String(name || '')
+      .replace(/^(thầy|cô|giáo viên|gv|ts\.?|ths\.?|gs\.?)\s+/i, '')
+      .trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'GV';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function buildTeacherRosterCardsHtml(teachers, activeCourseId, subjectName) {
+    const q = String(APP.teacherPickerSearch || '').trim().toLowerCase();
+    const list = q
+      ? teachers.filter(tc => `${tc.teacher} ${tc.name} ${tc.courseTag || ''} ${tc.desc || ''}`.toLowerCase().includes(q))
+      : teachers;
+    if (!list.length) {
+      return `
+        <div style="padding:1rem;border-radius:0.9rem;background:var(--pk9-surface-2);border:1px dashed var(--pk9-border);font-size:0.84rem;color:var(--pk9-text-muted);text-align:center;">
+          Không tìm thấy thầy/cô khớp từ khóa “<b>${esc(APP.teacherPickerSearch)}</b>”.
+        </div>
+      `;
+    }
+    const accent = getSubjectAccent(subjectName);
+    return `
+      <div class="pk9-teacher-tier-grid">
+        ${list.map(tc => {
+          const cp = countCourseProgress(tc);
+          const isAct = tc.id === activeCourseId;
+          const mono = getTeacherMonogram(tc.teacher);
+          const subAccent = getSubjectAccent(tc.subject || subjectName || '');
+          const barBg = (subAccent || accent).bg;
+          return `
+            <button type="button" class="pk9-teacher-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(tc.id)}">
+              <div class="pk9-teacher-card-head">
+                <span class="pk9-teacher-avatar" style="background:${barBg};">${esc(mono)}</span>
+                <div style="min-width:0;flex:1;">
+                  <div class="pk9-teacher-card-name">${esc(tc.teacher)}</div>
+                  <div class="pk9-teacher-card-tag">${esc(tc.courseTag || tc.desc || 'Full chuyên đề 2K9 & PDF')}</div>
+                </div>
+                ${isAct ? '<span class="pk9-badge pk9-badge-verified" style="font-size:0.64rem;flex-shrink:0;">ĐANG HỌC</span>' : ''}
+              </div>
+              <div class="pk9-teacher-card-foot">
+                <span class="pk9-tc-stat-pill">🎬 ${Number(tc.videoCount || 0)} video</span>
+                <span class="pk9-tc-stat-pill">📄 ${Number(tc.pdfFileCount || 0)} PDF</span>
+                ${cp.done > 0 ? `<span class="pk9-tc-stat-pill done">✓ ${cp.done}/${cp.total} (${cp.percent}%)</span>` : ''}
+              </div>
+              ${cp.done > 0 ? `<div class="pk9-tc-mini-bar"><span style="width:${Math.max(5, cp.percent)}%;"></span></div>` : ''}
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
   function renderLecturesTab() {
     const root = document.getElementById('tab-lectures');
     if (!root) return;
@@ -1516,15 +1586,15 @@
 
     const num2k9Subjects = new Set(catalog.filter(c => c.grade === '2K9').map(c => c.subject)).size || 8;
     const gradeMeta = [
-      { code: '2K9', icon: '🎓', label: 'Khối 12 (2K9/2K8) — Full Bài Giảng & PDF Theo Từng Giáo Viên', sub: 'Chọn Môn → Chọn Tên Thầy/Cô để vào Full Chương, Chủ Đề, Video & Tất Cả PDF' },
-      { code: '2K8', icon: '🔥', label: 'Khối 12 Tuyển Chọn 2K8 — Chuyên Đề + PDF', sub: 'Chuyên đề hay nhất đủ môn (Toán, Lí, Hóa, Sinh, Anh, Văn, Địa) kèm PDF dưới video' },
-      { code: 'DGNL', icon: '🏛️', label: 'Luyện Thi ĐGNL & ĐGTD — V-ACT (Empire) • HSA • TSA • SP/BCA', sub: 'Chuyên đề ĐGNL ĐHQG-HCM (ưu tiên Empire), ĐHQG-HN (HSA), Bách Khoa (TSA) & Sư Phạm/BCA' },
-      { code: '2K11', icon: '📘', label: 'Khối 10 — Chương Trình Mới GDPT 2018 (2K11)', sub: '5 Môn nền tảng: Toán 10, Vật Lí 10, Hóa Học 10, Sinh Học 10, Tiếng Anh 10' },
-      { code: '2K12', icon: '🎯', label: 'Khối 9 — Ôn Thi Tuyển Sinh Vào Lớp 10 (2K12)', sub: '5 Môn vào 10: Toán 9, Vật Lí 9, Hóa Học 9, Sinh Học 9, Tiếng Anh 9' }
+      { code: '2K9', icon: '🎓', shortTitle: 'Khối 12 (2K9)', label: 'Khối 12 (2K9/2K8) — Full GV & PDF' },
+      { code: '2K8', icon: '🔥', shortTitle: '2K8 Tuyển chọn', label: 'Khối 12 Tuyển Chọn 2K8 — Chuyên Đề' },
+      { code: 'DGNL', icon: '🏛️', shortTitle: 'ĐGNL & ĐGTD', label: 'V-ACT (Empire) • HSA • TSA • SP/BCA' },
+      { code: '2K11', icon: '📘', shortTitle: 'Khối 10 (2K11)', label: 'Khối 10 — Chương Trình Mới 2018' },
+      { code: '2K12', icon: '🎯', shortTitle: 'Vào 10 (2K12)', label: 'Khối 9 — Ôn Thi Vào Lớp 10' }
     ];
     const coursesInActiveGrade = catalog.filter(c => c.grade === activeGrade);
 
-    // Group 2K9 by 8 subjects + list all teachers in the selected subject
+    // Group 2K9 by subjects + list all teachers in the selected subject
     const subjects2k9 = [];
     if (activeGrade === '2K9') {
       const sMap = new Map();
@@ -1572,34 +1642,47 @@
       : allCoursePdfs;
     const ytSearchUrl = activeTopic?.youtubeSearchUrl
       || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${course.shortName || course.name} ${activeTopic?.title || ''}`)}`;
+    const courseAccent = getSubjectAccent(course.subject || course.name);
 
     root.innerHTML = `
-      <div class="pk9-mob-quick-bar">
-        <div style="min-width:0;flex:1 1 170px;">
-          <div style="font-size:0.7rem;font-weight:800;color:var(--pk9-primary);text-transform:uppercase;">Khối ${esc(activeGrade)} • ${esc(course.subject || '')}</div>
-          <div style="font-size:0.86rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👨‍🏫 ${esc(course.teacher)}</div>
+      <div class="pk9-studio-context-bar" id="pk9-studio-context-bar">
+        <div class="pk9-context-left">
+          <span class="pk9-teacher-avatar" style="background:${courseAccent.bg};width:40px;height:40px;font-size:0.86rem;">${esc(getTeacherMonogram(course.teacher || course.shortName))}</span>
+          <div style="min-width:0;flex:1;">
+            <div style="display:flex;align-items:center;gap:0.38rem;flex-wrap:wrap;">
+              <span class="pk9-context-badge">Khối ${esc(activeGrade)}</span>
+              <span class="pk9-context-badge soft">${course.icon || '📘'} ${esc(course.subject || course.shortName || '')}</span>
+              <span class="pk9-context-prog-pill" id="pk9-context-prog-pill">✓ ${prog.done}/${prog.total} bài (${prog.percent}%)</span>
+            </div>
+            <div class="pk9-context-teacher">
+              ${esc(course.teacher || course.name)}
+            </div>
+          </div>
         </div>
-        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
-          <button type="button" class="pk9-admin-btn-xs" data-toggle-mob-selectors="1" style="min-height:36px;">
-            ${APP.mobileSelectorsCollapsed ? '🔄 Đổi Môn / GV' : '🔼 Thu gọn bộ chọn'}
+        <div class="pk9-context-actions">
+          <button type="button" class="pk9-admin-btn-xs primary" data-toggle-mob-selectors="1" style="min-height:36px;">
+            ${APP.mobileSelectorsCollapsed ? '✨ Mở bộ chọn GV / Môn' : '🔼 Thu gọn bộ chọn'}
+          </button>
+          ${allCoursePdfs.length ? `
+            <button type="button" class="pk9-admin-btn-xs ${APP.showTeacherPdfDrawer ? 'active' : ''}" data-toggle-teacher-pdfs="1" style="min-height:36px;">
+              📄 Kho PDF (${allCoursePdfs.length})
+            </button>
+          ` : ''}
+          <button type="button" class="pk9-admin-btn-xs" data-toggle-theater="1" style="min-height:36px;">
+            🖥️ ${APP.theaterMode ? 'Thu nhỏ' : 'Rạp chiếu'}
           </button>
           <button type="button" class="pk9-admin-btn-xs" data-mob-jump-sidebar="1" style="min-height:36px;">
             📑 Mục lục
           </button>
-          ${allCoursePdfs.length ? `
-            <button type="button" class="pk9-admin-btn-xs" data-toggle-teacher-pdfs="1" style="min-height:36px;color:var(--pk9-primary);border-color:rgba(37,99,235,0.35);">
-              📄 ${allCoursePdfs.length} PDF
-            </button>
-          ` : ''}
         </div>
       </div>
 
-      <section class="pk9-lecture-hierarchy ${APP.mobileSelectorsCollapsed ? 'mob-collapsed' : ''}" id="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
+      <section class="pk9-lecture-hierarchy ${APP.mobileSelectorsCollapsed ? 'is-collapsed mob-collapsed' : ''}" id="pk9-lecture-hierarchy" aria-label="Chọn Khối lớp, Môn học và Giáo viên">
         <div class="pk9-tier-label">
           <span>📚 BƯỚC 1: CHỌN KHỐI LỚP HỌC TẬP</span>
-          <button type="button" class="pk9-btn-exam-ghost" data-toggle-theater="1" style="padding:0.35rem 0.75rem;font-size:0.76rem;">
-            ${APP.theaterMode ? '📐 Thu nhỏ màn hình' : '🖥️ Chế độ Rạp chiếu'}
-          </button>
+          <span style="font-size:0.74rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
+            ${totalAllTopics}+ bài giảng Video HD & PDF chuẩn
+          </span>
         </div>
 
         <div class="pk9-grade-tier-grid">
@@ -1608,12 +1691,12 @@
             const gTopicsCount = gCourses.reduce((s, c) => s + getCourseTopicCount(c), 0);
             const isAct = gm.code === activeGrade;
             return `
-              <button type="button" class="pk9-grade-tier-card ${isAct ? 'active' : ''}" data-select-lecture-grade="${gm.code}">
+              <button type="button" class="pk9-grade-tier-card ${isAct ? 'active' : ''}" data-select-lecture-grade="${gm.code}" title="${esc(gm.label)}">
                 <div class="pk9-grade-tier-icon">${gm.icon}</div>
                 <div style="min-width:0;flex:1;">
-                  <div style="font-weight:900;font-size:0.88rem;line-height:1.25;">${esc(gm.label)}</div>
-                  <div style="font-size:0.73rem;color:var(--pk9-text-muted);margin-top:0.2rem;">
-                    ${gm.code === '2K9' ? `${gCourses.length} giáo viên (${num2k9Subjects} môn)` : `${gCourses.length} môn học`} • <b>${gTopicsCount} bài giảng & PDF</b>
+                  <div class="pk9-grade-card-title">${esc(gm.shortTitle)}</div>
+                  <div class="pk9-grade-card-sub">
+                    ${gm.code === '2K9' ? `${gCourses.length} GV • ${num2k9Subjects} môn` : `${gCourses.length} môn`} • <b>${gTopicsCount}</b> mục
                   </div>
                 </div>
               </button>
@@ -1622,25 +1705,26 @@
         </div>
 
         ${activeGrade === '2K9' && subjects2k9.length ? `
-          <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
+          <div class="pk9-tier-label" style="margin-bottom:0.5rem;">
             <span>🎯 BƯỚC 2: CHỌN MÔN HỌC KHỐI 2K9 (${subjects2k9.length} MÔN)</span>
             <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
               Đang chọn: <b>${esc(current2k9Subj?.subject || '')}</b> (${teachersIn2k9Subj.length} Thầy/Cô)
             </span>
           </div>
 
-          <div class="pk9-subject-tier-grid" style="margin-bottom:1.05rem;">
+          <div class="pk9-subject-tier-grid" style="margin-bottom:1rem;">
             ${subjects2k9.map(sub => {
               const isAct = sub.subject === current2k9Subj?.subject;
+              const acc = getSubjectAccent(sub.subject);
               return `
-                <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-2k9-subject="${esc(sub.subject)}">
+                <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-2k9-subject="${esc(sub.subject)}" style="--pk9-subj-hex:${acc.hex};--pk9-subj-bg:${acc.bg};">
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;width:100%;">
-                    <span style="font-size:1.35rem;">${sub.icon || '📘'}</span>
-                    <span class="pk9-subj-meta">${sub.teachers.length} GV • ${sub.topics} mục</span>
+                    <span class="pk9-subj-icon-badge" style="${isAct ? '' : `background:${acc.chip};color:${acc.hex};`}">${sub.icon || '📘'}</span>
+                    <span class="pk9-subj-meta">${sub.teachers.length} GV • ${sub.topics} bài</span>
                   </div>
                   <div>
-                    <div style="font-weight:900;font-size:0.92rem;line-height:1.25;">Môn ${esc(sub.subject)}</div>
-                    <div class="pk9-subj-meta" style="margin-top:0.15rem;">
+                    <div style="font-weight:900;font-size:0.9rem;line-height:1.25;">Môn ${esc(sub.subject)}</div>
+                    <div class="pk9-subj-meta" style="margin-top:0.12rem;">
                       📄 ${sub.pdfs} file PDF & Đề
                     </div>
                   </div>
@@ -1649,35 +1733,19 @@
             }).join('')}
           </div>
 
-          <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
-            <span>👨‍🏫 BƯỚC 3: CHỌN TÊN GIÁO VIÊN DẠY MÔN ${esc((current2k9Subj?.subject || '').toUpperCase())} (${teachersIn2k9Subj.length} THẦY/CÔ)</span>
-            <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
-              Đang học: <b>${esc(course.teacher)}</b> • Ấn chọn giáo viên để mở Full bài giảng & tất cả PDF
-            </span>
+          <div class="pk9-tier-label pk9-teacher-tier-head" style="margin-bottom:0.55rem;">
+            <span>👨‍🏫 BƯỚC 3: CHỌN THẦY / CÔ MÔN ${esc((current2k9Subj?.subject || '').toUpperCase())} (${teachersIn2k9Subj.length} GIÁO VIÊN)</span>
+            ${teachersIn2k9Subj.length >= 4 ? `
+              <input type="search" id="pk9-teacher-quick-search" class="pk9-input pk9-teacher-filter-input" placeholder="🔍 Tìm nhanh tên Thầy / Cô..." value="${esc(APP.teacherPickerSearch || '')}" />
+            ` : `
+              <span style="font-size:0.73rem;color:var(--pk9-text-muted);text-transform:none;font-weight:700;">
+                Đang học: <b>${esc(course.teacher)}</b>
+              </span>
+            `}
           </div>
 
-          <div class="pk9-teacher-tier-grid">
-            ${teachersIn2k9Subj.map(tc => {
-              const cp = countCourseProgress(tc);
-              const isAct = tc.id === course.id;
-              return `
-                <button type="button" class="pk9-teacher-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(tc.id)}">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;">
-                    <span style="font-weight:900;font-size:0.89rem;color:${isAct ? 'var(--pk9-primary)' : 'inherit'};">👨‍🏫 ${esc(tc.teacher)}</span>
-                    ${isAct ? '<span class="pk9-badge pk9-badge-verified" style="font-size:0.65rem;">ĐANG HỌC</span>' : ''}
-                  </div>
-                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);line-height:1.35;">
-                    ${esc(tc.courseTag || tc.desc)}
-                  </div>
-                  <div style="display:flex;flex-wrap:wrap;gap:0.4rem;font-size:0.72rem;font-weight:800;margin-top:0.15rem;">
-                    <span>🎬 ${Number(tc.videoCount || 0)} video</span>
-                    <span>•</span>
-                    <span>📄 ${Number(tc.pdfFileCount || 0)} PDF</span>
-                    ${cp.done > 0 ? `<span>• <b style="color:#10b981;">✓ ${cp.done}/${cp.total}</b></span>` : ''}
-                  </div>
-                </button>
-              `;
-            }).join('')}
+          <div id="pk9-teacher-grid-wrap">
+            ${buildTeacherRosterCardsHtml(teachersIn2k9Subj, course.id, current2k9Subj?.subject || '')}
           </div>
         ` : `
           <div class="pk9-tier-label" style="margin-bottom:0.55rem;">
@@ -1691,10 +1759,11 @@
             ${coursesInActiveGrade.map(c => {
               const cp = countCourseProgress(c);
               const isAct = c.id === course.id;
+              const acc = getSubjectAccent(c.subject || c.name);
               return `
-                <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(c.id)}">
+                <button type="button" class="pk9-subject-tier-card ${isAct ? 'active' : ''}" data-select-course="${esc(c.id)}" style="--pk9-subj-hex:${acc.hex};--pk9-subj-bg:${acc.bg};">
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;width:100%;">
-                    <span style="font-size:1.35rem;">${c.icon || '📘'}</span>
+                    <span class="pk9-subj-icon-badge" style="${isAct ? '' : `background:${acc.chip};color:${acc.hex};`}">${c.icon || '📘'}</span>
                     <span class="pk9-subj-meta">${cp.done}/${cp.total} bài (${cp.percent}%)</span>
                   </div>
                   <div>
@@ -1785,17 +1854,25 @@
             </div>
 
             ${frameSrc ? `
-              <div class="pk9-video-frame-wrap">
+              <div class="pk9-video-frame-wrap" id="pk9-video-frame-wrap">
                 <iframe
                   id="pk9-lecture-iframe"
                   data-vid-kind="${esc(vid.kind)}"
                   data-yt-slot="lecture"
                   data-yt-base="${esc(frameSrc)}"
+                  data-external-url="${esc(vid.externalUrl || '')}"
                   src="${esc(frameSrc)}"
                   title="${esc(activeTopic.title)}"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowfullscreen
                 ></iframe>
+                <div class="pk9-video-suspended-overlay" id="pk9-video-suspended-overlay">
+                  <div class="pk9-suspended-badge">📺 Đang phát ở chế độ Toàn màn hình</div>
+                  <p style="margin:0.35rem 0 0.85rem;font-size:0.82rem;color:#cbd5e1;">Trình phát chính tạm dừng để tránh phát 2 video cùng lúc.</p>
+                  <button type="button" class="pk9-btn-hero-main" data-restore-inline-video="1" style="padding:0.5rem 1.05rem;font-size:0.8rem;">
+                    ▶ Tiếp tục xem tại khung này
+                  </button>
+                </div>
                 <div class="pk9-player-watermark ${vid.kind === 'none' ? 'is-pdf' : ''}" aria-hidden="true">
                   <img src="/assets/phuc-k9-favicon.png" alt="" />
                   <span>HỌC CÙNG PHÚC K9</span>
@@ -2068,36 +2145,44 @@
   function buildCourseChaptersListHtml(course, activeChapter, activeTopic) {
     if (!course) return '';
     const qFilter = APP.lectureSearch.trim().toLowerCase();
-    return (course.chapters || []).map(ch => {
+    return (course.chapters || []).map((ch, chIdx) => {
       const topics = (ch.topics || []).filter(t => {
         if (!qFilter) return true;
         return `${t.title} ${t.code || ''} ${t.desc || ''}`.toLowerCase().includes(qFilter);
       });
       if (!topics.length) return '';
       const chKey = `${course.id}::${ch.id}`;
+      const doneInCh = topics.filter(t => APP.doneMap[t.id]).length;
       const isOpen = qFilter
         ? true
         : (APP.openChaptersMap[chKey] !== undefined
             ? Boolean(APP.openChaptersMap[chKey])
             : (ch.id === activeChapter?.id || (course.chapters || []).length <= 2));
       return `
-        <div class="pk9-chapter-block">
+        <div class="pk9-chapter-block ${isOpen ? 'open' : ''}">
           <button type="button" class="pk9-chapter-head" data-toggle-chapter="${esc(chKey)}">
-            <span>${isOpen ? '▾ ' : '▸ '}${esc(ch.title)}</span>
-            <span style="font-size:0.72rem;color:var(--pk9-text-muted);flex-shrink:0;">${topics.length} bài</span>
+            <span class="pk9-chapter-title-wrap">
+              <span class="pk9-chapter-chevron">${isOpen ? '▾' : '▸'}</span>
+              <span>${esc(ch.title)}</span>
+            </span>
+            <span class="pk9-chapter-count-pill ${doneInCh === topics.length && topics.length > 0 ? 'all-done' : ''}">
+              ${doneInCh > 0 ? `${doneInCh}/` : ''}${topics.length} bài
+            </span>
           </button>
           ${isOpen ? `
           <div class="pk9-topic-list">
-            ${topics.map(t => {
+            ${topics.map((t, tIdx) => {
               const done = Boolean(APP.doneMap[t.id]);
               const act = t.id === activeTopic?.id;
               const hasPdf = Boolean(t.pdfUrl || t.solutionPdfUrl || (Array.isArray(t.pdfs) && t.pdfs.length));
               const isPdfOnly = t.kind === 'pdf' || (!t.videoId && !t.driveVideoUrl && Boolean(t.pdfUrl));
+              const numLabel = String(tIdx + 1).padStart(2, '0');
               return `
-                <button type="button" class="pk9-topic-btn ${act ? 'active' : ''}" data-select-topic="${esc(t.id)}">
-                  <span style="flex:1;line-height:1.35;">${act ? '▶ ' : ''}${isPdfOnly ? '📄 ' : ''}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
-                  <span style="font-size:0.78rem;color:${done ? '#10b981' : 'var(--pk9-text-soft)'};flex-shrink:0;">
-                    ${done ? '✓ Đã học' : esc(t.duration || '45p')}
+                <button type="button" class="pk9-topic-btn ${act ? 'active' : ''} ${done ? 'done' : ''}" data-select-topic="${esc(t.id)}">
+                  <span class="pk9-topic-index">${act ? '▶' : (done ? '✓' : numLabel)}</span>
+                  <span style="flex:1;min-width:0;line-height:1.38;">${isPdfOnly ? '📄 ' : '🎬 '}${esc(t.title)}${hasPdf ? '<span class="pk9-topic-pdf-tag">PDF</span>' : ''}</span>
+                  <span class="pk9-topic-dur" style="color:${done ? '#10b981' : 'var(--pk9-text-soft)'};">
+                    ${done ? 'Xong' : esc(t.duration || '45p')}
                   </span>
                 </button>
               `;
@@ -2656,6 +2741,71 @@
     `;
   }
 
+  function extractYtId(rawUrl = '') {
+    const m = String(rawUrl || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+    return m ? m[1] : '';
+  }
+
+  function extractDriveFileId(rawUrl = '') {
+    const m = String(rawUrl || '').match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/)
+      || String(rawUrl || '').match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([A-Za-z0-9_-]+)/);
+    return m ? m[1] : '';
+  }
+
+  function setYtEmbedStartTime(embedUrl, startSec = 0) {
+    try {
+      const u = new URL(embedUrl, window.location.origin);
+      if (startSec > 0) u.searchParams.set('start', String(Math.floor(startSec)));
+      else u.searchParams.delete('start');
+      u.searchParams.set('autoplay', '0');
+      u.searchParams.set('enablejsapi', '1');
+      return u.toString();
+    } catch {
+      const clean = String(embedUrl || '').replace(/([?&])(start|autoplay)=[^&]*/g, '');
+      const sep = clean.includes('?') ? '&' : '?';
+      return startSec > 0 ? `${clean}${sep}start=${Math.floor(startSec)}&autoplay=0` : clean;
+    }
+  }
+
+  function restoreSuspendedLectureVideo(overrideStartSec) {
+    const sus = APP._suspendedLectureVideo;
+    APP._suspendedLectureVideo = null;
+    const wrap = document.getElementById('pk9-video-frame-wrap');
+    if (wrap) wrap.classList.remove('is-suspended');
+    const ifr = document.getElementById('pk9-lecture-iframe');
+    if (!ifr || !sus || !sus.src) return;
+
+    let restoreSrc = sus.src;
+    if (sus.kind === 'youtube') {
+      const secToUse = typeof overrideStartSec === 'number' && overrideStartSec >= 0 ? overrideStartSec : (sus.resumeSec || 0);
+      restoreSrc = setYtEmbedStartTime(sus.src, secToUse);
+      const readout = document.getElementById('pk9-yt-time-readout');
+      if (readout && secToUse > 0) readout.textContent = `⏱ ${formatMmSs(secToUse)}`;
+    }
+    ifr.src = restoreSrc;
+    bindYtBridgeForSlot('lecture');
+  }
+
+  function closeInAppViewer() {
+    const ov = document.getElementById('pk9-inapp-viewer-overlay');
+    if (!ov || !ov.classList.contains('open')) return;
+    const modalSec = Math.floor(YT_BRIDGE_STATE.modal.time || 0);
+    const modalIfr = document.getElementById('pk9-inapp-viewer-iframe');
+    if (modalIfr) {
+      sendYtCommand('modal', 'pauseVideo', []);
+      modalIfr.src = 'about:blank';
+    }
+    ov.classList.remove('open');
+    ov.innerHTML = '';
+
+    const sus = APP._suspendedLectureVideo;
+    if (sus) {
+      const modalWasSameYt = sus.ytId && sus.ytId === extractYtId(sus.modalRawUrl || '');
+      const resumeAt = modalWasSameYt && modalSec > 0 ? modalSec : undefined;
+      restoreSuspendedLectureVideo(resumeAt);
+    }
+  }
+
   // ==========================================================================
   // IN-APP VIEWER MODAL (XEM TÀI LIỆU / VIDEO / KHÓA HỌC THẲNG TRONG WEB)
   // ==========================================================================
@@ -2670,10 +2820,10 @@
 
     let embedUrl = String(rawUrl || '').trim();
     let isYtModal = false;
-    const ytMatch = embedUrl.match(/(?:youtube\.com\/(?:watch\?v=|live\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
-    if (ytMatch) {
+    const ytId = extractYtId(embedUrl);
+    if (ytId) {
       isYtModal = true;
-      embedUrl = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1&autoplay=1`;
+      embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1&autoplay=1`;
     } else if (embedUrl.includes('docs.google.com/spreadsheets/d/')) {
       const m = embedUrl.match(/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
       const gidMatch = embedUrl.match(/gid=([0-9]+)/);
@@ -2681,6 +2831,40 @@
       if (m) embedUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/htmlview?gid=${gid}&widget=true&headers=false`;
     } else if (embedUrl.includes('drive.google.com/') || embedUrl.includes('docs.google.com/')) {
       embedUrl = toDrivePreviewUrl(embedUrl);
+    }
+
+    // Prevent dual simultaneous video/audio playback: suspend inline lecture video before mounting fullscreen modal
+    const lectureIfr = document.getElementById('pk9-lecture-iframe');
+    const lectKind = lectureIfr?.dataset?.vidKind || '';
+    const lectLiveSrc = lectureIfr && lectureIfr.src && !lectureIfr.src.startsWith('about:blank') ? lectureIfr.src : '';
+    const lectYtId = extractYtId(lectureIfr?.dataset?.ytBase || lectLiveSrc);
+    const lectDriveId = extractDriveFileId(lectureIfr?.dataset?.externalUrl || lectureIfr?.dataset?.ytBase || lectLiveSrc);
+    const targetDriveId = extractDriveFileId(rawUrl || embedUrl);
+    const isOpeningVideo = isYtModal || (lectKind === 'drive' && Boolean(lectDriveId && targetDriveId && lectDriveId === targetDriveId));
+
+    if (lectureIfr && lectLiveSrc && (lectKind === 'youtube' || lectKind === 'drive')) {
+      const curSec = Math.floor(YT_BRIDGE_STATE.lecture.time || 0);
+      if (isOpeningVideo) {
+        if (lectKind === 'youtube') sendYtCommand('lecture', 'pauseVideo', []);
+        if (!APP._suspendedLectureVideo) {
+          APP._suspendedLectureVideo = {
+            src: lectureIfr.dataset.ytBase || lectLiveSrc,
+            kind: lectKind,
+            resumeSec: curSec,
+            ytId: lectYtId,
+            modalRawUrl: rawUrl
+          };
+        } else {
+          APP._suspendedLectureVideo.modalRawUrl = rawUrl;
+        }
+        lectureIfr.src = 'about:blank';
+        document.getElementById('pk9-video-frame-wrap')?.classList.add('is-suspended');
+        if (isYtModal && lectYtId && ytId === lectYtId && curSec > 1) {
+          embedUrl += `&start=${curSec}`;
+        }
+      } else if (lectKind === 'youtube') {
+        sendYtCommand('lecture', 'pauseVideo', []);
+      }
     }
 
     overlay.innerHTML = `
@@ -5028,6 +5212,8 @@
           APP.activeTopicId = firstCourse.chapters?.[0]?.topics?.[0]?.id || '';
         }
         APP.inlinePdfUrl = '';
+        APP.teacherPickerSearch = '';
+        APP._suspendedLectureVideo = null;
         renderLecturesTab();
         return;
       }
@@ -5044,6 +5230,8 @@
         APP.inlinePdfUrl = '';
         APP.showTeacherPdfDrawer = false;
         APP.teacherPdfSearch = '';
+        APP.teacherPickerSearch = '';
+        APP._suspendedLectureVideo = null;
         renderLecturesTab();
         return;
       }
@@ -5051,13 +5239,22 @@
       const togglePdfDrawer = e.target.closest('[data-toggle-teacher-pdfs]');
       if (togglePdfDrawer) {
         APP.showTeacherPdfDrawer = !APP.showTeacherPdfDrawer;
-        const drawerWrap = document.getElementById('pk9-teacher-pdf-drawer-wrap');
-        const activeCourse = getCourseById(APP.activeCourseId);
-        if (drawerWrap && activeCourse && document.getElementById('pk9-video-stage')) {
-          drawerWrap.innerHTML = buildTeacherPdfDrawerHtml(activeCourse);
-          const count = (activeCourse.teacherPdfs || []).length;
-          togglePdfDrawer.classList.toggle('active', APP.showTeacherPdfDrawer);
-          togglePdfDrawer.innerHTML = `📄 Kho PDF Giáo Viên (${count}) ${APP.showTeacherPdfDrawer ? '▲' : '▼'}`;
+        const drawerSec = document.getElementById('pk9-teacher-pdf-drawer-sec');
+        const mainToggleBtn = document.getElementById('pk9-teacher-pdf-toggle-btn');
+        if (drawerSec && document.getElementById('pk9-video-stage')) {
+          drawerSec.style.display = APP.showTeacherPdfDrawer ? 'block' : 'none';
+          const total = mainToggleBtn?.getAttribute('data-pdf-total') || '';
+          if (mainToggleBtn) {
+            mainToggleBtn.innerHTML = APP.showTeacherPdfDrawer
+              ? '🔽 Thu gọn Kho PDF'
+              : `📄 Mở Kho Tất Cả PDF (${total} file)`;
+          }
+          document.querySelectorAll('[data-toggle-teacher-pdfs]').forEach(btn => {
+            if (btn !== mainToggleBtn) btn.classList.toggle('active', APP.showTeacherPdfDrawer);
+          });
+          if (APP.showTeacherPdfDrawer) {
+            drawerSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         } else {
           renderLecturesTab();
         }
@@ -5073,6 +5270,7 @@
         APP.inlinePdfUrl = '';
         APP.showTeacherPdfDrawer = false;
         APP.teacherPdfSearch = '';
+        APP._suspendedLectureVideo = null;
         renderLecturesTab();
         return;
       }
@@ -5092,8 +5290,8 @@
             APP.openChaptersMap[chKey] = !cur;
           }
           const chListEl = document.getElementById('pk9-lecture-chapters-list');
-          if (chListEl && c && found?.topic) {
-            chListEl.innerHTML = buildLectureChaptersHtml(c, found.topic, found.chapter);
+          if (chListEl && c) {
+            chListEl.innerHTML = buildCourseChaptersListHtml(c, found?.chapter, found?.topic);
           } else {
             renderLecturesTab();
           }
@@ -5105,6 +5303,7 @@
       if (selTopic) {
         APP.activeTopicId = selTopic.getAttribute('data-select-topic');
         APP.inlinePdfUrl = '';
+        APP._suspendedLectureVideo = null;
         renderLecturesTab();
         if (window.innerWidth <= 1024) {
           setTimeout(() => {
@@ -5173,17 +5372,15 @@
       const subtabBtn = e.target.closest('[data-study-subtab]');
       if (subtabBtn) {
         APP.studySubtab = subtabBtn.getAttribute('data-study-subtab');
-        const subtabPanel = document.getElementById('pk9-study-subtab-panel');
-        const subtabBar = document.getElementById('pk9-study-subtabs-bar');
+        const subtabBody = document.getElementById('pk9-study-body');
         const activeCourse = getCourseById(APP.activeCourseId);
         const found = findTopicInCourse(activeCourse, APP.activeTopicId);
-        if (subtabPanel && activeCourse && found?.topic && document.getElementById('pk9-video-stage')) {
-          if (subtabBar) {
-            subtabBar.querySelectorAll('[data-study-subtab]').forEach(btn => {
-              btn.classList.toggle('active', btn.getAttribute('data-study-subtab') === APP.studySubtab);
-            });
-          }
-          subtabPanel.innerHTML = renderStudySubtabContent(activeCourse, found.topic);
+        if (subtabBody && activeCourse && found?.topic && document.getElementById('pk9-video-stage')) {
+          document.querySelectorAll('#pk9-video-stage .pk9-study-subtabs [data-study-subtab]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-study-subtab') === APP.studySubtab);
+          });
+          subtabBody.innerHTML = renderTopicSubtabContent(found.topic);
+          typeset(subtabBody);
         } else {
           renderLecturesTab();
         }
@@ -5193,10 +5390,10 @@
       const theaterBtn = e.target.closest('[data-toggle-theater]');
       if (theaterBtn) {
         APP.theaterMode = !APP.theaterMode;
-        const studioEl = document.getElementById('pk9-lecture-studio') || document.getElementById('pk9-lecture-layout-grid');
+        const studioEl = document.getElementById('pk9-lecture-studio');
         if (studioEl && document.getElementById('pk9-video-stage')) {
           studioEl.classList.toggle('theater', APP.theaterMode);
-          document.querySelectorAll('#pk9-video-stage [data-toggle-theater]').forEach(btn => {
+          document.querySelectorAll('[data-toggle-theater]').forEach(btn => {
             btn.classList.toggle('active', APP.theaterMode);
             btn.innerHTML = `🖥️ ${APP.theaterMode ? 'Thu nhỏ' : 'Rạp chiếu'}`;
           });
@@ -5212,14 +5409,22 @@
         APP.doneMap[tId] = !APP.doneMap[tId];
         const isDoneNow = Boolean(APP.doneMap[tId]);
         if (document.getElementById('pk9-video-stage')) {
-          doneBtn.style.borderColor = isDoneNow ? '#10b981' : '';
-          doneBtn.style.color = isDoneNow ? '#10b981' : '';
-          doneBtn.innerHTML = isDoneNow ? '✅ Đã hoàn thành bài này' : '☑️ Đánh dấu hoàn thành (+25 XP)';
+          doneBtn.style.background = isDoneNow ? '#10b981' : '';
+          doneBtn.innerHTML = isDoneNow ? '✓ Đã hoàn thành (+25 XP)' : '✅ Đánh dấu hoàn thành (+25 XP)';
           const activeCourse = getCourseById(APP.activeCourseId);
           const found = findTopicInCourse(activeCourse, APP.activeTopicId);
+          if (activeCourse) {
+            const prog = countCourseProgress(activeCourse);
+            const progBadge = document.getElementById('pk9-course-prog-badge');
+            const progFill = document.getElementById('pk9-course-prog-fill');
+            const ctxProg = document.getElementById('pk9-context-prog-pill');
+            if (progBadge) progBadge.textContent = `${prog.done}/${prog.total} bài (${prog.percent}%)`;
+            if (progFill) progFill.style.width = `${Math.max(4, prog.percent)}%`;
+            if (ctxProg) ctxProg.textContent = `✓ ${prog.done}/${prog.total} bài (${prog.percent}%)`;
+          }
           const chListEl = document.getElementById('pk9-lecture-chapters-list');
           if (chListEl && activeCourse && found?.topic) {
-            chListEl.innerHTML = buildLectureChaptersHtml(activeCourse, found.topic, found.chapter);
+            chListEl.innerHTML = buildCourseChaptersListHtml(activeCourse, found.chapter, found.topic);
           }
         } else {
           renderLecturesTab();
@@ -5267,11 +5472,12 @@
         const qKey = quizOpt.getAttribute('data-topic-quiz');
         const oIdx = Number(quizOpt.getAttribute('data-topic-opt'));
         APP.quizAnswers[qKey] = oIdx;
-        const subtabPanel = document.getElementById('pk9-study-subtab-panel');
+        const subtabBody = document.getElementById('pk9-study-body');
         const activeCourse = getCourseById(APP.activeCourseId);
         const found = findTopicInCourse(activeCourse, APP.activeTopicId);
-        if (subtabPanel && activeCourse && found?.topic) {
-          subtabPanel.innerHTML = renderStudySubtabContent(activeCourse, found.topic);
+        if (subtabBody && activeCourse && found?.topic) {
+          subtabBody.innerHTML = renderTopicSubtabContent(found.topic);
+          typeset(subtabBody);
         } else {
           renderLecturesTab();
         }
@@ -5747,14 +5953,21 @@
       const toggleMobSelBtn = e.target.closest('[data-toggle-mob-selectors]');
       if (toggleMobSelBtn) {
         APP.mobileSelectorsCollapsed = !APP.mobileSelectorsCollapsed;
-        const selWrap = document.getElementById('pk9-lecture-selectors');
+        const selWrap = document.getElementById('pk9-lecture-hierarchy');
         if (selWrap) {
-          selWrap.classList.toggle('collapsed', APP.mobileSelectorsCollapsed);
-          const activeCourse = getCourseById(APP.activeCourseId);
-          toggleMobSelBtn.innerHTML = `${APP.mobileSelectorsCollapsed ? '🔽 Mở bộ lọc Khối / Môn / Giáo viên' : '🔼 Thu gọn bộ lọc'} • <b style="color:var(--pk9-primary);">${esc(activeCourse?.shortName || activeCourse?.name || '')}</b>`;
+          selWrap.classList.toggle('is-collapsed', APP.mobileSelectorsCollapsed);
+          selWrap.classList.toggle('mob-collapsed', APP.mobileSelectorsCollapsed);
+          document.querySelectorAll('[data-toggle-mob-selectors]').forEach(btn => {
+            btn.innerHTML = APP.mobileSelectorsCollapsed ? '✨ Mở bộ chọn GV / Môn' : '🔼 Thu gọn bộ chọn';
+          });
         } else {
           renderLecturesTab();
         }
+        return;
+      }
+
+      if (e.target.closest('[data-restore-inline-video]')) {
+        restoreSuspendedLectureVideo();
         return;
       }
 
@@ -5869,11 +6082,8 @@
       }
 
       const closeInAppBtn = e.target.closest('[data-close-inapp-viewer]');
-      if (closeInAppBtn) {
-        const ov = document.getElementById('pk9-inapp-viewer-overlay');
-        const ifr = document.getElementById('pk9-inapp-viewer-iframe');
-        if (ifr) ifr.src = 'about:blank';
-        if (ov) ov.classList.remove('open');
+      if (closeInAppBtn || e.target?.id === 'pk9-inapp-viewer-overlay') {
+        closeInAppViewer();
         return;
       }
 
@@ -6241,15 +6451,23 @@
         const chListEl = document.getElementById('pk9-lecture-chapters-list');
         const activeCourse = getCourseById(APP.activeCourseId);
         const found = findTopicInCourse(activeCourse, APP.activeTopicId);
-        if (chListEl && activeCourse && found?.topic) {
-          chListEl.innerHTML = buildLectureChaptersHtml(activeCourse, found.topic, found.chapter);
+        if (chListEl && activeCourse) {
+          chListEl.innerHTML = buildCourseChaptersListHtml(activeCourse, found?.chapter, found?.topic);
+        }
+      } else if (e.target.id === 'pk9-teacher-quick-search') {
+        APP.teacherPickerSearch = e.target.value || '';
+        const wrap = document.getElementById('pk9-teacher-grid-wrap');
+        const activeCourse = getCourseById(APP.activeCourseId);
+        const teachersInSubj = getCatalog().filter(c => c.grade === '2K9' && c.subject === (APP.active2k9Subject || activeCourse?.subject));
+        if (wrap) {
+          wrap.innerHTML = buildTeacherRosterCardsHtml(teachersInSubj, APP.activeCourseId, APP.active2k9Subject || activeCourse?.subject || '');
         }
       } else if (e.target.id === 'pk9-teacher-pdf-search') {
         APP.teacherPdfSearch = e.target.value || '';
         const listEl = document.getElementById('pk9-teacher-pdf-list-wrap');
         const activeCourse = getCourseById(APP.activeCourseId);
         if (listEl && activeCourse) {
-          listEl.innerHTML = buildTeacherPdfListHtml(activeCourse.teacherPdfs || []);
+          listEl.innerHTML = buildTeacherPdfRowsHtml(activeCourse);
         }
       } else if (e.target.id === 'pk9-lb-search-input') {
         APP.lbSearch = e.target.value || '';
@@ -6642,12 +6860,7 @@
       } else if (e.key === 'Escape') {
         closeAuthModal();
         document.getElementById('pk9-cmd-modal')?.classList.remove('open');
-        const ov = document.getElementById('pk9-inapp-viewer-overlay');
-        if (ov?.classList.contains('open')) {
-          const ifr = document.getElementById('pk9-inapp-viewer-iframe');
-          if (ifr) ifr.src = 'about:blank';
-          ov.classList.remove('open');
-        }
+        closeInAppViewer();
         if (APP.kcFullscreen) {
           APP.kcFullscreen = false;
           if (APP.activeTab === 'khoa-chui') renderKhoaChuiTab();
