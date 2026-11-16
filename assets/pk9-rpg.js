@@ -1338,6 +1338,65 @@
     `;
   }
 
+  function getReminderPrefs(rpgInput) {
+    const rpg = rpgInput || getRpgState();
+    let local = null;
+    try { local = JSON.parse(localStorage.getItem('pk9_reminder_prefs') || 'null'); } catch {}
+    const srv = rpg?.reminder;
+    return {
+      enabled: Boolean(srv?.enabled ?? local?.enabled ?? false),
+      time: String(srv?.time || local?.time || '20:30')
+    };
+  }
+
+  async function fireStudyNotification(title, body) {
+    try {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+      const reg = await navigator.serviceWorker?.getRegistration?.();
+      if (reg && typeof reg.showNotification === 'function') {
+        await reg.showNotification(title, {
+          body,
+          icon: '/assets/phuc-k9-favicon.png',
+          badge: '/assets/phuc-k9-favicon.png',
+          tag: 'pk9-daily-reminder',
+          data: { url: '/?tab=missions' }
+        });
+        return true;
+      }
+      new Notification(title, { body, icon: '/assets/phuc-k9-favicon.png' });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function checkAndNotifyReminders() {
+    const rpg = getRpgState();
+    const rem = getReminderPrefs(rpg);
+    const dueCount = Number(rpg.srs?.due_count || 0);
+    const checkedToday = Boolean(rpg.checkin?.checked_today);
+    const now = new Date();
+    const vnHour = (now.getUTCHours() + 7) % 24;
+    const vnMin = now.getUTCMinutes();
+    const curMinTotal = vnHour * 60 + vnMin;
+    const [rH, rM] = String(rem.time || '20:30').split(':').map(Number);
+    const remMinTotal = (Number(rH) || 20) * 60 + (Number(rM) || 30);
+    const todayKey = now.toISOString().slice(0, 10);
+
+    const needsAction = dueCount > 0 || (!checkedToday && curMinTotal >= Math.min(remMinTotal, 19 * 60));
+    if (rem.enabled && needsAction && curMinTotal >= remMinTotal) {
+      let alreadyNotified = '';
+      try { alreadyNotified = localStorage.getItem('pk9_reminder_notified_day') || ''; } catch {}
+      if (alreadyNotified !== todayKey) {
+        try { localStorage.setItem('pk9_reminder_notified_day', todayKey); } catch {}
+        const msg = dueCount > 0
+          ? `Bạn đang có ${dueCount} câu Sổ Ôn SRS đến hạn${!checkedToday ? ' & chưa điểm danh giữ chuỗi Streak hôm nay' : ''}!`
+          : 'Đừng quên vào Điểm Danh & làm vài câu giữ chuỗi Streak Phúc K9 hôm nay nhé!';
+        fireStudyNotification('🔥 HỌC CÙNG PHÚC K9 — Nhắc học', msg);
+      }
+    }
+  }
+
   // Render compact RPG Hero Bar inside tab-home
   function renderHomeRpgWidget(user, isAdmin) {
     const rpg = getRpgState();
@@ -1345,6 +1404,7 @@
     const eq = rpg.equipped_details || {};
     const tier = rpg.tier || { name: 'Bậc Đồng', icon: '🥉' };
     const dueCount = Number(rpg.srs?.due_count || 0);
+    const wrongCount = Number(rpg.wrong_bank?.total || 0);
     const ptUnlocked = Number(rpg.periodic?.unlocked_count || 3);
     const checkedToday = Boolean(rpg.checkin?.checked_today);
     const firstOpenMission = (rpg.missions || []).find(m => m.completed && !m.claimed);
@@ -1375,6 +1435,14 @@
           <div class="pk9-rpg-quick-links">
             <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="missions">
               ⚡ Luyện Nhiệm Vụ ${dueCount > 0 ? `<span class="pk9-dot-pill">${dueCount}</span>` : ''}
+            </button>
+            ${wrongCount > 0 ? `
+              <button type="button" class="pk9-btn-exam-ghost" data-home-wrong-bank="1">
+                ❌ Câu sai <span class="pk9-dot-pill">${wrongCount}</span>
+              </button>
+            ` : ''}
+            <button type="button" class="pk9-btn-exam-ghost" data-home-arena="1">
+              ⚔️ Đấu 1v1
             </button>
             <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="shop">
               🛍️ Cửa Hàng
@@ -1504,7 +1572,32 @@
               </div>
             </div>
           </div>
-        ` : RPG_UI.missionTab === 'srs' ? `
+        ` : RPG_UI.missionTab === 'srs' ? (() => {
+          const rem = getReminderPrefs(rpg);
+          const notifPerm = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+          return `
+          <div class="pk9-card" style="margin-bottom:0.85rem;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(245,158,11,0.08));border-color:rgba(56,189,248,0.35);">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+              <div>
+                <h4 style="margin:0 0 0.25rem;font-size:0.98rem;font-weight:900;">🔔 Nhắc Lịch Sổ Ôn SRS & Cứu Chuỗi Streak (PWA)</h4>
+                <p style="margin:0;font-size:0.8rem;color:var(--pk9-text-muted);">
+                  Hệ thống tự nhắc bạn mỗi khi mở web/app vào buổi tối nếu sắp đứt chuỗi Streak hoặc có câu Sổ Ôn đến hạn. (Quyền thông báo: <b>${notifPerm === 'granted' ? 'Đã bật ✅' : notifPerm === 'denied' ? 'Đang chặn' : 'Chưa bật'}</b>)
+                </p>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+                <select id="pk9-reminder-time" class="pk9-input" style="margin:0;width:auto;padding:0.35rem 0.6rem;font-size:0.82rem;">
+                  ${['19:30', '20:00', '20:30', '21:00', '21:30'].map(t => `<option value="${t}" ${rem.time === t ? 'selected' : ''}>⏰ ${t}</option>`).join('')}
+                </select>
+                <button type="button" class="pk9-btn-exam-primary" data-toggle-reminder="1" style="padding:0.4rem 0.85rem;font-size:0.8rem;">
+                  ${rem.enabled ? '🔕 Tắt nhắc lịch' : '🔔 Bật nhắc lịch'}
+                </button>
+                <button type="button" class="pk9-btn-exam-ghost" data-test-reminder="1" style="padding:0.4rem 0.75rem;font-size:0.8rem;">
+                  📲 Thử thông báo
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="pk9-card">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.85rem;">
               <div>
@@ -1537,7 +1630,8 @@
               `}
             </div>
           </div>
-        ` : `
+          `;
+        })() : `
           <div class="pk9-card">
             <h4 style="margin:0 0 0.75rem;font-size:1.05rem;font-weight:900;">🧭 Cẩm Nang Cơ Chế Phúc K9 RPG</h4>
             <div class="pk9-missions-grid">
@@ -2580,6 +2674,58 @@
 
       if (e.target.closest('[data-download-idcard]')) {
         downloadIdCardPng();
+        return;
+      }
+
+      if (e.target.closest('[data-home-wrong-bank]') && typeof window.switchTab === 'function') {
+        window.switchTab('exams');
+        window.PK9_EXAM_CENTER?.openWrongBank?.();
+        return;
+      }
+      if (e.target.closest('[data-home-arena]') && typeof window.switchTab === 'function') {
+        window.switchTab('exams');
+        window.PK9_EXAM_CENTER?.openArena?.();
+        return;
+      }
+
+      if (e.target.closest('[data-toggle-reminder]')) {
+        const rpg = getRpgState();
+        const cur = getReminderPrefs(rpg);
+        const timeVal = document.getElementById('pk9-reminder-time')?.value || cur.time || '20:30';
+        const nextEnabled = !cur.enabled;
+        if (nextEnabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+          try { await Notification.requestPermission(); } catch {}
+        }
+        const nextPrefs = { enabled: nextEnabled, time: timeVal };
+        try { localStorage.setItem('pk9_reminder_prefs', JSON.stringify(nextPrefs)); } catch {}
+        if (window.PK9_RPG_STATE) window.PK9_RPG_STATE.reminder = nextPrefs;
+        if (window.PK9_GET_USER && window.PK9_GET_USER()) {
+          await rpgPost('rpg-settings', { reminder: nextPrefs });
+        } else {
+          toast(nextEnabled ? `🔔 Đã bật nhắc lịch lúc ${timeVal} trên thiết bị này!` : '🔕 Đã tắt nhắc lịch.', 'info');
+          renderMissionsTab();
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-test-reminder]')) {
+        if (typeof Notification === 'undefined') {
+          toast('Trình duyệt hiện tại không hỗ trợ Web Notification.', 'warning');
+          return;
+        }
+        if (Notification.permission === 'default') {
+          try { await Notification.requestPermission(); } catch {}
+        }
+        if (Notification.permission !== 'granted') {
+          toast('Bạn cần cho phép Thông báo (Allow Notifications) trong trình duyệt để nhận nhắc lịch!', 'warning');
+          return;
+        }
+        const due = Number(getRpgState().srs?.due_count || 0);
+        await fireStudyNotification(
+          '🔥 HỌC CÙNG PHÚC K9 — Nhắc học',
+          due > 0 ? `Bạn có ${due} câu Sổ Ôn SRS đang chờ ôn tập!` : 'Thông báo nhắc lịch & bảo vệ chuỗi Streak đã hoạt động chuẩn!'
+        );
+        toast('📲 Đã gửi thông báo thử nghiệm!', 'success');
       }
     });
 
@@ -2622,6 +2768,7 @@
     getState: getRpgState,
     loadMeta: loadRpgMeta,
     rpgPost,
+    checkAndNotifyReminders,
     renderHomeWidget: renderHomeRpgWidget,
     renderTab(tabId) {
       if (tabId === 'missions') renderMissionsTab();
@@ -2639,9 +2786,9 @@
   bindEvents();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      loadRpgMeta().then(() => checkUrlForScannedStudentCard());
+      loadRpgMeta().then(() => { checkUrlForScannedStudentCard(); checkAndNotifyReminders(); });
     });
   } else {
-    loadRpgMeta().then(() => checkUrlForScannedStudentCard());
+    loadRpgMeta().then(() => { checkUrlForScannedStudentCard(); checkAndNotifyReminders(); });
   }
 })(window, document);

@@ -1160,3 +1160,327 @@ html.dark .pk9-exam-room.paper-softgray .pk9-q-card {
     transform: translateY(0);
   }
 }
+
+/* ============================================================================
+ * GROUP 2 UPGRADES: ARENA 1v1, CONTEST BANNER, DIAGNOSTICS, TOOLS & DGNL LOCK
+ * ============================================================================ */
+.pk9-contest-banner {
+  border-radius: 1.25rem;
+  padding: 1.1rem 1.35rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #0c4a6e 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.45);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
+}
+
+.pk9-contest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.24rem 0.68rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+}
+
+.pk9-contest-badge.upcoming {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #bae6fd;
+}
+
+.pk9-contest-badge.ended {
+  background: rgba(148, 163, 184, 0.2);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: #e2e8f0;
+}
+
+.pk9-diag-card {
+  background: var(--pk9-surface, #ffffff);
+  border: 1px solid var(--pk9-border, #e2e8f0);
+  border-radius: 1.15rem;
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.pk9-diag-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.3fr) minmax(120px, 2fr) auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px dashed var(--pk9-border, #e2e8f0);
+}
+
+.pk9-diag-row:last-child {
+  border-bottom: none;
+}
+
+.pk9-arena-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.pk9-arena-box {
+  background: var(--pk9-surface, #ffffff);
+  border: 1.5px solid var(--pk9-border, #e2e8f0);
+  border-radius: 1.2rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.pk9-arena-vs-card {
+  border-radius: 1.25rem;
+  padding: 1.2rem 1.35rem;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #f8fafc;
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.pk9-section-lock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.14), rgba(212, 175, 55, 0.12));
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+}
+
+/* Floating Casio Calculator & Canvas Scratchpad */
+.pk9-tool-float-card {
+  position: fixed;
+  z-index: 1250;
+  background: var(--pk9-surface, #ffffff);
+  color: var(--pk9-text, #0f172a);
+  border: 1.5px solid var(--pk9-border, #cbd5e1);
+  border-radius: 1.15rem;
+  box-shadow: 0 22px 55px rgba(2, 6, 23, 0.38);
+  overflow: hidden;
+  animation: pk9SlideUpSheet 0.18s ease-out;
+}
+
+.pk9-calc-card {
+  right: 1rem;
+  bottom: 1rem;
+  width: min(350px, calc(100vw - 1.5rem));
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.pk9-pad-card {
+  left: 1rem;
+  bottom: 1rem;
+  width: min(480px, calc(100vw - 1.5rem));
+}
+
+.pk9-tool-float-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.pk9-calc-card .pk9-tool-float-head {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pk9-tool-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.pk9-calc-screen {
+  padding: 0.65rem 0.85rem;
+  background: #061322;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.pk9-calc-hist {
+  min-height: 28px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pk9-calc-expr-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: right;
+  margin-top: 0.2rem;
+}
+
+.pk9-calc-res {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #38bdf8;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 0.15rem;
+  word-break: break-all;
+}
+
+.pk9-calc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+  padding: 0.65rem;
+}
+
+.pk9-calc-key {
+  min-height: 38px;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: #1e293b;
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.pk9-calc-key.fn { background: #16243b; color: #93c5fd; font-size: 0.75rem; }
+.pk9-calc-key.op { background: #1d4ed8; color: #ffffff; }
+.pk9-calc-key.warn { background: #92400e; color: #fef3c7; }
+.pk9-calc-key.danger { background: #991b1b; color: #fee2e2; }
+.pk9-calc-key.eq { background: #059669; color: #ffffff; border-color: #10b981; }
+.pk9-calc-key:active { transform: scale(0.96); }
+
+.pk9-pad-colors {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.48rem 0.85rem;
+  border-bottom: 1px solid var(--pk9-border, #e2e8f0);
+}
+
+.pk9-pad-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  cursor: pointer;
+}
+
+.pk9-pad-swatch.active {
+  transform: scale(1.16);
+  box-shadow: 0 0 0 2px #2563eb;
+}
+
+.pk9-pad-mini-btn {
+  padding: 0.22rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--pk9-border, #cbd5e1);
+  background: var(--pk9-surface-2, #f8fafc);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pk9-pad-mini-btn.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.pk9-pad-canvas-wrap {
+  width: 100%;
+  height: 280px;
+  background-color: #fffef7;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 18px 18px;
+  touch-action: none;
+}
+
+.pk9-pad-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+.pk9-ts-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.85rem;
+  margin-top: 0.55rem;
+  border-radius: 0.85rem;
+  background: var(--pk9-surface-2, #f8fafc);
+  border: 1px solid var(--pk9-border, #e2e8f0);
+}
+
+.pk9-ts-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.62rem;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--pk9-primary, #2563eb);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .pk9-diag-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+  .pk9-arena-vs-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .pk9-pad-card {
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    bottom: calc(var(--pk9-mob-nav-h, 58px) + 0.5rem);
+  }
+  .pk9-calc-card {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    bottom: calc(var(--pk9-mob-nav-h, 58px) + 0.5rem);
+  }
+}

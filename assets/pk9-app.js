@@ -646,6 +646,20 @@
     }
   }
   window.switchTab = switchTab;
+  window.PK9_ASK_AI = function (promptText) {
+    const text = String(promptText || '').trim().slice(0, 1950);
+    if (!text) return;
+    switchTab('ai', { force: true });
+    window.setTimeout(() => {
+      const inp = document.getElementById('pk9-ai-input');
+      const form = document.getElementById('pk9-ai-form');
+      if (inp && form) {
+        inp.value = text;
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      }
+    }, 80);
+  };
 
   // ==========================================================================
   // AUTH & LEADERBOARD FETCHING
@@ -1706,16 +1720,31 @@
           const frameSrc = vid.kind !== 'none'
             ? vid.embedUrl
             : (activeTopic.pdfUrl ? toDrivePreviewUrl(activeTopic.pdfUrl) : '');
+          const tsList = parseVideoTimestampNotes(APP.notesMap[activeTopic.id] || '');
           return `
           <div class="pk9-video-stage" id="pk9-video-stage">
             ${frameSrc ? `
               <div class="pk9-video-frame-wrap">
                 <iframe
+                  id="pk9-lecture-iframe"
+                  data-vid-kind="${esc(vid.kind)}"
+                  data-yt-base="${esc(frameSrc)}"
                   src="${esc(frameSrc)}"
                   title="${esc(activeTopic.title)}"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowfullscreen
                 ></iframe>
+              </div>
+            ` : ''}
+
+            ${tsList.length ? `
+              <div class="pk9-ts-bar" id="pk9-video-ts-bar">
+                <span style="font-size:0.75rem;font-weight:800;color:var(--pk9-text-muted);">⏱ Mốc ghi chú video:</span>
+                ${tsList.map(ts => `
+                  <button type="button" class="pk9-ts-chip" data-seek-video="${ts.sec}" data-seek-label="${esc(ts.label)}" title="Nhảy tới mốc ${esc(ts.label)}">
+                    ▶ ${esc(ts.label)}${ts.note ? ` · ${esc(ts.note)}` : ''}
+                  </button>
+                `).join('')}
               </div>
             ` : ''}
 
@@ -1897,6 +1926,23 @@
     }).join('');
   }
 
+  function parseVideoTimestampNotes(text) {
+    const out = [];
+    const lines = String(text || '').split(/\r?\n/);
+    for (const line of lines) {
+      const m = line.match(/\[?(\d{1,3}):([0-5]\d)\]?\s*(.*)/);
+      if (!m) continue;
+      const min = Number(m[1]);
+      const sec = Number(m[2]);
+      const total = min * 60 + sec;
+      const label = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      const note = String(m[3] || '').trim().slice(0, 42);
+      out.push({ sec: total, label, note });
+      if (out.length >= 16) break;
+    }
+    return out;
+  }
+
   function renderTopicSubtabContent(topic) {
     if (APP.studySubtab === 'theory') {
       return `
@@ -1973,15 +2019,33 @@
 
     if (APP.studySubtab === 'notes') {
       const savedNote = APP.notesMap[topic.id] || '';
+      const tsList = parseVideoTimestampNotes(savedNote);
       return `
         <div>
           <label style="font-weight:800;font-size:0.9rem;display:block;margin-bottom:0.5rem;">
-            📝 Ghi chú cá nhân cho bài "${esc(topic.title)}" (Tự động lưu trên trình duyệt & đồng bộ đám mây khi đăng nhập)
+            📝 Ghi chú cá nhân & Mốc thời gian cho bài "${esc(topic.title)}" (Đồng bộ đám mây khi đăng nhập)
           </label>
-          <textarea id="pk9-topic-note-area" class="pk9-input" rows="7" placeholder="Ghi lại công thức quan trọng, mốc thời gian video hoặc lỗi sai cần tránh...">${esc(savedNote)}</textarea>
+          <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;margin-bottom:0.55rem;padding:0.55rem 0.7rem;border-radius:0.8rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
+            <input type="text" id="pk9-ts-time-input" class="pk9-input" placeholder="mm:ss (VD: 12:30)" style="width:140px;margin:0;" maxlength="7" />
+            <input type="text" id="pk9-ts-label-input" class="pk9-input" placeholder="Nội dung tại mốc này (VD: Công thức bấm máy...)" style="flex:1 1 200px;margin:0;" maxlength="80" />
+            <button type="button" class="pk9-btn-exam-ghost" data-insert-ts-note="${esc(topic.id)}" style="flex-shrink:0;">
+              ⏱ + Chèn mốc video
+            </button>
+          </div>
+          ${tsList.length ? `
+            <div class="pk9-ts-bar" style="margin-bottom:0.55rem;margin-top:0;">
+              <span style="font-size:0.74rem;font-weight:800;color:var(--pk9-text-muted);">▶ Bấm để tua video:</span>
+              ${tsList.map(ts => `
+                <button type="button" class="pk9-ts-chip" data-seek-video="${ts.sec}" data-seek-label="${esc(ts.label)}">
+                  ${esc(ts.label)}${ts.note ? ` · ${esc(ts.note)}` : ''}
+                </button>
+              `).join('')}
+            </div>
+          ` : ''}
+          <textarea id="pk9-topic-note-area" class="pk9-input" rows="7" placeholder="Ghi lại công thức quan trọng hoặc thêm dòng dạng [12:30] Công thức nhanh để bấm tua thẳng tới đoạn video...">${esc(savedNote)}</textarea>
           <div style="margin-top:0.75rem;display:flex;justify-content:flex-end;">
             <button type="button" class="pk9-btn-exam-primary" data-save-note="${esc(topic.id)}">
-              💾 Lưu ghi chú
+              💾 Lưu ghi chú & Mốc thời gian
             </button>
           </div>
         </div>
@@ -3867,6 +3931,38 @@
           </div>
         </div>
 
+        <div class="pk9-card" style="margin-bottom:1.15rem;">
+          <h4 style="margin:0 0 0.5rem;font-size:1.02rem;font-weight:900;">🏆 Lập Lịch Kỳ Thi Thử Toàn Hệ Thống (Live Contest Scheduler)</h4>
+          <p style="margin:0 0 0.75rem;font-size:0.79rem;color:var(--pk9-text-muted);">
+            Tạo đợt thi thử có đồng hồ đếm ngược hiển thị ngoài Phòng Luyện Đề và Bảng Xếp Hạng riêng cho đợt thi đó.
+          </p>
+          <form id="pk9-admin-contest-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0.65rem;align-items:end;">
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">Tên kỳ thi</label>
+              <input type="text" name="title" class="pk9-input" maxlength="140" placeholder="VD: Thi Thử Cuối Tuần THPTQG..." required />
+            </div>
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">Đề thi gắn với đợt</label>
+              <select name="examId" class="pk9-input" required>
+                ${adminExams.map(ex => `<option value="${esc(ex.id)}">${esc(ex.title)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">Bắt đầu</label>
+              <input type="datetime-local" name="startAt" class="pk9-input" required />
+            </div>
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">Kết thúc</label>
+              <input type="datetime-local" name="endAt" class="pk9-input" required />
+            </div>
+            <div>
+              <label style="font-size:0.75rem;font-weight:800;">Thưởng Top 💎</label>
+              <input type="number" name="rewardDiamonds" class="pk9-input" min="0" max="50" value="5" />
+            </div>
+            <button type="submit" class="pk9-btn-exam-primary">🚀 Mở / Cập Nhật Kỳ Thi</button>
+          </form>
+        </div>
+
         <div class="pk9-exam-toolbar">
           <div>
             <h3 style="margin:0;font-size:1.05rem;font-weight:900;">🏛️ Nhật Ký Nộp Bài & Chấm Điểm Tự Động Thời Gian Thực (${filteredAttempts.length} lượt)</h3>
@@ -4924,6 +5020,50 @@
         return;
       }
 
+      const seekBtn = e.target.closest('[data-seek-video]');
+      if (seekBtn) {
+        const sec = Math.max(0, Number(seekBtn.getAttribute('data-seek-video') || 0));
+        const label = seekBtn.getAttribute('data-seek-label') || '';
+        const ifr = document.getElementById('pk9-lecture-iframe');
+        const stage = document.getElementById('pk9-video-stage');
+        if (ifr) {
+          const kind = ifr.getAttribute('data-vid-kind');
+          const base = ifr.getAttribute('data-yt-base') || '';
+          if (kind === 'youtube' && base) {
+            const sep = base.includes('?') ? '&' : '?';
+            const cleanBase = base.replace(/([?&])(start|autoplay)=[^&]*/g, '').replace(/[?&]$/, '');
+            ifr.src = `${cleanBase}${cleanBase.includes('?') ? '&' : '?'}start=${sec}&autoplay=1`;
+            stage?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            toast(`▶ Đã tua video tới mốc ${label || `${sec}s`}!`, 'info');
+          } else {
+            toast(`⏱ Mốc ghi chú ${label}: video Google Drive chưa hỗ trợ nhảy giây trực tiếp, bạn kéo thanh tua tới phút này nhé.`, 'info');
+          }
+        }
+        return;
+      }
+
+      const insertTsBtn = e.target.closest('[data-insert-ts-note]');
+      if (insertTsBtn) {
+        const tId = insertTsBtn.getAttribute('data-insert-ts-note');
+        const tRaw = (document.getElementById('pk9-ts-time-input')?.value || '').trim();
+        const lRaw = (document.getElementById('pk9-ts-label-input')?.value || '').trim();
+        const area = document.getElementById('pk9-topic-note-area');
+        const m = tRaw.match(/^(\d{1,3}):([0-5]\d)$/);
+        if (!m) {
+          toast('Nhập mốc thời gian đúng dạng phút:giây (VD: 12:30 hoặc 04:15).', 'error');
+          return;
+        }
+        const tag = `[${String(Number(m[1])).padStart(2, '0')}:${m[2]}] ${lRaw || 'Ghi chú quan trọng'}`;
+        if (area) {
+          area.value = area.value.trim() ? `${area.value.trim()}\n${tag}` : tag;
+          APP.notesMap[tId] = area.value;
+          await syncProgressToServer();
+          toast(`⏱ Đã thêm & lưu mốc ${m[1]}:${m[2]}!`, 'success');
+          renderLecturesTab();
+        }
+        return;
+      }
+
       const saveNoteBtn = e.target.closest('[data-save-note]');
       if (saveNoteBtn) {
         const tId = saveNoteBtn.getAttribute('data-save-note');
@@ -4931,7 +5071,8 @@
         if (area) {
           APP.notesMap[tId] = area.value;
           await syncProgressToServer();
-          toast('💾 Đã lưu ghi chú bài giảng!', 'success');
+          toast('💾 Đã lưu ghi chú & mốc thời gian bài giảng!', 'success');
+          renderLecturesTab();
         }
         return;
       }
@@ -6038,6 +6179,33 @@
         return;
       }
 
+      if (e.target.id === 'pk9-admin-contest-form') {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const payload = Object.fromEntries(fd.entries());
+        try {
+          const resp = await fetch('/api/exams?action=contest-save', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify(payload)
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data?.ok) {
+            toast(data.message || '🏆 Đã mở kỳ thi thử toàn hệ thống!', 'success');
+            if (window.PK9_EXAM_CENTER?.loadArenaLobbyData) {
+              await window.PK9_EXAM_CENTER.loadArenaLobbyData();
+            }
+            e.target.reset();
+          } else {
+            toast(data?.message || 'Không lưu được kỳ thi thử.', 'error');
+          }
+        } catch {
+          toast('Lỗi kết nối máy chủ khi lưu kỳ thi.', 'error');
+        }
+        return;
+      }
+
       if (e.target.id === 'pk9-community-form') {
         e.preventDefault();
         if (!APP.user) {
@@ -6607,6 +6775,18 @@
       if (!APP.user && cachedBan?.banned) renderBanOverlay(cachedBan);
     } catch {}
     loadCommunityItems();
+
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const duelCode = params.get('duel');
+      const tabParam = params.get('tab');
+      if (duelCode && window.PK9_EXAM_CENTER?.openDuelByCode) {
+        switchTab('exams', { force: true });
+        window.PK9_EXAM_CENTER.openDuelByCode(duelCode);
+      } else if (tabParam && ['home', 'lectures', 'exams', 'leaderboard', 'docs', 'khoa-chui', 'archive', 'flashcards', 'community', 'planner', 'ai', 'missions', 'journey', 'shop', 'periodic', 'idcard'].includes(tabParam)) {
+        switchTab(tabParam, { force: true });
+      }
+    } catch {}
 
     // Ghi nhận lượt truy cập thực & thiết bị (Mobile / Desktop / Tablet / WebView) vào Admin Dashboard
     trackAnalyticsEvent('pageview', (APP.activeTab === 'admin' && !isClientVerifiedAdmin()) ? 'home' : (APP.activeTab || 'home'));

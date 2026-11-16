@@ -21,7 +21,7 @@
   }
 
   const STATE = {
-    view: 'catalog', // 'catalog' | 'sources' | 'bookmarks' | 'taking' | 'result'
+    view: 'catalog', // 'catalog' | 'sources' | 'bookmarks' | 'wrong-bank' | 'diagnostics' | 'arena' | 'taking' | 'result'
     subjectFilter: 'ALL',
     statusFilter: 'ALL', // 'ALL' | 'todo' | 'done'
     paperTheme: (() => {
@@ -35,6 +35,7 @@
     exams: [],
     doneExamIds: new Set(),
     activeExam: null,
+    activeContestId: null,
     attemptId: null,
     answers: {},
     flagged: {},
@@ -48,6 +49,10 @@
     })(),
     currentQIdx: 0,
     paletteDrawerOpen: false,
+    sectionLockMode: false,
+    sectionsPlan: [],
+    activeSectionIdx: 0,
+    sectionRemainingSec: 0,
     serverSaveTimer: null,
     startedAt: 0,
     remainingSec: 0,
@@ -55,8 +60,139 @@
     lastResult: null,
     xpAwarded: 0,
     goldAwarded: 0,
-    diamondsAwarded: 0
+    diamondsAwarded: 0,
+    contests: [],
+    openDuels: [],
+    contestCountdownTimer: null,
+    contestLbData: null,
+    duelRoom: null,
+    duelStage: 'lobby', // 'lobby' | 'playing' | 'result'
+    duelAnswers: {},
+    duelElapsedSec: 0,
+    duelTimerId: null,
+    duelPollId: null,
+    duelSubject: 'Tất cả',
+    duelCount: 5,
+    duelLastReward: null
   };
+
+  function getWrongBankList() {
+    const srv = window.PK9_RPG_STATE?.wrong_bank?.items;
+    if (Array.isArray(srv)) return srv.filter(x => x && !x.resolved);
+    try {
+      const local = JSON.parse(localStorage.getItem('pk9_wrong_bank_local') || '[]');
+      return Array.isArray(local) ? local.filter(x => x && !x.resolved) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function getTopicStatsList() {
+    const srv = window.PK9_RPG_STATE?.topic_stats;
+    if (Array.isArray(srv) && srv.length) return srv;
+    try {
+      const local = JSON.parse(localStorage.getItem('pk9_topic_stats_local') || '{}');
+      return Object.values(local || {}).filter(Boolean).sort((a, b) => Number(a.accuracy || 0) - Number(b.accuracy || 0));
+    } catch {
+      return [];
+    }
+  }
+
+  function recordLocalDiagnostics(exam, graded) {
+    if (!exam || !graded) return;
+    const nowIso = new Date().toISOString();
+    const subject = subjLabel(exam.subject);
+    const qById = new Map((exam.questions || []).map(q => [String(q.id), q]));
+
+    try {
+      const statsMap = JSON.parse(localStorage.getItem('pk9_topic_stats_local') || '{}') || {};
+      for (const ts of (graded.topicStats || [])) {
+        const topic = String(ts.topic || '').trim();
+        if (!topic) continue;
+        const k = `${subject}::${topic}`;
+        const prev = statsMap[k] || { key: k, subject, topic, total: 0, correct: 0, earnedPts: 0, maxPts: 0, accuracy: 0 };
+        const earnedPts = Number((Number(prev.earnedPts || 0) + Number(ts.earnedPts || 0)).toFixed(2));
+        const maxPts = Number((Number(prev.maxPts || 0) + Number(ts.maxPts || 0)).toFixed(2));
+        statsMap[k] = {
+          key: k,
+          subject,
+          topic,
+          total: Number(prev.total || 0) + Number(ts.count || ts.total || 0),
+          correct: Number(prev.correct || 0) + Number(ts.correct || 0),
+          earnedPts,
+          maxPts,
+          accuracy: maxPts > 0 ? Math.round((earnedPts / maxPts) * 100) : 0,
+          lastAt: nowIso
+        };
+      }
+      localStorage.setItem('pk9_topic_stats_local', JSON.stringify(statsMap));
+    } catch {}
+
+    try {
+      const bank = JSON.parse(localStorage.getItem('pk9_wrong_bank_local') || '[]') || [];
+      for (const rv of (graded.review || [])) {
+        const qId = String(rv.id || '');
+        if (!qId) continue;
+        const ok = rv.status === 'correct' || rv.correct === true;
+        const idx = bank.findIndex(x => String(x.id) === qId);
+        if (ok) {
+          if (idx >= 0) bank[idx].resolved = true;
+          continue;
+        }
+        const srcQ = qById.get(qId) || {};
+        const item = {
+          id: qId,
+          examId: exam.id,
+          examTitle: exam.title,
+          subject,
+          section: rv.section || srcQ.section || 'I',
+          number: rv.number || srcQ.number || 0,
+          topic: rv.topic || srcQ.topic || 'Tổng hợp',
+          type: rv.type || srcQ.type || 'mcq',
+          text: rv.text || srcQ.text || '',
+          options: srcQ.options || rv.options,
+          statements: srcQ.statements,
+          answer: srcQ.answer !== undefined ? srcQ.answer : rv.correctAnswer,
+          acceptedAnswers: srcQ.acceptedAnswers,
+          explanation: rv.explanation || srcQ.explanation || '',
+          userAnswer: rv.userAnswer ?? null,
+          wrongCount: idx >= 0 ? Number(bank[idx].wrongCount || 1) + 1 : 1,
+          resolved: false,
+          lastWrongAt: nowIso
+        };
+        if (idx >= 0) bank.splice(idx, 1);
+        bank.unshift(item);
+      }
+      localStorage.setItem('pk9_wrong_bank_local', JSON.stringify(bank.slice(0, 120)));
+    } catch {}
+  }
+
+  function findRecommendedLesson(subject, topicName) {
+    const catalog = Array.isArray(window.PK9_CATALOG) ? window.PK9_CATALOG : [];
+    const tokens = String(topicName || '').toLowerCase().split(/[\s,;&/-]+/).filter(w => w.length >= 2);
+    const subjLow = String(subject || '').toLowerCase();
+    let best = null;
+    let bestScore = -1;
+
+    for (const course of catalog) {
+      const cText = `${course.name || ''} ${course.shortName || ''} ${course.id || ''}`.toLowerCase();
+      const subjBonus = cText.includes(subjLow) || (subjLow.includes('toán') && cText.includes('toán')) ? 3 : 0;
+      for (const ch of (course.chapters || [])) {
+        for (const t of (ch.topics || [])) {
+          const hay = `${ch.title || ''} ${t.title || ''} ${t.desc || ''}`.toLowerCase();
+          let score = subjBonus;
+          for (const tk of tokens) {
+            if (hay.includes(tk)) score += 2;
+          }
+          if (score > bestScore && score >= 4) {
+            bestScore = score;
+            best = { courseId: course.id, courseName: course.shortName || course.name, topicId: t.id, topicTitle: t.title };
+          }
+        }
+      }
+    }
+    return best;
+  }
 
   function getBookmarksList() {
     const serverBm = window.PK9_RPG_STATE?.bookmarks;
@@ -338,16 +474,31 @@
       const hist = JSON.parse(localStorage.getItem('pk9_exam_history') || '[]');
       for (const h of hist) if (h?.examId) done.add(String(h.examId));
     } catch {}
+      try {
+        const hResp = await fetch('/api/exams?action=history', { credentials: 'include' });
+        if (hResp.ok) {
+          const hData = await hResp.json();
+          for (const a of (hData?.attempts || hData?.history || [])) {
+            if (a?.examId || a?.exam_id) done.add(String(a.examId || a.exam_id));
+          }
+        }
+      } catch {}
+      STATE.doneExamIds = done;
+      loadArenaLobbyData();
+    }
+
+  async function loadArenaLobbyData() {
     try {
-      const hResp = await fetch('/api/exams?action=history', { credentials: 'include' });
-      if (hResp.ok) {
-        const hData = await hResp.json();
-        for (const a of (hData?.attempts || hData?.history || [])) {
-          if (a?.examId || a?.exam_id) done.add(String(a.examId || a.exam_id));
+      const resp = await fetch('/api/exams?action=arena-list', { credentials: 'include' });
+      if (resp.ok) {
+        const d = await resp.json();
+        if (Array.isArray(d?.contests)) STATE.contests = d.contests;
+        if (Array.isArray(d?.open_duels)) STATE.openDuels = d.open_duels;
+        if (STATE.view === 'catalog' || STATE.view === 'arena') {
+          updateContestBannerDOM();
         }
       }
     } catch {}
-    STATE.doneExamIds = done;
   }
 
   function findFullSeedExam(examId) {
@@ -431,6 +582,59 @@
     } catch {}
   }
 
+  function computeExamSectionsPlan(ex) {
+    if (!ex || !Array.isArray(ex.questions) || !ex.questions.length) return [];
+    const totalSec = Math.max(300, Number(ex.duration || ex.durationMinutes || 50) * 60);
+    if (Array.isArray(ex.sectionsMeta) && ex.sectionsMeta.length > 1) {
+      return ex.sectionsMeta.map(m => ({
+        id: String(m.id || 'I'),
+        label: String(m.label || `Phần ${m.id || 'I'}`),
+        durationSec: Math.max(60, Math.round(Number(m.durationMin || 15) * 60))
+      }));
+    }
+    const order = [];
+    const seen = new Set();
+    for (const q of ex.questions) {
+      const secId = String(q.section || (normalizeQuestionType(q) === 'truefalse' ? 'II' : normalizeQuestionType(q) === 'short' ? 'III' : 'I'));
+      if (!seen.has(secId)) { seen.add(secId); order.push(secId); }
+    }
+    if (order.length <= 1) return [];
+    const counts = order.map(id => ex.questions.filter(q => String(q.section || 'I') === id).length);
+    const totalQ = counts.reduce((s, n) => s + n, 0) || 1;
+    const labels = {
+      I: 'Phần I • Trắc nghiệm ABCD',
+      II: 'Phần II • Đúng / Sai',
+      III: 'Phần III • Trả lời ngắn'
+    };
+    return order.map((id, idx) => ({
+      id,
+      label: labels[id] || `Phần ${id}`,
+      durationSec: Math.max(120, Math.round((counts[idx] / totalQ) * totalSec))
+    }));
+  }
+
+  function advanceLockedSection(auto = false) {
+    if (!STATE.sectionLockMode || !STATE.sectionsPlan.length) return;
+    if (STATE.activeSectionIdx < STATE.sectionsPlan.length - 1) {
+      if (!auto && typeof window.confirm === 'function') {
+        const curLabel = STATE.sectionsPlan[STATE.activeSectionIdx]?.label || 'phần hiện tại';
+        if (!window.confirm(`Xác nhận khóa "${curLabel}" và chuyển sang phần tiếp theo? Sau khi chuyển bạn sẽ không quay lại sửa phần trước được nữa.`)) {
+          return;
+        }
+      }
+      STATE.activeSectionIdx += 1;
+      const nextSec = STATE.sectionsPlan[STATE.activeSectionIdx];
+      STATE.sectionRemainingSec = nextSec.durationSec;
+      const firstQIdx = (STATE.activeExam?.questions || []).findIndex(q => String(q.section || 'I') === nextSec.id);
+      if (firstQIdx >= 0) STATE.currentQIdx = firstQIdx;
+      renderExamCenter();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.PK9_TOAST) window.PK9_TOAST(`⏱ Đã chuyển sang ${nextSec.label}!`, 'info');
+    } else {
+      submitActiveExam(true);
+    }
+  }
+
   function startTimer() {
     stopTimer();
     STATE.timerId = setInterval(() => {
@@ -439,6 +643,15 @@
         return;
       }
       STATE.remainingSec = Math.max(0, STATE.remainingSec - 1);
+      if (STATE.sectionLockMode && STATE.sectionsPlan.length) {
+        STATE.sectionRemainingSec = Math.max(0, STATE.sectionRemainingSec - 1);
+        const secTimerEl = document.getElementById('pk9-sec-timer');
+        if (secTimerEl) secTimerEl.textContent = formatClock(STATE.sectionRemainingSec);
+        if (STATE.sectionRemainingSec === 0) {
+          advanceLockedSection(true);
+          return;
+        }
+      }
       if (STATE.remainingSec % 5 === 0) persistLocalDraftNow();
       const timerEl = document.getElementById('pk9-exam-timer');
       if (timerEl) {
@@ -452,7 +665,7 @@
     }, 1000);
   }
 
-  async function startExamById(examId, openSplitPdf = false) {
+  async function startExamById(examId, openSplitPdf = false, contestId = null) {
     let fullExam = findFullSeedExam(examId);
     const draft = readExamDraft(examId);
     let attemptId = draft?.attemptId || `local-${examId}-${Date.now()}`;
@@ -496,13 +709,21 @@
     const hadProgress = hasSavedDraft(examId);
 
     const pdfPath = fullExam.sourceFile || fullExam.pdfUrl || '';
+    const plan = computeExamSectionsPlan(fullExam);
+    const autoDgnlLock = Array.isArray(fullExam.sectionsMeta) && fullExam.sectionsMeta.length > 1;
+
     STATE.activeExam = fullExam;
+    STATE.activeContestId = contestId || null;
     STATE.attemptId = attemptId;
     STATE.answers = draft?.answers || {};
     STATE.flagged = draft?.flagged || {};
     STATE.currentQIdx = Math.max(0, Math.min((fullExam.questions || []).length - 1, Number(draft?.currentQIdx || 0)));
     STATE.paletteDrawerOpen = false;
     STATE.splitPdf = Boolean(openSplitPdf && pdfPath);
+    STATE.sectionsPlan = plan;
+    STATE.sectionLockMode = autoDgnlLock;
+    STATE.activeSectionIdx = 0;
+    STATE.sectionRemainingSec = plan[0]?.durationSec || defaultSec;
     STATE.startedAt = Date.now();
     STATE.remainingSec = restoredSec;
     STATE.view = 'taking';
@@ -515,8 +736,85 @@
     }
   }
 
+  function startWrongPracticeExam(items) {
+    const src = (Array.isArray(items) && items.length ? items : getWrongBankList()).slice(0, 25);
+    if (!src.length) {
+      if (window.PK9_TOAST) window.PK9_TOAST('Tuyệt vời! Bạn chưa có câu sai nào tồn đọng.', 'success');
+      return;
+    }
+    const questions = src.map((it, idx) => ({
+      id: it.id,
+      section: it.section || 'I',
+      type: it.type || 'mcq',
+      number: idx + 1,
+      topic: it.topic || 'Tổng hợp',
+      text: it.text,
+      options: it.options,
+      statements: it.statements,
+      answer: it.answer,
+      acceptedAnswers: it.acceptedAnswers,
+      explanation: it.explanation
+    }));
+    const customExam = {
+      id: `pk9-wrong-practice-${Date.now()}`,
+      isCustomWrongPractice: true,
+      title: `Ôn Tập ${questions.length} Câu Từng Làm Sai (Đề Riêng Của Bạn)`,
+      subject: STATE.subjectFilter !== 'ALL' ? STATE.subjectFilter : 'Tổng hợp',
+      source: 'Ngân hàng Câu Sai Học Cùng Phúc K9',
+      duration: Math.max(10, questions.length * 3),
+      questions
+    };
+    STATE.activeExam = customExam;
+    STATE.activeContestId = null;
+    STATE.attemptId = customExam.id;
+    STATE.answers = {};
+    STATE.flagged = {};
+    STATE.currentQIdx = 0;
+    STATE.paletteDrawerOpen = false;
+    STATE.splitPdf = false;
+    STATE.sectionsPlan = [];
+    STATE.sectionLockMode = false;
+    STATE.startedAt = Date.now();
+    STATE.remainingSec = customExam.duration * 60;
+    STATE.view = 'taking';
+    renderExamCenter();
+    startTimer();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function resolveWrongItem(qId, isCorrect = true, silent = false) {
+    try {
+      const bank = JSON.parse(localStorage.getItem('pk9_wrong_bank_local') || '[]') || [];
+      const item = bank.find(x => String(x.id) === String(qId));
+      if (item) item.resolved = Boolean(isCorrect);
+      localStorage.setItem('pk9_wrong_bank_local', JSON.stringify(bank));
+    } catch {}
+
+    const user = typeof window.PK9_GET_USER === 'function' ? window.PK9_GET_USER() : null;
+    if (user) {
+      try {
+        const resp = await fetch('/api/dashboard?action=rpg-wrong-resolve', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+          body: JSON.stringify({ id: qId, correct: Boolean(isCorrect) })
+        });
+        if (resp.ok) {
+          const d = await resp.json();
+          if (d?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
+            window.PK9_APPLY_RPG_UPDATE(d.rpg, { xp: d.xp, weekly_xp: d.weekly_xp });
+          }
+          if (!silent && d?.message && window.PK9_TOAST) window.PK9_TOAST(d.message, 'success');
+        }
+      } catch {}
+    } else if (!silent && window.PK9_TOAST) {
+      window.PK9_TOAST('✅ Đã chuyển câu hỏi này ra khỏi danh sách câu sai!', 'success');
+    }
+    if (!silent && STATE.view === 'wrong-bank') updateCatalogDynamicDOM();
+  }
+
   function saveDraftDebounced() {
-    if (!STATE.activeExam) return;
+    if (!STATE.activeExam || STATE.activeExam.isCustomWrongPractice) return;
     persistLocalDraftNow();
     if (STATE.serverSaveTimer) clearTimeout(STATE.serverSaveTimer);
     STATE.serverSaveTimer = setTimeout(() => {
@@ -549,11 +847,36 @@
     }
 
     stopTimer();
-    const seedExam = findFullSeedExam(STATE.activeExam.id) || STATE.activeExam;
+    window.PK9_EXAM_TOOLS?.closeCalc?.();
+    window.PK9_EXAM_TOOLS?.closeScratchpad?.();
+
+    const isCustomWrong = Boolean(STATE.activeExam.isCustomWrongPractice);
+    const seedExam = isCustomWrong ? STATE.activeExam : (findFullSeedExam(STATE.activeExam.id) || STATE.activeExam);
     let graded = gradeExamLocally(seedExam, STATE.answers);
     let xpEarned = 0;
     let goldEarned = 0;
     let diamondsEarned = 0;
+
+    if (isCustomWrong) {
+      let resolvedNow = 0;
+      for (const r of (graded.review || [])) {
+        if (r.status === 'correct' || r.correct === true) {
+          resolvedNow += 1;
+          await resolveWrongItem(r.id, true, true);
+        }
+      }
+      STATE.lastResult = graded;
+      STATE.xpAwarded = resolvedNow * 5;
+      STATE.goldAwarded = resolvedNow * 8;
+      STATE.diamondsAwarded = 0;
+      STATE.view = 'result';
+      renderExamCenter();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.PK9_TOAST) {
+        window.PK9_TOAST(`🔥 Đã ôn xong ${graded.total} câu sai: Đúng ${graded.correct}/${graded.total} (làm chủ ${resolvedNow} câu)!`, 'success');
+      }
+      return;
+    }
 
     try {
       const resp = await fetch('/api/exams?action=submit', {
@@ -568,6 +891,7 @@
           attempt_id: STATE.attemptId,
           examId: STATE.activeExam.id,
           exam_id: STATE.activeExam.id,
+          contestId: STATE.activeContestId || '',
           answers: STATE.answers
         })
       });
@@ -627,6 +951,7 @@
       } catch {}
     }
 
+    recordLocalDiagnostics(STATE.activeExam, graded);
     STATE.doneExamIds.add(String(STATE.activeExam.id));
 
     try {
@@ -648,6 +973,7 @@
     STATE.xpAwarded = xpEarned;
     STATE.goldAwarded = goldEarned;
     STATE.diamondsAwarded = diamondsEarned;
+    STATE.activeContestId = null;
     STATE.view = 'result';
     renderExamCenter();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -700,6 +1026,9 @@
 
       ${STATE.view === 'sources' ? renderVerifiedSourcesSection(sourcesList, refDocs, q)
         : STATE.view === 'bookmarks' ? renderBookmarksSection(bookmarks, q)
+        : STATE.view === 'wrong-bank' ? renderWrongBankSection(q)
+        : STATE.view === 'diagnostics' ? renderDiagnosticsSection()
+        : STATE.view === 'arena' ? renderArenaSection()
         : `
         <div class="pk9-exam-grid">
           ${filtered.length ? filtered.map(ex => {
@@ -754,10 +1083,82 @@
     `;
   }
 
+  function formatRemainDuration(ms) {
+    const sec = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(sec / 86400);
+    const h = Math.floor((sec % 86400) / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (d > 0) return `${d} ngày ${String(h).padStart(2, '0')}g:${String(m).padStart(2, '0')}p`;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function buildContestBannerHtml() {
+    const contests = Array.isArray(STATE.contests) ? STATE.contests : [];
+    const active = contests.find(c => c.status === 'live') || contests.find(c => c.status === 'upcoming') || contests[0];
+    if (!active) return '';
+    const now = Date.now();
+    const sMs = new Date(active.startAt).getTime();
+    const eMs = new Date(active.endAt).getTime();
+    const status = now < sMs ? 'upcoming' : now <= eMs ? 'live' : 'ended';
+    const remMs = status === 'upcoming' ? (sMs - now) : status === 'live' ? (eMs - now) : 0;
+    const badgeLabel = status === 'live'
+      ? `🔴 ĐANG MỞ THI THỬ • CÒN ${formatRemainDuration(remMs)}`
+      : status === 'upcoming'
+      ? `⏳ SẮP MỞ ĐỀ • SAU ${formatRemainDuration(remMs)}`
+      : '🏁 ĐỢT THI ĐÃ ĐÓNG • XEM BẢNG XẾP HẠNG';
+
+    return `
+      <div class="pk9-contest-banner">
+        <div style="flex:1 1 320px;min-width:0;">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.4rem;">
+            <span class="pk9-contest-badge ${status}" id="pk9-contest-countdown" data-contest-start="${esc(active.startAt)}" data-contest-end="${esc(active.endAt)}">${badgeLabel}</span>
+            ${Number(active.rewardDiamonds || 0) > 0 ? `<span class="pk9-badge" style="background:rgba(212,175,55,0.22);color:#fde047;border:1px solid rgba(212,175,55,0.45);">💎 Top thưởng +${Number(active.rewardDiamonds)} KC</span>` : ''}
+          </div>
+          <h3 style="margin:0 0 0.25rem;font-size:1.1rem;font-weight:900;color:#ffffff;">${esc(active.title)}</h3>
+          <div style="font-size:0.81rem;color:#cbd5e1;">Đề thi chuẩn: <b>${esc(active.examTitle || active.examId)}</b></div>
+        </div>
+        <div style="display:flex;gap:0.55rem;flex-wrap:wrap;align-items:center;">
+          ${status === 'live' ? `
+            <button type="button" class="pk9-btn-exam-primary" data-start-contest="${esc(active.id)}" data-contest-exam="${esc(active.examId)}">
+              ⚡ Vào Thi Đợt Này
+            </button>
+          ` : ''}
+          <button type="button" class="pk9-btn-exam-ghost" data-open-contest-lb="${esc(active.id)}" style="background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.28);">
+            🏆 BXH Đợt Thi
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateContestBannerDOM() {
+    const slot = document.getElementById('pk9-contest-banner-slot');
+    if (slot) slot.innerHTML = buildContestBannerHtml();
+    if (STATE.contestCountdownTimer) clearInterval(STATE.contestCountdownTimer);
+    if (document.getElementById('pk9-contest-countdown')) {
+      STATE.contestCountdownTimer = setInterval(() => {
+        const el = document.getElementById('pk9-contest-countdown');
+        if (!el) {
+          clearInterval(STATE.contestCountdownTimer);
+          STATE.contestCountdownTimer = null;
+          return;
+        }
+        const sMs = new Date(el.getAttribute('data-contest-start') || 0).getTime();
+        const eMs = new Date(el.getAttribute('data-contest-end') || 0).getTime();
+        const now = Date.now();
+        if (now < sMs) el.textContent = `⏳ SẮP MỞ ĐỀ • SAU ${formatRemainDuration(sMs - now)}`;
+        else if (now <= eMs) el.textContent = `🔴 ĐANG MỞ THI THỬ • CÒN ${formatRemainDuration(eMs - now)}`;
+        else el.textContent = '🏁 ĐỢT THI ĐÃ ĐÓNG • XEM BẢNG XẾP HẠNG';
+      }, 1000);
+    }
+  }
+
   function updateCatalogDynamicDOM() {
     const dyn = document.getElementById('pk9-exam-dynamic-body');
     if (dyn) {
       dyn.innerHTML = buildCatalogDynamicHtml();
+      typesetMath(dyn);
     } else {
       renderExamCenter();
     }
@@ -766,6 +1167,7 @@
   function renderCatalogView(root) {
     const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
     const bookmarks = getBookmarksList();
+    const wrongList = getWrongBankList();
 
     let hist = [];
     try { hist = JSON.parse(localStorage.getItem('pk9_exam_history') || '[]'); } catch {}
@@ -786,7 +1188,7 @@
                 Phòng Thi Ảo & Hệ Thống Chấm Điểm Tự Động Phúc K9
               </h2>
               <p style="margin:0;color:rgba(255,255,255,0.86);font-size:0.92rem;line-height:1.6;">
-                Tích hợp đề thi thật từ các Sở GD&ĐT (Lâm Đồng, Điện Biên, Hà Nội, Nghệ An...), THPT Ngô Gia Tự, Bộ GD&ĐT và ĐGNL HSA/V-ACT. Hệ thống chấm chuẩn 3 phần, lưu câu hỏi hay, chỉnh nền giấy làm bài & cộng XP + Vàng + Kim cương trực tiếp!
+                Tích hợp đề thi thật từ các Sở GD&ĐT (Lâm Đồng, Điện Biên, Hà Nội, Nghệ An...), THPT Ngô Gia Tự, Bộ GD&ĐT và ĐGNL HSA/V-ACT. Hỗ trợ Ngân hàng Câu Sai, Chẩn đoán Điểm Yếu, Đấu Trường 1v1, Bảng Nháp & Máy Tính Khoa Học!
               </p>
             </div>
             <div class="pk9-exam-kpis">
@@ -810,6 +1212,8 @@
           </div>
         </div>
 
+        <div id="pk9-contest-banner-slot">${buildContestBannerHtml()}</div>
+
         <div class="pk9-exam-toolbar">
           <div class="pk9-exam-tabs">
             ${subjects.map(sub => `
@@ -817,11 +1221,20 @@
                 ${sub === 'ALL' ? '🔥 Tất cả môn' : esc(sub)}
               </button>
             `).join('')}
+            <button type="button" class="pk9-exam-chip ${STATE.view === 'wrong-bank' ? 'active' : ''}" data-exam-view="wrong-bank">
+              ❌ Câu sai (${wrongList.length})
+            </button>
+            <button type="button" class="pk9-exam-chip ${STATE.view === 'diagnostics' ? 'active' : ''}" data-exam-view="diagnostics">
+              📊 Điểm yếu & Gợi ý
+            </button>
+            <button type="button" class="pk9-exam-chip ${STATE.view === 'arena' ? 'active' : ''}" data-exam-view="arena">
+              ⚔️ Đấu Trường 1v1
+            </button>
             <button type="button" class="pk9-exam-chip ${STATE.view === 'bookmarks' ? 'active' : ''}" data-exam-view="bookmarks">
               📌 Câu đã lưu (${bookmarks.length})
             </button>
             <button type="button" class="pk9-exam-chip ${STATE.view === 'sources' ? 'active' : ''}" data-exam-view="sources">
-              📚 Kho Đề Gốc Sở / Bộ (${sourcesList.length + refDocs.length})
+              📚 Đề gốc Sở/Bộ (${sourcesList.length + refDocs.length})
             </button>
           </div>
           <div class="pk9-exam-search">
@@ -832,6 +1245,347 @@
 
         <div id="pk9-exam-dynamic-body">
           ${buildCatalogDynamicHtml()}
+        </div>
+
+        ${STATE.contestLbData ? renderContestLbModalHtml(STATE.contestLbData) : ''}
+      </div>
+    `;
+    updateContestBannerDOM();
+    typesetMath(root);
+  }
+
+  function renderContestLbModalHtml(data) {
+    const contest = data?.contest || {};
+    const entries = Array.isArray(data?.entries) ? data.entries : [];
+    return `
+      <div class="pk9-palette-drawer-backdrop open" id="pk9-contest-lb-modal" data-close-contest-lb="1">
+        <div class="pk9-palette-drawer" style="max-width:600px;" onclick="event.stopPropagation()">
+          <div class="pk9-palette-drawer-head">
+            <div>
+              <div style="font-weight:900;font-size:1rem;">🏆 BXH Đợt Thi: ${esc(contest.title || 'Kỳ Thi Thử Toàn Hệ Thống')}</div>
+              <div style="font-size:0.76rem;color:var(--pk9-text-muted,#64748b);">Xếp hạng theo Điểm cao nhất → Thời gian làm bài nhanh nhất</div>
+            </div>
+            <button type="button" class="pk9-btn-exam-ghost" data-close-contest-lb="1" style="padding:0.3rem 0.65rem;">✕ Đóng</button>
+          </div>
+          ${entries.length ? `
+            <div style="display:flex;flex-direction:column;gap:0.45rem;">
+              ${entries.slice(0, 30).map((r, i) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.65rem;padding:0.6rem 0.85rem;border-radius:0.8rem;background:var(--pk9-surface-2,#f8fafc);border:1px solid var(--pk9-border,#e2e8f0);">
+                  <div style="display:flex;align-items:center;gap:0.6rem;min-width:0;">
+                    <span style="font-weight:900;font-size:0.95rem;width:28px;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</span>
+                    <div style="min-width:0;">
+                      <div style="font-weight:800;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.displayName || r.username)}</div>
+                      <div style="font-size:0.74rem;color:var(--pk9-text-muted,#64748b);">Đúng ${r.correct}/${r.total} câu • Thời gian ${formatClock(r.timeSec || 60)}</div>
+                    </div>
+                  </div>
+                  <div style="font-weight:900;font-size:1.05rem;color:#2563eb;">${Number(r.score || 0).toFixed(2)}đ</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div style="padding:2rem 1rem;text-align:center;color:var(--pk9-text-muted,#64748b);font-size:0.88rem;">
+              Chưa có thí sinh nào nộp bài trong đợt thi này. Hãy là người đầu tiên ghi tên lên Top 1!
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWrongBankSection(q) {
+    const allWrong = getWrongBankList();
+    const list = allWrong.filter(item => {
+      if (STATE.subjectFilter !== 'ALL' && subjLabel(item.subject) !== STATE.subjectFilter) return false;
+      if (!q) return true;
+      return `${item.text || ''} ${item.topic || ''} ${item.subject || ''} ${item.examTitle || ''}`.toLowerCase().includes(q);
+    });
+
+    if (!allWrong.length) {
+      return `
+        <div style="padding:2.3rem 1.5rem;text-align:center;background:var(--pk9-surface);border-radius:1.15rem;border:1px dashed var(--pk9-border);">
+          <div style="font-size:2.2rem;margin-bottom:0.4rem;">🎉</div>
+          <div style="font-weight:900;font-size:1.05rem;margin-bottom:0.25rem;">Ngân Hàng Câu Sai đang sạch bóng!</div>
+          <div style="font-size:0.86rem;color:var(--pk9-text-muted);max-width:480px;margin:0 auto;">
+            Mỗi khi bạn nộp một đề trong Phòng Luyện Đề, bất kỳ câu nào làm sai hoặc thiếu ý sẽ tự động gom về đây để bạn luyện lại riêng cho tới khi thuộc lòng.
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="pk9-diag-card" style="display:flex;align-items:center;justify-content:space-between;gap:0.85rem;flex-wrap:wrap;">
+        <div>
+          <h4 style="margin:0 0 0.25rem;font-size:1.02rem;font-weight:900;">❌ Ngân Hàng "Câu Sai Của Riêng Tôi" (${list.length} câu cần vá)</h4>
+          <p style="margin:0;font-size:0.83rem;color:var(--pk9-text-muted);">Hệ thống tự gom câu sai từ các đề thi Sở/Bộ. Làm đúng lại sẽ được cộng <b>+8 🪙 Vàng & +5 ⚡ EXP</b> mỗi câu!</p>
+        </div>
+        <button type="button" class="pk9-btn-exam-primary" data-practice-wrong-all="1" ${list.length ? '' : 'disabled'}>
+          ⚡ Luyện lại ${Math.min(25, list.length)} câu sai ngay
+        </button>
+      </div>
+
+      <div class="pk9-exam-grid">
+        ${list.map(it => {
+          const recLesson = findRecommendedLesson(it.subject, it.topic);
+          return `
+            <article class="pk9-exam-card">
+              <div>
+                <div class="pk9-exam-card-badges">
+                  <span class="pk9-badge pk9-badge-subj">📘 ${esc(subjLabel(it.subject))}</span>
+                  ${it.topic ? `<span class="pk9-badge pk9-badge-verified">📌 ${esc(it.topic)}</span>` : ''}
+                  <span class="pk9-badge pk9-badge-draft">Sai ${Number(it.wrongCount || 1)} lần</span>
+                </div>
+                <div style="font-size:0.88rem;font-weight:700;line-height:1.5;margin:0.45rem 0 0.55rem;">${esc(it.text || 'Câu hỏi đã lưu')}</div>
+                ${it.explanation ? `<div style="font-size:0.78rem;color:var(--pk9-text-muted);background:var(--pk9-surface-2);padding:0.5rem 0.65rem;border-radius:0.65rem;margin-bottom:0.55rem;">💡 ${esc(it.explanation)}</div>` : ''}
+                ${it.examTitle ? `<div class="pk9-exam-origin">📄 Nguồn: ${esc(it.examTitle)} (Câu ${esc(it.number || '?')})</div>` : ''}
+              </div>
+              <div class="pk9-exam-actions">
+                <button type="button" class="pk9-btn-exam-primary" data-resolve-wrong="${esc(it.id)}">✓ Đã nắm vững (+8🪙)</button>
+                ${recLesson ? `
+                  <button type="button" class="pk9-btn-exam-ghost" data-jump-rec-course="${esc(recLesson.courseId)}" data-jump-rec-topic="${esc(recLesson.topicId)}" title="Mở bài giảng liên quan">
+                    🎬 Ôn bài giảng
+                  </button>
+                ` : ''}
+                <button type="button" class="pk9-btn-exam-ghost" data-ask-ai-question="${esc(`Giải thích chi tiết và chỉ lỗi hay sai cho câu ${subjLabel(it.subject)} (${it.topic || ''}): ${it.text || ''}`)}">
+                  🤖 Hỏi AI
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderDiagnosticsSection() {
+    const stats = getTopicStatsList();
+    if (!stats.length) {
+      return `
+        <div style="padding:2.3rem 1.5rem;text-align:center;background:var(--pk9-surface);border-radius:1.15rem;border:1px dashed var(--pk9-border);">
+          <div style="font-size:2.2rem;margin-bottom:0.4rem;">📊</div>
+          <div style="font-weight:900;font-size:1.05rem;margin-bottom:0.25rem;">Chưa có dữ liệu Chẩn đoán Năng lực</div>
+          <div style="font-size:0.86rem;color:var(--pk9-text-muted);max-width:480px;margin:0 auto;">
+            Hãy hoàn thành ít nhất 1 đề thi bất kỳ trong Kho Luyện Đề — hệ thống sẽ tự vẽ biểu đồ độ chính xác từng chuyên đề và đề xuất video cần ôn ngay!
+          </div>
+        </div>
+      `;
+    }
+    const weakTopics = stats.filter(s => Number(s.accuracy || 0) < 75);
+    return `
+      <div class="pk9-diag-card">
+        <h4 style="margin:0 0 0.35rem;font-size:1.05rem;font-weight:900;">📊 Bản Đồ Chẩn Đoán Chuyên Đề Mạnh / Yếu (Tích Lũy Toàn Bộ Đề)</h4>
+        <p style="margin:0 0 0.9rem;font-size:0.83rem;color:var(--pk9-text-muted);">
+          Sắp xếp từ chuyên đề yếu nhất lên đầu (${weakTopics.length} chuyên đề dưới 75% cần ưu tiên vá lỗ hổng).
+        </p>
+        <div>
+          ${stats.map(t => {
+            const pct = Math.max(0, Math.min(100, Number(t.accuracy || 0)));
+            const color = pct >= 80 ? '#10b981' : pct >= 55 ? '#f59e0b' : '#ef4444';
+            const rec = findRecommendedLesson(t.subject, t.topic);
+            return `
+              <div class="pk9-diag-row">
+                <div>
+                  <div style="font-weight:800;font-size:0.88rem;">${esc(t.topic)}</div>
+                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);">${esc(subjLabel(t.subject))} • Đúng ${t.correct || 0}/${t.total || 0} câu</div>
+                </div>
+                <div class="pk9-topic-track" style="height:0.62rem;">
+                  <div class="pk9-topic-fill" style="width:${Math.max(4, pct)}%;background:${color};"></div>
+                </div>
+                <div style="font-weight:900;font-size:0.9rem;color:${color};min-width:58px;text-align:right;">${pct}%</div>
+                <div>
+                  ${rec ? `
+                    <button type="button" class="pk9-btn-exam-ghost" data-jump-rec-course="${esc(rec.courseId)}" data-jump-rec-topic="${esc(rec.topicId)}" style="padding:0.32rem 0.7rem;font-size:0.76rem;">
+                      🎬 Học: ${esc(rec.courseName)}
+                    </button>
+                  ` : `<span style="font-size:0.74rem;color:var(--pk9-text-muted);">${pct >= 80 ? '✅ Vững vàng' : '📌 Ôn câu sai'}</span>`}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function stopDuelTimers() {
+    if (STATE.duelTimerId) { clearInterval(STATE.duelTimerId); STATE.duelTimerId = null; }
+    if (STATE.duelPollId) { clearInterval(STATE.duelPollId); STATE.duelPollId = null; }
+  }
+
+  function startDuelTimers() {
+    stopDuelTimers();
+    if (STATE.duelStage === 'playing' && STATE.duelRoom) {
+      STATE.duelTimerId = setInterval(() => {
+        if (STATE.view !== 'arena' || STATE.duelStage !== 'playing') { stopDuelTimers(); return; }
+        STATE.duelElapsedSec += 1;
+        const cEl = document.getElementById('pk9-duel-clock');
+        if (cEl) cEl.textContent = formatClock(STATE.duelElapsedSec);
+      }, 1000);
+    }
+    if (STATE.duelRoom && STATE.duelRoom.status !== 'finished') {
+      STATE.duelPollId = setInterval(async () => {
+        if (STATE.view !== 'arena' || !STATE.duelRoom?.code) { stopDuelTimers(); return; }
+        try {
+          const resp = await fetch(`/api/exams?action=duel-state&code=${encodeURIComponent(STATE.duelRoom.code)}`, { credentials: 'include' });
+          if (resp.ok) {
+            const d = await resp.json();
+            if (d?.ok && d.room) {
+              const prevStatus = STATE.duelRoom.status;
+              const prevLen = (STATE.duelRoom.players || []).length;
+              STATE.duelRoom = d.room;
+              if (STATE.duelStage === 'result' && (d.room.status !== prevStatus || (d.room.players || []).length !== prevLen)) {
+                updateCatalogDynamicDOM();
+                if (d.room.status === 'finished') stopDuelTimers();
+              }
+            }
+          }
+        } catch {}
+      }, 3000);
+    }
+  }
+
+  function renderArenaSection() {
+    const loggedUser = typeof window.PK9_GET_USER === 'function' ? window.PK9_GET_USER() : null;
+    const myUname = String(loggedUser?.username || '').toLowerCase();
+
+    if (STATE.duelRoom && (STATE.duelStage === 'playing' || STATE.duelStage === 'result')) {
+      const room = STATE.duelRoom;
+      const players = room.players || [];
+      const me = players.find(p => String(p.username).toLowerCase() === myUname) || players[0] || {};
+      const opp = players.find(p => String(p.username).toLowerCase() !== myUname) || null;
+      const qs = room.questions || [];
+      const doneCnt = qs.filter(q => Number.isInteger(STATE.duelAnswers[q.id])).length;
+      const shareUrl = `${window.location.origin}/?duel=${encodeURIComponent(room.code)}`;
+
+      if (STATE.duelStage === 'result' || me.status === 'submitted') {
+        const bothDone = room.status === 'finished';
+        return `
+          <div class="pk9-arena-vs-card">
+            <div>
+              <div style="font-size:0.72rem;font-weight:800;color:#38bdf8;">BẠN • ${room.winner?.username === me.username ? '👑 NGƯỜI THẮNG' : ''}</div>
+              <div style="font-size:1.15rem;font-weight:900;margin:0.15rem 0;">${esc(me.displayName || me.username || 'Bạn')}</div>
+              <div style="font-size:0.88rem;color:#fde047;font-weight:800;">
+                ${me.score ?? 0} điểm • Đúng ${me.correct ?? 0}/${qs.length} (${formatClock(me.timeSec || 0)})
+              </div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:1.5rem;font-weight:900;color:#f59e0b;">⚔️ VS</div>
+              <div style="font-size:0.74rem;color:#cbd5e1;">Mã phòng: <b>${esc(room.code)}</b></div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.72rem;font-weight:800;color:#38bdf8;">ĐỐI THỦ • ${opp && room.winner?.username === opp.username ? '👑 NGƯỜI THẮNG' : ''}</div>
+              <div style="font-size:1.15rem;font-weight:900;margin:0.15rem 0;">${opp ? esc(opp.displayName || opp.username) : '⏳ Đang chờ bạn bè vào...'}</div>
+              <div style="font-size:0.88rem;color:#e2e8f0;font-weight:700;">
+                ${!opp ? `Gửi mã ${esc(room.code)} để đối thủ vào đấu` : opp.status === 'submitted' ? `${opp.score} điểm • Đúng ${opp.correct}/${qs.length} (${formatClock(opp.timeSec || 0)})` : '⏳ Đối thủ đang làm bài...'}
+              </div>
+            </div>
+          </div>
+
+          <div class="pk9-diag-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.65rem;">
+            <div>
+              <b>${bothDone ? (room.winner?.type === 'draw' ? '🤝 Hai đấu thủ hòa điểm!' : `🏆 Chiến thắng thuộc về ${esc(room.winner?.displayName || '')}!`) : '📡 Đang tự động cập nhật kết quả đối thủ mỗi 3 giây...'}</b>
+              ${STATE.duelLastReward ? `<div style="font-size:0.8rem;color:#10b981;font-weight:800;margin-top:0.2rem;">🎁 Phần thưởng đã nhận: +${STATE.duelLastReward.gold || 0} 🪙 Vàng · +${STATE.duelLastReward.xp || 0} ⚡ EXP</div>` : ''}
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-btn-exam-ghost" data-copy-duel-link="${esc(shareUrl)}">📋 Chép Link Mời (${esc(room.code)})</button>
+              <button type="button" class="pk9-btn-exam-primary" data-duel-back-lobby="1">⚔️ Về Sảnh Đấu Trường</button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            ${qs.map((q, idx) => {
+              const picked = STATE.duelAnswers[q.id];
+              const isOk = picked === q.correct;
+              return `
+                <div class="pk9-review-card ${isOk ? 'correct' : 'wrong'}">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
+                    <b>Câu ${idx + 1} • ${esc(q.subject)}</b>
+                    <span class="pk9-badge ${isOk ? 'pk9-badge-verified' : 'pk9-badge-hot'}">${isOk ? '✓ Chính xác' : '✗ Chưa đúng'}</span>
+                  </div>
+                  <div style="font-size:0.9rem;margin-bottom:0.45rem;">${esc(q.question)}</div>
+                  <div style="font-size:0.82rem;">Bạn chọn: <b>${picked >= 0 ? esc(q.options?.[picked] || '') : 'Trống'}</b> • Đáp án đúng: <b style="color:#10b981;">${esc(q.options?.[q.correct] || '')}</b></div>
+                  ${q.solution ? `<div class="pk9-exp-box">💡 ${esc(q.solution)}</div>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="pk9-exam-sticky-bar" style="position:sticky;top:var(--pk9-topbar-h,52px);z-index:20;margin-bottom:1rem;">
+          <div>
+            <div style="font-size:0.74rem;font-weight:800;color:#2563eb;">⚔️ PHÒNG THÁCH ĐẤU 1v1 • MÃ: ${esc(room.code)}</div>
+            <div style="font-weight:900;font-size:0.96rem;">${esc(room.title)} (${doneCnt}/${qs.length} câu)</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+            <span class="pk9-timer-pill" id="pk9-duel-clock">${formatClock(STATE.duelElapsedSec)}</span>
+            <button type="button" class="pk9-btn-exam-ghost" data-copy-duel-link="${esc(shareUrl)}">📋 Link mời</button>
+            <button type="button" class="pk9-btn-exam-primary" data-duel-submit="1">✅ Nộp bài Đấu</button>
+            <button type="button" class="pk9-btn-exam-ghost" data-duel-back-lobby="1">✕ Rời</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.85rem;">
+          ${qs.map((q, idx) => {
+            const picked = STATE.duelAnswers[q.id];
+            const letters = ['A', 'B', 'C', 'D'];
+            return `
+              <div class="pk9-q-card ${Number.isInteger(picked) ? 'answered' : ''}">
+                <div class="pk9-q-num" style="margin-bottom:0.45rem;"><span>Câu ${idx + 1}/${qs.length} • ${esc(q.subject)}</span><span class="pk9-q-topic-tag">${esc(q.topic)}</span></div>
+                <div class="pk9-q-prompt">${esc(q.question)}</div>
+                <div class="pk9-mcq-list">
+                  ${(q.options || []).map((opt, oIdx) => `
+                    <div class="pk9-mcq-opt ${picked === oIdx ? 'selected' : ''}" data-duel-pick="${esc(q.id)}" data-duel-opt="${oIdx}">
+                      <span class="pk9-mcq-letter">${letters[oIdx]}</span>
+                      <div style="flex:1;">${esc(opt)}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    const duelSubjs = ['Tất cả', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
+    return `
+      <div class="pk9-arena-grid">
+        <div class="pk9-arena-box">
+          <h4 style="margin:0 0 0.45rem;font-size:1.02rem;font-weight:900;">⚔️ Tạo Phòng Thách Đấu 1v1 Mới</h4>
+          <p style="margin:0 0 0.85rem;font-size:0.82rem;color:var(--pk9-text-muted);">Chọn môn & số câu, hệ thống sinh mã phòng + link mời gửi bạn bè. Thắng trận thưởng <b>+40 🪙 Vàng & +35 ⚡ EXP</b>!</p>
+          ${!loggedUser ? `<div style="margin-bottom:0.75rem;padding:0.55rem 0.75rem;border-radius:0.75rem;background:rgba(245,158,11,0.12);font-size:0.8rem;font-weight:700;color:#b45309;">🔒 Hãy <button type="button" class="pk9-admin-btn-xs" data-open-auth="login">Đăng nhập</button> để tạo và đấu 1v1 cùng bạn bè.</div>` : ''}
+          <div style="font-size:0.76rem;font-weight:800;margin-bottom:0.3rem;color:var(--pk9-text-muted);">MÔN THI ĐẤU:</div>
+          <div class="pk9-exam-tabs" style="margin-bottom:0.7rem;">
+            ${duelSubjs.map(s => `<button type="button" class="pk9-exam-chip ${STATE.duelSubject === s ? 'active' : ''}" data-duel-subj="${esc(s)}">${esc(s)}</button>`).join('')}
+          </div>
+          <div style="font-size:0.76rem;font-weight:800;margin-bottom:0.3rem;color:var(--pk9-text-muted);">SỐ CÂU ĐẤU NHANH:</div>
+          <div class="pk9-exam-tabs" style="margin-bottom:0.9rem;">
+            ${[5, 10].map(n => `<button type="button" class="pk9-exam-chip ${STATE.duelCount === n ? 'active' : ''}" data-duel-count="${n}">${n} câu tốc độ</button>`).join('')}
+          </div>
+          <button type="button" class="pk9-btn-exam-primary" data-duel-create="1" style="width:100%;">🚀 Tạo Phòng & Lấy Mã Mời</button>
+        </div>
+
+        <div class="pk9-arena-box">
+          <h4 style="margin:0 0 0.45rem;font-size:1.02rem;font-weight:900;">🔑 Nhập Mã Phòng Hoặc Vào Sảnh Đang Chờ</h4>
+          <p style="margin:0 0 0.75rem;font-size:0.82rem;color:var(--pk9-text-muted);">Dán mã 6 ký tự (VD: K9A7F2) bạn bè gửi hoặc chọn phòng đang mở bên dưới.</p>
+          <form id="pk9-duel-join-form" style="display:flex;gap:0.5rem;margin-bottom:0.9rem;">
+            <input type="text" id="pk9-duel-code-input" class="pk9-input" maxlength="12" placeholder="Nhập mã phòng (VD: K9XXXX)..." style="margin:0;text-transform:uppercase;font-weight:800;" required />
+            <button type="submit" class="pk9-btn-exam-primary" style="flex-shrink:0;">⚔️ Vào Đấu</button>
+          </form>
+          <div style="font-size:0.76rem;font-weight:800;margin-bottom:0.45rem;color:var(--pk9-text-muted);">PHÒNG THÁCH ĐẤU ĐANG MỞ (${(STATE.openDuels || []).length}):</div>
+          <div style="display:flex;flex-direction:column;gap:0.45rem;max-height:220px;overflow-y:auto;">
+            ${(STATE.openDuels || []).length ? STATE.openDuels.map(r => `
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.55rem 0.75rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
+                <div style="min-width:0;">
+                  <div style="font-weight:800;font-size:0.84rem;">${esc(r.title)} <span class="pk9-badge pk9-badge-code">${esc(r.code)}</span></div>
+                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);">Chủ phòng: ${esc(r.hostName)} • ${r.playerCount || 1}/2 đấu thủ</div>
+                </div>
+                <button type="button" class="pk9-admin-btn-xs" data-duel-join-code="${esc(r.code)}" ${r.playerCount >= 2 ? 'disabled' : ''}>
+                  ${r.playerCount >= 2 ? (r.status === 'finished' ? '🏁 Đã xong' : 'Đủ người') : '⚔️ Thách đấu'}
+                </button>
+              </div>
+            `).join('') : `<div style="font-size:0.82rem;color:var(--pk9-text-muted);padding:0.75rem 0;">Chưa có phòng nào mở — hãy bấm Tạo Phòng bên trái để khởi xướng kèo 1v1!</div>`}
+          </div>
         </div>
       </div>
     `;
@@ -950,12 +1704,24 @@
     const questions = ex.questions || [];
     const answeredCount = questions.filter(q => isQuestionAnswered(q, STATE.answers[q.id])).length;
     const pdfPath = ex.sourceFile || ex.pdfUrl || '';
+    const hasSectionPlan = Array.isArray(STATE.sectionsPlan) && STATE.sectionsPlan.length > 1;
+    const activeSec = (STATE.sectionLockMode && hasSectionPlan)
+      ? (STATE.sectionsPlan[STATE.activeSectionIdx] || STATE.sectionsPlan[0])
+      : null;
 
-    const p1 = questions.filter(q => normalizeQuestionType(q) === 'mcq');
-    const p2 = questions.filter(q => normalizeQuestionType(q) === 'truefalse');
-    const p3 = questions.filter(q => normalizeQuestionType(q) === 'short');
+    const visibleQuestions = activeSec
+      ? questions.filter(q => String(q.section || 'I') === String(activeSec.id))
+      : questions;
 
-    const curIdx = Math.max(0, Math.min(questions.length - 1, Number(STATE.currentQIdx) || 0));
+    const p1 = visibleQuestions.filter(q => normalizeQuestionType(q) === 'mcq');
+    const p2 = visibleQuestions.filter(q => normalizeQuestionType(q) === 'truefalse');
+    const p3 = visibleQuestions.filter(q => normalizeQuestionType(q) === 'short');
+
+    let curIdx = Math.max(0, Math.min(questions.length - 1, Number(STATE.currentQIdx) || 0));
+    if (activeSec && questions[curIdx] && String(questions[curIdx].section || 'I') !== String(activeSec.id)) {
+      const matchIdx = questions.findIndex(q => String(q.section || 'I') === String(activeSec.id));
+      if (matchIdx >= 0) curIdx = matchIdx;
+    }
     STATE.currentQIdx = curIdx;
     const curQ = questions[curIdx] || null;
 
@@ -976,6 +1742,17 @@
             <span class="pk9-exam-progress-pill">
               <span class="pk9-hide-mob-xs">Đã làm: </span><b id="pk9-exam-progress-text">${answeredCount}/${questions.length}</b>
             </span>
+            <button type="button" class="pk9-btn-exam-ghost" data-exam-tool-calc="1" title="Bật máy tính khoa học Casio" style="padding:0.28rem 0.58rem;font-size:0.74rem;">
+              🧮 <span class="pk9-hide-mob-xs">Máy tính</span>
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-exam-tool-pad="${esc(ex.id)}" title="Bật bảng nháp vẽ tay" style="padding:0.28rem 0.58rem;font-size:0.74rem;">
+              ✏️ <span class="pk9-hide-mob-xs">Nháp</span>
+            </button>
+            ${hasSectionPlan ? `
+              <button type="button" class="pk9-btn-exam-ghost" data-toggle-section-lock="1" title="Chế độ ĐGNL chia phần khóa giờ riêng" style="padding:0.28rem 0.58rem;font-size:0.74rem;${STATE.sectionLockMode ? 'border-color:#0284c7;color:#0284c7;font-weight:900;' : ''}">
+                ${STATE.sectionLockMode ? '🔒 Chia phần ĐGNL' : '🔓 Chia phần'}
+              </button>
+            ` : ''}
             <div class="pk9-paper-switch" role="group" aria-label="Nền giấy làm bài">
               <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-white' ? 'active' : ''}" data-paper-theme="paper-white" title="Nền giấy trắng">⬜ Trắng</button>
               <button type="button" class="pk9-paper-btn ${paperTheme === 'paper-ivory' ? 'active' : ''}" data-paper-theme="paper-ivory" title="Nền giấy ngà dịu mắt">📜 Ngà</button>
@@ -1000,6 +1777,29 @@
             </button>
           </div>
         </div>
+
+        ${activeSec ? `
+          <div class="pk9-section-lock-bar">
+            <div>
+              <div style="font-size:0.74rem;font-weight:900;color:#0284c7;">🎯 CHẾ ĐỘ ĐGNL KHÓA GIỜ TỪNG PHẦN (${STATE.activeSectionIdx + 1}/${STATE.sectionsPlan.length})</div>
+              <div style="font-weight:900;font-size:0.96rem;">${esc(activeSec.label)} (${visibleQuestions.length} câu đang mở)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">
+              <span class="pk9-timer-pill" style="background:rgba(14,165,233,0.16);color:#0369a1;border-color:rgba(14,165,233,0.4);">
+                ⏱ Giờ phần này: <b id="pk9-sec-timer">${formatClock(STATE.sectionRemainingSec)}</b>
+              </span>
+              ${STATE.activeSectionIdx < STATE.sectionsPlan.length - 1 ? `
+                <button type="button" class="pk9-btn-exam-primary" data-advance-section="1" style="padding:0.4rem 0.85rem;font-size:0.8rem;">
+                  ⏭️ Khóa phần này & Qua phần tiếp →
+                </button>
+              ` : `
+                <button type="button" class="pk9-btn-exam-primary" data-submit-exam="1" style="padding:0.4rem 0.85rem;font-size:0.8rem;">
+                  ✅ Nộp bài (Phần cuối)
+                </button>
+              `}
+            </div>
+          </div>
+        ` : ''}
 
         <div class="pk9-exam-workspace ${STATE.splitPdf && pdfPath ? 'with-pdf' : ''}">
           ${STATE.splitPdf && pdfPath ? `
@@ -1040,7 +1840,7 @@
                   ← Câu trước
                 </button>
                 <button type="button" class="pk9-btn-exam-ghost" data-toggle-single-q="1">
-                  📜 Xem toàn bộ ${questions.length} câu
+                  📜 Xem toàn bộ ${visibleQuestions.length} câu
                 </button>
                 ${curIdx < questions.length - 1 ? `
                   <button type="button" class="pk9-btn-exam-primary" data-step-q="1">
@@ -1085,15 +1885,16 @@
                 🧭 Bản đồ câu hỏi
               </div>
               <div style="font-size:0.76rem;color:var(--pk9-text-muted,#64748b);margin-top:0.2rem;">
-                Nhấn vào số câu để cuộn nhanh tới câu hỏi đó.
+                ${activeSec ? `Đang khóa làm ${esc(activeSec.id)} — các phần khác tạm khóa.` : 'Nhấn vào số câu để cuộn nhanh tới câu hỏi đó.'}
               </div>
               <div class="pk9-palette-grid" id="pk9-palette-grid">
                 ${questions.map((q, idx) => {
                   const done = isQuestionAnswered(q, STATE.answers[q.id]);
                   const flag = Boolean(STATE.flagged[q.id]);
                   const isCur = STATE.focusSingleQ && idx === curIdx;
+                  const locked = activeSec && String(q.section || 'I') !== String(activeSec.id);
                   return `
-                    <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''} ${isCur ? 'current' : ''}" data-jump-q="${esc(q.id)}" data-jump-idx="${idx}">
+                    <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''} ${isCur ? 'current' : ''}" data-jump-q="${esc(q.id)}" data-jump-idx="${idx}" ${locked ? 'disabled style="opacity:0.35;cursor:not-allowed;" title="Phần này đang khóa"' : ''}>
                       ${idx + 1}
                     </button>
                   `;
@@ -1122,8 +1923,9 @@
                 const done = isQuestionAnswered(q, STATE.answers[q.id]);
                 const flag = Boolean(STATE.flagged[q.id]);
                 const isCur = STATE.focusSingleQ && idx === curIdx;
+                const locked = activeSec && String(q.section || 'I') !== String(activeSec.id);
                 return `
-                  <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''} ${isCur ? 'current' : ''}" data-jump-q="${esc(q.id)}" data-jump-idx="${idx}">
+                  <button type="button" class="pk9-palette-btn ${done ? 'answered' : ''} ${flag ? 'flagged' : ''} ${isCur ? 'current' : ''}" data-jump-q="${esc(q.id)}" data-jump-idx="${idx}" ${locked ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''}>
                     ${idx + 1}
                   </button>
                 `;
@@ -1263,7 +2065,15 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:0.55rem;">
-            <button type="button" class="pk9-btn-exam-primary" data-retry-exam="${esc(ex.id)}">
+            <button type="button" class="pk9-btn-exam-primary" data-download-cert="1">
+              🏅 Tải Phiếu Báo Điểm (.PNG)
+            </button>
+            ${(res.review || []).some(rv => rv.status !== 'correct' && !rv.correct) ? `
+              <button type="button" class="pk9-btn-exam-ghost" data-practice-wrong-recent="1" style="background:rgba(239,68,68,0.22);color:#fecaca;border-color:rgba(248,113,113,0.45);">
+                ❌ Ôn lại ${(res.review || []).filter(rv => rv.status !== 'correct' && !rv.correct).length} câu sai
+              </button>
+            ` : ''}
+            <button type="button" class="pk9-btn-exam-ghost" data-retry-exam="${esc(ex.id)}" style="background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25);">
               🔄 Làm lại đề này
             </button>
             <button type="button" class="pk9-btn-exam-ghost" data-back-catalog="1" style="background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25);">
@@ -1274,16 +2084,25 @@
 
         ${Array.isArray(res.topicStats) && res.topicStats.length ? `
           <div class="pk9-topic-breakdown">
-            <h4 style="margin:0 0 0.85rem;font-size:1.02rem;font-weight:800;">
-              📊 Phân tích năng lực theo Chuyên đề (Chẩn đoán điểm mạnh / điểm yếu)
-            </h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.85rem;">
+              <h4 style="margin:0;font-size:1.02rem;font-weight:800;">
+                📊 Phân tích năng lực theo Chuyên đề (Chẩn đoán điểm mạnh / điểm yếu)
+              </h4>
+              <button type="button" class="pk9-btn-exam-ghost" data-open-diagnostics="1" style="padding:0.32rem 0.7rem;font-size:0.78rem;">
+                📈 Xem biểu đồ tích lũy & Gợi ý bài giảng
+              </button>
+            </div>
             ${res.topicStats.map(t => {
               const pct = Number(t.accuracy ?? t.percent ?? 0);
               const earned = Number(t.earnedPts ?? t.earned ?? 0).toFixed(2);
               const maxPts = Number(t.maxPts ?? t.max ?? 0).toFixed(2);
+              const rec = pct < 75 ? findRecommendedLesson(subjLabel(ex.subject), t.topic) : null;
               return `
                 <div class="pk9-topic-bar-row">
-                  <div style="font-weight:700;color:var(--pk9-text,#0f172a);">${esc(t.topic)}</div>
+                  <div style="font-weight:700;color:var(--pk9-text,#0f172a);">
+                    ${esc(t.topic)}
+                    ${rec ? ` <button type="button" class="pk9-admin-btn-xs" data-jump-rec-course="${esc(rec.courseId)}" data-jump-rec-topic="${esc(rec.topicId)}" style="margin-left:0.35rem;">🎬 Ôn video</button>` : ''}
+                  </div>
                   <div class="pk9-topic-track">
                     <div class="pk9-topic-fill" style="width:${Math.max(4, pct)}%;"></div>
                   </div>
@@ -1339,11 +2158,14 @@
 
             return `
               <div class="pk9-review-card ${statusClass}">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.45rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.45rem;flex-wrap:wrap;">
                   <div style="font-weight:800;color:#2563eb;">
                     Câu ${r.number || idx + 1} (Phần ${esc(r.section || 'I')}) ${r.topic ? `• <span style="color:var(--pk9-text-muted,#64748b);font-weight:600;">${esc(r.topic)}</span>` : ''}
                   </div>
-                  ${statusBadge}
+                  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                    ${statusBadge}
+                    ${!isOk ? `<button type="button" class="pk9-admin-btn-xs" data-ask-ai-question="${esc(`Giải thích chi tiết từng bước câu ${subjLabel(ex.subject)} (${r.topic || ''}) sau đây và chỉ rõ vì sao đáp án đúng lại như vậy:\n${r.text || r.prompt || ''}`)}">🤖 Nhờ AI giải</button>` : ''}
+                  </div>
                 </div>
                 <div style="font-size:0.93rem;line-height:1.6;white-space:pre-line;">${esc(r.text || r.prompt || '')}</div>
                 ${ansCompare}
@@ -1483,8 +2305,21 @@
       const stepQBtn = e.target.closest('[data-step-q]');
       if (stepQBtn && STATE.activeExam) {
         const delta = Number(stepQBtn.getAttribute('data-step-q') || 0);
-        const total = (STATE.activeExam.questions || []).length;
-        STATE.currentQIdx = Math.max(0, Math.min(total - 1, (STATE.currentQIdx || 0) + delta));
+        const qs = STATE.activeExam.questions || [];
+        let minIdx = 0;
+        let maxIdx = Math.max(0, qs.length - 1);
+        if (STATE.sectionLockMode && STATE.sectionsPlan.length) {
+          const activeSec = STATE.sectionsPlan[STATE.activeSectionIdx];
+          const secIndices = [];
+          qs.forEach((q, idx) => {
+            if (activeSec && String(q.section || 'I') === String(activeSec.id)) secIndices.push(idx);
+          });
+          if (secIndices.length) {
+            minIdx = secIndices[0];
+            maxIdx = secIndices[secIndices.length - 1];
+          }
+        }
+        STATE.currentQIdx = Math.max(minIdx, Math.min(maxIdx, (STATE.currentQIdx || minIdx) + delta));
         saveDraftDebounced();
         renderExamCenter();
         return;
@@ -1575,12 +2410,221 @@
       if (exitBtn) {
         persistLocalDraftNow();
         stopTimer();
+        window.PK9_EXAM_TOOLS?.closeCalc?.();
+        window.PK9_EXAM_TOOLS?.closeScratchpad?.();
         STATE.paletteDrawerOpen = false;
         STATE.view = 'catalog';
         renderExamCenter();
         if (window.PK9_TOAST) {
           window.PK9_TOAST('Đã lưu tự động tiến độ & thời gian làm bài để bạn tiếp tục sau!', 'info');
         }
+        return;
+      }
+
+      if (e.target.closest('[data-exam-tool-calc]')) {
+        window.PK9_EXAM_TOOLS?.toggleCalc?.();
+        return;
+      }
+      const padBtn = e.target.closest('[data-exam-tool-pad]');
+      if (padBtn) {
+        window.PK9_EXAM_TOOLS?.toggleScratchpad?.(padBtn.getAttribute('data-exam-tool-pad') || 'default');
+        return;
+      }
+      if (e.target.closest('[data-toggle-section-lock]')) {
+        if (!STATE.sectionsPlan.length && STATE.activeExam) {
+          STATE.sectionsPlan = computeExamSectionsPlan(STATE.activeExam);
+        }
+        STATE.sectionLockMode = !STATE.sectionLockMode;
+        if (STATE.sectionLockMode && STATE.sectionsPlan.length) {
+          STATE.activeSectionIdx = 0;
+          STATE.sectionRemainingSec = STATE.sectionsPlan[0].durationSec;
+          if (window.PK9_TOAST) window.PK9_TOAST('🔒 Đã bật chế độ ĐGNL khóa giờ từng phần!', 'info');
+        }
+        renderExamCenter();
+        return;
+      }
+      if (e.target.closest('[data-advance-section]')) {
+        advanceLockedSection(false);
+        return;
+      }
+      if (e.target.closest('[data-download-cert]') && STATE.activeExam && STATE.lastResult) {
+        const u = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
+        const rpg = window.PK9_RPG_STATE || {};
+        window.PK9_EXAM_TOOLS?.downloadCertificate?.({
+          studentName: u?.display_name || u?.username || 'Học Viên Phúc K9',
+          sbd: rpg.sbd || 'K9-GUEST',
+          subject: subjLabel(STATE.activeExam.subject),
+          examId: STATE.activeExam.id,
+          examTitle: STATE.activeExam.title,
+          score: STATE.lastResult.score,
+          rawScore: STATE.lastResult.rawScore,
+          maxScore: STATE.lastResult.maxScore,
+          correct: STATE.lastResult.correct,
+          total: STATE.lastResult.total,
+          topicStats: STATE.lastResult.topicStats
+        });
+        return;
+      }
+      if (e.target.closest('[data-open-diagnostics]')) {
+        STATE.view = 'diagnostics';
+        renderExamCenter();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (e.target.closest('[data-practice-wrong-all]')) {
+        const list = getWrongBankList().filter(it => STATE.subjectFilter === 'ALL' || subjLabel(it.subject) === STATE.subjectFilter);
+        startWrongPracticeExam(list);
+        return;
+      }
+      if (e.target.closest('[data-practice-wrong-recent]') && STATE.activeExam && STATE.lastResult) {
+        const wrongIds = new Set((STATE.lastResult.review || []).filter(r => r.status !== 'correct' && !r.correct).map(r => String(r.id)));
+        const items = (STATE.activeExam.questions || []).filter(q => wrongIds.has(String(q.id))).map(q => ({
+          ...q,
+          subject: subjLabel(STATE.activeExam.subject)
+        }));
+        startWrongPracticeExam(items);
+        return;
+      }
+      const resolveBtn = e.target.closest('[data-resolve-wrong]');
+      if (resolveBtn) {
+        resolveWrongItem(resolveBtn.getAttribute('data-resolve-wrong'), true, false);
+        return;
+      }
+      const recCourseBtn = e.target.closest('[data-jump-rec-course]');
+      if (recCourseBtn && typeof window.switchTab === 'function') {
+        window.switchTab('lectures', {
+          courseId: recCourseBtn.getAttribute('data-jump-rec-course'),
+          topicId: recCourseBtn.getAttribute('data-jump-rec-topic')
+        });
+        return;
+      }
+      const askAiBtn = e.target.closest('[data-ask-ai-question]');
+      if (askAiBtn && typeof window.PK9_ASK_AI === 'function') {
+        window.PK9_ASK_AI(askAiBtn.getAttribute('data-ask-ai-question') || '');
+        return;
+      }
+      const startContestBtn = e.target.closest('[data-start-contest]');
+      if (startContestBtn) {
+        const cid = startContestBtn.getAttribute('data-start-contest');
+        const exId = startContestBtn.getAttribute('data-contest-exam');
+        startExamById(exId, false, cid);
+        return;
+      }
+      const openContestLbBtn = e.target.closest('[data-open-contest-lb]');
+      if (openContestLbBtn) {
+        const cid = openContestLbBtn.getAttribute('data-open-contest-lb');
+        fetch(`/api/exams?action=contest-lb&id=${encodeURIComponent(cid)}`, { credentials: 'include' })
+          .then(r => r.json())
+          .then(d => {
+            if (d?.ok) {
+              STATE.contestLbData = d;
+              renderExamCenter();
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      if (e.target.closest('[data-close-contest-lb]')) {
+        STATE.contestLbData = null;
+        renderExamCenter();
+        return;
+      }
+      const duelSubjBtn = e.target.closest('[data-duel-subj]');
+      if (duelSubjBtn) {
+        STATE.duelSubject = duelSubjBtn.getAttribute('data-duel-subj') || 'Tất cả';
+        updateCatalogDynamicDOM();
+        return;
+      }
+      const duelCountBtn = e.target.closest('[data-duel-count]');
+      if (duelCountBtn) {
+        STATE.duelCount = Number(duelCountBtn.getAttribute('data-duel-count') || 5);
+        updateCatalogDynamicDOM();
+        return;
+      }
+      if (e.target.closest('[data-duel-create]')) {
+        const u = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
+        if (!u) {
+          if (typeof window.PK9_OPEN_AUTH === 'function') window.PK9_OPEN_AUTH('login');
+          return;
+        }
+        fetch('/api/exams?action=duel-create', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+          body: JSON.stringify({ subject: STATE.duelSubject, count: STATE.duelCount })
+        })
+          .then(r => r.json())
+          .then(d => {
+            if (d?.ok && d.room) {
+              STATE.duelRoom = d.room;
+              STATE.duelAnswers = {};
+              STATE.duelElapsedSec = 0;
+              STATE.duelLastReward = null;
+              STATE.duelStage = 'playing';
+              updateCatalogDynamicDOM();
+              startDuelTimers();
+              loadArenaLobbyData();
+              if (window.PK9_TOAST) window.PK9_TOAST(`⚔️ Đã tạo phòng đấu ${d.code}! Gửi link cho bạn bè cùng thi!`, 'success');
+            } else if (window.PK9_TOAST) {
+              window.PK9_TOAST(d?.message || 'Không tạo được phòng đấu.', 'error');
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      const duelJoinBtn = e.target.closest('[data-duel-join-code]');
+      if (duelJoinBtn) {
+        joinDuelRoomClient(duelJoinBtn.getAttribute('data-duel-join-code'));
+        return;
+      }
+      const duelPick = e.target.closest('[data-duel-pick]');
+      if (duelPick && STATE.duelRoom) {
+        const qId = duelPick.getAttribute('data-duel-pick');
+        const oIdx = Number(duelPick.getAttribute('data-duel-opt'));
+        STATE.duelAnswers[qId] = oIdx;
+        updateCatalogDynamicDOM();
+        return;
+      }
+      if (e.target.closest('[data-duel-submit]') && STATE.duelRoom) {
+        fetch('/api/exams?action=duel-submit', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+          body: JSON.stringify({ code: STATE.duelRoom.code, answers: STATE.duelAnswers, time_sec: STATE.duelElapsedSec })
+        })
+          .then(r => r.json())
+          .then(d => {
+            if (d?.ok && d.room) {
+              STATE.duelRoom = d.room;
+              STATE.duelLastReward = d.reward || null;
+              STATE.duelStage = 'result';
+              if (d.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
+                window.PK9_APPLY_RPG_UPDATE(d.rpg, { xp: d.xp, weekly_xp: d.weekly_xp });
+              }
+              updateCatalogDynamicDOM();
+              startDuelTimers();
+              loadArenaLobbyData();
+            } else if (window.PK9_TOAST) {
+              window.PK9_TOAST(d?.message || 'Không nộp được bài đấu.', 'error');
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      if (e.target.closest('[data-duel-back-lobby]')) {
+        stopDuelTimers();
+        STATE.duelRoom = null;
+        STATE.duelStage = 'lobby';
+        STATE.duelLastReward = null;
+        updateCatalogDynamicDOM();
+        loadArenaLobbyData();
+        return;
+      }
+      const copyDuelBtn = e.target.closest('[data-copy-duel-link]');
+      if (copyDuelBtn) {
+        const u = copyDuelBtn.getAttribute('data-copy-duel-link') || '';
+        try { navigator.clipboard?.writeText(u); } catch {}
+        if (window.PK9_TOAST) window.PK9_TOAST(`📋 Đã chép link phòng thách đấu: ${u}`, 'success');
         return;
       }
 
@@ -1623,6 +2667,48 @@
         persistLocalDraftNow();
       }
     });
+
+    document.addEventListener('submit', e => {
+      if (e.target && e.target.id === 'pk9-duel-join-form') {
+        e.preventDefault();
+        const code = document.getElementById('pk9-duel-code-input')?.value || '';
+        joinDuelRoomClient(code);
+      }
+    });
+  }
+
+  async function joinDuelRoomClient(codeRaw) {
+    const code = String(codeRaw || '').trim().toUpperCase();
+    if (!code) return;
+    const u = window.PK9_GET_USER ? window.PK9_GET_USER() : null;
+    if (!u) {
+      if (typeof window.PK9_OPEN_AUTH === 'function') window.PK9_OPEN_AUTH('login');
+      if (window.PK9_TOAST) window.PK9_TOAST('🔑 Hãy đăng nhập để vào phòng thách đấu 1v1!', 'info');
+      return;
+    }
+    try {
+      const resp = await fetch('/api/exams?action=duel-join', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+        body: JSON.stringify({ code })
+      });
+      const d = await resp.json().catch(() => ({}));
+      if (resp.ok && d?.ok && d.room) {
+        STATE.view = 'arena';
+        STATE.duelRoom = d.room;
+        STATE.duelAnswers = {};
+        STATE.duelElapsedSec = 0;
+        STATE.duelLastReward = null;
+        const myRow = (d.room.players || []).find(p => String(p.username).toLowerCase() === String(u.username || '').toLowerCase());
+        STATE.duelStage = myRow?.status === 'submitted' ? 'result' : 'playing';
+        renderExamCenter();
+        startDuelTimers();
+        loadArenaLobbyData();
+      } else if (window.PK9_TOAST) {
+        window.PK9_TOAST(d?.message || 'Không vào được phòng đấu.', 'error');
+      }
+    } catch {}
   }
 
   async function initExamCenter() {
@@ -1634,6 +2720,21 @@
     init: initExamCenter,
     render: renderExamCenter,
     startExamById,
+    openDuelByCode(code) {
+      STATE.view = 'arena';
+      renderExamCenter();
+      if (code) joinDuelRoomClient(code);
+    },
+    openWrongBank() {
+      STATE.view = 'wrong-bank';
+      renderExamCenter();
+    },
+    openArena() {
+      STATE.view = 'arena';
+      renderExamCenter();
+      loadArenaLobbyData();
+    },
+    loadArenaLobbyData,
     isTakingExam() {
       return STATE.view === 'taking' && Boolean(STATE.activeExam);
     },

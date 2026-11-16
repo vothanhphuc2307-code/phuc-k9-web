@@ -22,6 +22,7 @@ const {
   equipCatalogItem,
   convertCurrency,
   recordSrsAnswer,
+  resolveWrongQuestion,
   toggleExamBookmark,
   openPeriodicCell
 } = require('../lib/rpg');
@@ -825,6 +826,8 @@ async function handleRpgRequest(redis, req, res, session, action) {
     out = convertCurrency(u, clean(body.direction || '', 30), body.amount);
   } else if (sub === 'bookmark') {
     out = toggleExamBookmark(u, body);
+  } else if (sub === 'wrong-resolve') {
+    out = resolveWrongQuestion(u, clean(body.id || '', 120), body.correct !== false, isAdm);
   } else if (sub === 'periodic-open') {
     out = openPeriodicCell(u, { mode: clean(body.mode || 'random', 20), z: body.z });
   } else if (sub === 'practice-finish') {
@@ -943,6 +946,13 @@ async function handleRpgRequest(redis, req, res, session, action) {
         cur.updatedAt = new Date().toISOString();
         u.rpg.flashcards_state[fk] = cur;
       }
+    }
+    if (body.reminder && typeof body.reminder === 'object') {
+      const remTime = String(body.reminder.time || u.rpg.reminder?.time || '20:30');
+      u.rpg.reminder = {
+        enabled: Boolean(body.reminder.enabled),
+        time: /^\d{2}:\d{2}$/.test(remTime) ? remTime : '20:30'
+      };
     }
     out = { ok: true, message: 'Đã đồng bộ cài đặt học tập & giao diện!' };
   } else {

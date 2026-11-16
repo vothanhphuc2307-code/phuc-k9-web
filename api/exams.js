@@ -1,13 +1,15 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, sendJson, sendAdminGuardError, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
+const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, sendAdminGuardError, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
 const { normalizeScoring, questionNeedsReview, validateExamStructure } = require('../lib/exam-utils');
 const {
   vnWeekKey,
   ensureUserRpgState,
   buildPublicRpgSnapshot,
   applyRewardMultipliers,
-  recordSrsAnswer
+  recordSrsAnswer,
+  recordExamDiagnostics
 } = require('../lib/rpg');
+const arena = require('../lib/arena');
 const SEED = require('../lib/seed-exams');
 const crypto = require('crypto');
 
@@ -140,6 +142,7 @@ function publicExam(e) {
     sourceFile: e.sourceFile,
     originUrl: e.originUrl,
     duration: e.duration,
+    ...(Array.isArray(e.sectionsMeta) ? { sectionsMeta: e.sectionsMeta } : {}),
     scoring: e.scoring,
     questionCount: (e.questions || []).length,
     questions: (e.questions || []).map(q => {
@@ -489,19 +492,51 @@ async function handler(req, res) {
         return sendJson(res, 200, { ok: true, sourceFile: e.sourceFile, originUrl: e.originUrl });
       }
 
+      if (action === 'arena-list') {
+        const [contests, openDuels] = await Promise.all([
+          arena.listContests(r),
+          arena.listOpenDuels(r)
+        ]);
+        return sendJson(res, 200, { ok: true, contests, open_duels: openDuels });
+      }
+
+      if (action === 'contest-lb') {
+        const contestId = clean(u.searchParams.get('id') || id, 120);
+        if (!contestId) return sendJson(res, 400, { ok: false, message: 'Thiếu ID kỳ thi.' });
+        const [contests, entries] = await Promise.all([
+          arena.listContests(r),
+          arena.getContestLeaderboard(r, contestId)
+        ]);
+        const contest = contests.find(c => c.id === contestId) || null;
+        return sendJson(res, 200, { ok: true, contest, entries });
+      }
+
+      if (action === 'duel-state') {
+        const code = clean(u.searchParams.get('code'), 20).toUpperCase();
+        if (!code) return sendJson(res, 400, { ok: false, message: 'Thiếu mã phòng thách đấu.' });
+        const room = await redisJsonGet(r, `phuc:duel:room:${code}`);
+        if (!room || Number(room.expiresAt || 0) < Date.now()) {
+          return sendJson(res, 404, { ok: false, message: 'Phòng thách đấu không tồn tại hoặc đã hết hạn.' });
+        }
+        return sendJson(res, 200, {
+          ok: true,
+          room: arena.sanitizeRoomPublic(room, session?.username || '')
+        });
+      }
+
       return sendJson(res, 400, { ok: false, message: 'Action không hợp lệ.' });
     }
 
     if (req.method !== 'POST') return sendJson(res, 405, { ok: false, message: 'Method không được hỗ trợ.' });
     const session = await getSession(req);
-    if (session?.username && !['admin-import', 'publish', 'unpublish', 'delete'].includes(action)) {
+    if (session?.username && !['admin-import', 'publish', 'unpublish', 'delete', 'contest-save', 'contest-delete'].includes(action)) {
       const ban = await rejectIfBanned(r, req, res, session.username);
       if (ban) return sendJson(res, 403, { ok: false, banned: true, auth_revoked: true, ban_reason: ban.reason, message: 'Tài khoản đã bị khóa vĩnh viễn.' });
     }
     const body = await parseBody(req);
 
     // Admin actions require authenticated admin + CSRF
-    if (['admin-import', 'publish', 'unpublish', 'delete'].includes(action)) {
+    if (['admin-import', 'publish', 'unpublish', 'delete', 'contest-save', 'contest-delete'].includes(action)) {
       if (!session) return sendJson(res, 401, { ok: false, message: 'Hãy đăng nhập tài khoản quản trị.' });
       if (!csrfOk(req, session)) return sendJson(res, 403, { ok: false, message: 'CSRF không hợp lệ.' });
       const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: `exams:${action}` });
@@ -581,6 +616,72 @@ async function handler(req, res) {
         await r.del(key('def', targetId));
         try { if (typeof r.srem === 'function') await r.srem('phuc:exam:index', targetId); } catch {}
         return sendJson(res, 200, { ok: true, message: 'Đã xóa bản lưu đề tùy chỉnh.' });
+      }
+
+      if (action === 'contest-save') {
+        const ex = await getExam(r, clean(body.examId, 100));
+        const saved = await arena.saveContest(r, {
+          ...body,
+          examTitle: body.examTitle || ex?.title || ''
+        }, session.username);
+        if (!saved.ok) return sendJson(res, saved.status || 400, { ok: false, message: saved.message });
+        return sendJson(res, 200, { ok: true, contest: saved.contest, message: '🏆 Đã lưu lịch Kỳ Thi Thử Hệ Thống!' });
+      }
+
+      if (action === 'contest-delete') {
+        const cid = clean(body.id, 100);
+        if (!cid) return sendJson(res, 400, { ok: false, message: 'Thiếu ID kỳ thi.' });
+        const out = await arena.deleteContest(r, cid);
+        return sendJson(res, 200, { ok: true, ...out, message: 'Đã xóa kỳ thi thử.' });
+      }
+    }
+
+    if (['duel-create', 'duel-join', 'duel-submit'].includes(action)) {
+      if (!session?.username || isGuestName(session.username)) {
+        return sendJson(res, 401, { ok: false, auth_required: true, message: 'Hãy đăng nhập hoặc đăng ký tài khoản để tham gia Đấu Trường 1v1!' });
+      }
+      const csrf = session.csrf || await getCsrf(req, res);
+      if (!requireCsrf(req, session, csrf) && !csrfOk(req, session)) {
+        return sendJson(res, 403, { ok: false, message: 'CSRF token không hợp lệ.', csrf });
+      }
+      const uProfile = await redisJsonGet(r, `${USER_PREFIX}${normalizeUsername(session.username)}`);
+      if (!uProfile) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy hồ sơ tài khoản.' });
+
+      if (action === 'duel-create') {
+        const room = await arena.createDuelRoom(r, uProfile, {
+          subject: clean(body.subject || 'Tất cả', 40),
+          count: Number(body.count || 5),
+          title: clean(body.title || '', 100)
+        });
+        return sendJson(res, 200, {
+          ok: true,
+          code: room.code,
+          room: arena.sanitizeRoomPublic(room, uProfile.username)
+        });
+      }
+
+      if (action === 'duel-join') {
+        const joined = await arena.joinDuelRoom(r, body.code, uProfile);
+        if (!joined.ok) return sendJson(res, joined.status || 400, { ok: false, message: joined.message });
+        return sendJson(res, 200, {
+          ok: true,
+          code: joined.room.code,
+          room: arena.sanitizeRoomPublic(joined.room, uProfile.username)
+        });
+      }
+
+      if (action === 'duel-submit') {
+        const subOut = await arena.submitDuelRoom(r, body.code, uProfile, body.answers || {}, body.time_sec || 60);
+        if (!subOut.ok) return sendJson(res, subOut.status || 400, { ok: false, message: subOut.message });
+        return sendJson(res, 200, {
+          ok: true,
+          already: !!subOut.already,
+          reward: subOut.reward,
+          xp: Number(uProfile.xp || 0),
+          weekly_xp: Number(uProfile.weekly_xp || 0),
+          rpg: buildPublicRpgSnapshot(uProfile),
+          room: arena.sanitizeRoomPublic(subOut.room, uProfile.username)
+        });
       }
     }
 
@@ -748,6 +849,17 @@ async function handler(req, res) {
                     subject: a.exam.subject || 'Toán'
                   });
                 }
+              }
+              recordExamDiagnostics(uProfile, a.exam, result);
+              if (body.contestId) {
+                try {
+                  const allContests = await arena.listContests(r);
+                  const matchedContest = allContests.find(c => c.id === clean(body.contestId, 80) && c.status === 'live');
+                  if (matchedContest && matchedContest.examId === a.exam.id) {
+                    const elapsedSec = Math.max(10, Math.round((a.submittedAt - Number(a.startedAt || (a.submittedAt - 60000))) / 1000));
+                    await arena.recordContestSubmission(r, matchedContest.id, uProfile, result, elapsedSec);
+                  }
+                } catch {}
               }
               if (!isAdm) {
                 const wk = vnWeekKey();
