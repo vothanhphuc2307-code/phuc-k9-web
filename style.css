@@ -159,7 +159,6 @@ html.dark .pk9-ambient-fx {
 .pk9-ambient-svg {
   position: absolute;
   pointer-events: none;
-  will-change: transform;
 }
 
 .pk9-ambient-svg-1 {
@@ -167,7 +166,7 @@ html.dark .pk9-ambient-fx {
   right: 3%;
   width: 240px;
   height: 240px;
-  animation: pk9AmbientFloat 18s ease-in-out infinite alternate;
+  animation: pk9AmbientFloat 20s ease-in-out infinite alternate;
 }
 
 .pk9-ambient-svg-2 {
@@ -175,7 +174,7 @@ html.dark .pk9-ambient-fx {
   left: calc(var(--pk9-sidebar-w) + 2%);
   width: 210px;
   height: 210px;
-  animation: pk9AmbientFloat 22s ease-in-out infinite alternate-reverse;
+  animation: pk9AmbientFloat 24s ease-in-out infinite alternate-reverse;
 }
 
 @keyframes pk9AmbientFloat {
@@ -200,8 +199,8 @@ html.dark .pk9-ambient-fx {
   top: 0;
   height: 100vh;
   background: var(--pk9-surface);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-right: 1px solid var(--pk9-border);
   display: flex;
   flex-direction: column;
@@ -434,8 +433,9 @@ html.dark .pk9-nav-item.active {
   top: 0;
   height: var(--pk9-topbar-h);
   z-index: 40;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--pk9-border);
   display: flex;
   align-items: center;
@@ -677,25 +677,24 @@ html.dark .pk9-install-chip.installed {
 .pk9-hero-orb-2 {
   position: absolute;
   border-radius: 50%;
-  filter: blur(44px);
   pointer-events: none;
-  animation: pk9OrbFloat 9s ease-in-out infinite alternate;
+  animation: pk9OrbFloat 11s ease-in-out infinite alternate;
 }
 
 .pk9-hero-orb-1 {
-  width: 300px;
-  height: 300px;
-  top: -100px;
-  right: -60px;
-  background: rgba(127, 192, 222, 0.26);
+  width: 340px;
+  height: 340px;
+  top: -115px;
+  right: -75px;
+  background: radial-gradient(circle, rgba(127, 192, 222, 0.28) 0%, rgba(127, 192, 222, 0.1) 42%, transparent 72%);
 }
 
 .pk9-hero-orb-2 {
-  width: 240px;
-  height: 240px;
-  bottom: -90px;
-  left: 34%;
-  background: rgba(212, 175, 55, 0.2);
+  width: 280px;
+  height: 280px;
+  bottom: -105px;
+  left: 32%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.08) 42%, transparent 72%);
   animation-delay: -4s;
 }
 
@@ -848,9 +847,7 @@ html.dark .pk9-install-chip.installed {
 }
 
 .pk9-hero-stats-card {
-  background: rgba(15, 32, 46, 0.66);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: rgba(15, 32, 46, 0.78);
   border: 1px solid rgba(127, 192, 222, 0.24);
   border-radius: 1.45rem;
   padding: 1.25rem;
@@ -4428,8 +4425,7 @@ html.dark .pk9-shop-card::after {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .pk9-card,
-  .pk9-shop-card {
+  .pk9-card {
     background-image: radial-gradient(
       260px circle at var(--mx, -999px) var(--my, -999px),
       rgba(212, 175, 55, 0.085),
@@ -4596,8 +4592,14 @@ html.dark .pk9-shop-card::after {
   .pk9-mobile-bottom-nav,
   .pk9-hero-stats-card,
   .pk9-sidebar {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .pk9-topbar {
+    background: rgba(255, 255, 255, 0.96);
+  }
+  html.dark .pk9-topbar {
+    background: rgba(15, 23, 42, 0.96);
   }
   .pk9-hero-orb-1,
   .pk9-hero-orb-2 {
