@@ -485,6 +485,9 @@
       } catch {}
       STATE.doneExamIds = done;
       loadArenaLobbyData();
+      if (typeof window.PK9_SYNC_ECOSYSTEM_STATS === 'function') {
+        window.PK9_SYNC_ECOSYSTEM_STATS();
+      }
     }
 
   async function loadArenaLobbyData() {
@@ -2735,6 +2738,15 @@
       loadArenaLobbyData();
     },
     loadArenaLobbyData,
+    getStats() {
+      const sourcesList = Array.isArray(window.PK9_EXAM_SOURCES) ? window.PK9_EXAM_SOURCES : [];
+      const refDocs = Array.isArray(window.PHUC_PDF_REFERENCE_V27) ? window.PHUC_PDF_REFERENCE_V27 : [];
+      const interactiveCount = STATE.exams.length || (Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS.length : 0);
+      return {
+        interactiveCount,
+        sourceCount: sourcesList.length + refDocs.length
+      };
+    },
     isTakingExam() {
       return STATE.view === 'taking' && Boolean(STATE.activeExam);
     },

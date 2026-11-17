@@ -1766,7 +1766,7 @@
       { id: 'ALL', label: `🌟 Tất cả (${items.length})` },
       { id: 'outfit', label: '👕 Trang phục 3D' },
       { id: 'aura', label: '🌀 Hào quang Aura' },
-      { id: 'frame', label: '🖼️ Khung Anime' },
+      { id: 'frame', label: '🖼️ Khung Nitro & Anime' },
       { id: 'pet', label: '🐾 Linh thú 3D' },
       { id: 'title', label: '🏅 Danh hiệu' },
       { id: 'cardbg', label: '🪪 Nền Thẻ QR' },
@@ -1782,7 +1782,7 @@
     const slotsMeta = [
       { key: 'outfit', label: 'Trang phục 3D', val: previewLoadout.outfit },
       { key: 'aura', label: 'Hào quang Aura', val: previewLoadout.aura },
-      { key: 'frame', label: 'Khung Anime', val: previewLoadout.frame },
+      { key: 'frame', label: 'Khung Nitro & Anime', val: previewLoadout.frame },
       { key: 'pet', label: 'Linh thú 3D', val: previewLoadout.pet },
       { key: 'title', label: 'Danh hiệu', val: previewLoadout.title },
       { key: 'cardbg', label: 'Nền Thẻ QR', val: previewLoadout.cardbg }

@@ -97,6 +97,31 @@
   box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.65), 0 0 24px rgba(253, 224, 71, 0.85), 0 0 38px rgba(168, 85, 247, 0.6);
 }
 
+.pk9-frame-nitro-sakura {
+  border: 3px solid #f472b6 !important;
+  box-shadow: 0 0 0 2px rgba(251, 207, 232, 0.55), 0 0 22px rgba(244, 114, 182, 0.78);
+}
+
+.pk9-frame-nitro-cats {
+  border: 3px solid #22d3ee !important;
+  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.55), 0 0 22px rgba(34, 211, 238, 0.82);
+}
+
+.pk9-frame-nitro-glitch {
+  border: 3px solid #38bdf8 !important;
+  box-shadow: -2px 0 0 2px rgba(244, 63, 94, 0.75), 2px 0 0 2px rgba(34, 211, 238, 0.75), 0 0 22px rgba(168, 85, 247, 0.65);
+}
+
+.pk9-frame-nitro-galaxy {
+  border: 3px solid #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.55), 0 0 24px rgba(99, 102, 241, 0.85), 0 0 34px rgba(244, 114, 182, 0.45);
+}
+
+.pk9-frame-nitro-monarch {
+  border: 3px solid #fbbf24 !important;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.65), 0 0 26px rgba(251, 191, 36, 0.85), 0 0 38px rgba(124, 58, 237, 0.65);
+}
+
 /* ---------- COMPOSABLE AVATAR STAGE (3D MODEL + SPINNING ANIME FRAME + AURA) ---------- */
 .pk9-avatar-stage {
   position: relative;
@@ -323,13 +348,25 @@
   border: 1px solid rgba(216, 180, 254, 0.55) !important;
 }
 
-.pk9-shop-price {
-  white-space: nowrap;
+.pk9-shop-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
-.pk9-shop-act-btn {
+.pk9-shop-price {
+  white-space: nowrap;
+  font-size: 0.78rem !important;
+}
+
+.pk9-shop-foot .pk9-shop-act-btn {
   white-space: nowrap !important;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  padding: 0.36rem 0.68rem;
+  font-size: 0.75rem;
+  border-radius: 0.72rem;
 }
 
 /* ---------- 3D SHOP ITEM STAGE INSIDE EACH CATALOG CARD ---------- */
@@ -420,13 +457,17 @@ html.pk9-doc-hidden * {
 }
 
 .pk9-shop-cat-pill {
-  font-size: 0.62rem;
+  font-size: 0.61rem;
   font-weight: 800;
-  color: rgba(226, 232, 240, 0.94);
-  background: rgba(15, 23, 42, 0.88);
+  color: rgba(226, 232, 240, 0.96);
+  background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.28);
   padding: 0.14rem 0.42rem;
   border-radius: 999px;
+  white-space: nowrap;
+  max-width: 62%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pk9-shop-stage-topbar .pk9-badge {
@@ -551,6 +592,15 @@ html.pk9-doc-hidden * {
 }
 
 @media (max-width: 640px) {
+  .pk9-shop-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.36rem;
+  }
+  .pk9-shop-foot .pk9-shop-act-btn {
+    width: 100%;
+    justify-content: center;
+  }
   .pk9-avatar-stage.is-lg {
     width: 74px;
     height: 74px;

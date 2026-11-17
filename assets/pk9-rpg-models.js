@@ -178,7 +178,12 @@
     'pk9-frame-phoenix': { ring1: '#be123c', ring2: '#fb923c', mode: 'phoenix' },
     'pk9-frame-infinity': { ring1: '#7e22ce', ring2: '#22d3ee', mode: 'infinity' },
     'pk9-frame-galaxy': { ring1: '#4c1d95', ring2: '#f472b6', mode: 'galaxy' },
-    'pk9-frame-valkyrie': { ring1: '#e2e8f0', ring2: '#fbbf24', mode: 'wings' }
+    'pk9-frame-valkyrie': { ring1: '#e2e8f0', ring2: '#fbbf24', mode: 'wings' },
+    'pk9-frame-nitro-sakura': { ring1: '#db2777', ring2: '#fbcfe8', mode: 'nitro_sakura' },
+    'pk9-frame-nitro-cats': { ring1: '#06b6d4', ring2: '#f472b6', mode: 'nitro_cats' },
+    'pk9-frame-nitro-glitch': { ring1: '#ef4444', ring2: '#22d3ee', mode: 'nitro_glitch' },
+    'pk9-frame-nitro-galaxy': { ring1: '#312e81', ring2: '#38bdf8', mode: 'nitro_galaxy' },
+    'pk9-frame-nitro-monarch': { ring1: '#581c87', ring2: '#fbbf24', mode: 'nitro_monarch' }
   };
 
   function renderFrameRingSvg(frameClass, sizePx, opts = {}) {
@@ -318,6 +323,80 @@
           <circle cx="${c}" cy="${c}" r="${baseR + 7}" stroke="#34d399" stroke-width="1.6" stroke-dasharray="16 8"/>
         </g>
         <polygon points="60,8 65,15 60,22 55,15" fill="#10b981" stroke="#ecfdf5" stroke-width="1"/>
+      `;
+    } else if (spec.mode === 'nitro_sakura') {
+      extra = `
+        <!-- Discord Nitro Sakura Blossom Decoration: hugging branches, clustered flowers & floating petals -->
+        <circle cx="${c}" cy="${c}" r="${baseR + 4.5}" fill="none" stroke="rgba(244,114,182,0.58)" stroke-width="2.2"/>
+        <path d="M16,66 Q16,26 48,15" fill="none" stroke="#831843" stroke-width="4" stroke-linecap="round"/>
+        <path d="M104,56 Q104,94 72,105" fill="none" stroke="#831843" stroke-width="3.6" stroke-linecap="round"/>
+        <g transform="translate(26 26)" class="pk9-svg-pulse">
+          ${[0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-7" rx="4.2" ry="7" fill="#fbcfe8" stroke="#f472b6" stroke-width="0.9" transform="rotate(${a})"/>`).join('')}
+          <circle cx="0" cy="0" r="3" fill="#fde047"/>
+        </g>
+        <g transform="translate(94 88)" class="pk9-svg-pulse">
+          ${[0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-6" rx="3.8" ry="6" fill="#f9a8d4" stroke="#ec4899" stroke-width="0.8" transform="rotate(${a})"/>`).join('')}
+          <circle cx="0" cy="0" r="2.6" fill="#fef08a"/>
+        </g>
+        <g class="pk9-svg-spin-slow" opacity="0.92">
+          <ellipse cx="96" cy="24" rx="4.5" ry="2.2" fill="#fbcfe8" transform="rotate(32 96 24)"/>
+          <ellipse cx="22" cy="92" rx="4.2" ry="2.1" fill="#f472b6" transform="rotate(-24 22 92)"/>
+          <circle cx="62" cy="11" r="2.4" fill="#ffffff"/>
+        </g>
+      `;
+    } else if (spec.mode === 'nitro_cats') {
+      extra = `
+        <!-- Discord Nitro Cyber Cat Ears Decoration -->
+        <circle cx="${c}" cy="${c}" r="${baseR + 5}" fill="none" stroke="#22d3ee" stroke-width="2.4" stroke-dasharray="28 6 8 6" class="pk9-svg-spin-slow"/>
+        <g>
+          <path d="M22,38 L14,4 L45,19 Z" fill="#0f172a" stroke="#22d3ee" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M24,33 L19,12 L38,21 Z" fill="#f472b6" opacity="0.9"/>
+          <path d="M98,38 L106,4 L75,19 Z" fill="#0f172a" stroke="#f472b6" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M96,33 L101,12 L82,21 Z" fill="#22d3ee" opacity="0.9"/>
+        </g>
+        <g stroke="#e0f2fe" stroke-width="1.8" stroke-linecap="round" class="pk9-svg-pulse">
+          <line x1="6" y1="62" x2="18" y2="64"/>
+          <line x1="8" y1="71" x2="19" y2="69"/>
+          <line x1="114" y1="62" x2="102" y2="64"/>
+          <line x1="112" y1="71" x2="101" y2="69"/>
+        </g>
+      `;
+    } else if (spec.mode === 'nitro_glitch') {
+      extra = `
+        <!-- Discord Nitro RGB Glitch HUD Decoration -->
+        <g class="pk9-svg-bolt">
+          <circle cx="${c - 2}" cy="${c}" r="${baseR + 6}" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-dasharray="20 8 5 10"/>
+          <circle cx="${c + 2}" cy="${c}" r="${baseR + 6}" fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-dasharray="18 10 8 8"/>
+        </g>
+        <rect x="6" y="34" width="16" height="3.2" rx="1.5" fill="#22d3ee"/>
+        <rect x="98" y="80" width="16" height="3.2" rx="1.5" fill="#f43f5e"/>
+        <rect x="86" y="14" width="18" height="2.6" rx="1.2" fill="#fde047"/>
+        <path d="M12,24 L12,12 L24,12 M96,12 L108,12 L108,24 M12,96 L12,108 L24,108 M96,108 L108,108 L108,96" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      `;
+    } else if (spec.mode === 'nitro_galaxy') {
+      extra = `
+        <!-- Discord Nitro Stardust & Saturn Orbital Ring -->
+        <ellipse cx="${c}" cy="${c}" rx="57" ry="18" fill="none" stroke="url(#${gid}_lg)" stroke-width="3.6" transform="rotate(-24 ${c} ${c})"/>
+        <ellipse cx="${c}" cy="${c}" rx="52" ry="15" fill="none" stroke="#38bdf8" stroke-width="1.4" stroke-dasharray="6 4" transform="rotate(-24 ${c} ${c})"/>
+        <g class="pk9-svg-pulse">
+          <polygon points="22,22 24,28 30,30 24,32 22,38 20,32 14,30 20,28" fill="#fef08a"/>
+          <polygon points="98,82 100,87 105,89 100,91 98,96 96,91 91,89 96,87" fill="#38bdf8"/>
+          <circle cx="98" cy="26" r="3" fill="#f472b6"/>
+          <circle cx="18" cy="88" r="2.6" fill="#a855f7"/>
+        </g>
+      `;
+    } else if (spec.mode === 'nitro_monarch') {
+      extra = `
+        <!-- Discord Nitro Infernal Monarch Horns & Flame Halo -->
+        <g class="pk9-svg-flame">
+          <path d="M26,42 C10,24 16,4 32,2 C26,16 28,28 36,36 Z" fill="#09090b" stroke="#fbbf24" stroke-width="1.8"/>
+          <path d="M94,42 C110,24 104,4 88,2 C94,16 92,28 84,36 Z" fill="#09090b" stroke="#fbbf24" stroke-width="1.8"/>
+          <polygon points="50,15 55,2 60,10 65,2 70,15 60,20" fill="#fde047" stroke="#7c3aed" stroke-width="1.2"/>
+        </g>
+        <g class="pk9-svg-spin-slow">
+          <circle cx="${c}" cy="${c}" r="${baseR + 7}" fill="none" stroke="#a855f7" stroke-width="2.6" stroke-dasharray="18 6"/>
+          <circle cx="${c}" cy="${c}" r="${baseR + 10.5}" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8 12"/>
+        </g>
       `;
     } else {
       extra = `
@@ -769,7 +848,7 @@
   const CAT_LABELS = {
     outfit: 'Trang phục 3D',
     aura: 'Hào quang Aura',
-    frame: 'Khung Anime',
+    frame: 'Khung Nitro & Anime',
     pet: 'Linh thú 3D',
     title: 'Danh hiệu',
     cardbg: 'Nền Thẻ QR',
@@ -818,15 +897,19 @@
     const petBadge = petId || petIcon
       ? `<span class="pk9-avatar-stage-pet" title="${esc(opts.petName || 'Thú cưng')}">${petId ? renderPetSvg(petId, size === 'sm' ? 16 : 26) : esc(petIcon)}</span>`
       : '';
+    const rawPhoto = String(opts.avatarImgUrl || '').trim();
+    const coreHtml = rawPhoto
+      ? `<img src="${esc(rawPhoto)}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" />`
+      : `<svg viewBox="0 0 120 120" width="${px}" height="${px}" style="display:block;">
+            <defs>${hero.defs}</defs>
+            ${hero.body}
+          </svg>`;
 
     return `
       <div class="pk9-avatar-stage is-${esc(size)}"${navAttr}${titleAttr}>
         ${auraSvg ? `<div class="pk9-avatar-stage-aura">${auraSvg}</div>` : ''}
         <div class="pk9-avatar-stage-core ${esc(frameClass)}">
-          <svg viewBox="0 0 120 120" width="${px}" height="${px}" style="display:block;">
-            <defs>${hero.defs}</defs>
-            ${hero.body}
-          </svg>
+          ${coreHtml}
         </div>
         <div class="pk9-avatar-stage-frame-fx">${renderFrameRingSvg(frameClass, '100%')}</div>
         ${petBadge}
