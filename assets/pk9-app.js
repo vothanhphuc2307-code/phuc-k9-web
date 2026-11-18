@@ -81,7 +81,16 @@
     mobileSelectorsCollapsed: false,
     sidebarCollapsed: false,
     deferredInstallPrompt: null,
-    isStandalone: false
+    isStandalone: false,
+    isMobileUi: false,
+    // AI Tutor & Camera Problem Solver State
+    aiPendingImageData: '',
+    aiPendingImageName: '',
+    aiSubjectHint: 'Toán học',
+    aiShowKeyPanel: false,
+    aiStatusCache: null,
+    _cameraStream: null,
+    _cameraFacing: 'environment'
   };
 
   let _serverAdminVerified = false;
@@ -603,9 +612,13 @@
     document.querySelectorAll('[data-nav-tab]').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === target);
     });
+    const mobCamBtn = document.getElementById('pk9-mob-cam-btn');
+    if (mobCamBtn) {
+      mobCamBtn.classList.toggle('active', target === 'ai');
+    }
     const mobHubBtn = document.getElementById('pk9-mob-hub-btn');
     if (mobHubBtn) {
-      mobHubBtn.classList.toggle('active', !['home', 'lectures', 'khoa-chui', 'exams', 'leaderboard'].includes(target));
+      mobHubBtn.classList.toggle('active', !['home', 'lectures', 'ai', 'exams'].includes(target));
     }
     document.getElementById('pk9-mob-hub-sheet')?.classList.remove('open');
 
@@ -1456,8 +1469,62 @@
       ? 'Nắm chắc toàn bộ nền tảng trọng tâm + luyện thuần thục Phần II Đúng/Sai để không mất điểm oan.'
       : 'Học bài nền tảng cốt lõi từng chương, bấm xem video từng bước & ôn Flashcard công thức hằng ngày.';
 
+    const unameMob = esc(APP.user?.display_name || APP.user?.username || 'Bạn học mới');
     root.innerHTML = `
-      <section class="pk9-hero">
+      <!-- DISTINCT MOBILE APP HOME INTERFACE (VISIBLE <= 768px) -->
+      <section class="pk9-mob-only-home">
+        <div class="pk9-mob-app-card">
+          <div class="pk9-mob-app-top">
+            <div style="display:flex;align-items:center;gap:0.65rem;min-width:0;">
+              <img src="/assets/logo-phuc-k9.png?v=2026" alt="Phúc K9" style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.14);padding:3px;flex-shrink:0;" />
+              <div style="min-width:0;">
+                <div style="font-size:0.68rem;font-weight:900;color:#fde047;letter-spacing:0.04em;">MOBILE APP • HỌC CÙNG PHÚC K9</div>
+                <div style="font-size:1.05rem;font-weight:900;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chào ${unameMob} 👋</div>
+              </div>
+            </div>
+            <button type="button" class="pk9-mob-guide-pill" data-open-onboarding="auto">❓ Tân thủ</button>
+          </div>
+          <div class="pk9-mob-kpi-row">
+            <div class="pk9-mob-kpi-pill"><b>${stats.coursesCount}</b><span>Khóa</span></div>
+            <div class="pk9-mob-kpi-pill"><b>${totalTopics.toLocaleString('vi-VN')}+</b><span>Video/PDF</span></div>
+            <div class="pk9-mob-kpi-pill"><b>${stats.interactiveExamCount}+</b><span>Đề 3 phần</span></div>
+            <div class="pk9-mob-kpi-pill"><b>${APP.user ? `${doneTotal} bài` : `${stats.daysToExam}đ`}</b><span>${APP.user ? 'Đã xong' : 'THPT'}</span></div>
+          </div>
+          <div class="pk9-mob-action-deck">
+            <button type="button" class="pk9-mob-action-card cam" data-open-camera-ai="1">
+              <span class="pk9-mob-act-ico">📸</span>
+              <div>
+                <strong>Chụp Giải Bài AI</strong>
+                <small>Camera quét đề Toán/Lí/Hóa</small>
+              </div>
+            </button>
+            <button type="button" class="pk9-mob-action-card video" data-nav-tab="lectures">
+              <span class="pk9-mob-act-ico">🎬</span>
+              <div>
+                <strong>Phòng Video HD</strong>
+                <small>Xem theo từng Thầy/Cô</small>
+              </div>
+            </button>
+            <button type="button" class="pk9-mob-action-card exam" data-nav-tab="exams">
+              <span class="pk9-mob-act-ico">🏛️</span>
+              <div>
+                <strong>Luyện Đề Sở/Bộ</strong>
+                <small>Chấm tự động + Casio</small>
+              </div>
+            </button>
+            <button type="button" class="pk9-mob-action-card lib" data-nav-tab="khoa-chui">
+              <span class="pk9-mob-act-ico">📖</span>
+              <div>
+                <strong>Thư Viện Công Khai</strong>
+                <small>Link Sheet &amp; PDF gốc</small>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DISTINCT DESKTOP WORKSTATION HERO (VISIBLE >= 769px) -->
+      <section class="pk9-hero pk9-pc-only-home">
         <div class="pk9-hero-orb-1"></div>
         <div class="pk9-hero-orb-2"></div>
         <div class="pk9-hero-grid">
@@ -1480,6 +1547,9 @@
             <div class="pk9-hero-ctas">
               <button type="button" class="pk9-btn-hero-main" data-nav-tab="lectures">
                 🎬 <span class="pk9-hide-mob-xs">Vào Phòng Học Video (${totalTopics.toLocaleString('vi-VN')}+ bài)</span><span class="pk9-show-mob-xs">Học Video</span>
+              </button>
+              <button type="button" class="pk9-btn-hero-sec" data-open-camera-ai="1" style="background:linear-gradient(135deg,rgba(14,165,233,0.34),rgba(139,92,246,0.34));border-color:rgba(125,211,252,0.65);">
+                📸 <span>Chụp Ảnh Giải Bài AI</span>
               </button>
               <button type="button" class="pk9-btn-hero-sec" data-nav-tab="exams">
                 🏛️ <span class="pk9-hide-mob-xs">Luyện Đề Chấm Tự Động (${stats.interactiveExamCount}+ đề)</span><span class="pk9-show-mob-xs">Luyện Đề</span>
@@ -4054,43 +4124,310 @@
   }
 
   // ==========================================================================
-  // TAB 10: AI TUTOR PHÚC K9 (/api/ai + SMART FALLBACK)
+  // TAB 10: AI TUTOR + CAMERA VISION SOLVER (/api/ai MULTI-FREE WATERFALL)
   // ==========================================================================
+  function getAiClientKeyConfig() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('pk9_ai_client_cfg') || 'null');
+      if (saved && typeof saved === 'object') {
+        return {
+          provider: String(saved.provider || 'gemini').toLowerCase(),
+          key: String(saved.key || '').trim()
+        };
+      }
+    } catch {}
+    return { provider: 'gemini', key: '' };
+  }
+
+  function saveAiClientKeyConfig(provider, key) {
+    try {
+      const cleanKey = String(key || '').trim();
+      const cleanProv = String(provider || 'gemini').toLowerCase();
+      if (!cleanKey) {
+        localStorage.removeItem('pk9_ai_client_cfg');
+      } else {
+        localStorage.setItem('pk9_ai_client_cfg', JSON.stringify({ provider: cleanProv, key: cleanKey }));
+      }
+    } catch {}
+  }
+
+  async function refreshAiStatusBadge() {
+    if (!APP.aiStatusCache) {
+      try {
+        const resp = await fetch('/api/ai', { credentials: 'include' });
+        if (resp.ok) {
+          APP.aiStatusCache = await resp.json();
+        }
+      } catch {}
+    }
+    const pill = document.getElementById('pk9-ai-status-pill');
+    if (!pill) return;
+    const cfg = getAiClientKeyConfig();
+    const serverProviders = APP.aiStatusCache?.active_providers || [];
+    if (cfg.key) {
+      pill.className = 'pk9-badge pk9-badge-verified';
+      pill.textContent = `🟢 Đang dùng Key cá nhân (${cfg.provider.toUpperCase()}) • Camera Vision Ready`;
+    } else if (serverProviders.length) {
+      pill.className = 'pk9-badge pk9-badge-verified';
+      pill.textContent = `🟢 Máy chủ sẵn sàng (${serverProviders.map(p => p.id.toUpperCase()).join(' / ')})`;
+    } else {
+      pill.className = 'pk9-badge pk9-badge-hot';
+      pill.textContent = '🔑 Chưa gắn API Key — Bấm "Cài Key Free" bên phải (miễn phí Google Gemini / Groq)';
+    }
+  }
+
+  function drawScaledImageToJpegDataUrl(sourceEl, srcW, srcH, maxDim = 1280) {
+    const w0 = Math.max(1, Number(srcW) || 800);
+    const h0 = Math.max(1, Number(srcH) || 600);
+    const scale = Math.min(1, maxDim / Math.max(w0, h0));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(w0 * scale));
+    canvas.height = Math.max(1, Math.round(h0 * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(sourceEl, 0, 0, canvas.width, canvas.height);
+    let out = canvas.toDataURL('image/jpeg', 0.84);
+    if (out.length > 900000) out = canvas.toDataURL('image/jpeg', 0.68);
+    return out;
+  }
+
+  function compressStudyImageFile(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !String(file.type || '').startsWith('image/')) {
+        reject(new Error('Vui lòng chọn tệp hình ảnh (JPG, PNG, WebP).'));
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        reject(new Error('Ảnh quá lớn (tối đa 15MB).'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Không đọc được tệp ảnh.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Tệp ảnh không hợp lệ.'));
+        img.onload = () => resolve(drawScaledImageToJpegDataUrl(img, img.naturalWidth || img.width, img.naturalHeight || img.height, 1280));
+        img.src = String(reader.result || '');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setAiPendingImage(dataUrl, label = 'Ảnh bài tập đã chọn') {
+    APP.aiPendingImageData = dataUrl || '';
+    APP.aiPendingImageName = dataUrl ? label : '';
+    const bar = document.getElementById('pk9-ai-img-preview-bar');
+    if (!bar) return;
+    if (!dataUrl) {
+      bar.style.display = 'none';
+      bar.innerHTML = '';
+      return;
+    }
+    bar.style.display = 'flex';
+    bar.innerHTML = `
+      <img src="${dataUrl}" alt="Ảnh đề bài" class="pk9-ai-thumb-img" />
+      <div style="min-width:0;flex:1;">
+        <div style="font-size:0.78rem;font-weight:900;color:var(--pk9-text);">📸 ${esc(label)}</div>
+        <div style="font-size:0.72rem;color:var(--pk9-text-muted);">Bấm gửi ngay hoặc gõ thêm yêu cầu (VD: "Giải câu b", "Tìm lỗi sai")</div>
+      </div>
+      <button type="button" class="pk9-admin-btn-xs danger" data-clear-ai-image="1">✕ Bỏ ảnh</button>
+    `;
+  }
+
+  function stopCameraStream() {
+    if (APP._cameraStream) {
+      try { APP._cameraStream.getTracks().forEach(t => t.stop()); } catch {}
+      APP._cameraStream = null;
+    }
+    const vid = document.getElementById('pk9-cam-video');
+    if (vid) vid.srcObject = null;
+  }
+
+  function closeAiCameraModal() {
+    stopCameraStream();
+    document.getElementById('pk9-camera-modal')?.classList.remove('open');
+  }
+
+  async function startCameraIntoModal() {
+    const vid = document.getElementById('pk9-cam-video');
+    const st = document.getElementById('pk9-cam-status');
+    if (!vid || !st) return;
+    stopCameraStream();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      st.textContent = '⚠️ Trình duyệt không hỗ trợ Live Camera — Hãy bấm "🖼️ Chọn ảnh" hoặc mở Camera máy!';
+      return;
+    }
+    st.textContent = '⏳ Đang mở camera... Vui lòng bấm Cho phép nếu trình duyệt hỏi.';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: APP._cameraFacing || 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: false
+      });
+      APP._cameraStream = stream;
+      vid.srcObject = stream;
+      await vid.play().catch(() => {});
+      st.textContent = '✅ Sẵn sàng! Căn rõ đề bài vào khung rồi bấm "📸 Chụp & Gửi Vào AI"';
+    } catch {
+      st.textContent = '⚠️ Chưa mở được camera trực tiếp (chưa cấp quyền hoặc máy không có webcam). Hãy bấm "🖼️ Chọn ảnh" để chụp bằng máy ảnh hệ thống hoặc chọn ảnh có sẵn!';
+    }
+  }
+
+  function openAiCameraModal() {
+    if (APP.activeTab !== 'ai') {
+      switchTab('ai');
+    }
+    const ov = document.getElementById('pk9-camera-modal');
+    if (ov) {
+      ov.classList.add('open');
+      startCameraIntoModal();
+    } else {
+      document.getElementById('pk9-ai-cam-input')?.click();
+    }
+  }
+
+  function formatAiReplyHtml(rawText) {
+    let s = esc(String(rawText || ''));
+    s = s.replace(/\*\*([^*\n]{1,220})\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/`([^`\n]{1,120})`/g, '<code>$1</code>');
+    return s;
+  }
+
+  function searchLocalStudyContext(query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+    const tokens = q.split(/\s+/).filter(w => w.length >= 2).slice(0, 6);
+    if (!tokens.length) return [];
+    const matches = [];
+    for (const c of getCatalog()) {
+      for (const ch of c.chapters || []) {
+        for (const t of ch.topics || []) {
+          const hay = `${t.title} ${c.subject} ${c.name}`.toLowerCase();
+          if (tokens.some(tk => hay.includes(tk))) {
+            matches.push({ title: t.title, sub: `${c.shortName || c.name} • ${c.teacher || ''}`, courseId: c.id, topicId: t.id });
+          }
+          if (matches.length >= 4) break;
+        }
+        if (matches.length >= 4) break;
+      }
+      if (matches.length >= 4) break;
+    }
+    return matches;
+  }
+
   function renderAiTab() {
     const root = document.getElementById('tab-ai');
     if (!root) return;
 
     const samples = [
+      'Giải chi tiết bài toán trong ảnh này giúp em từng bước?',
       'Giải thích cách tính tích phân từng phần và ví dụ minh họa?',
       'So sánh lực Lo-ren-xơ và lực từ tác dụng lên dây dẫn?',
       'Cách viết đồng phân este C4H8O2 nhanh không bị sót?'
     ];
+    const subjects = ['Toán học', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Ngữ văn'];
+    const clientCfg = getAiClientKeyConfig();
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
-        <div class="pk9-sec-head" style="margin-top:0;">
-          <div>
-            <h2>🤖 Trợ Lý AI Học Tập Phúc K9 (Giải Toán, Lí, Hóa, Sinh, Anh 24/7)</h2>
-            <p>Đặt câu hỏi về công thức, phương pháp giải bài tập hoặc nhờ AI lập kế hoạch ôn thi cá nhân hóa.</p>
+        <div class="pk9-ai-hero-card">
+          <div style="min-width:0;flex:1;">
+            <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+              <span class="pk9-badge" id="pk9-ai-status-pill" style="background:rgba(255,255,255,0.16);color:#fde047;">⏳ Đang kiểm tra kết nối AI...</span>
+            </div>
+            <h2 style="margin:0 0 0.25rem;font-size:1.35rem;font-weight:900;">🤖 Gia Sư AI &amp; Camera Giải Bài Tập 24/7</h2>
+            <p style="margin:0;font-size:0.84rem;color:rgba(255,255,255,0.88);line-height:1.5;">
+              Chụp ảnh đề bài bằng Camera (hoặc dán ảnh Ctrl+V) để AI đọc chữ &amp; viết lời giải từng bước chuẩn LaTeX!
+            </p>
+          </div>
+          <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+            <button type="button" class="pk9-btn-hero-main" data-open-camera-ai="1" style="padding:0.55rem 0.95rem;font-size:0.82rem;">
+              📸 Chụp Đề Giải Bài
+            </button>
+            <button type="button" class="pk9-btn-hero-sec" data-toggle-ai-key-box="1" style="padding:0.55rem 0.9rem;font-size:0.82rem;">
+              🔑 Cài API Key Free
+            </button>
+          </div>
+        </div>
+
+        <div id="pk9-ai-key-panel" class="pk9-card pk9-ai-key-panel" style="display:${APP.aiShowKeyPanel ? 'block' : 'none'};margin-bottom:0.9rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">
+            <strong style="font-size:0.95rem;">🔑 Kết Nối API AI Miễn Phí (Không Cần Thẻ Visa)</strong>
+            <button type="button" class="pk9-admin-btn-xs" data-toggle-ai-key-box="1">✕ Đóng</button>
+          </div>
+          <p style="margin:0 0 0.65rem;font-size:0.8rem;color:var(--pk9-text-muted);line-height:1.5;">
+            Nếu Admin chưa gắn biến môi trường <code>GEMINI_API_KEY</code> / <code>GROQ_API_KEY</code> trên Vercel, bạn vẫn có thể tự tạo 1 Key miễn phí trong 30 giây và dán vào đây (chỉ lưu trên trình duyệt của bạn):
+          </p>
+          <div class="pk9-ai-free-sources-grid">
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="pk9-ai-src-card">
+              <b>1. Google AI Studio (Khuyên dùng #1)</b>
+              <span>Miễn phí Gemini Vision (~500 lượt/ngày), giải Toán/Lí/Hóa &amp; đọc ảnh chữ viết tay tiếng Việt siêu chuẩn.</span>
+            </a>
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="pk9-ai-src-card">
+              <b>2. Groq LPU Cloud</b>
+              <span>Tốc độ phản hồi cực nhanh, 1.000 – 14.400 lượt/ngày miễn phí, hỗ trợ Llama 4 Scout Vision.</span>
+            </a>
+            <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener" class="pk9-ai-src-card">
+              <b>3. Mistral Experiment</b>
+              <span>Gói miễn phí rộng tới 1 tỷ tokens/tháng (cần xác minh SĐT), hỗ trợ Pixtral Vision.</span>
+            </a>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.65rem;">
+            <select id="pk9-ai-client-provider" class="pk9-input" style="max-width:190px;margin-top:0;">
+              <option value="gemini" ${clientCfg.provider === 'gemini' ? 'selected' : ''}>Google Gemini (Free)</option>
+              <option value="groq" ${clientCfg.provider === 'groq' ? 'selected' : ''}>Groq LPU (Free)</option>
+              <option value="mistral" ${clientCfg.provider === 'mistral' ? 'selected' : ''}>Mistral Free</option>
+              <option value="openrouter" ${clientCfg.provider === 'openrouter' ? 'selected' : ''}>OpenRouter :free</option>
+            </select>
+            <input type="password" id="pk9-ai-client-key" class="pk9-input" style="flex:1 1 200px;margin-top:0;" placeholder="Dán API Key của bạn (VD: AIza... hoặc gsk_...)" value="${esc(clientCfg.key)}" />
+            <button type="button" class="pk9-btn-exam-primary" data-save-ai-key="1" style="flex:0 0 auto;padding:0.55rem 0.95rem;font-size:0.8rem;">💾 Lưu Key</button>
           </div>
         </div>
 
         <div class="pk9-card">
-          <div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.75rem;">
-            ${samples.map(s => `<button type="button" class="pk9-exam-chip" data-ai-suggest="${esc(s)}" style="font-size:0.78rem;">💡 ${esc(s)}</button>`).join('')}
+          <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.65rem;">
+            <span style="font-size:0.76rem;font-weight:800;color:var(--pk9-text-muted);">Môn học:</span>
+            ${subjects.map(sub => `
+              <button type="button" class="pk9-exam-chip ${APP.aiSubjectHint === sub ? 'active' : ''}" data-ai-subject="${esc(sub)}" style="padding:0.25rem 0.62rem;font-size:0.74rem;">${esc(sub)}</button>
+            `).join('')}
           </div>
-          <div id="pk9-ai-messages" style="min-height:260px;max-height:420px;overflow-y:auto;padding:1rem;border-radius:1rem;background:var(--pk9-surface-2);margin-bottom:1rem;display:flex;flex-direction:column;gap:0.75rem;">
-            <div style="align-self:flex-start;max-width:85%;padding:0.85rem 1.1rem;border-radius:1rem;background:var(--pk9-surface);border:1px solid var(--pk9-border);font-size:0.9rem;">
-              👋 Xin chào! Mình là <b>Trợ lý AI Học Cùng Phúc K9</b>. Bạn cần giải thích công thức Toán 12, Vật lí 12, Hóa học 12 (IUPAC), Sinh học 12 hay chiến thuật làm đề GDPT 2018? Hãy nhập câu hỏi bên dưới nhé!
+
+          <div class="pk9-ai-suggest-row">
+            ${samples.map(s => `<button type="button" class="pk9-exam-chip" data-ai-suggest="${esc(s)}" style="font-size:0.76rem;">💡 ${esc(s)}</button>`).join('')}
+          </div>
+
+          <div id="pk9-ai-messages" class="pk9-ai-messages-box">
+            <div class="pk9-ai-bubble bot">
+              👋 Xin chào! Mình là <b>Gia Sư AI Học Cùng Phúc K9</b>. Bạn có thể:<br/>
+              • Bấm <b>📸 Camera</b> để chụp trực tiếp bài tập trên giấy / màn hình;<br/>
+              • Bấm <b>🖼️ Chọn ảnh</b> hoặc nhấn <code>Ctrl+V</code> để dán ảnh chụp màn hình;<br/>
+              • Hoặc gõ câu hỏi bên dưới để mình giải chi tiết từng bước!
             </div>
           </div>
-          <form id="pk9-ai-form" class="pk9-ai-form">
-            <input type="text" id="pk9-ai-input" class="pk9-input" maxlength="2000" style="margin-top:0;flex:1 1 min(100%, 200px);min-width:0;" placeholder="Nhập câu hỏi bài tập hoặc công thức cần giải thích..." required />
-            <button type="submit" id="pk9-ai-submit-btn" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0 1.2rem;">Gửi câu hỏi 🚀</button>
+
+          <div id="pk9-ai-img-preview-bar" class="pk9-ai-img-preview-bar" style="display:none;"></div>
+
+          <form id="pk9-ai-form" class="pk9-ai-form-v2">
+            <div class="pk9-ai-media-btns">
+              <button type="button" class="pk9-btn-exam-ghost" data-open-camera-ai="1" title="Mở Camera chụp đề bài" style="flex:0 0 auto;padding:0.52rem 0.72rem;font-size:0.84rem;">📸</button>
+              <button type="button" class="pk9-btn-exam-ghost" data-pick-ai-gallery="1" title="Chọn ảnh bài tập từ máy" style="flex:0 0 auto;padding:0.52rem 0.72rem;font-size:0.84rem;">🖼️</button>
+              <input type="file" id="pk9-ai-cam-input" accept="image/*" capture="environment" style="display:none;" />
+              <input type="file" id="pk9-ai-file-input" accept="image/*" style="display:none;" />
+            </div>
+            <input type="text" id="pk9-ai-input" class="pk9-input" maxlength="2500" style="margin-top:0;flex:1 1 min(100%, 190px);min-width:0;" placeholder="Nhập câu hỏi hoặc để trống nếu chỉ gửi ảnh..." />
+            <button type="submit" id="pk9-ai-submit-btn" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0.58rem 1.05rem;">Giải ngay 🚀</button>
           </form>
         </div>
       </div>
     `;
+    if (APP.aiPendingImageData) {
+      setAiPendingImage(APP.aiPendingImageData, APP.aiPendingImageName || 'Ảnh bài tập đã chọn');
+    }
+    refreshAiStatusBadge();
   }
 
   // ==========================================================================
@@ -5839,9 +6176,90 @@
       if (closeMobHub) {
         document.getElementById('pk9-mob-hub-sheet')?.classList.remove('open');
         document.getElementById('pk9-mob-hub-btn')?.classList.remove('active');
-        if (!closeMobHub.hasAttribute('data-open-feedback') && !closeMobHub.hasAttribute('data-open-auth') && !closeMobHub.hasAttribute('data-nav-tab')) {
+        if (
+          !closeMobHub.hasAttribute('data-open-feedback') &&
+          !closeMobHub.hasAttribute('data-open-auth') &&
+          !closeMobHub.hasAttribute('data-nav-tab') &&
+          !closeMobHub.hasAttribute('data-open-camera-ai')
+        ) {
           return;
         }
+      }
+
+      if (e.target.id === 'pk9-camera-modal' || e.target.closest('[data-close-camera]')) {
+        closeAiCameraModal();
+        return;
+      }
+
+      if (e.target.closest('[data-open-camera-ai]')) {
+        openAiCameraModal();
+        return;
+      }
+
+      if (e.target.closest('[data-switch-camera-facing]')) {
+        APP._cameraFacing = APP._cameraFacing === 'environment' ? 'user' : 'environment';
+        startCameraIntoModal();
+        return;
+      }
+
+      if (e.target.closest('[data-snap-camera-photo]')) {
+        const vid = document.getElementById('pk9-cam-video');
+        if (!vid || !vid.videoWidth) {
+          toast('Camera chưa sẵn sàng ảnh — hãy bấm "🖼️ Chọn ảnh" nếu máy chưa có camera!', 'info');
+          return;
+        }
+        const snapUrl = drawScaledImageToJpegDataUrl(vid, vid.videoWidth, vid.videoHeight, 1280);
+        setAiPendingImage(snapUrl, 'Ảnh đề bài chụp từ Camera');
+        closeAiCameraModal();
+        const aiIn = document.getElementById('pk9-ai-input');
+        if (aiIn && !aiIn.value.trim()) {
+          aiIn.value = 'Hãy đọc đề bài trong ảnh và giải chi tiết từng bước giúp em!';
+        }
+        toast('📸 Đã chụp đề bài — bấm "Giải ngay 🚀" để AI giải chi tiết!', 'success');
+        return;
+      }
+
+      if (e.target.closest('[data-pick-ai-gallery]')) {
+        closeAiCameraModal();
+        const fileInp = document.getElementById('pk9-ai-file-input');
+        if (fileInp) {
+          fileInp.value = '';
+          fileInp.click();
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-clear-ai-image]')) {
+        setAiPendingImage('');
+        return;
+      }
+
+      if (e.target.closest('[data-toggle-ai-key-box]')) {
+        APP.aiShowKeyPanel = !APP.aiShowKeyPanel;
+        const panel = document.getElementById('pk9-ai-key-panel');
+        if (panel) panel.style.display = APP.aiShowKeyPanel ? 'block' : 'none';
+        return;
+      }
+
+      if (e.target.closest('[data-save-ai-key]')) {
+        const prov = document.getElementById('pk9-ai-client-provider')?.value || 'gemini';
+        const keyVal = document.getElementById('pk9-ai-client-key')?.value || '';
+        saveAiClientKeyConfig(prov, keyVal);
+        APP.aiShowKeyPanel = false;
+        const panel = document.getElementById('pk9-ai-key-panel');
+        if (panel) panel.style.display = 'none';
+        refreshAiStatusBadge();
+        toast(keyVal.trim() ? `🔑 Đã lưu API Key (${prov.toUpperCase()}) trên trình duyệt của bạn!` : 'Đã xóa Key cá nhân khỏi trình duyệt.', 'success');
+        return;
+      }
+
+      const aiSubjBtn = e.target.closest('[data-ai-subject]');
+      if (aiSubjBtn) {
+        APP.aiSubjectHint = aiSubjBtn.getAttribute('data-ai-subject') || 'Toán học';
+        document.querySelectorAll('[data-ai-subject]').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-ai-subject') === APP.aiSubjectHint);
+        });
+        return;
       }
 
       if (e.target.id === 'pk9-feedback-modal' || e.target.closest('[data-close-feedback]')) {
@@ -7764,36 +8182,57 @@
         const submitBtn = document.getElementById('pk9-ai-submit-btn');
         const box = document.getElementById('pk9-ai-messages');
         const q = String(input?.value || '').trim();
-        if (!q || !box) return;
-        input.value = '';
+        const imgData = APP.aiPendingImageData || '';
+        if ((!q && !imgData) || !box) {
+          toast('Vui lòng nhập câu hỏi hoặc chụp/chọn ảnh đề bài cần giải.', 'info');
+          return;
+        }
+        const sentText = q || 'Hãy đọc đề bài trong ảnh và giải chi tiết từng bước giúp em!';
+        if (input) input.value = '';
+        setAiPendingImage('');
         if (submitBtn) submitBtn.disabled = true;
 
         box.insertAdjacentHTML('beforeend', `
-          <div style="align-self:flex-end;max-width:80%;padding:0.75rem 1rem;border-radius:1rem;background:var(--pk9-primary);color:#fff;font-size:0.9rem;font-weight:600;white-space:pre-line;">
-            ${esc(q)}
+          <div class="pk9-ai-bubble user">
+            ${imgData ? `<img src="${imgData}" alt="Ảnh đề bài" class="pk9-ai-chat-img" />` : ''}
+            <div>${esc(sentText)}</div>
           </div>
         `);
 
         const pendingEl = document.createElement('div');
-        pendingEl.style.cssText = 'align-self:flex-start;max-width:85%;padding:0.85rem 1.1rem;border-radius:1rem;background:var(--pk9-surface);border:1px solid var(--pk9-border);font-size:0.9rem;white-space:pre-line;';
-        pendingEl.innerHTML = '🤖 <b>Trợ lý AI Phúc K9:</b>\n⏳ Đang phân tích đề bài và viết lời giải chi tiết...';
+        pendingEl.className = 'pk9-ai-bubble bot';
+        pendingEl.innerHTML = imgData
+          ? '🤖 <b>Gia Sư AI Phúc K9:</b>\n⏳ Đang đọc đề bài từ ảnh &amp; viết lời giải từng bước...'
+          : '🤖 <b>Gia Sư AI Phúc K9:</b>\n⏳ Đang phân tích câu hỏi &amp; viết lời giải chi tiết...';
         box.appendChild(pendingEl);
         box.scrollTop = box.scrollHeight;
 
         const curCourse = getCourseById(APP.activeCourseId);
         const curTopic = findTopicInCourse(curCourse, APP.activeTopicId)?.topic;
+        const clientCfg = getAiClientKeyConfig();
         let replyText = '';
+        let replyProvider = '';
         let errReason = '';
+        let isUnconfigured = false;
+
         try {
           const resp = await fetch('/api/ai', {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-pk9-visitor': getVisitorClientId()
+            },
             body: JSON.stringify({
-              message: q,
-              prompt: q,
+              message: sentText,
+              prompt: sentText,
+              image_data: imgData || undefined,
+              subject_hint: APP.aiSubjectHint || '',
+              client_provider: clientCfg.key ? clientCfg.provider : undefined,
+              client_key: clientCfg.key || undefined,
               context: {
                 grade: APP.user?.settings?.preferred_grade || APP.gradeFilter || '2K9',
+                subject: APP.aiSubjectHint || curCourse?.subject || '',
                 title: curTopic?.title || curCourse?.title || '',
                 description: curCourse ? `${curCourse.subject || ''} - ${curCourse.teacher || ''}` : ''
               }
@@ -7802,8 +8241,10 @@
           const data = await resp.json().catch(() => ({}));
           if (resp.ok && data?.ok) {
             replyText = data.answer || data.reply || data.text || '';
+            replyProvider = data.provider || data.model || '';
           } else {
             errReason = data?.message || `Máy chủ AI phản hồi mã lỗi ${resp.status}.`;
+            isUnconfigured = Boolean(data?.unconfigured || resp.status === 503);
           }
         } catch {
           errReason = 'Không thể kết nối tới /api/ai.';
@@ -7812,12 +8253,70 @@
         }
 
         if (replyText) {
-          pendingEl.innerHTML = `🤖 <b>Trợ lý AI Phúc K9:</b>\n${esc(replyText)}`;
+          pendingEl.innerHTML = `🤖 <b>Gia Sư AI Phúc K9:</b>${replyProvider ? ` <span class="pk9-badge pk9-badge-code" style="font-size:0.68rem;">⚡ ${esc(replyProvider)}</span>` : ''}\n${formatAiReplyHtml(replyText)}`;
         } else {
-          pendingEl.innerHTML = `⚠️ <b>AI Tutor tạm chưa phản hồi trực tiếp</b> (${esc(errReason)})\n\n💡 Gợi ý tự tra nhanh:\n1) Tìm dạng toán/lý thuyết trong <b>Video Bài Giảng & Lý Thuyết</b>;\n2) Mở <b>Bảng Tuần Hoàn</b> hoặc <b>Flashcard 3D</b> nếu cần tra nhanh công thức;\n3) Thử làm đề tương ứng ở <b>Phòng Luyện Đề</b> để xem lời giải chi tiết.`;
+          const localHits = searchLocalStudyContext(sentText);
+          pendingEl.innerHTML = `
+            ⚠️ <b>AI Tutor chưa kết nối được API Key</b> (${esc(errReason)})
+            <div style="margin-top:0.45rem;font-size:0.82rem;line-height:1.5;">
+              ${isUnconfigured
+                ? '👉 Admin chưa dán <code>GEMINI_API_KEY</code> / <code>GROQ_API_KEY</code> lên Vercel, nhưng bạn có thể tự dán Key <b>miễn phí 100%</b> ngay trên web trong 30 giây:'
+                : '👉 Kiểm tra lại API Key hoặc thử nguồn miễn phí dự phòng (Google AI Studio / Groq):'}
+            </div>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;">
+              <button type="button" class="pk9-admin-btn-xs primary" data-toggle-ai-key-box="1">🔑 Cài API Key Free ngay</button>
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;">🌐 Lấy Gemini Key Free</a>
+              <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;">⚡ Lấy Groq Key Free</a>
+            </div>
+            ${localHits.length ? `
+              <div style="margin-top:0.65rem;padding-top:0.55rem;border-top:1px dashed var(--pk9-border);font-size:0.8rem;">
+                <b>📚 Bài giảng liên quan ngay trong web:</b>
+                <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.35rem;">
+                  ${localHits.map(h => `<button type="button" class="pk9-admin-btn-xs" data-open-lecture-course="${esc(h.courseId)}" data-open-lecture-topic="${esc(h.topicId)}" style="text-align:left;justify-content:flex-start;">🎬 ${esc(h.title)} (${esc(h.sub)})</button>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          `;
         }
         box.scrollTop = box.scrollHeight;
         typeset(box);
+      }
+    });
+
+    document.addEventListener('change', async ev => {
+      const target = ev.target;
+      if (!target || (target.id !== 'pk9-ai-cam-input' && target.id !== 'pk9-ai-file-input')) return;
+      const file = target.files && target.files[0];
+      if (!file) return;
+      try {
+        const compressed = await compressStudyImageFile(file);
+        setAiPendingImage(compressed, file.name || 'Ảnh bài tập');
+        const aiIn = document.getElementById('pk9-ai-input');
+        if (aiIn && !aiIn.value.trim()) {
+          aiIn.value = 'Hãy đọc đề bài trong ảnh và giải chi tiết từng bước giúp em!';
+        }
+        toast('📸 Đã nạp ảnh đề bài — bấm "Giải ngay 🚀"!', 'success');
+      } catch (err) {
+        toast(err?.message || 'Không thể xử lý ảnh này.', 'error');
+      }
+    });
+
+    document.addEventListener('paste', async ev => {
+      if (APP.activeTab !== 'ai') return;
+      const items = ev.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (blob) {
+            try {
+              const compressed = await compressStudyImageFile(blob);
+              setAiPendingImage(compressed, 'Ảnh dán từ Clipboard (Ctrl+V)');
+              toast('📋 Đã dán ảnh đề bài vào AI Tutor!', 'success');
+            } catch {}
+          }
+          break;
+        }
       }
     });
 
@@ -7832,6 +8331,7 @@
         closeAuthModal();
         closeOnboardingModal();
         closeFeedbackModal();
+        closeAiCameraModal();
         document.getElementById('pk9-cmd-modal')?.classList.remove('open');
         closeInAppViewer();
         if (APP.kcFullscreen) {
@@ -7964,7 +8464,23 @@
     syncMobileScrollLock();
   }
 
+  function syncResponsiveUiClass() {
+    const isMob = window.innerWidth <= 768;
+    APP.isMobileUi = isMob;
+    document.body.classList.toggle('pk9-mobile-ui', isMob);
+    document.body.classList.toggle('pk9-desktop-ui', !isMob);
+  }
+
   function initMobileAndPwaHelpers() {
+    syncResponsiveUiClass();
+    let resizeRaf = 0;
+    window.addEventListener('resize', () => {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        syncResponsiveUiClass();
+      });
+    }, { passive: true });
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
