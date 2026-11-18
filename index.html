@@ -66,9 +66,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&family=Lora:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="/style.css?v=70" />
-  <link rel="stylesheet" href="/assets/exam-center.css?v=70" />
-  <link rel="stylesheet" href="/assets/pk9-rpg-3d.css?v=70" />
+  <link rel="stylesheet" href="/style.css?v=71" />
+  <link rel="stylesheet" href="/assets/exam-center.css?v=71" />
+  <link rel="stylesheet" href="/assets/pk9-rpg-3d.css?v=71" />
 
   <!-- MathJax Configuration for LaTeX Formulas -->
   <script>
@@ -387,7 +387,7 @@
     </div>
   </div>
 
-  <!-- MOBILE BOTTOM NAVIGATION BAR -->
+  <!-- MOBILE BOTTOM NAVIGATION BAR (NATIVE APP DOCK) -->
   <nav class="pk9-mobile-bottom-nav" aria-label="Điều hướng di động">
     <button type="button" class="pk9-mob-nav-btn active" data-nav-tab="home">
       <span>🏠</span>
@@ -397,17 +397,13 @@
       <span>🎬</span>
       <span>Bài giảng</span>
     </button>
-    <button type="button" class="pk9-mob-nav-btn" data-nav-tab="khoa-chui">
-      <span>📖</span>
-      <span>Công khai</span>
+    <button type="button" class="pk9-mob-nav-btn pk9-mob-nav-cam" id="pk9-mob-cam-btn" data-open-camera-ai="1" title="Chụp ảnh giải bài tập bằng AI Camera">
+      <span class="pk9-mob-cam-fab">📸</span>
+      <span>Giải AI</span>
     </button>
     <button type="button" class="pk9-mob-nav-btn" data-nav-tab="exams">
       <span>🏛️</span>
       <span>Luyện đề</span>
-    </button>
-    <button type="button" class="pk9-mob-nav-btn" data-nav-tab="leaderboard">
-      <span>🏆</span>
-      <span>BXH Top</span>
     </button>
     <button type="button" class="pk9-mob-nav-btn" id="pk9-mob-hub-btn" data-open-mob-hub="1">
       <span>⚡</span>
@@ -430,6 +426,21 @@
         <button type="button" class="pk9-icon-btn" data-close-mob-hub="1" aria-label="Đóng">✕</button>
       </div>
       <div class="pk9-mob-hub-grid">
+        <button type="button" class="pk9-mob-hub-tile hot" data-open-camera-ai="1" data-close-mob-hub="1">
+          <span class="pk9-mob-hub-icon">📸</span>
+          <span class="pk9-mob-hub-label">Camera Giải Bài</span>
+          <span class="pk9-mob-hub-sub">Chụp đề • AI Vision</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile hot" data-nav-tab="khoa-chui">
+          <span class="pk9-mob-hub-icon">📖</span>
+          <span class="pk9-mob-hub-label">Thư Viện Công Khai</span>
+          <span class="pk9-mob-hub-sub">Nguồn PDF &amp; Sheet</span>
+        </button>
+        <button type="button" class="pk9-mob-hub-tile" data-nav-tab="leaderboard">
+          <span class="pk9-mob-hub-icon">🏆</span>
+          <span class="pk9-mob-hub-label">BXH Top Học Viên</span>
+          <span class="pk9-mob-hub-sub">Đua điểm tuần</span>
+        </button>
         <button type="button" class="pk9-mob-hub-tile hot" data-nav-tab="missions">
           <span class="pk9-mob-hub-icon">⚡</span>
           <span class="pk9-mob-hub-label">Luyện Nhiệm Vụ</span>
@@ -514,6 +525,32 @@
     <div class="pk9-modal-box pk9-feedback-box" id="pk9-feedback-modal-box"></div>
   </div>
 
+  <!-- LIVE CAMERA PROBLEM SCANNER MODAL -->
+  <div class="pk9-modal-backdrop" id="pk9-camera-modal" role="dialog" aria-modal="true" aria-label="Camera chụp đề bài AI">
+    <div class="pk9-modal-box pk9-camera-box" id="pk9-camera-modal-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.7rem;">
+        <div>
+          <div style="font-size:0.7rem;font-weight:900;color:#0ea5e9;text-transform:uppercase;">📸 AI VISION SCANNER • HỌC CÙNG PHÚC K9</div>
+          <h3 style="margin:0.1rem 0 0;font-size:1.05rem;font-weight:900;">Chụp Ảnh Đề Bài Để AI Giải Chi Tiết</h3>
+        </div>
+        <button type="button" class="pk9-icon-btn" data-close-camera="1" aria-label="Đóng camera">✕</button>
+      </div>
+      <div class="pk9-cam-stage" id="pk9-cam-stage">
+        <video id="pk9-cam-video" autoplay playsinline muted></video>
+        <div class="pk9-cam-reticle" aria-hidden="true">
+          <span>Căn đề bài gọn trong khung sáng</span>
+        </div>
+        <div class="pk9-cam-status" id="pk9-cam-status">Đang khởi động camera...</div>
+      </div>
+      <canvas id="pk9-cam-canvas" style="display:none;"></canvas>
+      <div class="pk9-cam-controls">
+        <button type="button" class="pk9-btn-exam-ghost" data-switch-camera-facing="1" style="flex:0 1 auto;padding:0.5rem 0.85rem;font-size:0.8rem;">🔄 Đổi cam</button>
+        <button type="button" class="pk9-btn-exam-primary" data-snap-camera-photo="1" style="flex:1 1 150px;padding:0.6rem 1rem;font-size:0.88rem;">📸 Chụp &amp; Gửi Vào AI</button>
+        <button type="button" class="pk9-btn-exam-ghost" data-pick-ai-gallery="1" style="flex:0 1 auto;padding:0.5rem 0.85rem;font-size:0.8rem;">🖼️ Chọn ảnh</button>
+      </div>
+    </div>
+  </div>
+
   <!-- COMMAND PALETTE MODAL (CTRL + K) -->
   <div class="pk9-modal-backdrop" id="pk9-cmd-modal" role="dialog" aria-modal="true">
     <div class="pk9-modal-box">
@@ -536,10 +573,10 @@
   <script src="/assets/pk9-2k9-manifest.js"></script>
   <script src="/assets/pk9-2k8-curated.js"></script>
   <script src="/assets/pk9-2k8-dgnl.js"></script>
-  <script src="/assets/pk9-exam-tools.js?v=70"></script>
-  <script src="/assets/exam-center.js?v=70"></script>
-  <script src="/assets/pk9-rpg-models.js?v=70"></script>
-  <script src="/assets/pk9-rpg.js?v=70"></script>
-  <script src="/assets/pk9-app.js?v=70"></script>
+  <script src="/assets/pk9-exam-tools.js?v=71"></script>
+  <script src="/assets/exam-center.js?v=71"></script>
+  <script src="/assets/pk9-rpg-models.js?v=71"></script>
+  <script src="/assets/pk9-rpg.js?v=71"></script>
+  <script src="/assets/pk9-app.js?v=71"></script>
 </body>
 </html>

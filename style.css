@@ -4482,9 +4482,9 @@ html.dark .pk9-pt-cell.locked { background: #1e293b !important; color: #94a3b8 !
  * ========================================================================== */
 @media (max-width: 1024px) {
   .pk9-mobile-bottom-nav {
-    grid-template-columns: repeat(6, 1fr) !important;
-    padding-left: 0.2rem;
-    padding-right: 0.2rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    padding-left: 0.28rem;
+    padding-right: 0.28rem;
   }
   .pk9-mob-nav-btn {
     font-size: 0.64rem;
@@ -6016,6 +6016,404 @@ html.dark .pk9-feedback-box {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   V71: DISTINCT MOBILE APP INTERFACE IDENTITY + CAMERA PROBLEM SOLVER + AI UI
+   ========================================================================== */
+.pk9-mob-only-home {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pk9-mob-only-home {
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .pk9-pc-only-home {
+    display: none !important;
+  }
+
+  /* Native App Floating Dock Bottom Nav */
+  .pk9-mobile-bottom-nav {
+    left: 8px;
+    right: 8px;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    width: calc(100% - 16px);
+    min-height: 62px;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    padding: 0.24rem 0.28rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  }
+  .pk9-mob-nav-cam {
+    overflow: visible;
+  }
+  .pk9-mob-cam-fab {
+    width: 42px;
+    height: 42px;
+    margin-top: -16px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0284c7, #6366f1);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem !important;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.42);
+  }
+  html.dark .pk9-mob-cam-fab {
+    border-color: #0f172a;
+  }
+  .pk9-mob-scroll-top {
+    bottom: 84px !important;
+  }
+
+  /* Distinct Mobile App Home Shell */
+  .pk9-mob-app-card {
+    background: linear-gradient(145deg, #08182b 0%, #102b4c 60%, #0d4b5e 100%);
+    border-radius: 1.35rem;
+    padding: 0.95rem;
+    color: #f8fafc;
+    border: 1px solid rgba(125, 211, 252, 0.28);
+    box-shadow: 0 14px 32px rgba(8, 24, 43, 0.24);
+  }
+  .pk9-mob-app-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.72rem;
+  }
+  .pk9-mob-guide-pill {
+    border: 1px solid rgba(250, 204, 21, 0.45);
+    background: rgba(15, 23, 42, 0.65);
+    color: #fde047;
+    border-radius: 999px;
+    padding: 0.3rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pk9-mob-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.38rem;
+    margin-bottom: 0.75rem;
+  }
+  .pk9-mob-kpi-pill {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.78rem;
+    padding: 0.42rem 0.28rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+  }
+  .pk9-mob-kpi-pill b {
+    font-size: 0.84rem;
+    font-weight: 900;
+    color: #fde047;
+  }
+  .pk9-mob-kpi-pill span {
+    font-size: 0.64rem;
+    color: #cbd5e1;
+    font-weight: 700;
+  }
+  .pk9-mob-action-deck {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.48rem;
+  }
+  .pk9-mob-action-card {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    border-radius: 0.95rem;
+    padding: 0.62rem 0.65rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.52rem;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .pk9-mob-action-card.cam {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.52), rgba(139, 92, 246, 0.52));
+    border-color: rgba(125, 211, 252, 0.55);
+  }
+  .pk9-mob-action-card.video {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.42), rgba(13, 148, 136, 0.42));
+  }
+  .pk9-mob-act-ico {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .pk9-mob-action-card strong {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+  .pk9-mob-action-card small {
+    display: block;
+    font-size: 0.65rem;
+    color: rgba(241, 245, 249, 0.85);
+    line-height: 1.2;
+    margin-top: 0.1rem;
+  }
+
+  /* Horizontal Swipe Story Cards on Mobile Home (instead of long desktop stacks) */
+  #tab-home .pk9-grid-4,
+  #tab-home .pk9-grid-3 {
+    display: flex !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.72rem;
+    padding-bottom: 0.45rem;
+    scrollbar-width: none;
+  }
+  #tab-home .pk9-grid-4::-webkit-scrollbar,
+  #tab-home .pk9-grid-3::-webkit-scrollbar {
+    display: none;
+  }
+  #tab-home .pk9-grid-4 > *,
+  #tab-home .pk9-grid-3 > * {
+    flex: 0 0 76%;
+    max-width: 280px;
+    scroll-snap-align: start;
+  }
+
+  /* Mobile Lectures: Put Video Stage FIRST on top of Chapter Accordion */
+  #pk9-lecture-studio {
+    display: flex !important;
+    flex-direction: column;
+  }
+  #pk9-video-stage {
+    order: -1;
+  }
+}
+
+/* ==========================================================================
+   AI TUTOR + CAMERA VISION SOLVER UI
+   ========================================================================== */
+.pk9-ai-hero-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 1.15rem 1.3rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #0b1b34 0%, #164e63 58%, #312e81 100%);
+  color: #f8fafc;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+.pk9-ai-free-sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 0.5rem;
+}
+.pk9-ai-src-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.72rem;
+  border-radius: 0.85rem;
+  background: var(--pk9-surface-2);
+  border: 1px solid var(--pk9-border);
+  text-decoration: none;
+  color: var(--pk9-text);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.pk9-ai-src-card:hover {
+  border-color: var(--pk9-primary);
+}
+.pk9-ai-src-card b {
+  color: var(--pk9-primary);
+  font-size: 0.79rem;
+}
+.pk9-ai-src-card span {
+  color: var(--pk9-text-muted);
+}
+.pk9-ai-suggest-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.72rem;
+}
+.pk9-ai-messages-box {
+  min-height: 250px;
+  max-height: 440px;
+  overflow-y: auto;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: var(--pk9-surface-2);
+  margin-bottom: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.pk9-ai-bubble {
+  max-width: 88%;
+  padding: 0.78rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  white-space: pre-line;
+  word-break: break-word;
+}
+.pk9-ai-bubble.bot {
+  align-self: flex-start;
+  background: var(--pk9-surface);
+  border: 1px solid var(--pk9-border);
+  color: var(--pk9-text);
+}
+.pk9-ai-bubble.user {
+  align-self: flex-end;
+  background: var(--pk9-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+.pk9-ai-chat-img {
+  display: block;
+  max-width: min(260px, 100%);
+  max-height: 190px;
+  border-radius: 0.68rem;
+  margin-bottom: 0.45rem;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.pk9-ai-img-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.72rem;
+  margin-bottom: 0.65rem;
+  border-radius: 0.85rem;
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+.pk9-ai-thumb-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 0.6rem;
+  object-fit: cover;
+  border: 1px solid var(--pk9-border);
+  flex-shrink: 0;
+}
+.pk9-ai-form-v2 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.pk9-ai-media-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* Camera Modal */
+#pk9-camera-modal.open {
+  animation: none;
+}
+.pk9-camera-box {
+  max-width: 580px;
+  padding: 1.2rem;
+  background: #ffffff;
+}
+html.dark .pk9-camera-box {
+  background: #0f172a;
+}
+.pk9-cam-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #050b14;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--pk9-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pk9-cam-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pk9-cam-reticle {
+  position: absolute;
+  inset: 14% 8%;
+  border: 2px dashed rgba(250, 204, 21, 0.78);
+  border-radius: 0.85rem;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+.pk9-cam-reticle span {
+  background: rgba(15, 23, 42, 0.78);
+  color: #fde047;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+.pk9-cam-status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.82);
+  color: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.65rem;
+  pointer-events: none;
+}
+.pk9-cam-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.78rem;
+}
+@media (max-width: 768px) {
+  .pk9-ai-suggest-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+  .pk9-ai-suggest-row::-webkit-scrollbar {
+    display: none;
+  }
+  .pk9-ai-suggest-row > * {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .pk9-ai-messages-box {
+    min-height: 200px;
+    max-height: 48vh;
+  }
+  .pk9-camera-box {
+    padding: 0.9rem;
+  }
+}
+
 
 
 
