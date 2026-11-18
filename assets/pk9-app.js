@@ -4166,13 +4166,15 @@
     const serverProviders = APP.aiStatusCache?.active_providers || [];
     if (cfg.key) {
       pill.className = 'pk9-badge pk9-badge-verified';
-      pill.textContent = `🟢 Đang dùng Key cá nhân (${cfg.provider.toUpperCase()}) • Camera Vision Ready`;
+      pill.textContent = `🟢 Đang dùng Key (${cfg.provider.toUpperCase()}) • Camera Vision Ready`;
     } else if (serverProviders.length) {
       pill.className = 'pk9-badge pk9-badge-verified';
-      pill.textContent = `🟢 Máy chủ sẵn sàng (${serverProviders.map(p => p.id.toUpperCase()).join(' / ')})`;
+      pill.textContent = `🟢 Máy chủ sẵn sàng (${serverProviders.map(p => p.id.toUpperCase()).join(' / ')}) • Camera Vision`;
     } else {
       pill.className = 'pk9-badge pk9-badge-hot';
-      pill.textContent = '🔑 Chưa gắn API Key — Bấm "Cài Key Free" bên phải (miễn phí Google Gemini / Groq)';
+      pill.textContent = isClientVerifiedAdmin()
+        ? '⚙️ Admin: Chưa gắn Key AI hệ thống — Vào Admin > Hệ thống để lưu 1 lần'
+        : '🟡 Gia sư AI đang bảo trì kết nối máy chủ';
     }
   }
 
@@ -4348,43 +4350,11 @@
             <button type="button" class="pk9-btn-hero-main" data-open-camera-ai="1" style="padding:0.55rem 0.95rem;font-size:0.82rem;">
               📸 Chụp Đề Giải Bài
             </button>
-            <button type="button" class="pk9-btn-hero-sec" data-toggle-ai-key-box="1" style="padding:0.55rem 0.9rem;font-size:0.82rem;">
-              🔑 Cài API Key Free
-            </button>
-          </div>
-        </div>
-
-        <div id="pk9-ai-key-panel" class="pk9-card pk9-ai-key-panel" style="display:${APP.aiShowKeyPanel ? 'block' : 'none'};margin-bottom:0.9rem;">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">
-            <strong style="font-size:0.95rem;">🔑 Kết Nối API AI Miễn Phí (Không Cần Thẻ Visa)</strong>
-            <button type="button" class="pk9-admin-btn-xs" data-toggle-ai-key-box="1">✕ Đóng</button>
-          </div>
-          <p style="margin:0 0 0.65rem;font-size:0.8rem;color:var(--pk9-text-muted);line-height:1.5;">
-            Nếu Admin chưa gắn biến môi trường <code>GEMINI_API_KEY</code> / <code>GROQ_API_KEY</code> trên Vercel, bạn vẫn có thể tự tạo 1 Key miễn phí trong 30 giây và dán vào đây (chỉ lưu trên trình duyệt của bạn):
-          </p>
-          <div class="pk9-ai-free-sources-grid">
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="pk9-ai-src-card">
-              <b>1. Google AI Studio (Khuyên dùng #1)</b>
-              <span>Miễn phí Gemini Vision (~500 lượt/ngày), giải Toán/Lí/Hóa &amp; đọc ảnh chữ viết tay tiếng Việt siêu chuẩn.</span>
-            </a>
-            <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="pk9-ai-src-card">
-              <b>2. Groq LPU Cloud</b>
-              <span>Tốc độ phản hồi cực nhanh, 1.000 – 14.400 lượt/ngày miễn phí, hỗ trợ Llama 4 Scout Vision.</span>
-            </a>
-            <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener" class="pk9-ai-src-card">
-              <b>3. Mistral Experiment</b>
-              <span>Gói miễn phí rộng tới 1 tỷ tokens/tháng (cần xác minh SĐT), hỗ trợ Pixtral Vision.</span>
-            </a>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.65rem;">
-            <select id="pk9-ai-client-provider" class="pk9-input" style="max-width:190px;margin-top:0;">
-              <option value="gemini" ${clientCfg.provider === 'gemini' ? 'selected' : ''}>Google Gemini (Free)</option>
-              <option value="groq" ${clientCfg.provider === 'groq' ? 'selected' : ''}>Groq LPU (Free)</option>
-              <option value="mistral" ${clientCfg.provider === 'mistral' ? 'selected' : ''}>Mistral Free</option>
-              <option value="openrouter" ${clientCfg.provider === 'openrouter' ? 'selected' : ''}>OpenRouter :free</option>
-            </select>
-            <input type="password" id="pk9-ai-client-key" class="pk9-input" style="flex:1 1 200px;margin-top:0;" placeholder="Dán API Key của bạn (VD: AIza... hoặc gsk_...)" value="${esc(clientCfg.key)}" />
-            <button type="button" class="pk9-btn-exam-primary" data-save-ai-key="1" style="flex:0 0 auto;padding:0.55rem 0.95rem;font-size:0.8rem;">💾 Lưu Key</button>
+            ${isClientVerifiedAdmin() ? `
+              <button type="button" class="pk9-btn-hero-sec" data-open-admin-ai-keys="1" style="padding:0.55rem 0.9rem;font-size:0.82rem;">
+                🛡️ Admin: Cài Key AI Web
+              </button>
+            ` : ''}
           </div>
         </div>
 
@@ -5568,6 +5538,59 @@
         </div>
       </div>
 
+      <div class="pk9-card" style="margin-bottom:1.15rem;" id="pk9-admin-ai-keys-card">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.65rem;margin-bottom:0.65rem;">
+          <div>
+            <h4 style="margin:0 0 0.25rem;font-size:1.05rem;font-weight:900;">🤖 Cấu Hình API Key AI Miễn Phí Cho Toàn Website (Lưu 1 Lần Dùng Chung)</h4>
+            <p style="margin:0;font-size:0.8rem;color:var(--pk9-text-muted);line-height:1.5;">
+              Dán key vào đây (hoặc gắn trên Vercel Env) để <b>100% học sinh</b> sử dụng Gia Sư AI &amp; Camera Giải Bài Tập mà không cần cài đặt gì thêm. Hỗ trợ xoay tua tự động nếu 1 nguồn chạm giới hạn!
+            </p>
+          </div>
+        </div>
+        <div class="pk9-ai-free-sources-grid" style="margin-bottom:0.8rem;">
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="pk9-ai-src-card">
+            <b>1. Google AI Studio (GEMINI_API_KEY) — Khuyên dùng #1</b>
+            <span>Miễn phí không cần Visa (~500 lượt/ngày), đọc Camera &amp; công thức tiếng Việt cực tốt.</span>
+          </a>
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="pk9-ai-src-card">
+            <b>2. Groq LPU Cloud (GROQ_API_KEY) — Khuyên dùng #2</b>
+            <span>Siêu nhanh, 1.000 – 14.400 lượt/ngày free (Llama 4 Scout Vision + Llama 3.3).</span>
+          </a>
+          <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener" class="pk9-ai-src-card">
+            <b>3. Mistral Experiment (MISTRAL_API_KEY)</b>
+            <span>Gói miễn phí tới 1 tỷ tokens/tháng (cần xác minh SĐT), hỗ trợ Pixtral Vision.</span>
+          </a>
+        </div>
+        <form id="pk9-admin-ai-keys-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 240px),1fr));gap:0.65rem;">
+          ${[
+            { id: 'gemini', label: 'Google Gemini Key', ph: 'AIza...' },
+            { id: 'groq', label: 'Groq Cloud Key', ph: 'gsk_...' },
+            { id: 'mistral', label: 'Mistral API Key', ph: 'Mistral key...' },
+            { id: 'openrouter', label: 'OpenRouter Free Key', ph: 'sk-or-v1-...' }
+          ].map(p => {
+            const st = d?.ai_keys_status?.[p.id] || {};
+            const stBadge = st.configured
+              ? `<span class="pk9-badge pk9-badge-verified" style="font-size:0.68rem;">✓ Đã gắn (${st.source === 'env' ? 'Vercel Env' : 'Admin Vault'} ${esc(st.masked)})</span>`
+              : `<span class="pk9-badge pk9-badge-code" style="font-size:0.68rem;">Chưa gắn</span>`;
+            return `
+              <div style="padding:0.65rem 0.75rem;border-radius:0.85rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+                  <b style="font-size:0.8rem;">${esc(p.label)}</b>
+                  ${stBadge}
+                </div>
+                <div style="display:flex;gap:0.35rem;align-items:center;">
+                  <input type="password" name="${p.id}" class="pk9-input" placeholder="${st.configured ? 'Dán key mới nếu muốn thay...' : p.ph}" style="margin-top:0;flex:1;min-width:0;padding:0.48rem 0.65rem;font-size:0.8rem;" />
+                  ${st.source === 'vault' ? `<button type="button" class="pk9-admin-btn-xs danger" data-clear-admin-ai-key="${p.id}" title="Gỡ key khỏi Vault">🗑️</button>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+          <div style="grid-column:1 / -1;display:flex;justify-content:flex-end;">
+            <button type="submit" class="pk9-btn-exam-primary" style="flex:0 0 auto;padding:0.55rem 1.2rem;">💾 Lưu API Key AI Cho Toàn Web</button>
+          </div>
+        </form>
+      </div>
+
       <div class="pk9-card">
         <h4 style="margin:0 0 0.75rem;font-size:1.02rem;font-weight:900;">📜 Nhật Ký Thao Tác Quản Trị Viên (Admin Audit Logs)</h4>
         <div class="pk9-admin-table-wrap">
@@ -6234,22 +6257,25 @@
         return;
       }
 
-      if (e.target.closest('[data-toggle-ai-key-box]')) {
-        APP.aiShowKeyPanel = !APP.aiShowKeyPanel;
-        const panel = document.getElementById('pk9-ai-key-panel');
-        if (panel) panel.style.display = APP.aiShowKeyPanel ? 'block' : 'none';
+      if (e.target.closest('[data-open-admin-ai-keys]')) {
+        APP.adminSubtab = 'system';
+        switchTab('admin');
+        setTimeout(() => {
+          document.getElementById('pk9-admin-ai-keys-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 180);
         return;
       }
 
-      if (e.target.closest('[data-save-ai-key]')) {
-        const prov = document.getElementById('pk9-ai-client-provider')?.value || 'gemini';
-        const keyVal = document.getElementById('pk9-ai-client-key')?.value || '';
-        saveAiClientKeyConfig(prov, keyVal);
-        APP.aiShowKeyPanel = false;
-        const panel = document.getElementById('pk9-ai-key-panel');
-        if (panel) panel.style.display = 'none';
-        refreshAiStatusBadge();
-        toast(keyVal.trim() ? `🔑 Đã lưu API Key (${prov.toUpperCase()}) trên trình duyệt của bạn!` : 'Đã xóa Key cá nhân khỏi trình duyệt.', 'success');
+      const clearAdminAiBtn = e.target.closest('[data-clear-admin-ai-key]');
+      if (clearAdminAiBtn) {
+        const prov = clearAdminAiBtn.getAttribute('data-clear-admin-ai-key');
+        if (prov) {
+          const ok = await runAdminAction({ sub_action: 'set-ai-keys', [`clear_${prov}`]: true });
+          if (ok) {
+            APP.aiStatusCache = null;
+            refreshAiStatusBadge();
+          }
+        }
         return;
       }
 
@@ -7979,6 +8005,23 @@
         return;
       }
 
+      if (e.target.id === 'pk9-admin-ai-keys-form') {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const payload = { sub_action: 'set-ai-keys' };
+        for (const [k, v] of fd.entries()) {
+          const val = String(v || '').trim();
+          if (val) payload[k] = val;
+        }
+        const ok = await runAdminAction(payload);
+        if (ok) {
+          e.target.reset();
+          APP.aiStatusCache = null;
+          refreshAiStatusBadge();
+        }
+        return;
+      }
+
       if (e.target.id === 'pk9-auth-form') {
         e.preventDefault();
         const form = e.target;
@@ -8257,16 +8300,14 @@
         } else {
           const localHits = searchLocalStudyContext(sentText);
           pendingEl.innerHTML = `
-            ⚠️ <b>AI Tutor chưa kết nối được API Key</b> (${esc(errReason)})
-            <div style="margin-top:0.45rem;font-size:0.82rem;line-height:1.5;">
-              ${isUnconfigured
-                ? '👉 Admin chưa dán <code>GEMINI_API_KEY</code> / <code>GROQ_API_KEY</code> lên Vercel, nhưng bạn có thể tự dán Key <b>miễn phí 100%</b> ngay trên web trong 30 giây:'
-                : '👉 Kiểm tra lại API Key hoặc thử nguồn miễn phí dự phòng (Google AI Studio / Groq):'}
+            ⚠️ <b>Gia Sư AI tạm thời chưa kết nối được máy chủ</b>
+            <div style="margin-top:0.4rem;font-size:0.82rem;line-height:1.5;color:var(--pk9-text-muted);">
+              ${esc(errReason || 'Hệ thống AI đang bảo trì hoặc quá tải tạm thời.')}
+              ${!isClientVerifiedAdmin() ? ' Em thử lại sau ít phút hoặc báo Admin hỗ trợ nhanh nếu cần gấp nhé!' : ''}
             </div>
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;">
-              <button type="button" class="pk9-admin-btn-xs primary" data-toggle-ai-key-box="1">🔑 Cài API Key Free ngay</button>
-              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;">🌐 Lấy Gemini Key Free</a>
-              <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="pk9-admin-btn-xs" style="text-decoration:none;">⚡ Lấy Groq Key Free</a>
+              ${isClientVerifiedAdmin() ? `<button type="button" class="pk9-admin-btn-xs primary" data-open-admin-ai-keys="1">🛡️ Admin: Cài Key AI Hệ Thống ngay</button>` : ''}
+              <button type="button" class="pk9-admin-btn-xs" data-open-feedback="bug" data-feedback-ctx="Gia Sư AI Tutor">💬 Báo Admin kiểm tra AI</button>
             </div>
             ${localHits.length ? `
               <div style="margin-top:0.65rem;padding-top:0.55rem;border-top:1px dashed var(--pk9-border);font-size:0.8rem;">

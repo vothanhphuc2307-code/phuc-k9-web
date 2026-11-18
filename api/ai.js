@@ -75,9 +75,22 @@ function sanitizeImageDataUrl(raw) {
   return s;
 }
 
-function getConfiguredServerProviders() {
+async function getConfiguredServerProviders(redis) {
+  let storedKeys = {};
+  if (redis) {
+    try {
+      const raw = await redis.get('phuc:system:ai-keys');
+      storedKeys = typeof raw === 'string' ? JSON.parse(raw) : (raw && typeof raw === 'object' ? raw : {});
+    } catch {
+      storedKeys = {};
+    }
+  }
   return PROVIDER_ORDER
-    .map(id => ({ def: PROVIDERS[id], key: String(process.env[PROVIDERS[id].envKey] || '').trim() }))
+    .map(id => {
+      const envVal = String(process.env[PROVIDERS[id].envKey] || '').trim();
+      const dbVal = String(storedKeys?.[id] || '').trim();
+      return { def: PROVIDERS[id], key: envVal || dbVal };
+    })
     .filter(x => x.key.length > 8);
 }
 
@@ -142,7 +155,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'GET') {
-      const configuredList = getConfiguredServerProviders().map(x => ({
+      const configuredList = (await getConfiguredServerProviders(redis)).map(x => ({
         id: x.def.id,
         label: x.def.label,
         vision: x.def.supportsVision
@@ -218,7 +231,7 @@ module.exports = async function handler(req, res) {
     if (clientKey.length >= 10 && clientKey.length <= 260 && PROVIDERS[clientProvId]) {
       candidateQueue.push({ def: PROVIDERS[clientProvId], key: clientKey, isClientKey: true });
     }
-    for (const entry of getConfiguredServerProviders()) {
+    for (const entry of await getConfiguredServerProviders(redis)) {
       if (!candidateQueue.some(c => c.def.id === entry.def.id && c.key === entry.key)) {
         candidateQueue.push({ def: entry.def, key: entry.key, isClientKey: false });
       }
@@ -228,12 +241,7 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 503, {
         ok: false,
         unconfigured: true,
-        message: 'Hệ thống AI chưa gắn API Key miễn phí trên máy chủ (GEMINI_API_KEY / GROQ_API_KEY). Bạn có thể dán API Key miễn phí từ Google AI Studio hoặc Groq ngay trong mục "🔑 Cài API Key Free" bên trên!',
-        free_sources: [
-          { name: 'Google AI Studio (Gemini)', url: 'https://aistudio.google.com/apikey' },
-          { name: 'Groq Cloud (Llama 4 Vision)', url: 'https://console.groq.com/keys' },
-          { name: 'Mistral Console (Experiment)', url: 'https://console.mistral.ai/api-keys' }
-        ]
+        message: 'Hệ thống Gia Sư AI chưa được Admin gắn API Key trên máy chủ.'
       });
     }
 

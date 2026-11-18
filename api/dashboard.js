@@ -1717,6 +1717,22 @@ module.exports = async function handler(req, res) {
         (curAdminRec && verifyPassword('admin123', curAdminRec))
       );
 
+      let storedAiKeys = {};
+      try {
+        storedAiKeys = safeParseObj(await redis.get('phuc:system:ai-keys')) || {};
+      } catch { storedAiKeys = {}; }
+      const aiKeyMeta = id => {
+        const envName = ({ gemini: 'GEMINI_API_KEY', groq: 'GROQ_API_KEY', mistral: 'MISTRAL_API_KEY', openrouter: 'OPENROUTER_API_KEY', nvidia: 'NVIDIA_API_KEY', openai: 'OPENAI_API_KEY' })[id];
+        const envVal = String((envName && process.env[envName]) || '').trim();
+        const dbVal = String(storedAiKeys?.[id] || '').trim();
+        const activeVal = envVal || dbVal;
+        return {
+          configured: activeVal.length > 8,
+          source: envVal.length > 8 ? 'env' : (dbVal.length > 8 ? 'vault' : 'none'),
+          masked: activeVal.length > 8 ? `${activeVal.slice(0, 4)}...${activeVal.slice(-4)}` : ''
+        };
+      };
+
       return sendJson(res, 200, {
         ok: true,
         viewer_username: normalizeUsername(session.username),
@@ -1726,6 +1742,14 @@ module.exports = async function handler(req, res) {
         week_key: currentWeek,
         storage_mode: redis.__isMemoryFallback ? 'Memory Fallback (Local Dev)' : 'Upstash Redis Cloud',
         weak_admin_password: weakAdminPassword,
+        ai_keys_status: {
+          gemini: aiKeyMeta('gemini'),
+          groq: aiKeyMeta('groq'),
+          mistral: aiKeyMeta('mistral'),
+          nvidia: aiKeyMeta('nvidia'),
+          openrouter: aiKeyMeta('openrouter'),
+          openai: aiKeyMeta('openai')
+        },
         kpis: {
           total_users: allUsers.length,
           banned_users: enrichedUsers.filter(u => u.banned).length,
@@ -2098,6 +2122,30 @@ module.exports = async function handler(req, res) {
         }
         await logAdminAudit('Xóa Feedback', `ID ${targetId}`);
         return sendJson(res, 200, { ok: true, message: 'Đã xóa góp ý khỏi hộp thư.', remaining: kept.length });
+      }
+
+      if (subAction === 'set-ai-keys') {
+        let curKeys = {};
+        try {
+          curKeys = safeParseObj(await redis.get('phuc:system:ai-keys')) || {};
+        } catch { curKeys = {}; }
+        const allowed = ['gemini', 'groq', 'mistral', 'nvidia', 'openrouter', 'openai'];
+        const updatedProviders = [];
+        for (const p of allowed) {
+          if (body[`clear_${p}`]) {
+            delete curKeys[p];
+            updatedProviders.push(`-${p}`);
+          } else {
+            const val = clean(body[p] || '', 260);
+            if (val.length >= 10) {
+              curKeys[p] = val;
+              updatedProviders.push(p);
+            }
+          }
+        }
+        await redis.set('phuc:system:ai-keys', curKeys);
+        await logAdminAudit('Cấu hình AI Keys hệ thống', updatedProviders.length ? updatedProviders.join(', ') : 'Giữ nguyên');
+        return sendJson(res, 200, { ok: true, message: '✅ Đã lưu API Key AI vào hệ thống — toàn bộ học sinh dùng được ngay!', updated: updatedProviders });
       }
 
       return sendJson(res, 400, { ok: false, message: 'Sub-action quản trị không hợp lệ.' });
