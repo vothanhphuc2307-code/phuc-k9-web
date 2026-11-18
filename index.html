@@ -66,9 +66,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&family=Lora:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="/style.css?v=69" />
-  <link rel="stylesheet" href="/assets/exam-center.css?v=69" />
-  <link rel="stylesheet" href="/assets/pk9-rpg-3d.css?v=69" />
+  <link rel="stylesheet" href="/style.css?v=70" />
+  <link rel="stylesheet" href="/assets/exam-center.css?v=70" />
+  <link rel="stylesheet" href="/assets/pk9-rpg-3d.css?v=70" />
 
   <!-- MathJax Configuration for LaTeX Formulas -->
   <script>
@@ -290,6 +290,14 @@
           </span>
         </button>
 
+        <button type="button" class="pk9-nav-item" data-open-feedback="1" style="margin-top:0.25rem;border:1px dashed rgba(16,185,129,0.38);">
+          <span class="pk9-nav-item-left">
+            <span class="pk9-nav-icon">💬</span>
+            <span>Góp Ý &amp; Báo Lỗi</span>
+          </span>
+          <span class="pk9-nav-pill" style="background:rgba(16,185,129,0.15);color:#059669;">Admin</span>
+        </button>
+
         <div class="pk9-nav-group-label" id="pk9-nav-admin-group" style="display:none;">Quản trị hệ thống</div>
         <button type="button" class="pk9-nav-item" id="pk9-nav-admin-btn" data-nav-tab="admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.12),rgba(245,158,11,0.12));border-color:rgba(225,29,72,0.3);">
           <span class="pk9-nav-item-left">
@@ -477,6 +485,11 @@
           <span class="pk9-mob-hub-label">Cộng Đồng K9</span>
           <span class="pk9-mob-hub-sub">Chia sẻ tài liệu</span>
         </button>
+        <button type="button" class="pk9-mob-hub-tile" data-open-feedback="1" data-close-mob-hub="1">
+          <span class="pk9-mob-hub-icon">💬</span>
+          <span class="pk9-mob-hub-label">Góp Ý &amp; Liên Hệ</span>
+          <span class="pk9-mob-hub-sub">Gmail • SĐT Admin</span>
+        </button>
         <button type="button" class="pk9-mob-hub-tile" data-open-auth="profile" data-close-mob-hub="1">
           <span class="pk9-mob-hub-icon">⚙️</span>
           <span class="pk9-mob-hub-label">Tài Khoản &amp; PIN</span>
@@ -494,6 +507,11 @@
   <!-- FIRST-TIME SMART ONBOARDING GUIDE MODAL (GUEST VS MEMBER) -->
   <div class="pk9-modal-backdrop" id="pk9-onboarding-modal" role="dialog" aria-modal="true" aria-label="Hướng dẫn sử dụng Học Cùng Phúc K9">
     <div class="pk9-modal-box pk9-onboard-box" id="pk9-onboarding-modal-box"></div>
+  </div>
+
+  <!-- FEEDBACK & CONTACT ADMIN MODAL -->
+  <div class="pk9-modal-backdrop" id="pk9-feedback-modal" role="dialog" aria-modal="true" aria-label="Góp ý, báo lỗi và liên hệ Admin">
+    <div class="pk9-modal-box pk9-feedback-box" id="pk9-feedback-modal-box"></div>
   </div>
 
   <!-- COMMAND PALETTE MODAL (CTRL + K) -->
@@ -518,10 +536,10 @@
   <script src="/assets/pk9-2k9-manifest.js"></script>
   <script src="/assets/pk9-2k8-curated.js"></script>
   <script src="/assets/pk9-2k8-dgnl.js"></script>
-  <script src="/assets/pk9-exam-tools.js?v=69"></script>
-  <script src="/assets/exam-center.js?v=69"></script>
-  <script src="/assets/pk9-rpg-models.js?v=69"></script>
-  <script src="/assets/pk9-rpg.js?v=69"></script>
-  <script src="/assets/pk9-app.js?v=69"></script>
+  <script src="/assets/pk9-exam-tools.js?v=70"></script>
+  <script src="/assets/exam-center.js?v=70"></script>
+  <script src="/assets/pk9-rpg-models.js?v=70"></script>
+  <script src="/assets/pk9-rpg.js?v=70"></script>
+  <script src="/assets/pk9-app.js?v=70"></script>
 </body>
 </html>

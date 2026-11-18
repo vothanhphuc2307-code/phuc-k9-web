@@ -5872,10 +5872,151 @@ html.dark .pk9-onboard-box {
   flex-wrap: wrap;
 }
 @media (max-width: 640px) {
-  .pk9-onboard-box {
+  .pk9-onboard-box,
+  .pk9-feedback-box {
     padding: 1rem;
   }
 }
+
+/* ==========================================================================
+   V70 FEEDBACK & DIRECT ADMIN CONTACT UI
+   ========================================================================== */
+#pk9-feedback-modal.open {
+  animation: none;
+}
+.pk9-feedback-box {
+  max-width: 640px;
+  padding: 1.45rem;
+  background: #ffffff;
+}
+html.dark .pk9-feedback-box {
+  background: #0f172a;
+}
+.pk9-fb-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--pk9-border);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.13), rgba(37, 99, 235, 0.1));
+  margin-bottom: 0.75rem;
+}
+.pk9-fb-contact-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+.pk9-fb-contact-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.85rem;
+  background: var(--pk9-surface-2);
+  border: 1px solid var(--pk9-border);
+  font-size: 0.78rem;
+  color: var(--pk9-text);
+  word-break: break-word;
+}
+.pk9-fb-mini-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.pk9-fb-mini-acts a {
+  text-decoration: none;
+}
+.pk9-fb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.72rem;
+}
+.pk9-fb-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--pk9-text);
+  margin-bottom: 0.25rem;
+}
+.pk9-fb-stars {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.pk9-fb-star-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 0.65rem;
+  border: 1px solid var(--pk9-border);
+  background: var(--pk9-surface-2);
+  color: #94a3b8;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.14s ease, color 0.16s ease, border-color 0.16s ease;
+}
+.pk9-fb-star-btn.active {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.13);
+}
+.pk9-fb-star-btn:hover {
+  transform: scale(1.08);
+}
+.pk9-fb-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.pk9-fb-row-2 .pk9-input,
+.pk9-fb-textarea {
+  margin-top: 0;
+}
+.pk9-fb-textarea {
+  min-height: 92px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.48;
+}
+.pk9-fb-context-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.45rem 0.72rem;
+  border-radius: 0.72rem;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  font-size: 0.77rem;
+  color: var(--pk9-primary);
+}
+.pk9-fb-success-card {
+  text-align: center;
+  padding: 1.25rem 0.9rem;
+  border-radius: 1rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.pk9-home-feedback-banner {
+  margin-top: 1.4rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(37, 99, 235, 0.07));
+  border-color: rgba(16, 185, 129, 0.34);
+}
+@media (max-width: 640px) {
+  .pk9-fb-contact-strip,
+  .pk9-fb-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 
 
