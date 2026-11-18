@@ -1702,6 +1702,12 @@ module.exports = async function handler(req, res) {
         auditLogs = (rawLogs || []).map(safeParseObj).filter(Boolean);
       } catch { auditLogs = []; }
 
+      let feedbacks = [];
+      try {
+        const rawFb = await redis.lrange('phuc:feedbacks', 0, 199);
+        feedbacks = (rawFb || []).map(safeParseObj).filter(Boolean);
+      } catch { feedbacks = []; }
+
       const activeTodayCount = allUsers.filter(u => u?.last_active && new Date(u.last_active).getTime() >= start).length;
       const avgExamScore = attempts.length ? Math.round((totalScoreAll / attempts.length) * 100) / 100 : 0;
       const defaultAdminRec = allUsers.find(u => normalizeUsername(u?.username) === SUPER_ADMIN_USERNAME);
@@ -1770,7 +1776,8 @@ module.exports = async function handler(req, res) {
         recent_attempts: attempts.slice(0, 100),
         announcement,
         custom_khoa_chui: customKhoaChui,
-        audit_logs: auditLogs
+        audit_logs: auditLogs,
+        feedbacks
       });
     }
 
@@ -2045,6 +2052,52 @@ module.exports = async function handler(req, res) {
         }
         await logAdminAudit('Xóa Khóa Chui Tùy Chỉnh', `ID ${targetId}`);
         return sendJson(res, 200, { ok: true, message: 'Đã xóa khóa học khỏi danh sách.', remaining: kept.length });
+      }
+
+      if (subAction === 'feedback-status') {
+        const targetId = clean(body.id || '', 80);
+        const nextStatus = ['new', 'read', 'resolved'].includes(String(body.status || '').trim())
+          ? String(body.status).trim()
+          : 'resolved';
+        const adminNote = clean(body.admin_note || '', 300);
+        if (!targetId) return sendJson(res, 422, { ok: false, message: 'Thiếu ID feedback.' });
+        const rawFb = await redis.lrange('phuc:feedbacks', 0, 299).catch(() => []);
+        const items = (rawFb || []).map(safeParseObj).filter(Boolean);
+        let updated = null;
+        for (const it of items) {
+          if (String(it.id || '') === targetId) {
+            it.status = nextStatus;
+            if (body.admin_note !== undefined) it.admin_note = adminNote;
+            it.updated_at = new Date().toISOString();
+            it.handled_by = session.username;
+            updated = it;
+            break;
+          }
+        }
+        if (!updated) return sendJson(res, 404, { ok: false, message: 'Không tìm thấy góp ý này.' });
+        await redis.del('phuc:feedbacks');
+        for (let idx = items.length - 1; idx >= 0; idx--) {
+          await redis.lpush('phuc:feedbacks', JSON.stringify(items[idx]));
+        }
+        await logAdminAudit('Cập nhật trạng thái Feedback', `${targetId} -> ${nextStatus}`);
+        return sendJson(res, 200, { ok: true, message: nextStatus === 'resolved' ? 'Đã đánh dấu xử lý xong góp ý!' : 'Đã cập nhật trạng thái góp ý.', item: updated });
+      }
+
+      if (subAction === 'feedback-delete') {
+        const targetId = clean(body.id || '', 80);
+        if (!targetId) return sendJson(res, 422, { ok: false, message: 'Thiếu ID feedback cần xóa.' });
+        const rawFb = await redis.lrange('phuc:feedbacks', 0, 299).catch(() => []);
+        const items = (rawFb || []).map(safeParseObj).filter(Boolean);
+        const kept = items.filter(it => String(it.id || '') !== targetId);
+        if (kept.length === items.length) {
+          return sendJson(res, 404, { ok: false, message: 'Không tìm thấy góp ý cần xóa.' });
+        }
+        await redis.del('phuc:feedbacks');
+        for (let idx = kept.length - 1; idx >= 0; idx--) {
+          await redis.lpush('phuc:feedbacks', JSON.stringify(kept[idx]));
+        }
+        await logAdminAudit('Xóa Feedback', `ID ${targetId}`);
+        return sendJson(res, 200, { ok: true, message: 'Đã xóa góp ý khỏi hộp thư.', remaining: kept.length });
       }
 
       return sendJson(res, 400, { ok: false, message: 'Sub-action quản trị không hợp lệ.' });

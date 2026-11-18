@@ -71,6 +71,12 @@
     adminDetailData: null,
     adminLoading: false,
     adminSelectedStudent: null,
+    adminFeedbackFilter: 'ALL',
+    // Feedback & Direct Contact State
+    feedbackRating: 5,
+    feedbackCategory: 'bug',
+    feedbackContext: '',
+    feedbackSubmitted: null,
     // Mobile UX & PWA Install State
     mobileSelectorsCollapsed: false,
     sidebarCollapsed: false,
@@ -1125,6 +1131,162 @@
     };
   }
 
+  const ADMIN_CONTACT_EMAIL = 'doivo250388@gmail.com';
+  const ADMIN_CONTACT_PHONE = '0382952325';
+
+  function buildGmailComposeUrl(subject, bodyText) {
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(ADMIN_CONTACT_EMAIL)}&su=${encodeURIComponent(subject || '[HỌC CÙNG PHÚC K9] Góp ý / Báo lỗi')}&body=${encodeURIComponent(bodyText || '')}`;
+  }
+
+  function buildMailtoUrl(subject, bodyText) {
+    return `mailto:${ADMIN_CONTACT_EMAIL}?subject=${encodeURIComponent(subject || '[HỌC CÙNG PHÚC K9] Góp ý / Báo lỗi')}&body=${encodeURIComponent(bodyText || '')}`;
+  }
+
+  function closeFeedbackModal() {
+    const ov = document.getElementById('pk9-feedback-modal');
+    if (ov) ov.classList.remove('open');
+  }
+
+  function renderFeedbackModalBody() {
+    const box = document.getElementById('pk9-feedback-modal-box');
+    if (!box) return;
+    const catDefs = [
+      { id: 'bug', label: '🐛 Báo lỗi Video / PDF / Web' },
+      { id: 'exam', label: '📝 Sai đáp án / Đề thi' },
+      { id: 'feature', label: '💡 Góp ý tính năng mới' },
+      { id: 'other', label: '🤝 Liên hệ / Khác' }
+    ];
+    const submitted = APP.feedbackSubmitted;
+    const defaultName = APP.user?.display_name || APP.user?.username || '';
+
+    box.innerHTML = `
+      <div class="pk9-fb-head">
+        <div>
+          <div class="pk9-onboard-kicker" style="color:#059669;">💬 KÊNH GÓP Ý &amp; HỖ TRỢ TRỰC TIẾP • HỌC CÙNG PHÚC K9</div>
+          <h3 style="margin:0.2rem 0 0;font-size:1.18rem;font-weight:900;">Gửi Feedback Về Cho Admin</h3>
+        </div>
+        <button type="button" class="pk9-icon-btn" data-close-feedback="1" aria-label="Đóng">✕</button>
+      </div>
+
+      <div class="pk9-fb-contact-strip">
+        <div class="pk9-fb-contact-pill">
+          <span>📧 Gmail: <b>${ADMIN_CONTACT_EMAIL}</b></span>
+          <div class="pk9-fb-mini-acts">
+            <a href="${buildMailtoUrl('[HỌC CÙNG PHÚC K9] Góp ý', '')}" class="pk9-admin-btn-xs primary" target="_blank" rel="noopener">Gửi Mail</a>
+            <button type="button" class="pk9-admin-btn-xs" data-copy-contact="${ADMIN_CONTACT_EMAIL}">📋 Copy</button>
+          </div>
+        </div>
+        <div class="pk9-fb-contact-pill">
+          <span>📞 SĐT / Zalo: <b>${ADMIN_CONTACT_PHONE}</b></span>
+          <div class="pk9-fb-mini-acts">
+            <a href="https://zalo.me/${ADMIN_CONTACT_PHONE}" class="pk9-admin-btn-xs primary" target="_blank" rel="noopener">💬 Zalo</a>
+            <a href="tel:${ADMIN_CONTACT_PHONE}" class="pk9-admin-btn-xs">📞 Gọi</a>
+            <button type="button" class="pk9-admin-btn-xs" data-copy-contact="${ADMIN_CONTACT_PHONE}">📋 Copy</button>
+          </div>
+        </div>
+      </div>
+
+      ${submitted ? `
+        <div class="pk9-fb-success-card">
+          <div style="font-size:2rem;margin-bottom:0.35rem;">🎉</div>
+          <h4 style="margin:0 0 0.35rem;font-size:1.05rem;font-weight:900;">Cảm Ơn Bạn Đã Đóng Góp Ý Kiến!</h4>
+          <p style="margin:0 0 0.8rem;font-size:0.84rem;color:var(--pk9-text-muted);line-height:1.5;">
+            ${esc(submitted.serverMessage || 'Góp ý của bạn đã được lưu vào Hộp thư Admin trên web.')}
+            ${submitted.emailForwarded ? ' Hệ thống cũng đã chuyển tiếp bản sao tới Gmail Admin.' : ' Nếu cần gửi kèm ảnh chụp màn hình hoặc trao đổi gấp, hãy bấm nút bên dưới:'}
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:0.45rem;justify-content:center;margin-bottom:0.85rem;">
+            <a href="${buildGmailComposeUrl(submitted.mailSubject, submitted.mailBody)}" target="_blank" rel="noopener" class="pk9-btn-exam-primary" style="flex:0 1 auto;padding:0.5rem 0.95rem;font-size:0.8rem;text-decoration:none;">
+              📧 Mở Gmail gửi về ${ADMIN_CONTACT_EMAIL}
+            </a>
+            <a href="${buildMailtoUrl(submitted.mailSubject, submitted.mailBody)}" class="pk9-btn-exam-ghost" style="flex:0 1 auto;padding:0.5rem 0.9rem;font-size:0.8rem;text-decoration:none;">
+              ✉️ App Email mặc định
+            </a>
+            <a href="https://zalo.me/${ADMIN_CONTACT_PHONE}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="flex:0 1 auto;padding:0.5rem 0.9rem;font-size:0.8rem;text-decoration:none;">
+              💬 Nhắn Zalo ${ADMIN_CONTACT_PHONE}
+            </a>
+          </div>
+          <div style="display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
+            <button type="button" class="pk9-admin-btn-xs" data-fb-reset="1">✍️ Gửi thêm góp ý khác</button>
+            <button type="button" class="pk9-admin-btn-xs primary" data-close-feedback="1">✓ Đóng cửa sổ</button>
+          </div>
+        </div>
+      ` : `
+        <form id="pk9-feedback-form" class="pk9-fb-form">
+          ${APP.feedbackContext ? `
+            <div class="pk9-fb-context-badge">
+              <span>📍 Đang gắn ngữ cảnh: <b>${esc(APP.feedbackContext)}</b></span>
+              <button type="button" class="pk9-admin-btn-xs" data-fb-clear-ctx="1">✕ Bỏ</button>
+            </div>
+          ` : ''}
+          <div>
+            <label class="pk9-fb-label">1. Bạn hài lòng mức nào với web?</label>
+            <div class="pk9-fb-stars" role="group" aria-label="Đánh giá sao">
+              ${[1, 2, 3, 4, 5].map(star => `
+                <button type="button" class="pk9-fb-star-btn ${Number(APP.feedbackRating || 5) >= star ? 'active' : ''}" data-fb-star="${star}" title="${star} sao">
+                  ★
+                </button>
+              `).join('')}
+              <span style="font-size:0.78rem;font-weight:800;color:var(--pk9-text-muted);margin-left:0.35rem;">
+                ${['', 'Rất cần cải thiện', 'Chưa hài lòng lắm', 'Ổn, cần thêm chỉnh sửa', 'Rất tốt!', 'Tuyệt vời 5 sao!'][Math.min(5, Math.max(1, Number(APP.feedbackRating || 5)))]}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label class="pk9-fb-label">2. Chọn chủ đề góp ý:</label>
+            <div style="display:flex;flex-wrap:wrap;gap:0.38rem;">
+              ${catDefs.map(c => `
+                <button type="button" class="pk9-exam-chip ${APP.feedbackCategory === c.id ? 'active' : ''}" data-fb-cat="${c.id}" style="padding:0.32rem 0.65rem;font-size:0.76rem;">
+                  ${c.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="pk9-fb-row-2">
+            <div>
+              <label class="pk9-fb-label" for="pk9-fb-name">Tên của bạn:</label>
+              <input type="text" id="pk9-fb-name" name="name" class="pk9-input" maxlength="80" placeholder="VD: Minh Anh 2K9..." value="${esc(defaultName)}" />
+            </div>
+            <div>
+              <label class="pk9-fb-label" for="pk9-fb-contact">SĐT / Zalo / Gmail nhận hồi âm (tùy chọn):</label>
+              <input type="text" id="pk9-fb-contact" name="contact" class="pk9-input" maxlength="120" placeholder="VD: 09xx... hoặc email@gmail.com" />
+            </div>
+          </div>
+
+          <div>
+            <label class="pk9-fb-label" for="pk9-fb-msg">3. Nội dung chi tiết <span style="color:#e11d48;">*</span></label>
+            <textarea id="pk9-fb-msg" name="message" class="pk9-input pk9-fb-textarea" rows="4" minlength="6" maxlength="1500" required placeholder="Mô tả lỗi bạn gặp (link video/PDF hỏng, sai đáp án câu nào...) hoặc tính năng bạn muốn Admin bổ sung thêm..."></textarea>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;margin-top:0.2rem;">
+            <span style="font-size:0.74rem;color:var(--pk9-text-muted);">
+              🔒 Gửi trực tiếp về Admin • Hoạt động ngay cả khi chưa đăng nhập.
+            </span>
+            <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-btn-exam-ghost" data-close-feedback="1" style="padding:0.5rem 0.9rem;font-size:0.82rem;">Hủy</button>
+              <button type="submit" class="pk9-btn-exam-primary" id="pk9-fb-submit-btn" style="padding:0.5rem 1.15rem;font-size:0.84rem;">🚀 Gửi Feedback Cho Admin</button>
+            </div>
+          </div>
+        </form>
+      `}
+    `;
+  }
+
+  function openFeedbackModal(opts = {}) {
+    const ov = document.getElementById('pk9-feedback-modal');
+    if (!ov) return;
+    if (opts.category) APP.feedbackCategory = opts.category;
+    if (opts.context !== undefined) {
+      APP.feedbackContext = String(opts.context || '').trim().slice(0, 180);
+    } else {
+      APP.feedbackContext = `Mục: ${TAB_LABELS_VI[APP.activeTab] || APP.activeTab || 'Trang chủ'}`;
+    }
+    APP.feedbackSubmitted = null;
+    renderFeedbackModalBody();
+    ov.classList.add('open');
+  }
+
   function closeOnboardingModal() {
     const ov = document.getElementById('pk9-onboarding-modal');
     if (ov) ov.classList.remove('open');
@@ -1694,6 +1856,29 @@
           </button>
         </div>
       `}
+
+      <section class="pk9-card pk9-home-feedback-banner">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.9rem;">
+          <div style="min-width:0;flex:1 1 min(100%, 340px);">
+            <span class="pk9-badge pk9-badge-verified" style="margin-bottom:0.4rem;">💬 KÊNH GÓP Ý &amp; HỖ TRỢ TRỰC TIẾP ADMIN</span>
+            <h3 style="margin:0.15rem 0 0.35rem;font-size:1.08rem;font-weight:900;">Phát hiện link lỗi, sai đáp án hay muốn góp ý tính năng mới?</h3>
+            <p style="margin:0;font-size:0.83rem;color:var(--pk9-text-muted);line-height:1.5;">
+              Nhắn thẳng cho Admin Phúc K9 qua form góp ý trên web, <b>Gmail: <a href="mailto:${ADMIN_CONTACT_EMAIL}" style="color:var(--pk9-primary);font-weight:800;">${ADMIN_CONTACT_EMAIL}</a></b> hoặc <b>SĐT / Zalo: <a href="tel:${ADMIN_CONTACT_PHONE}" style="color:var(--pk9-primary);font-weight:800;">${ADMIN_CONTACT_PHONE}</a></b>.
+            </p>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.48rem;">
+            <button type="button" class="pk9-btn-exam-primary" data-open-feedback="bug" style="flex:0 1 auto;padding:0.55rem 1.05rem;font-size:0.83rem;">
+              💬 Gửi Feedback / Báo Lỗi
+            </button>
+            <a href="https://zalo.me/${ADMIN_CONTACT_PHONE}" target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="flex:0 1 auto;padding:0.55rem 0.95rem;font-size:0.82rem;text-decoration:none;">
+              💬 Zalo ${ADMIN_CONTACT_PHONE}
+            </a>
+            <a href="mailto:${ADMIN_CONTACT_EMAIL}" class="pk9-btn-exam-ghost" style="flex:0 1 auto;padding:0.55rem 0.95rem;font-size:0.82rem;text-decoration:none;">
+              📧 Gmail Admin
+            </a>
+          </div>
+        </div>
+      </section>
     `;
     typeset(root);
   }
@@ -2218,6 +2403,9 @@
                     🔍 Toàn màn hình
                   </button>
                 ` : ''}
+                <button type="button" class="pk9-brand-mini-btn" data-open-feedback="bug" data-feedback-ctx="${esc(`${course.shortName || course.name} • ${activeTopic.title}`)}" title="Báo lỗi video hoặc PDF bài học này về Admin">
+                  🐛 Báo lỗi
+                </button>
               </div>
             </div>
 
@@ -4237,6 +4425,9 @@
           <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'system' ? 'active' : ''}" data-admin-subtab="system">
             ⚙️ 6. Hệ Thống & Audit
           </button>
+          <button type="button" class="pk9-admin-subtab ${APP.adminSubtab === 'feedback' ? 'active' : ''}" data-admin-subtab="feedback">
+            💬 7. Feedback (${(d?.feedbacks || []).filter(f => (f.status || 'new') === 'new').length} mới)
+          </button>
         </div>
 
         <div id="pk9-admin-subtab-body">
@@ -4912,6 +5103,77 @@
       `;
     }
 
+    // SUBTAB 7: USER FEEDBACK INBOX
+    if (APP.adminSubtab === 'feedback') {
+      const allFb = Array.isArray(d?.feedbacks) ? d.feedbacks : [];
+      const curFilter = APP.adminFeedbackFilter || 'ALL';
+      const filteredFb = allFb.filter(it => {
+        const st = it.status || 'new';
+        if (curFilter === 'new') return st === 'new' || st === 'read';
+        if (curFilter === 'resolved') return st === 'resolved';
+        return true;
+      });
+      const newCount = allFb.filter(it => (it.status || 'new') === 'new').length;
+      return `
+        <div class="pk9-card" style="margin-bottom:1.1rem;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;">
+            <div>
+              <h4 style="margin:0 0 0.25rem;font-size:1.05rem;font-weight:900;">💬 Hộp Thư Góp Ý &amp; Báo Lỗi Học Viên (${allFb.length} tin • ${newCount} chưa đọc)</h4>
+              <p style="margin:0;font-size:0.8rem;color:var(--pk9-text-muted);">
+                Kênh liên hệ nhận góp ý trực tiếp: Gmail <b>${ADMIN_CONTACT_EMAIL}</b> • SĐT/Zalo <b>${ADMIN_CONTACT_PHONE}</b>.
+              </p>
+            </div>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-exam-chip ${curFilter === 'ALL' ? 'active' : ''}" data-admin-fb-filter="ALL">Tất cả (${allFb.length})</button>
+              <button type="button" class="pk9-exam-chip ${curFilter === 'new' ? 'active' : ''}" data-admin-fb-filter="new">Chưa xong (${allFb.filter(it => (it.status || 'new') !== 'resolved').length})</button>
+              <button type="button" class="pk9-exam-chip ${curFilter === 'resolved' ? 'active' : ''}" data-admin-fb-filter="resolved">Đã xử lý (${allFb.filter(it => it.status === 'resolved').length})</button>
+            </div>
+          </div>
+        </div>
+
+        ${filteredFb.length ? `
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            ${filteredFb.map(fb => {
+              const st = fb.status || 'new';
+              const stars = '★'.repeat(Math.max(1, Math.min(5, Number(fb.rating || 5))));
+              const isEmail = /@/.test(fb.contact || '');
+              return `
+                <article class="pk9-card" style="border-left:4px solid ${st === 'resolved' ? '#10b981' : st === 'read' ? '#3b82f6' : '#f59e0b'};">
+                  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:0.55rem;margin-bottom:0.45rem;">
+                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+                      <span class="pk9-badge ${st === 'resolved' ? 'pk9-badge-verified' : st === 'read' ? 'pk9-badge-subj' : 'pk9-badge-hot'}">
+                        ${st === 'resolved' ? '✓ Đã xử lý' : st === 'read' ? '👀 Đã xem' : '● Mới'}
+                      </span>
+                      <span class="pk9-badge pk9-badge-subj">${esc(fb.category_label || 'Góp ý')}</span>
+                      <span class="pk9-badge pk9-badge-code" style="color:#f59e0b;">${stars}</span>
+                      ${fb.email_sent ? '<span class="pk9-badge pk9-badge-verified">📧 Đã forward Gmail</span>' : ''}
+                    </div>
+                    <span style="font-size:0.75rem;color:var(--pk9-text-muted);">${esc(fb.created_label || fb.created_at || '')} • ${esc(fb.device_hint || 'Web')}</span>
+                  </div>
+                  <div style="font-size:0.86rem;font-weight:800;margin-bottom:0.25rem;">
+                    👤 ${esc(fb.sender_name || 'Ẩn danh')} ${fb.username ? `<code style="font-size:0.75rem;">@${esc(fb.username)}</code>` : '<span style="font-size:0.74rem;color:var(--pk9-text-muted);">(Khách)</span>'}
+                    ${fb.contact ? ` • 📞 Liên hệ: <b>${esc(fb.contact)}</b>` : ''}
+                  </div>
+                  ${fb.page_context ? `<div style="font-size:0.76rem;color:var(--pk9-primary);margin-bottom:0.35rem;">📍 ${esc(fb.page_context)}</div>` : ''}
+                  <div style="font-size:0.86rem;line-height:1.55;padding:0.62rem 0.78rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);white-space:pre-line;">${esc(fb.message)}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.65rem;">
+                    ${st !== 'resolved' ? `<button type="button" class="pk9-admin-btn-xs primary" data-admin-fb-status="resolved" data-fb-id="${esc(fb.id)}">✓ Đánh dấu Đã xử lý</button>` : ''}
+                    ${st === 'new' ? `<button type="button" class="pk9-admin-btn-xs" data-admin-fb-status="read" data-fb-id="${esc(fb.id)}">👀 Đã xem</button>` : ''}
+                    ${isEmail ? `<a href="mailto:${esc(fb.contact)}?subject=${encodeURIComponent('[HỌC CÙNG PHÚC K9] Phản hồi góp ý của bạn')}" class="pk9-admin-btn-xs" style="text-decoration:none;">📧 Trả lời Email</a>` : ''}
+                    <button type="button" class="pk9-admin-btn-xs danger" data-admin-fb-delete="${esc(fb.id)}">🗑️ Xóa</button>
+                  </div>
+                </article>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <div class="pk9-card" style="text-align:center;padding:2rem;color:var(--pk9-text-muted);">
+            Chưa có góp ý nào khớp bộ lọc hiện tại.
+          </div>
+        `}
+      `;
+    }
+
     // SUBTAB 5: SYSTEM ANNOUNCEMENT, API HEALTH & AUDIT LOGS
     const logs = Array.isArray(d?.audit_logs) ? d.audit_logs : [];
     const curAnn = APP.systemAnnouncement || {};
@@ -5577,6 +5839,80 @@
       if (closeMobHub) {
         document.getElementById('pk9-mob-hub-sheet')?.classList.remove('open');
         document.getElementById('pk9-mob-hub-btn')?.classList.remove('active');
+        if (!closeMobHub.hasAttribute('data-open-feedback') && !closeMobHub.hasAttribute('data-open-auth') && !closeMobHub.hasAttribute('data-nav-tab')) {
+          return;
+        }
+      }
+
+      if (e.target.id === 'pk9-feedback-modal' || e.target.closest('[data-close-feedback]')) {
+        closeFeedbackModal();
+        return;
+      }
+
+      const openFbBtn = e.target.closest('[data-open-feedback]');
+      if (openFbBtn) {
+        const catAttr = openFbBtn.getAttribute('data-open-feedback');
+        const ctxAttr = openFbBtn.getAttribute('data-feedback-ctx');
+        openFeedbackModal({
+          category: ['bug', 'exam', 'feature', 'other'].includes(catAttr) ? catAttr : undefined,
+          context: ctxAttr || undefined
+        });
+        return;
+      }
+
+      const fbStarBtn = e.target.closest('[data-fb-star]');
+      if (fbStarBtn) {
+        APP.feedbackRating = Math.min(5, Math.max(1, Number(fbStarBtn.getAttribute('data-fb-star') || 5)));
+        const nameVal = document.getElementById('pk9-fb-name')?.value;
+        const contactVal = document.getElementById('pk9-fb-contact')?.value;
+        const msgVal = document.getElementById('pk9-fb-msg')?.value;
+        renderFeedbackModalBody();
+        if (nameVal !== undefined && document.getElementById('pk9-fb-name')) document.getElementById('pk9-fb-name').value = nameVal;
+        if (contactVal !== undefined && document.getElementById('pk9-fb-contact')) document.getElementById('pk9-fb-contact').value = contactVal;
+        if (msgVal !== undefined && document.getElementById('pk9-fb-msg')) document.getElementById('pk9-fb-msg').value = msgVal;
+        return;
+      }
+
+      const fbCatBtn = e.target.closest('[data-fb-cat]');
+      if (fbCatBtn) {
+        APP.feedbackCategory = fbCatBtn.getAttribute('data-fb-cat') || 'bug';
+        const nameVal = document.getElementById('pk9-fb-name')?.value;
+        const contactVal = document.getElementById('pk9-fb-contact')?.value;
+        const msgVal = document.getElementById('pk9-fb-msg')?.value;
+        renderFeedbackModalBody();
+        if (nameVal !== undefined && document.getElementById('pk9-fb-name')) document.getElementById('pk9-fb-name').value = nameVal;
+        if (contactVal !== undefined && document.getElementById('pk9-fb-contact')) document.getElementById('pk9-fb-contact').value = contactVal;
+        if (msgVal !== undefined && document.getElementById('pk9-fb-msg')) document.getElementById('pk9-fb-msg').value = msgVal;
+        return;
+      }
+
+      if (e.target.closest('[data-fb-clear-ctx]')) {
+        APP.feedbackContext = '';
+        const nameVal = document.getElementById('pk9-fb-name')?.value;
+        const contactVal = document.getElementById('pk9-fb-contact')?.value;
+        const msgVal = document.getElementById('pk9-fb-msg')?.value;
+        renderFeedbackModalBody();
+        if (nameVal !== undefined && document.getElementById('pk9-fb-name')) document.getElementById('pk9-fb-name').value = nameVal;
+        if (contactVal !== undefined && document.getElementById('pk9-fb-contact')) document.getElementById('pk9-fb-contact').value = contactVal;
+        if (msgVal !== undefined && document.getElementById('pk9-fb-msg')) document.getElementById('pk9-fb-msg').value = msgVal;
+        return;
+      }
+
+      if (e.target.closest('[data-fb-reset]')) {
+        APP.feedbackSubmitted = null;
+        renderFeedbackModalBody();
+        return;
+      }
+
+      const copyBtn = e.target.closest('[data-copy-contact]');
+      if (copyBtn) {
+        const val = copyBtn.getAttribute('data-copy-contact') || '';
+        try {
+          await navigator.clipboard.writeText(val);
+          toast(`📋 Đã sao chép: ${val}`, 'success');
+        } catch {
+          toast(`Thông tin liên hệ: ${val}`, 'info');
+        }
         return;
       }
 
@@ -6798,6 +7134,28 @@
         return;
       }
 
+      const adminFbFilterBtn = e.target.closest('[data-admin-fb-filter]');
+      if (adminFbFilterBtn) {
+        APP.adminFeedbackFilter = adminFbFilterBtn.getAttribute('data-admin-fb-filter') || 'ALL';
+        renderAdminTab();
+        return;
+      }
+
+      const adminFbStatusBtn = e.target.closest('[data-admin-fb-status]');
+      if (adminFbStatusBtn) {
+        const id = adminFbStatusBtn.getAttribute('data-fb-id') || '';
+        const status = adminFbStatusBtn.getAttribute('data-admin-fb-status') || 'resolved';
+        await runAdminAction({ sub_action: 'feedback-status', id, status });
+        return;
+      }
+
+      const adminFbDelBtn = e.target.closest('[data-admin-fb-delete]');
+      if (adminFbDelBtn) {
+        const id = adminFbDelBtn.getAttribute('data-admin-fb-delete') || '';
+        await runAdminAction({ sub_action: 'feedback-delete', id });
+        return;
+      }
+
       const adminExportCsvBtn = e.target.closest('[data-admin-export-csv]');
       if (adminExportCsvBtn) {
         const payload = APP.adminDetailData || {};
@@ -7091,6 +7449,86 @@
           }
         } catch {
           toast('Lỗi kết nối máy chủ.', 'error');
+        }
+        return;
+      }
+
+      if (e.target.id === 'pk9-feedback-form') {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+        const submitBtn = document.getElementById('pk9-fb-submit-btn');
+        const name = String(fd.get('name') || '').trim();
+        const contact = String(fd.get('contact') || '').trim();
+        const message = String(fd.get('message') || '').trim();
+        if (message.length < 6) {
+          toast('Vui lòng nhập nội dung góp ý ít nhất 6 ký tự.', 'error');
+          return;
+        }
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '⏳ Đang gửi...';
+        }
+        try {
+          if (!APP.csrf) {
+            await fetchAuthAndLeaderboard();
+          }
+          const deviceHint = `${window.innerWidth <= 768 ? 'Mobile' : 'Desktop'} (${window.innerWidth}x${window.innerHeight})`;
+          const resp = await fetch('/api/community?action=feedback-submit', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': APP.csrf,
+              'x-pk9-visitor': getVisitorClientId()
+            },
+            body: JSON.stringify({
+              category: APP.feedbackCategory || 'bug',
+              rating: APP.feedbackRating || 5,
+              name,
+              contact,
+              message,
+              page_context: APP.feedbackContext || '',
+              device_hint: deviceHint
+            })
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (data?.csrf) APP.csrf = data.csrf;
+          if (!resp.ok || !data?.ok) {
+            toast(data?.message || 'Không thể gửi feedback lúc này.', 'error');
+            return;
+          }
+          const catMap = {
+            bug: 'Báo lỗi Video / PDF / Web',
+            exam: 'Góp ý Đề thi / Đáp án',
+            feature: 'Đề xuất tính năng mới',
+            other: 'Góp ý chung / Liên hệ'
+          };
+          const subj = `[HỌC CÙNG PHÚC K9] Feedback (${catMap[APP.feedbackCategory] || 'Góp ý'}) ★${APP.feedbackRating || 5}`;
+          const mailBody = [
+            `Người gửi: ${name || APP.user?.display_name || 'Học viên'}`,
+            `Liên hệ lại: ${contact || 'Không để lại'}`,
+            `Ngữ cảnh: ${APP.feedbackContext || 'Trang web'}`,
+            `Đánh giá: ${APP.feedbackRating || 5}/5 sao`,
+            '',
+            'Nội dung chi tiết:',
+            message
+          ].join('\n');
+          APP.feedbackSubmitted = {
+            serverMessage: data.message,
+            emailForwarded: Boolean(data.email_forwarded),
+            mailSubject: subj,
+            mailBody
+          };
+          renderFeedbackModalBody();
+          toast('🎉 ' + (data.message || 'Đã gửi góp ý thành công!'), 'success');
+        } catch {
+          toast('Lỗi kết nối khi gửi feedback. Bạn có thể nhắn Zalo 0382952325 hoặc Gmail doivo250388@gmail.com.', 'error');
+        } finally {
+          if (submitBtn && document.body.contains(submitBtn)) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 Gửi Feedback Cho Admin';
+          }
         }
         return;
       }
@@ -7393,6 +7831,7 @@
       } else if (e.key === 'Escape') {
         closeAuthModal();
         closeOnboardingModal();
+        closeFeedbackModal();
         document.getElementById('pk9-cmd-modal')?.classList.remove('open');
         closeInAppViewer();
         if (APP.kcFullscreen) {
