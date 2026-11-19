@@ -11,6 +11,7 @@ const {
 } = require('../lib/rpg');
 const arena = require('../lib/arena');
 const SEED = require('../lib/seed-exams');
+const EXAM_BANK = require('../assets/pk9-exam-bank');
 const crypto = require('crypto');
 
 const ATTEMPTS_KEY = 'phuc:exam-attempts';
@@ -164,6 +165,32 @@ function publicExam(e) {
       if (q.type === 'short') x.input = true;
       return x;
     })
+  };
+}
+
+function publicExamSummary(e) {
+  e = normalizeExamMeta(e);
+  return {
+    id: e.id,
+    title: e.title,
+    subject: e.subject,
+    grade: e.grade,
+    program: e.program,
+    year: e.year,
+    examType: e.examType,
+    examPeriod: e.examPeriod,
+    semester: e.semester,
+    examSession: e.examSession,
+    periodLabel: e.periodLabel,
+    source: e.source,
+    sourceOrg: e.sourceOrg || e.examSession || '',
+    sourceFile: e.sourceFile,
+    originUrl: e.originUrl,
+    duration: e.duration,
+    ...(Array.isArray(e.sectionsMeta) ? { sectionsMeta: e.sectionsMeta } : {}),
+    scoring: e.scoring,
+    isBank: !!e.isBank,
+    questionCount: Array.isArray(e.questions) ? e.questions.length : Number(e.questionCount || 20)
   };
 }
 
@@ -360,7 +387,12 @@ async function getExam(r, id) {
   let e = await redisJsonGet(r, key('def', id));
   if (e) return normalizeExamMeta(e);
   const seed = SEED.find(x => x.id === id) || null;
-  return seed ? normalizeExamMeta(seed) : null;
+  if (seed) return normalizeExamMeta(seed);
+  if (EXAM_BANK && typeof EXAM_BANK.getFullExam === 'function') {
+    const bankExam = EXAM_BANK.getFullExam(id);
+    if (bankExam) return normalizeExamMeta(bankExam);
+  }
+  return null;
 }
 
 async function handler(req, res) {
@@ -371,16 +403,29 @@ async function handler(req, res) {
 
     if (req.method === 'GET') {
       if (action === 'list') {
-        const ids = new Set(SEED.map(x => x.id));
+        const redisIds = new Set();
         try {
-          for (const id of (await r.smembers('phuc:exam:index')) || []) ids.add(String(id));
+          for (const id of (await r.smembers('phuc:exam:index')) || []) redisIds.add(String(id));
         } catch {}
-        const out = [];
-        for (const id of ids) {
-          const x = await getExam(r, id);
-          if (x && x.published !== false) out.push(publicExam(x));
+        const byId = new Map();
+        for (const s of SEED) {
+          if (s && s.published !== false) byId.set(s.id, publicExamSummary(s));
         }
-        return sendJson(res, 200, { ok: true, exams: out });
+        if (EXAM_BANK && typeof EXAM_BANK.getCatalogSummaries === 'function') {
+          for (const b of EXAM_BANK.getCatalogSummaries()) {
+            if (b && !byId.has(b.id)) byId.set(b.id, publicExamSummary(b));
+          }
+        }
+        for (const id of redisIds) {
+          const x = await redisJsonGet(r, key('def', id));
+          if (!x) continue;
+          if (x.published === false) {
+            byId.delete(id);
+          } else {
+            byId.set(id, publicExamSummary(x));
+          }
+        }
+        return sendJson(res, 200, { ok: true, exams: Array.from(byId.values()) });
       }
 
       const session = await getSession(req);
@@ -428,36 +473,49 @@ async function handler(req, res) {
         const guard = await requireAdminOrBanIntruder(r, req, res, session, { source: 'exams:admin-list' });
         if (!guard.ok) return sendAdminGuardError(res, guard);
         const seedIdSet = new Set(SEED.map(x => x.id));
-        const ids = new Set(seedIdSet);
+        const redisIds = new Set();
         try {
-          for (const id of (await r.smembers('phuc:exam:index')) || []) ids.add(String(id));
+          for (const id of (await r.smembers('phuc:exam:index')) || []) redisIds.add(String(id));
         } catch {}
-        const out = [];
-        for (const id of ids) {
-          const x = await getExam(r, id);
-          if (x) {
-            out.push({
-              id: x.id,
-              title: x.title,
-              program: x.program,
-              subject: x.subject,
-              grade: x.grade,
-              year: x.year,
-              examType: x.examType,
-              periodLabel: x.periodLabel,
-              source: x.source,
-              sourceFile: x.sourceFile,
-              originUrl: x.originUrl,
-              sourceId: x.sourceId,
-              duration: x.duration,
-              questionCount: (x.questions || []).length,
-              published: x.published !== false,
-              isSeed: seedIdSet.has(x.id),
-              reviewCount: (x.questions || []).filter(questionNeedsReview).length,
-              updatedAt: x.updatedAt || x.createdAt || null
-            });
+        const map = new Map();
+        for (const s of SEED) {
+          const x = normalizeExamMeta(s);
+          map.set(x.id, {
+            id: x.id, title: x.title, program: x.program, subject: x.subject, grade: x.grade, year: x.year,
+            examType: x.examType, periodLabel: x.periodLabel, source: x.source, sourceFile: x.sourceFile,
+            originUrl: x.originUrl, sourceId: x.sourceId, duration: x.duration,
+            questionCount: (x.questions || []).length, published: x.published !== false,
+            isSeed: true, reviewCount: (x.questions || []).filter(questionNeedsReview).length,
+            updatedAt: x.updatedAt || x.createdAt || null
+          });
+        }
+        if (EXAM_BANK && typeof EXAM_BANK.getCatalogSummaries === 'function') {
+          for (const b of EXAM_BANK.getCatalogSummaries()) {
+            if (!map.has(b.id)) {
+              map.set(b.id, {
+                id: b.id, title: b.title, program: b.program, subject: b.subject, grade: b.grade, year: b.year,
+                examType: b.examType, periodLabel: b.periodLabel, source: b.source, sourceFile: '',
+                originUrl: '', sourceId: '', duration: b.duration,
+                questionCount: b.questionCount || 20, published: true,
+                isSeed: true, isBank: true, reviewCount: 0, updatedAt: null
+              });
+            }
           }
         }
+        for (const id of redisIds) {
+          const raw = await redisJsonGet(r, key('def', id));
+          if (!raw) continue;
+          const x = normalizeExamMeta(raw);
+          map.set(x.id, {
+            id: x.id, title: x.title, program: x.program, subject: x.subject, grade: x.grade, year: x.year,
+            examType: x.examType, periodLabel: x.periodLabel, source: x.source, sourceFile: x.sourceFile,
+            originUrl: x.originUrl, sourceId: x.sourceId, duration: x.duration,
+            questionCount: (x.questions || []).length, published: x.published !== false,
+            isSeed: seedIdSet.has(x.id), reviewCount: (x.questions || []).filter(questionNeedsReview).length,
+            updatedAt: x.updatedAt || x.createdAt || null
+          });
+        }
+        const out = Array.from(map.values());
         out.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
         return sendJson(res, 200, { ok: true, exams: out });
       }
