@@ -66,9 +66,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&family=Lora:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="/style.css?v=72" />
-  <link rel="stylesheet" href="/assets/exam-center.css?v=72" />
-  <link rel="stylesheet" href="/assets/pk9-rpg-3d.css?v=72" />
+  <link rel="stylesheet" href="/style.css?v=73" />
+  <link rel="stylesheet" href="/assets/exam-center.css?v=73" />
+  <link rel="stylesheet" href="/assets/pk9-rpg-3d.css?v=73" />
 
   <!-- MathJax Configuration for LaTeX Formulas -->
   <script>
@@ -341,7 +341,7 @@
         </div>
 
         <div class="pk9-topbar-actions">
-          <button type="button" class="pk9-xp-chip pk9-install-chip" id="pk9-install-app-btn" data-install-app="1" title="Tải App Học Cùng Phúc K9 về điện thoại hoặc máy tính">
+          <button type="button" class="pk9-xp-chip pk9-install-chip pk9-hide-mob-768" id="pk9-install-app-btn" data-install-app="1" title="Tải App Học Cùng Phúc K9 về điện thoại hoặc máy tính">
             📲 <span class="pk9-hide-compact">Tải </span><span>App</span>
           </button>
           <button type="button" class="pk9-xp-chip pk9-hide-tablet-sm" id="pk9-top-khoa-chui-btn" data-nav-tab="khoa-chui" title="Mở ngay Thư Viện Công Khai trực tiếp trong web" style="background:linear-gradient(135deg,rgba(16,185,129,0.16),rgba(37,99,235,0.16));border-color:rgba(16,185,129,0.4);color:#0d9488;">
@@ -350,8 +350,11 @@
           <button type="button" class="pk9-xp-chip pk9-hide-mob-xs" id="pk9-top-admin-btn" data-nav-tab="admin" title="Mở Trung tâm điều hành Admin" style="display:none;background:linear-gradient(135deg,rgba(225,29,72,0.18),rgba(245,158,11,0.18));border-color:rgba(225,29,72,0.45);color:#e11d48;">
             🛡️ <span class="hide-compact">Admin Pro</span>
           </button>
-          <button type="button" class="pk9-xp-chip" id="pk9-top-xp-chip" data-nav-tab="leaderboard" title="Tài khoản Khách chưa mở khóa BXH — Đăng ký hoặc đăng nhập để đua Top">
+          <button type="button" class="pk9-xp-chip pk9-hide-mob-768" id="pk9-top-xp-chip" data-nav-tab="leaderboard" title="Tài khoản Khách chưa mở khóa BXH — Đăng ký hoặc đăng nhập để đua Top">
             🔒 <span class="hide-xs">Khách • </span><b>BXH<span class="pk9-hide-mob-430"> Khóa</span></b>
+          </button>
+          <button type="button" class="pk9-icon-btn pk9-guide-icon-btn" id="pk9-top-guide-btn" data-open-onboarding="auto" title="Hướng Dẫn Tân Thủ Kiểu Game" aria-label="Mở hướng dẫn tân thủ kiểu game">
+            🎮
           </button>
           <button type="button" class="pk9-icon-btn pk9-theme-btn" data-toggle-theme="1" title="Chuyển chế độ Sáng / Tối" aria-label="Đổi chế độ Sáng Tối">
             🌙
@@ -426,6 +429,11 @@
         <button type="button" class="pk9-icon-btn" data-close-mob-hub="1" aria-label="Đóng">✕</button>
       </div>
       <div class="pk9-mob-hub-grid">
+        <button type="button" class="pk9-mob-hub-tile hot" data-open-onboarding="auto" data-close-mob-hub="1" style="grid-column:1 / -1;background:linear-gradient(135deg,rgba(250,204,21,0.16),rgba(14,165,233,0.16));border-color:rgba(250,204,21,0.52);">
+          <span class="pk9-mob-hub-icon">🎮</span>
+          <span class="pk9-mob-hub-label">Hướng Dẫn Tân Thủ (Kiểu Game)</span>
+          <span class="pk9-mob-hub-sub">Chỉ tay từng nút • 1 phút làm chủ toàn web</span>
+        </button>
         <button type="button" class="pk9-mob-hub-tile hot" data-open-camera-ai="1" data-close-mob-hub="1">
           <span class="pk9-mob-hub-icon">📸</span>
           <span class="pk9-mob-hub-label">Camera Giải Bài</span>
@@ -515,7 +523,10 @@
     <div class="pk9-modal-box" id="pk9-auth-modal-box"></div>
   </div>
 
-  <!-- FIRST-TIME SMART ONBOARDING GUIDE MODAL (GUEST VS MEMBER) -->
+  <!-- GAME-STYLE INTERACTIVE SPOTLIGHT TUTORIAL (ADAPTIVE MOBILE/PC + GUEST/MEMBER) -->
+  <div class="pk9-gt-root" id="pk9-game-tutorial-root" role="dialog" aria-modal="true" aria-label="Hướng dẫn tân thủ kiểu game Học Cùng Phúc K9" aria-hidden="true"></div>
+
+  <!-- FIRST-TIME SMART ONBOARDING GUIDE MODAL (LEGACY FALLBACK CONTAINER) -->
   <div class="pk9-modal-backdrop" id="pk9-onboarding-modal" role="dialog" aria-modal="true" aria-label="Hướng dẫn sử dụng Học Cùng Phúc K9">
     <div class="pk9-modal-box pk9-onboard-box" id="pk9-onboarding-modal-box"></div>
   </div>
@@ -573,10 +584,10 @@
   <script src="/assets/pk9-2k9-manifest.js"></script>
   <script src="/assets/pk9-2k8-curated.js"></script>
   <script src="/assets/pk9-2k8-dgnl.js"></script>
-  <script src="/assets/pk9-exam-tools.js?v=72"></script>
-  <script src="/assets/exam-center.js?v=72"></script>
-  <script src="/assets/pk9-rpg-models.js?v=72"></script>
-  <script src="/assets/pk9-rpg.js?v=72"></script>
-  <script src="/assets/pk9-app.js?v=72"></script>
+  <script src="/assets/pk9-exam-tools.js?v=73"></script>
+  <script src="/assets/exam-center.js?v=73"></script>
+  <script src="/assets/pk9-rpg-models.js?v=73"></script>
+  <script src="/assets/pk9-rpg.js?v=73"></script>
+  <script src="/assets/pk9-app.js?v=73"></script>
 </body>
 </html>

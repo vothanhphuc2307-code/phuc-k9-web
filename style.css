@@ -1409,7 +1409,7 @@ html.dark .pk9-tc-stat-pill.done {
 
 .pk9-teacher-pdf-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
   gap: 0.55rem;
   max-height: 360px;
   overflow-y: auto;
@@ -6411,6 +6411,1058 @@ html.dark .pk9-camera-box {
   }
   .pk9-camera-box {
     padding: 0.9rem;
+  }
+}
+
+/* ==========================================================================
+   V73: MOBILE PDF VIEWER FIX + MOBILE UI DECLUTTER + GAME-STYLE RPG TUTORIAL
+   ========================================================================== */
+
+/* Topbar Game Guide Quick Button */
+.pk9-guide-icon-btn {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(14, 165, 233, 0.18));
+  border-color: rgba(250, 204, 21, 0.52);
+  color: var(--pk9-text);
+}
+.pk9-guide-icon-btn:hover {
+  border-color: #facc15;
+  transform: translateY(-1px);
+}
+
+/* Clean Per-File PDF Cards under Lecture Video */
+.pk9-pdf-bar-hint {
+  font-weight: 700;
+  color: var(--pk9-text-muted);
+  font-size: 0.73rem;
+}
+.pk9-pdf-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pk9-pdf-item-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.62rem 0.78rem;
+  border-radius: 0.9rem;
+  background: var(--pk9-surface);
+  border: 1.5px solid var(--pk9-border);
+  min-width: 0;
+}
+.pk9-pdf-item-card.is-open {
+  border-color: rgba(37, 99, 235, 0.52);
+  background: rgba(37, 99, 235, 0.05);
+}
+.pk9-pdf-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.pk9-pdf-item-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 0.7rem;
+  background: rgba(37, 99, 235, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+.pk9-pdf-item-text {
+  min-width: 0;
+  flex: 1;
+}
+.pk9-pdf-item-text strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--pk9-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pk9-pdf-item-text span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--pk9-text-muted);
+  font-weight: 600;
+}
+.pk9-pdf-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.36rem;
+}
+.pk9-pdf-action-btn.active-inline {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--pk9-primary);
+}
+.pk9-pdf-brand-text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.pk9-pdf-brand-sub {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pk9-brand-mini-btn.accent {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: rgba(125, 211, 252, 0.6);
+  color: #ffffff;
+}
+.pk9-brand-mini-btn.close {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(225, 29, 72, 0.85);
+  color: #ffffff;
+}
+
+/* Native-App-Grade In-App PDF / Document / Video Viewer (Overrides legacy cascade) */
+.pk9-inapp-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(4, 10, 22, 0.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem;
+}
+.pk9-inapp-viewer-overlay.open {
+  display: flex;
+}
+.pk9-inapp-viewer-box {
+  width: 100%;
+  max-width: 1280px;
+  height: 92dvh;
+  max-height: 92dvh;
+  background: #0b1426;
+  border: 1.5px solid rgba(250, 204, 21, 0.35);
+  border-radius: 1.2rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.58);
+}
+.pk9-viewer-header {
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(135deg, #071022 0%, #102442 75%, #0d2b3e 100%);
+  color: #f8fafc;
+  border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+  padding: 0.62rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.pk9-viewer-brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex: 1 1 0%;
+}
+.pk9-viewer-crest {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+}
+.pk9-viewer-titles {
+  min-width: 0;
+  flex: 1;
+}
+.pk9-viewer-eyebrow {
+  font-size: 0.66rem;
+  font-weight: 900;
+  color: #fde047;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pk9-viewer-title {
+  font-weight: 900;
+  font-size: 0.94rem;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+.pk9-viewer-sub {
+  font-size: 0.73rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pk9-viewer-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+.pk9-viewer-pc-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+.pk9-viewer-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.82rem;
+  min-height: 36px;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(251, 113, 133, 0.55);
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.pk9-viewer-close-btn:hover {
+  background: #be123c;
+}
+.pk9-viewer-stage {
+  position: relative;
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  background: #f8fafc;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.pk9-viewer-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+.pk9-viewer-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: #0b1426;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 1.2rem;
+  text-align: center;
+  transition: opacity 0.25s ease;
+}
+.pk9-viewer-loading.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.pk9-viewer-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(148, 163, 184, 0.28);
+  border-top-color: #38bdf8;
+  animation: pk9Spin 0.8s linear infinite;
+}
+@keyframes pk9Spin {
+  to { transform: rotate(360deg); }
+}
+.pk9-viewer-load-txt {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #fde047;
+}
+.pk9-viewer-load-hint {
+  font-size: 0.76rem;
+  color: #cbd5e1;
+  max-width: 320px;
+  line-height: 1.45;
+}
+.pk9-viewer-mob-bar {
+  display: none;
+}
+.pk9-show-mob-768 {
+  display: none;
+}
+.pk9-viewer-ext-card {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(155deg, #071326 0%, #0e2240 60%, #0c3147 100%);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.5rem 1.2rem;
+  gap: 0.72rem;
+}
+.pk9-viewer-ext-logo {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  border: 2px solid rgba(250, 204, 21, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px;
+}
+.pk9-viewer-ext-pill {
+  padding: 0.24rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.pk9-viewer-ext-card h4 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 900;
+  max-width: 440px;
+  line-height: 1.38;
+}
+.pk9-viewer-ext-card p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  max-width: 420px;
+  line-height: 1.55;
+}
+.pk9-viewer-ext-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+/* Mobile New-User 3-Step Launchpad Strip */
+.pk9-mob-start-guide-strip {
+  display: none;
+}
+
+/* ==========================================================================
+   MOBILE OPTIMIZATION & DECLUTTER (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: clip;
+  }
+  .pk9-hide-mob-768,
+  .pk9-mob-hide-dup,
+  .pk9-mob-shortcut-strip {
+    display: none !important;
+  }
+  .pk9-show-mob-768 {
+    display: inline !important;
+  }
+  .pk9-guide-icon-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    font-size: 0.85rem;
+  }
+  .pk9-content {
+    padding: 0.65rem 0.65rem calc(5.8rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Crisp Mobile Launchpad Strip */
+  .pk9-mob-start-guide-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    margin-top: 0.62rem;
+    padding: 0.65rem 0.78rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.14), rgba(14, 165, 233, 0.13));
+    border: 1.5px solid rgba(250, 204, 21, 0.45);
+  }
+  .pk9-mob-sg-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+  }
+  .pk9-mob-sg-badge {
+    padding: 0.2rem 0.48rem;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #fde047;
+    font-size: 0.64rem;
+    font-weight: 900;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pk9-mob-sg-txt {
+    min-width: 0;
+  }
+  .pk9-mob-sg-txt strong {
+    display: block;
+    font-size: 0.79rem;
+    font-weight: 900;
+    color: var(--pk9-text);
+    line-height: 1.2;
+  }
+  .pk9-mob-sg-txt span {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--pk9-text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pk9-mob-sg-btn {
+    border: none;
+    border-radius: 0.7rem;
+    background: linear-gradient(135deg, #2563eb, #0d9488);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 0.46rem 0.68rem;
+    min-height: 36px;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 6px 14px -4px rgba(37, 99, 235, 0.5);
+  }
+  .pk9-mob-action-card {
+    min-height: 58px;
+    transition: transform 0.14s ease;
+  }
+  .pk9-mob-action-card:active {
+    transform: scale(0.97);
+  }
+  .pk9-mob-action-card.exam {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.34), rgba(234, 88, 12, 0.34));
+    border-color: rgba(251, 191, 36, 0.45);
+  }
+  .pk9-mob-action-card.lib {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.34), rgba(6, 182, 212, 0.34));
+    border-color: rgba(52, 211, 153, 0.45);
+  }
+
+  /* Compact Home Cards & Sections on Mobile */
+  .pk9-home-starter-grid {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .pk9-goal-card,
+  .pk9-daily-boss-card {
+    padding: 0.9rem !important;
+    border-radius: 1.05rem !important;
+  }
+  .pk9-sec-head {
+    margin-top: 1.15rem;
+    margin-bottom: 0.65rem;
+    gap: 0.45rem;
+  }
+  .pk9-sec-head h2 {
+    font-size: 1.02rem;
+    line-height: 1.3;
+  }
+  .pk9-sec-head p {
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  /* TRUE FULLSCREEN EDGE-TO-EDGE MOBILE PDF READER */
+  .pk9-inapp-viewer-overlay {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+    background: #071022;
+  }
+  .pk9-inapp-viewer-box {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+  .pk9-viewer-header {
+    padding: calc(0.42rem + env(safe-area-inset-top, 0px)) 0.58rem 0.42rem;
+    gap: 0.45rem;
+    min-height: 52px;
+  }
+  .pk9-viewer-crest {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+  }
+  .pk9-viewer-eyebrow {
+    font-size: 0.58rem;
+  }
+  .pk9-viewer-title {
+    font-size: 0.83rem;
+  }
+  .pk9-viewer-sub,
+  .pk9-viewer-pc-actions {
+    display: none;
+  }
+  .pk9-viewer-close-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 0.68rem;
+    font-size: 0.95rem;
+  }
+  .pk9-viewer-close-txt {
+    display: none;
+  }
+  .pk9-viewer-mob-bar {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.4rem 0.52rem calc(0.42rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, #0b1830 0%, #071022 100%);
+    border-top: 1px solid rgba(250, 204, 21, 0.28);
+    flex-shrink: 0;
+  }
+  .pk9-viewer-mob-btn {
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 44px;
+    border-radius: 0.72rem;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    background: rgba(15, 23, 42, 0.92);
+    color: #f8fafc;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.08rem;
+    padding: 0.24rem 0.2rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .pk9-viewer-mob-btn span {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .pk9-viewer-mob-btn small {
+    font-size: 0.66rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .pk9-viewer-mob-btn.primary {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    border-color: rgba(125, 211, 252, 0.65);
+    color: #ffffff;
+  }
+
+  /* Fix Inline PDF Card & Brand Bar Overflow on Mobile */
+  .pk9-video-pdf-bar {
+    padding: 0.65rem 0.52rem;
+  }
+  .pk9-pdf-bar-hint {
+    display: none;
+  }
+  .pk9-pdf-item-card {
+    padding: 0.58rem 0.62rem;
+    gap: 0.48rem;
+  }
+  .pk9-pdf-item-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.34rem;
+  }
+  .pk9-pdf-item-actions > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .pk9-pdf-item-actions .pk9-pdf-action-btn {
+    width: 100%;
+    min-height: 36px;
+    padding: 0.36rem 0.45rem;
+    font-size: 0.74rem;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pk9-inline-pdf-wrap {
+    height: 64dvh;
+    min-height: 380px;
+    border-radius: 0.9rem;
+  }
+  .pk9-pdf-brand-bar {
+    flex-wrap: nowrap;
+    padding: 0.4rem 0.5rem;
+    gap: 0.38rem;
+  }
+  .pk9-pdf-brand-bar .pk9-brand-bar-left {
+    flex: 1 1 0%;
+    min-width: 0;
+    gap: 0.4rem;
+    overflow: hidden;
+  }
+  .pk9-pdf-brand-bar .pk9-brand-pill-tag {
+    font-size: 0.62rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pk9-pdf-brand-bar .pk9-brand-bar-actions {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 0.25rem;
+  }
+  .pk9-pdf-brand-bar .pk9-brand-mini-btn {
+    padding: 0.26rem 0.42rem;
+    font-size: 0.7rem;
+    min-height: 30px;
+  }
+  .pk9-player-watermark.is-pdf {
+    bottom: 8px;
+    right: 8px;
+    font-size: 0.58rem;
+    padding: 0.14rem 0.38rem;
+    opacity: 0.76;
+  }
+}
+
+/* ==========================================================================
+   GAME-STYLE INTERACTIVE RPG SPOTLIGHT TUTORIAL (PC + MOBILE)
+   ========================================================================== */
+.pk9-gt-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+  pointer-events: auto;
+}
+.pk9-gt-root.open {
+  display: block;
+}
+.pk9-gt-full-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 9, 22, 0.8);
+  z-index: 2000;
+}
+.pk9-gt-spotlight {
+  position: fixed;
+  z-index: 2001;
+  border-radius: 14px;
+  border: 2.5px solid #facc15;
+  box-shadow: 0 0 0 9999px rgba(3, 9, 22, 0.78), 0 0 24px rgba(250, 204, 21, 0.58);
+  transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+}
+.pk9-gt-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  border: 2px solid rgba(56, 189, 248, 0.85);
+  pointer-events: none;
+  animation: pk9GtPulse 1.5s ease-out infinite;
+}
+@keyframes pk9GtPulse {
+  0% { transform: scale(0.98); opacity: 0.95; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+.pk9-gt-arrow {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.24rem 0.62rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  animation: pk9GtBounce 0.95s ease-in-out infinite alternate;
+}
+.pk9-gt-arrow.is-above {
+  bottom: calc(100% + 10px);
+}
+.pk9-gt-arrow.is-below {
+  top: calc(100% + 10px);
+}
+@keyframes pk9GtBounce {
+  0% { transform: translate(-50%, 0); }
+  100% { transform: translate(-50%, -6px); }
+}
+
+.pk9-gt-dialog {
+  position: fixed;
+  left: 50%;
+  z-index: 2005;
+  width: min(510px, calc(100vw - 20px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  border-radius: 1.25rem;
+  padding: 0.95rem 1.05rem;
+  background: linear-gradient(155deg, #071326 0%, #0e2240 58%, #0b2b3d 100%);
+  color: #f8fafc;
+  border: 1.8px solid rgba(250, 204, 21, 0.55);
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.pk9-gt-dialog.dock-center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.pk9-gt-dialog.dock-top {
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+}
+.pk9-gt-dialog.dock-bottom {
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+}
+.pk9-gt-dialog.is-finish {
+  border-color: #facc15;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25), 0 26px 65px rgba(0, 0, 0, 0.72);
+}
+
+.pk9-gt-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-bottom: 0.48rem;
+}
+.pk9-gt-quest-badge {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #fde047;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pk9-gt-top-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+.pk9-gt-step-pill {
+  padding: 0.16rem 0.46rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+  font-size: 0.68rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.pk9-gt-skip-btn {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.pk9-gt-skip-btn:hover {
+  color: #ffffff;
+  border-color: rgba(248, 113, 113, 0.65);
+}
+
+.pk9-gt-xp-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+.pk9-gt-xp-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.pk9-gt-xp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #34d399, #facc15);
+  transition: width 0.35s ease;
+}
+.pk9-gt-xp-label {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #fde047;
+  white-space: nowrap;
+}
+
+.pk9-gt-character-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.72rem;
+}
+.pk9-gt-avatar-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+.pk9-gt-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #facc15;
+  background: #0f172a;
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.4);
+}
+.pk9-gt-lv-tag {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.06rem 0.36rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  color: #ffffff;
+  font-size: 0.56rem;
+  font-weight: 900;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.pk9-gt-speech {
+  min-width: 0;
+  flex: 1;
+}
+.pk9-gt-npc-name {
+  font-size: 0.64rem;
+  font-weight: 900;
+  color: #38bdf8;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.14rem;
+}
+.pk9-gt-title {
+  margin: 0 0 0.32rem;
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.32;
+}
+.pk9-gt-body {
+  margin: 0;
+  font-size: 0.81rem;
+  line-height: 1.52;
+  color: #e2e8f0;
+}
+.pk9-gt-body b {
+  color: #fde047;
+}
+
+.pk9-gt-roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.42rem;
+  margin-top: 0.72rem;
+}
+.pk9-gt-roadmap-item {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(125, 211, 252, 0.25);
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.38rem;
+  text-align: center;
+}
+.pk9-gt-rm-ico {
+  display: block;
+  font-size: 1.25rem;
+  margin-bottom: 0.18rem;
+}
+.pk9-gt-roadmap-item strong {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.2;
+}
+.pk9-gt-roadmap-item small {
+  display: block;
+  font-size: 0.63rem;
+  color: #cbd5e1;
+  margin-top: 0.12rem;
+  line-height: 1.2;
+}
+
+.pk9-gt-quick-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: 0.65rem;
+}
+.pk9-gt-mini-cta {
+  padding: 0.44rem 0.78rem;
+  border-radius: 0.72rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.pk9-gt-mini-cta.primary {
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.pk9-gt-finish-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+.pk9-gt-finish-btn {
+  padding: 0.58rem 0.62rem;
+  min-height: 42px;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  font-size: 0.77rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: center;
+}
+.pk9-gt-finish-btn.primary {
+  background: linear-gradient(135deg, #2563eb, #0d9488);
+  border-color: transparent;
+}
+.pk9-gt-finish-btn.gold {
+  background: linear-gradient(135deg, #f59e0b, #eab308);
+  color: #0f172a;
+  border-color: transparent;
+  font-weight: 900;
+}
+
+.pk9-gt-tip {
+  margin-top: 0.65rem;
+  padding: 0.46rem 0.66rem;
+  border-radius: 0.75rem;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px dashed rgba(56, 189, 248, 0.42);
+  font-size: 0.73rem;
+  color: #bae6fd;
+  line-height: 1.42;
+}
+
+.pk9-gt-footer {
+  margin-top: 0.78rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.pk9-gt-mode-btn {
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  border-radius: 0.68rem;
+  padding: 0.38rem 0.62rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pk9-gt-nav-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+.pk9-gt-btn {
+  min-height: 38px;
+  padding: 0.45rem 0.92rem;
+  border-radius: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.pk9-gt-btn.ghost {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.38);
+  color: #f8fafc;
+}
+.pk9-gt-btn.primary {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #0f172a;
+  box-shadow: 0 8px 18px -4px rgba(250, 204, 21, 0.52);
+}
+
+@media (max-width: 640px) {
+  .pk9-gt-dialog {
+    padding: 0.8rem 0.85rem;
+    border-radius: 1.05rem;
+  }
+  .pk9-gt-avatar-wrap,
+  .pk9-gt-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  .pk9-gt-title {
+    font-size: 0.9rem;
+  }
+  .pk9-gt-body {
+    font-size: 0.77rem;
+  }
+  .pk9-gt-roadmap-grid {
+    gap: 0.32rem;
+  }
+  .pk9-gt-roadmap-item strong {
+    font-size: 0.67rem;
+  }
+  .pk9-gt-roadmap-item small {
+    font-size: 0.59rem;
+  }
+  .pk9-gt-btn {
+    min-height: 38px;
+    padding: 0.42rem 0.78rem;
+    font-size: 0.77rem;
   }
 }
 
