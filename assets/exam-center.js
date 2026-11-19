@@ -1807,14 +1807,21 @@
         <div class="pk9-exam-workspace ${STATE.splitPdf && pdfPath ? 'with-pdf' : ''}">
           ${STATE.splitPdf && pdfPath ? `
             <div class="pk9-exam-pdf-pane">
-              <div style="padding:0.65rem 1rem;background:#0f172a;color:#fff;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                <span>📄 Đề gốc đối chiếu (${esc(ex.source || '')})</span>
-                <div style="display:flex;align-items:center;gap:0.75rem;">
-                  <a href="${esc(getDirectDownloadUrl(pdfPath))}" download target="_blank" rel="noopener" style="color:#34d399;text-decoration:none;">⬇️ Tải PDF</a>
-                  <a href="${esc(pdfPath)}" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:none;">Mở tab mới ↗</a>
+              <div class="pk9-exam-pdf-head">
+                <div class="pk9-exam-pdf-title-wrap">
+                  <img src="/assets/phuc-k9-favicon.png" alt="" class="pk9-exam-pdf-crest" />
+                  <span class="pk9-exam-pdf-title">📄 Đề PDF (${esc(ex.source || 'Sở/Bộ')})</span>
+                </div>
+                <div class="pk9-exam-pdf-tools">
+                  <button type="button" class="pk9-exam-pdf-mini-btn accent" data-open-inapp-url="${esc(pdfPath)}" data-open-inapp-title="${esc(ex.title || 'Đề thi PDF gốc')}" data-open-inapp-sub="${esc(ex.source || 'Học Cùng Phúc K9')}">🔍 Toàn màn hình</button>
+                  <a href="${esc(getDirectDownloadUrl(pdfPath))}" download target="_blank" rel="noopener" class="pk9-exam-pdf-mini-btn">⬇️ Tải</a>
+                  <a href="${esc(pdfPath)}" target="_blank" rel="noopener" class="pk9-exam-pdf-mini-btn">↗️ Mở gốc</a>
+                  <button type="button" class="pk9-exam-pdf-mini-btn close" data-toggle-split-pdf="1" aria-label="Ẩn PDF">✕</button>
                 </div>
               </div>
-              <iframe src="${esc(pdfPath)}" title="Đề PDF gốc"></iframe>
+              <div class="pk9-exam-pdf-stage">
+                <iframe src="${esc(pdfPath)}" title="Đề PDF gốc"></iframe>
+              </div>
             </div>
           ` : ''}
 

@@ -1300,10 +1300,33 @@
     ov.classList.add('open');
   }
 
-  function closeOnboardingModal() {
-    const ov = document.getElementById('pk9-onboarding-modal');
-    if (ov) ov.classList.remove('open');
+  // ==========================================================================
+  // V73: GAME-STYLE INTERACTIVE SPOTLIGHT TUTORIAL (MOBILE + PC, GUEST + MEMBER)
+  // ==========================================================================
+  const GAME_TUTORIAL = {
+    open: false,
+    mode: 'guest',
+    stepIdx: 0,
+    steps: [],
+    targetEl: null,
+    repositionTimer: null,
+    boundResize: null,
+    boundKey: null
+  };
+
+  function getTutorialStorageKey(modeOverride) {
+    const isMember = modeOverride === 'member'
+      ? true
+      : (modeOverride === 'guest' ? false : Boolean(APP.user?.username));
+    if (isMember && APP.user?.username) {
+      return `pk9_gt_done_member_v2_${String(APP.user.username).toLowerCase()}`;
+    }
+    return 'pk9_gt_done_guest_v2';
+  }
+
+  function markGameTutorialSeen(modeOverride) {
     try {
+      localStorage.setItem(getTutorialStorageKey(modeOverride), '1');
       if (APP.user?.username) {
         localStorage.setItem(`pk9_onboard_member_v1_${String(APP.user.username).toLowerCase()}`, '1');
       } else {
@@ -1312,109 +1335,410 @@
     } catch {}
   }
 
-  function openOnboardingModal(mode = 'auto') {
-    const ov = document.getElementById('pk9-onboarding-modal');
-    const box = document.getElementById('pk9-onboarding-modal-box');
-    if (!ov || !box) return;
-    const isMember = mode === 'member' ? true : (mode === 'guest' ? false : Boolean(APP.user));
+  function buildGameTutorialSteps(isMember, isMob) {
     const stats = getEcosystemStats();
-    const uname = esc(APP.user?.display_name || APP.user?.username || 'Bạn');
+    const uname = esc(APP.user?.display_name || APP.user?.username || 'Chiến binh 2K9');
+    return [
+      {
+        id: 'welcome',
+        tab: 'home',
+        selector: null,
+        badge: isMember ? '⚔️ NHIỆM VỤ TÂN THỦ • THÀNH VIÊN' : '🧭 NHIỆM VỤ TÂN THỦ • CHẾ ĐỘ KHÁCH',
+        title: isMember
+          ? `Chào mừng ${uname} gia nhập HỌC CÙNG PHÚC K9!`
+          : 'Lần đầu vào web hơi nhiều nút? Đừng lo, đi cùng mình 1 phút nhé!',
+        body: isMember
+          ? `Tài khoản của bạn đã sẵn sàng đua <b>BXH Tuần</b>, tích <b>Vàng/XP</b> và mở <b>Khung Avatar Nitro</b>. Mình sẽ chỉ tận tay từng khu vực quan trọng để bạn học siêu gọn không bị rối.`
+          : `Web có rất nhiều kho học liệu (<b>${stats.topicsCount.toLocaleString('vi-VN')}+ Video & PDF</b>, <b>${stats.interactiveExamCount}+ Đề Sở/Bộ</b> & <b>AI giải bài</b>). Nhớ đúng <b>3 bước vàng</b> là làm chủ ngay:`,
+        roadmap: [
+          { icon: '🎬', label: '1. Xem Video & PDF', sub: 'Chọn Môn → Thầy/Cô' },
+          { icon: '🏛️', label: '2. Luyện Đề Thi', sub: 'Chấm điểm tự động' },
+          { icon: '📸', label: '3. Chụp Ảnh Hỏi AI', sub: 'Bí câu nào quét ngay' }
+        ],
+        tip: '🎁 Hoàn thành hướng dẫn kiểu Game này để mở khóa lộ trình học gọn nhẹ nhất!',
+        xp: 15
+      },
+      {
+        id: 'account',
+        tab: 'home',
+        selector: '#pk9-top-auth-btn',
+        badge: isMember ? '🛡️ CHẶNG 1 • HỒ SƠ & TIẾN ĐỘ' : '🔑 CHẶNG 1 • ĐĂNG NHẬP / TẠO TÀI KHOẢN',
+        title: isMember
+          ? 'Đây là Hồ Sơ & Kho Tiến Độ Đồng Bộ Của Bạn'
+          : 'Bước 1: Đăng Ký 10 Giây Để Lưu Tiến Độ (+100 XP)',
+        body: isMember
+          ? `Bấm vào nút tên tài khoản ở góc trên này bất cứ lúc nào để đổi <b>Khung Avatar Nitro</b>, xem mã khôi phục PIN, đồng bộ tiến độ giữa điện thoại & máy tính.`
+          : `Bạn hoàn toàn có thể học thử <b>miễn phí 100%</b> ngay không cần tài khoản. Tuy nhiên bấm nút sáng này để tạo tài khoản 10 giây sẽ lưu toàn bộ bài đã học, nhận <b>+100 XP</b> và mở khóa <b>BXH Tuần</b>!`,
+        tip: isMember
+          ? '💡 Đã đăng nhập: Mọi bài video & điểm thi đều tự động lưu lên mây.'
+          : '💡 Mẹo: Có thể bấm "Tiếp tục" để xem hết hướng dẫn trước rồi đăng ký sau cũng được!',
+        quickAuth: !isMember,
+        xp: 30
+      },
+      {
+        id: 'lectures-nav',
+        tab: 'home',
+        selector: isMob ? '.pk9-mob-nav-btn[data-nav-tab="lectures"]' : '.pk9-nav-item[data-nav-tab="lectures"]',
+        fallbackSelector: '[data-nav-tab="lectures"]',
+        badge: '🎬 CHẶNG 2 • BẮT ĐẦU HỌC TỪ ĐÂY',
+        title: 'Bước 2: Mở Phòng Video Bài Giảng & PDF Theo Thầy/Cô',
+        body: isMob
+          ? `Muốn bắt đầu học bài mới? Chỉ cần chạm nút <b>🎬 Bài giảng</b> ở thanh dưới cùng này! Bên trong chia rõ <b>Khối → Môn → Thầy/Cô</b> để bạn học theo đúng lộ trình.`
+          : `Muốn bắt đầu học bài mới? Bấm mục <b>🎬 Video Bài Giảng</b> ở menu bên trái. Tất cả bài giảng được sắp xếp gọn theo <b>Khối → Môn → Thầy/Cô</b> kèm tài liệu PDF.`,
+        tip: '👇 Bấm "Tiếp tục" để mình đưa bạn bước vào tận Phòng Học xem cách đổi Thầy/Cô & mở PDF!',
+        xp: 45
+      },
+      {
+        id: 'lectures-stage',
+        tab: 'lectures',
+        selector: '#pk9-studio-context-bar',
+        fallbackSelector: '#tab-lectures .pk9-video-stage',
+        badge: '📄 CHẶNG 3 • ĐỔI THẦY/CÔ & MỞ PDF',
+        title: 'Cách Chọn Giáo Viên & Đọc PDF Toàn Màn Hình Không Lỗi',
+        body: `Ngay trên thanh điều khiển này bạn có thể: <b>✨ Mở bộ chọn GV / Môn</b> để đổi môn/thầy cô, bấm <b>📄 Kho PDF</b> để xem toàn bộ đề & bản viết tay, hoặc mở trực tiếp file PDF dưới mỗi video ở chế độ <b>toàn màn hình chuẩn mobile</b>!`,
+        tip: '💡 Mẹo đọc PDF trên điện thoại: Bấm nút "Toàn màn hình" để đọc rõ nét, có thanh tải về & mở gốc ở cạnh dưới.',
+        xp: 60
+      },
+      {
+        id: 'exams-nav',
+        tab: 'home',
+        selector: isMob ? '.pk9-mob-nav-btn[data-nav-tab="exams"]' : '.pk9-nav-item[data-nav-tab="exams"]',
+        fallbackSelector: '[data-nav-tab="exams"]',
+        badge: '🏛️ CHẶNG 4 • THỰC CHIẾN PHÒNG THI',
+        title: 'Bước 3: Luyện Đề Sở/Bộ Chuẩn GDPT 2018',
+        body: `Học xong lý thuyết thì vào ngay <b>🏛️ Luyện đề</b>! Có sẵn <b>${stats.interactiveExamCount}+ đề tương tác 3 phần</b> (Trắc nghiệm, Đúng/Sai, Trả lời ngắn), đồng hồ bấm giờ, máy tính Casio tích hợp & chế độ xem song song <b>Đề PDF gốc</b>.`,
+        tip: '💡 Làm xong hệ thống chấm điểm ngay, chỉ rõ câu sai và cộng XP đua Top!',
+        xp: 75
+      },
+      {
+        id: 'camera-ai',
+        tab: 'home',
+        selector: isMob ? '#pk9-mob-cam-btn' : '.pk9-nav-item[data-nav-tab="ai"]',
+        fallbackSelector: '[data-open-camera-ai="1"]',
+        badge: '📸 CHẶNG 5 • BÍ KÍP AI GIẢI BÀI',
+        title: isMob ? 'Nút Tròn Giữa Này Là Camera Quét Đề AI!' : 'Gia Sư AI 24/7 & Chụp Ảnh Giải Bài Tập',
+        body: isMob
+          ? `Đang làm bài tập trên vở mà gặp câu khó? Bấm ngay nút <b>📸 Giải AI</b> ở giữa thanh dưới để chụp thẳng ảnh đề bài — AI sẽ đọc hình và hướng dẫn giải chi tiết từng bước!`
+          : `Gặp câu Toán/Lí/Hóa hóc búa? Mở <b>🤖 Gia Sư AI 24/7</b> để nhắn hỏi hoặc tải/chụp ảnh đề bài lên, AI sẽ giải thích chi tiết từng bước dễ hiểu.`,
+        tip: '💡 Mẹo chụp nét: Canh đề bài gọn trong khung vàng, đủ ánh sáng để AI đọc công thức chuẩn nhất.',
+        xp: 90
+      },
+      {
+        id: 'hub-tools',
+        tab: 'home',
+        selector: isMob ? '#pk9-mob-hub-btn' : '.pk9-nav-item[data-nav-tab="docs"]',
+        fallbackSelector: isMob ? '[data-open-mob-hub="1"]' : '[data-nav-tab="docs"]',
+        badge: isMob ? '⚡ CHẶNG 6 • KHO TIỆN ÍCH GỌN NHẸ' : '📚 CHẶNG 6 • THƯ VIỆN PDF & SHOP NITRO',
+        title: isMob
+          ? 'Mọi Công Cụ Nâng Cao Đều Gom Gọn Trong "⚡ Tiện Ích"'
+          : 'Kho Thư Viện PDF Pro, Shop Nitro & Công Cụ Mở Rộng',
+        body: isMob
+          ? `Để màn hình chính luôn gọn thoáng không bị rối, toàn bộ tiện ích phụ như <b>Thư Viện PDF (${stats.docsCount}+ Ebook)</b>, <b>Thư Viện Công Khai</b>, <b>BXH</b>, <b>Shop Khung Nitro</b>, <b>Flashcards 3D</b>, <b>Pomodoro</b> & <b>Góp ý Admin</b> đều cất gọn trong nút này!`
+          : `Bên thanh menu trái còn có <b>📚 Thư Viện PDF Pro (${stats.docsCount}+ Ebook)</b>, <b>📖 Thư Viện Công Khai</b>, <b>🃏 Flashcards 3D</b> và mục <b>🛍️ Cửa Hàng Khung Avatar Nitro</b>. Bạn có thể bấm nút thu gọn menu trên góc trái bất cứ lúc nào.`,
+        tip: '✨ Muốn xem lại hướng dẫn này bất kỳ lúc nào? Bấm biểu tượng 🎮 trên thanh trên cùng!',
+        xp: 100
+      },
+      {
+        id: 'finish',
+        tab: 'home',
+        selector: null,
+        isFinish: true,
+        badge: '🏆 NHIỆM VỤ TÂN THỦ HOÀN TẤT • 100%',
+        title: 'Xuất Sắc! Bạn Đã Mở Khóa Bản Đồ HỌC CÙNG PHÚC K9!',
+        body: `Từ giờ nhìn web là thấy rõ đường đi nước bước ngay. Hãy chọn <b>1 hành động đầu tiên</b> bên dưới để bắt đầu hành trình 9+ ngay hôm nay nhé!`,
+        tip: '🎉 Huy hiệu Tân Thủ đã kích hoạt — Chúc bạn học thật mượt và bứt phá điểm số!',
+        xp: 100
+      }
+    ];
+  }
 
-    box.innerHTML = isMember ? `
-      <div class="pk9-onboard-head member">
-        <div>
-          <div class="pk9-onboard-kicker">🎉 CHÀO MỪNG THÀNH VIÊN CHÍNH THỨC • HỌC CÙNG PHÚC K9</div>
-          <h3 style="margin:0.2rem 0 0;font-size:1.2rem;font-weight:900;">Hành Trang Tân Binh Cho ${uname}</h3>
-        </div>
-        <button type="button" class="pk9-icon-btn" data-close-onboarding="1" aria-label="Đóng">✕</button>
+  function findVisibleTutorialTarget(step) {
+    if (!step) return null;
+    const candidates = [step.selector, step.fallbackSelector].filter(Boolean);
+    for (const sel of candidates) {
+      const nodes = document.querySelectorAll(sel);
+      for (const el of nodes) {
+        const rect = el.getBoundingClientRect();
+        const st = window.getComputedStyle(el);
+        if (st.display !== 'none' && st.visibility !== 'hidden' && rect.width > 4 && rect.height > 4) {
+          return el;
+        }
+      }
+    }
+    return null;
+  }
+
+  function isElementFixedOrSticky(el) {
+    let cur = el;
+    while (cur && cur !== document.body && cur !== document.documentElement) {
+      const pos = window.getComputedStyle(cur).position;
+      if (pos === 'fixed' || pos === 'sticky') return true;
+      cur = cur.parentElement;
+    }
+    return false;
+  }
+
+  function positionGameTutorialSpotlight() {
+    if (!GAME_TUTORIAL.open) return;
+    const root = document.getElementById('pk9-game-tutorial-root');
+    if (!root) return;
+    const spotlight = root.querySelector('.pk9-gt-spotlight');
+    const dialog = root.querySelector('.pk9-gt-dialog');
+    const backdrop = root.querySelector('.pk9-gt-full-backdrop');
+    const arrow = root.querySelector('.pk9-gt-arrow');
+    const step = GAME_TUTORIAL.steps[GAME_TUTORIAL.stepIdx];
+    const target = findVisibleTutorialTarget(step);
+    GAME_TUTORIAL.targetEl = target;
+
+    const vw = window.innerWidth || 390;
+    const vh = window.innerHeight || 800;
+
+    if (!target) {
+      if (spotlight) spotlight.style.display = 'none';
+      if (backdrop) backdrop.style.display = 'block';
+      if (dialog) {
+        dialog.classList.remove('dock-top', 'dock-bottom');
+        dialog.classList.add('dock-center');
+      }
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const pad = 6;
+    const left = Math.max(4, rect.left - pad);
+    const top = Math.max(4, rect.top - pad);
+    const width = Math.min(vw - left - 4, rect.width + pad * 2);
+    const height = Math.min(vh - top - 4, rect.height + pad * 2);
+
+    if (backdrop) backdrop.style.display = 'none';
+    if (spotlight) {
+      spotlight.style.display = 'block';
+      spotlight.style.left = `${Math.round(left)}px`;
+      spotlight.style.top = `${Math.round(top)}px`;
+      spotlight.style.width = `${Math.round(Math.max(28, width))}px`;
+      spotlight.style.height = `${Math.round(Math.max(28, height))}px`;
+    }
+
+    const centerY = top + height / 2;
+    const targetIsLower = centerY > vh * 0.5;
+    if (dialog) {
+      dialog.classList.remove('dock-center', 'dock-top', 'dock-bottom');
+      dialog.classList.add(targetIsLower ? 'dock-top' : 'dock-bottom');
+    }
+    if (arrow) {
+      arrow.classList.toggle('is-above', targetIsLower);
+      arrow.classList.toggle('is-below', !targetIsLower);
+      arrow.textContent = targetIsLower ? '👇 ĐÂY NÈ!' : '👆 ĐÂY NÈ!';
+    }
+  }
+
+  function renderGameTutorialStep() {
+    const root = document.getElementById('pk9-game-tutorial-root');
+    if (!root || !GAME_TUTORIAL.open) return;
+
+    const step = GAME_TUTORIAL.steps[GAME_TUTORIAL.stepIdx];
+    if (!step) return closeGameTutorial();
+
+    // Ensure overlays/sheets aren't blocking view
+    document.getElementById('pk9-mob-hub-sheet')?.classList.remove('open');
+    document.getElementById('pk9-mob-hub-btn')?.classList.remove('active');
+    document.getElementById('pk9-sidebar')?.classList.remove('mobile-open');
+    document.getElementById('pk9-sidebar-backdrop')?.classList.remove('open');
+
+    // Switch tab smoothly if required by this step
+    if (step.tab && APP.activeTab !== step.tab) {
+      switchTab(step.tab, { force: true, keepScroll: true });
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    const total = GAME_TUTORIAL.steps.length;
+    const idx = GAME_TUTORIAL.stepIdx;
+    const isMember = GAME_TUTORIAL.mode === 'member';
+    const pct = Math.max(12, Math.round(((idx + 1) / total) * 100));
+
+    root.innerHTML = `
+      <div class="pk9-gt-full-backdrop" data-gt-backdrop="1"></div>
+      <div class="pk9-gt-spotlight" style="display:none;" data-gt-next="1" title="Bấm để qua bước tiếp theo">
+        <span class="pk9-gt-pulse"></span>
+        <span class="pk9-gt-arrow">👆 ĐÂY NÈ!</span>
       </div>
-      <div style="font-size:0.84rem;color:var(--pk9-text-muted);margin:0.65rem 0 0.85rem;line-height:1.5;">
-        Tài khoản của bạn đã mở khóa toàn bộ <b>BXH Tuần, Ví Vàng/Kim Cương, Cửa Hàng Khung Avatar Nitro Discord & Lưu tiến độ đồng bộ</b>. Dưới đây là 4 bước dùng web hiệu quả nhất:
-      </div>
-      <div class="pk9-onboard-steps">
-        <div class="pk9-onboard-step">
-          <span class="pk9-step-num">1</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Chọn đúng Thầy/Cô & Video Bài Giảng (${stats.topicsCount.toLocaleString('vi-VN')}+ bài)</strong>
-            <div>Bấm nút Phát thương hiệu <b>HỌC CÙNG PHÚC K9</b> trên khung video để học nhanh không lag, tải PDF & ghi chú mốc giây ngay bên dưới.</div>
-            <button type="button" class="pk9-admin-btn-xs primary" data-nav-tab="lectures" data-close-onboarding="1" style="margin-top:0.35rem;">🎬 Vào Phòng Video ngay</button>
+      <div class="pk9-gt-dialog dock-center ${step.isFinish ? 'is-finish' : ''}">
+        <div class="pk9-gt-top-strip">
+          <div class="pk9-gt-quest-badge">${step.badge}</div>
+          <div class="pk9-gt-top-right">
+            <span class="pk9-gt-step-pill">${idx + 1}/${total}</span>
+            <button type="button" class="pk9-gt-skip-btn" data-gt-close="1" aria-label="Đóng hướng dẫn">✕ Bỏ qua</button>
           </div>
         </div>
-        <div class="pk9-onboard-step">
-          <span class="pk9-step-num">2</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Điểm danh 24h & Giải đề nhận XP đua Top Tuần</strong>
-            <div>Mỗi ngày điểm danh nhận Vàng, làm bài trong <b>Kho Luyện Đề (${stats.interactiveExamCount} đề + ${stats.sourceExamCount}+ đề gốc)</b> để tích XP lên Bảng Vàng.</div>
-            <button type="button" class="pk9-admin-btn-xs" data-nav-tab="exams" data-close-onboarding="1" style="margin-top:0.35rem;">🏛️ Vào Kho Luyện Đề</button>
+
+        <div class="pk9-gt-xp-wrap">
+          <div class="pk9-gt-xp-bar"><div class="pk9-gt-xp-fill" style="width:${pct}%;"></div></div>
+          <span class="pk9-gt-xp-label">⚡ +${step.xp} XP</span>
+        </div>
+
+        <div class="pk9-gt-character-row">
+          <div class="pk9-gt-avatar-wrap">
+            <img src="/assets/logo-phuc-k9.png?v=2026" alt="Phúc K9 Guide" class="pk9-gt-avatar" />
+            <span class="pk9-gt-lv-tag">LV.99</span>
+          </div>
+          <div class="pk9-gt-speech">
+            <div class="pk9-gt-npc-name">🧭 TRỢ LÝ PHÚC K9 GUIDE</div>
+            <h3 class="pk9-gt-title">${step.title}</h3>
+            <p class="pk9-gt-body">${step.body}</p>
           </div>
         </div>
-        <div class="pk9-onboard-step">
-          <span class="pk9-step-num">3</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Đeo Khung Viền Avatar Nitro Discord & Hào Quang 3D</strong>
-            <div>Vào Siêu Thị 3D để thử miễn phí các khung động kiểu Discord Nitro (<i>Hoa Anh Đào, Tai Mèo Neon, Glitch, Sao Thổ, Hắc Hỏa</i>) lên avatar của bạn!</div>
-            <button type="button" class="pk9-admin-btn-xs" data-nav-tab="shop" data-close-onboarding="1" style="margin-top:0.35rem;">🛍️ Mở Shop &amp; Khung Nitro</button>
+
+        ${Array.isArray(step.roadmap) ? `
+          <div class="pk9-gt-roadmap-grid">
+            ${step.roadmap.map(r => `
+              <div class="pk9-gt-roadmap-item">
+                <span class="pk9-gt-rm-ico">${r.icon}</span>
+                <strong>${r.label}</strong>
+                <small>${r.sub}</small>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${step.quickAuth ? `
+          <div class="pk9-gt-quick-acts">
+            <button type="button" class="pk9-gt-mini-cta primary" data-gt-finish-auth="register">🚀 Đăng Ký Ngay (+100 XP)</button>
+            <button type="button" class="pk9-gt-mini-cta" data-gt-finish-auth="login">🔑 Đăng Nhập</button>
+          </div>
+        ` : ''}
+
+        ${step.isFinish ? `
+          <div class="pk9-gt-finish-grid">
+            <button type="button" class="pk9-gt-finish-btn primary" data-gt-finish-tab="lectures">🎬 Học Video Đầu Tiên</button>
+            <button type="button" class="pk9-gt-finish-btn" data-gt-finish-tab="exams">🏛️ Làm 1 Đề Thi Ngay</button>
+            <button type="button" class="pk9-gt-finish-btn" data-gt-finish-camera="1">📸 Chụp Ảnh Hỏi AI</button>
+            <button type="button" class="pk9-gt-finish-btn" data-gt-finish-tab="docs">📚 Mở Thư Viện PDF</button>
+            ${!APP.user ? `<button type="button" class="pk9-gt-finish-btn gold" data-gt-finish-auth="register" style="grid-column:1 / -1;">🚀 Đăng Ký Tài Khoản Miễn Phí (+100 XP &amp; Khung Nitro)</button>` : ''}
+          </div>
+        ` : ''}
+
+        ${step.tip ? `<div class="pk9-gt-tip">${step.tip}</div>` : ''}
+
+        <div class="pk9-gt-footer">
+          <button type="button" class="pk9-gt-mode-btn" data-gt-mode="${isMember ? 'guest' : 'member'}">
+            ${isMember ? '👀 Xem bản Khách' : '🛡️ Xem bản Thành viên'}
+          </button>
+          <div class="pk9-gt-nav-btns">
+            ${idx > 0 ? `<button type="button" class="pk9-gt-btn ghost" data-gt-prev="1">← Trước</button>` : ''}
+            ${step.isFinish ? `
+              <button type="button" class="pk9-gt-btn primary" data-gt-close="1">🏆 Vào Học Ngay!</button>
+            ` : `
+              <button type="button" class="pk9-gt-btn primary" data-gt-next="1">
+                ${idx === 0 ? '▶ Bắt Đầu Tour →' : (idx === total - 2 ? '🎉 Tổng Kết →' : 'Tiếp tục →')}
+              </button>
+            `}
           </div>
         </div>
-        <div class="pk9-onboard-step">
-          <span class="pk9-step-num">4</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Lấy Thẻ Học Viên QR &amp; Sổ Câu Sai tự động</strong>
-            <div>Mở Thẻ QR cá nhân để lưu ảnh thành tích hoặc dùng <b>Gia Sư AI 24/7</b> giải bài mọi lúc.</div>
-            <button type="button" class="pk9-admin-btn-xs" data-nav-tab="idcard" data-close-onboarding="1" style="margin-top:0.35rem;">🪪 Xem Thẻ Học Viên QR</button>
-          </div>
-        </div>
-      </div>
-      <div class="pk9-onboard-foot">
-        <button type="button" class="pk9-btn-exam-ghost" data-switch-onboard-mode="guest" style="font-size:0.78rem;">👀 Xem hướng dẫn Khách</button>
-        <button type="button" class="pk9-btn-exam-primary" data-close-onboarding="1" style="padding:0.55rem 1.25rem;">✅ Bắt Đầu Học Ngay!</button>
-      </div>
-    ` : `
-      <div class="pk9-onboard-head guest">
-        <div>
-          <div class="pk9-onboard-kicker">👋 LẦN ĐẦU TỚI HỌC CÙNG PHÚC K9 • HƯỚNG DẪN NHANH</div>
-          <h3 style="margin:0.2rem 0 0;font-size:1.2rem;font-weight:900;">Bứt Phá Điểm Số Trong 3 Bước Dễ Hiểu</h3>
-        </div>
-        <button type="button" class="pk9-icon-btn" data-close-onboarding="1" aria-label="Đóng">✕</button>
-      </div>
-      <div style="font-size:0.84rem;color:var(--pk9-text-muted);margin:0.65rem 0 0.85rem;line-height:1.5;">
-        Bạn đang dùng chế độ <b>Khách (Miễn phí 100%)</b> — hoàn toàn có thể học thử bài giảng, bấm Casio làm đề thi Sở/Bộ ngay mà chưa cần đăng ký. Tuy nhiên để lưu tiến độ &amp; mở khóa BXH, hãy tạo tài khoản 10 giây!
-      </div>
-      <div class="pk9-onboard-steps">
-        <div class="pk9-onboard-step">
-          <span class="pk9-step-num">1</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Chọn Khối → Môn → Thầy/Cô bạn muốn học</strong>
-            <div>Vào mục <b>Video Bài Giảng (${stats.topicsCount.toLocaleString('vi-VN')}+ bài)</b>, bấm nút Phát mang logo Phúc K9 để xem bài + đọc/tải PDF kèm theo.</div>
-            <button type="button" class="pk9-admin-btn-xs" data-nav-tab="lectures" data-close-onboarding="1" style="margin-top:0.35rem;">🎬 Xem Thử Video Ngay</button>
-          </div>
-        </div>
-        <div class="pk9-onboard-step">
-          <span class="pk9-step-num">2</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Thử ngay Kho Luyện Đề 3 Phần &amp; Thử Thách 1 Câu Hôm Nay</strong>
-            <div>Hệ thống chấm điểm tự động chuẩn 2018 (Trắc nghiệm, Đúng-Sai, Trả lời ngắn), có sẵn máy tính Casio &amp; bảng nháp.</div>
-            <button type="button" class="pk9-admin-btn-xs" data-nav-tab="exams" data-close-onboarding="1" style="margin-top:0.35rem;">🏛️ Làm Đề Thử Ngay</button>
-          </div>
-        </div>
-        <div class="pk9-onboard-step highlight">
-          <span class="pk9-step-num">3</span>
-          <div style="min-width:0;flex:1;">
-            <strong>Đăng Ký / Đăng Nhập để mở toàn bộ quyền lợi Thành viên (+100 XP)</strong>
-            <div>Lưu tiến độ vĩnh viễn, đua Top BXH Tuần, nhận Vàng mở <b>Khung Avatar kiểu Discord Nitro</b> &amp; tạo <b>Thẻ Học Viên QR</b>!</div>
-            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.42rem;">
-              <button type="button" class="pk9-btn-exam-primary" data-close-onboarding="1" data-open-auth="register" style="padding:0.42rem 0.9rem;font-size:0.78rem;">🚀 Đăng Ký Miễn Phí (+100 XP)</button>
-              <button type="button" class="pk9-btn-exam-ghost" data-close-onboarding="1" data-open-auth="login" style="padding:0.42rem 0.78rem;font-size:0.78rem;">🔑 Đăng Nhập</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pk9-onboard-foot">
-        <button type="button" class="pk9-btn-exam-ghost" data-switch-onboard-mode="member" style="font-size:0.78rem;">🛡️ Xem trước giao diện sau khi Đăng nhập</button>
-        <button type="button" class="pk9-btn-exam-ghost" data-close-onboarding="1" style="font-size:0.8rem;">👀 Tiếp tục xem dạng Khách</button>
       </div>
     `;
-    ov.classList.add('open');
+
+    clearTimeout(GAME_TUTORIAL.repositionTimer);
+    GAME_TUTORIAL.repositionTimer = setTimeout(() => {
+      if (!GAME_TUTORIAL.open) return;
+      const target = findVisibleTutorialTarget(step);
+      if (target && !isElementFixedOrSticky(target)) {
+        const rect = target.getBoundingClientRect();
+        const vh = window.innerHeight || 800;
+        if (rect.top < 72 || rect.bottom > vh - 96) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(positionGameTutorialSpotlight, 320);
+        }
+      }
+      positionGameTutorialSpotlight();
+    }, 90);
+  }
+
+  function closeGameTutorial(opts = {}) {
+    const root = document.getElementById('pk9-game-tutorial-root');
+    GAME_TUTORIAL.open = false;
+    GAME_TUTORIAL.targetEl = null;
+    clearTimeout(GAME_TUTORIAL.repositionTimer);
+    if (GAME_TUTORIAL.boundResize) {
+      window.removeEventListener('resize', GAME_TUTORIAL.boundResize);
+      window.removeEventListener('scroll', GAME_TUTORIAL.boundResize, true);
+      GAME_TUTORIAL.boundResize = null;
+    }
+    if (GAME_TUTORIAL.boundKey) {
+      document.removeEventListener('keydown', GAME_TUTORIAL.boundKey);
+      GAME_TUTORIAL.boundKey = null;
+    }
+    if (root) {
+      root.classList.remove('open');
+      root.setAttribute('aria-hidden', 'true');
+      root.innerHTML = '';
+    }
+    markGameTutorialSeen(GAME_TUTORIAL.mode);
+    syncMobileScrollLock();
+    if (opts.celebrate) {
+      toast('🏆 Hoàn thành Nhiệm Vụ Tân Thủ! Chúc bạn học thật mượt!', 'success');
+    }
+  }
+
+  function openGameTutorial(mode = 'auto', startStep = 0) {
+    const root = document.getElementById('pk9-game-tutorial-root');
+    if (!root) return;
+    const isMember = mode === 'member' ? true : (mode === 'guest' ? false : Boolean(APP.user));
+    const isMob = window.innerWidth <= 1024;
+    GAME_TUTORIAL.mode = isMember ? 'member' : 'guest';
+    GAME_TUTORIAL.steps = buildGameTutorialSteps(isMember, isMob);
+    GAME_TUTORIAL.stepIdx = Math.max(0, Math.min(startStep, GAME_TUTORIAL.steps.length - 1));
+    GAME_TUTORIAL.open = true;
+
+    root.classList.add('open');
+    root.setAttribute('aria-hidden', 'false');
+
+    if (!GAME_TUTORIAL.boundResize) {
+      GAME_TUTORIAL.boundResize = () => {
+        if (!GAME_TUTORIAL.open) return;
+        const nowMob = window.innerWidth <= 1024;
+        GAME_TUTORIAL.steps = buildGameTutorialSteps(GAME_TUTORIAL.mode === 'member', nowMob);
+        positionGameTutorialSpotlight();
+      };
+      window.addEventListener('resize', GAME_TUTORIAL.boundResize, { passive: true });
+      window.addEventListener('scroll', GAME_TUTORIAL.boundResize, { passive: true, capture: true });
+    }
+    if (!GAME_TUTORIAL.boundKey) {
+      GAME_TUTORIAL.boundKey = (ev) => {
+        if (!GAME_TUTORIAL.open) return;
+        if (ev.key === 'Escape') {
+          ev.preventDefault();
+          closeGameTutorial();
+        } else if (ev.key === 'ArrowRight') {
+          ev.preventDefault();
+          if (GAME_TUTORIAL.stepIdx < GAME_TUTORIAL.steps.length - 1) {
+            GAME_TUTORIAL.stepIdx++;
+            renderGameTutorialStep();
+          } else {
+            closeGameTutorial({ celebrate: true });
+          }
+        } else if (ev.key === 'ArrowLeft') {
+          ev.preventDefault();
+          if (GAME_TUTORIAL.stepIdx > 0) {
+            GAME_TUTORIAL.stepIdx--;
+            renderGameTutorialStep();
+          }
+        }
+      };
+      document.addEventListener('keydown', GAME_TUTORIAL.boundKey);
+    }
+
+    syncMobileScrollLock();
+    renderGameTutorialStep();
+  }
+
+  function closeOnboardingModal() {
+    closeGameTutorial();
+    const ov = document.getElementById('pk9-onboarding-modal');
+    if (ov) ov.classList.remove('open');
+  }
+
+  function openOnboardingModal(mode = 'auto') {
+    openGameTutorial(mode, 0);
   }
 
   function renderHomeTab() {
@@ -1469,57 +1793,69 @@
       ? 'Nắm chắc toàn bộ nền tảng trọng tâm + luyện thuần thục Phần II Đúng/Sai để không mất điểm oan.'
       : 'Học bài nền tảng cốt lõi từng chương, bấm xem video từng bước & ôn Flashcard công thức hằng ngày.';
 
-    const unameMob = esc(APP.user?.display_name || APP.user?.username || 'Bạn học mới');
+    const unameMob = esc(APP.user?.display_name || APP.user?.username || 'Tân Thủ');
     root.innerHTML = `
       <!-- DISTINCT MOBILE APP HOME INTERFACE (VISIBLE <= 768px) -->
       <section class="pk9-mob-only-home">
         <div class="pk9-mob-app-card">
           <div class="pk9-mob-app-top">
-            <div style="display:flex;align-items:center;gap:0.65rem;min-width:0;">
-              <img src="/assets/logo-phuc-k9.png?v=2026" alt="Phúc K9" style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.14);padding:3px;flex-shrink:0;" />
+            <div style="display:flex;align-items:center;gap:0.62rem;min-width:0;">
+              <img src="/assets/logo-phuc-k9.png?v=2026" alt="Phúc K9" style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,0.14);padding:3px;flex-shrink:0;" />
               <div style="min-width:0;">
-                <div style="font-size:0.68rem;font-weight:900;color:#fde047;letter-spacing:0.04em;">MOBILE APP • HỌC CÙNG PHÚC K9</div>
-                <div style="font-size:1.05rem;font-weight:900;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chào ${unameMob} 👋</div>
+                <div style="font-size:0.64rem;font-weight:900;color:#fde047;letter-spacing:0.05em;">HỌC CÙNG PHÚC K9 • MOBILE</div>
+                <div style="font-size:1.02rem;font-weight:900;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chào ${unameMob} 👋</div>
               </div>
             </div>
-            <button type="button" class="pk9-mob-guide-pill" data-open-onboarding="auto">❓ Tân thủ</button>
+            <button type="button" class="pk9-mob-guide-pill" data-open-onboarding="auto">🎮 Hướng dẫn</button>
           </div>
           <div class="pk9-mob-kpi-row">
             <div class="pk9-mob-kpi-pill"><b>${stats.coursesCount}</b><span>Khóa</span></div>
             <div class="pk9-mob-kpi-pill"><b>${totalTopics.toLocaleString('vi-VN')}+</b><span>Video/PDF</span></div>
-            <div class="pk9-mob-kpi-pill"><b>${stats.interactiveExamCount}+</b><span>Đề 3 phần</span></div>
+            <div class="pk9-mob-kpi-pill"><b>${stats.interactiveExamCount}+</b><span>Đề thi</span></div>
             <div class="pk9-mob-kpi-pill"><b>${APP.user ? `${doneTotal} bài` : `${stats.daysToExam}đ`}</b><span>${APP.user ? 'Đã xong' : 'THPT'}</span></div>
           </div>
           <div class="pk9-mob-action-deck">
-            <button type="button" class="pk9-mob-action-card cam" data-open-camera-ai="1">
-              <span class="pk9-mob-act-ico">📸</span>
-              <div>
-                <strong>Chụp Giải Bài AI</strong>
-                <small>Camera quét đề Toán/Lí/Hóa</small>
-              </div>
-            </button>
             <button type="button" class="pk9-mob-action-card video" data-nav-tab="lectures">
               <span class="pk9-mob-act-ico">🎬</span>
               <div>
-                <strong>Phòng Video HD</strong>
-                <small>Xem theo từng Thầy/Cô</small>
+                <strong>Học Video &amp; PDF</strong>
+                <small>Chọn Môn • Thầy/Cô</small>
               </div>
             </button>
             <button type="button" class="pk9-mob-action-card exam" data-nav-tab="exams">
               <span class="pk9-mob-act-ico">🏛️</span>
               <div>
-                <strong>Luyện Đề Sở/Bộ</strong>
+                <strong>Luyện Đề Thi</strong>
                 <small>Chấm tự động + Casio</small>
               </div>
             </button>
-            <button type="button" class="pk9-mob-action-card lib" data-nav-tab="khoa-chui">
-              <span class="pk9-mob-act-ico">📖</span>
+            <button type="button" class="pk9-mob-action-card cam" data-open-camera-ai="1">
+              <span class="pk9-mob-act-ico">📸</span>
               <div>
-                <strong>Thư Viện Công Khai</strong>
-                <small>Link Sheet &amp; PDF gốc</small>
+                <strong>Chụp Giải Bài AI</strong>
+                <small>Quét ảnh đề tức thì</small>
+              </div>
+            </button>
+            <button type="button" class="pk9-mob-action-card lib" data-nav-tab="docs">
+              <span class="pk9-mob-act-ico">📚</span>
+              <div>
+                <strong>Kho Ebook PDF</strong>
+                <small>${stats.docsCount}+ đề &amp; sổ tay gốc</small>
               </div>
             </button>
           </div>
+        </div>
+
+        <!-- NEW USER ANTI-CLUTTER 3-STEP LAUNCHPAD ON MOBILE -->
+        <div class="pk9-mob-start-guide-strip">
+          <div class="pk9-mob-sg-left">
+            <span class="pk9-mob-sg-badge">🧭 MỚI VÀO?</span>
+            <div class="pk9-mob-sg-txt">
+              <strong>Bắt đầu gọn trong 3 bước</strong>
+              <span>Video → Luyện đề → Chụp AI</span>
+            </div>
+          </div>
+          <button type="button" class="pk9-mob-sg-btn" data-open-onboarding="auto">▶ Xem Tour Game</button>
         </div>
       </section>
 
@@ -1705,7 +2041,7 @@
       ` : ''}
 
       <!-- BANNER TRUY CẬP THẲNG THƯ VIỆN CÔNG KHAI TRONG WEB -->
-      <div class="pk9-card" style="margin-bottom:1.25rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.85rem;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(37,99,235,0.12));border:1.5px solid rgba(16,185,129,0.38);">
+      <div class="pk9-card pk9-mob-hide-dup" style="margin-bottom:1.25rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.85rem;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(37,99,235,0.12));border:1.5px solid rgba(16,185,129,0.38);">
         <div style="flex:1 1 min(100%, 220px);min-width:0;">
           <div style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.73rem;font-weight:900;color:#0d9488;text-transform:uppercase;margin-bottom:0.2rem;">
             <span class="pk9-live-dot"></span> TỔNG HỢP CÔNG KHAI • GHI RÕ NGUỒN GIẢNG VIÊN
@@ -2049,37 +2385,49 @@
     return `
       <div class="pk9-video-pdf-bar">
         <div class="pk9-pdf-bar-head">
-          <span>📚 TÀI LIỆU PDF BÀI GIẢNG KÈM DƯỚI VIDEO (${items.length} file)</span>
-          <span style="font-weight:700;color:var(--pk9-text-muted);font-size:0.73rem;">Đọc ngay dưới video hoặc phóng to toàn màn hình</span>
+          <span>📚 TÀI LIỆU PDF BÀI GIẢNG (${items.length} file)</span>
+          <span class="pk9-pdf-bar-hint">Đọc toàn màn hình hoặc xem ngay dưới video</span>
         </div>
-        <div class="pk9-pdf-chip-row">
+        <div class="pk9-pdf-cards-stack">
           ${items.map((it, idx) => {
             const isOpen = activePreviewUrl === it.url;
             const dlUrl = toDirectDownloadUrl(it.url);
+            const fullTitle = `${topic.title} — ${it.label}`;
             return `
-              <button type="button"
-                class="pk9-pdf-action-btn ${isOpen ? 'primary' : ''}"
-                data-toggle-inline-pdf="${esc(it.url)}"
-                data-inline-pdf-title="${esc(`${topic.title} — ${it.label}`)}"
-              >
-                ${it.icon} ${isOpen ? `🔽 Đang mở: ${esc(it.label)}` : `📖 Đọc tại chỗ: ${esc(it.label)}`}
-              </button>
-              <button type="button"
-                class="pk9-pdf-action-btn"
-                data-open-inapp-url="${esc(it.url)}"
-                data-open-inapp-title="${esc(`${topic.title} — ${it.label}`)}"
-                data-open-inapp-sub="Tài liệu PDF kèm video • Học Cùng Phúc K9"
-              >
-                🔍 Phóng to #${idx + 1}
-              </button>
-              ${dlUrl ? `
-                <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-pdf-action-btn" title="Tải trực tiếp file PDF về điện thoại hoặc máy tính">
-                  ⬇️ Tải PDF
-                </a>
-              ` : ''}
-              <a href="${esc(it.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn">
-                ↗️ Mở Drive
-              </a>
+              <div class="pk9-pdf-item-card ${isOpen ? 'is-open' : ''}">
+                <div class="pk9-pdf-item-info">
+                  <span class="pk9-pdf-item-ico">${it.icon}</span>
+                  <div class="pk9-pdf-item-text">
+                    <strong>${esc(it.label)}</strong>
+                    <span>PDF #${idx + 1} • Học Cùng Phúc K9</span>
+                  </div>
+                </div>
+                <div class="pk9-pdf-item-actions">
+                  <button type="button"
+                    class="pk9-pdf-action-btn primary"
+                    data-open-inapp-url="${esc(it.url)}"
+                    data-open-inapp-title="${esc(fullTitle)}"
+                    data-open-inapp-sub="Tài liệu PDF kèm video • Học Cùng Phúc K9"
+                  >
+                    🔍 Toàn màn hình
+                  </button>
+                  <button type="button"
+                    class="pk9-pdf-action-btn ${isOpen ? 'active-inline' : ''}"
+                    data-toggle-inline-pdf="${esc(it.url)}"
+                    data-inline-pdf-title="${esc(fullTitle)}"
+                  >
+                    ${isOpen ? '🔽 Ẩn khung xem' : '📖 Đọc tại chỗ'}
+                  </button>
+                  ${dlUrl ? `
+                    <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-pdf-action-btn" title="Tải trực tiếp file PDF về máy">
+                      ⬇️ Tải PDF
+                    </a>
+                  ` : ''}
+                  <a href="${esc(it.url)}" target="_blank" rel="noopener" class="pk9-pdf-action-btn" title="Mở liên kết gốc">
+                    ↗️ Drive
+                  </a>
+                </div>
+              </div>
             `;
           }).join('')}
         </div>
@@ -2088,16 +2436,16 @@
             <div class="pk9-pdf-brand-bar">
               <div class="pk9-brand-bar-left">
                 <img src="/assets/phuc-k9-favicon.png" alt="Logo Phúc K9" class="pk9-brand-crest-img" />
-                <div style="min-width:0;flex:1;">
-                  <div class="pk9-brand-pill-tag">HỌC CÙNG PHÚC K9 • TÀI LIỆU PDF ĐỘC QUYỀN</div>
-                  <div style="font-size:0.75rem;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}</div>
+                <div class="pk9-pdf-brand-text">
+                  <div class="pk9-brand-pill-tag">HỌC CÙNG PHÚC K9 • PDF</div>
+                  <div class="pk9-pdf-brand-sub">${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}</div>
                 </div>
               </div>
               <div class="pk9-brand-bar-actions">
-                <button type="button" class="pk9-brand-mini-btn" data-open-inapp-url="${esc(activePreviewUrl)}" data-open-inapp-title="${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}" data-open-inapp-sub="Tài liệu PDF chính thức • Học Cùng Phúc K9">🔍 Phóng to</button>
-                <button type="button" class="pk9-brand-mini-btn" data-reload-inline-pdf="1">🔄 Tải lại</button>
-                ${toDirectDownloadUrl(activePreviewUrl) ? `<a href="${esc(toDirectDownloadUrl(activePreviewUrl))}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn">⬇️ Tải PDF</a>` : ''}
-                <button type="button" class="pk9-brand-mini-btn" data-close-inline-pdf="1" style="border-color:rgba(248,113,113,0.45);color:#fca5a5;">✕ Thu gọn</button>
+                <button type="button" class="pk9-brand-mini-btn accent" data-open-inapp-url="${esc(activePreviewUrl)}" data-open-inapp-title="${esc(APP.inlinePdfTitle || 'Tài liệu PDF bài giảng')}" data-open-inapp-sub="Tài liệu PDF chính thức • Học Cùng Phúc K9">🔍 <span class="pk9-hide-mob-768">Phóng to</span><span class="pk9-show-mob-768">Full</span></button>
+                <button type="button" class="pk9-brand-mini-btn" data-reload-inline-pdf="1" aria-label="Tải lại PDF">🔄</button>
+                ${toDirectDownloadUrl(activePreviewUrl) ? `<a href="${esc(toDirectDownloadUrl(activePreviewUrl))}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn" aria-label="Tải PDF">⬇️</a>` : ''}
+                <button type="button" class="pk9-brand-mini-btn close" data-close-inline-pdf="1" aria-label="Thu gọn PDF">✕</button>
               </div>
             </div>
             <div class="pk9-inline-pdf-frame-inner">
@@ -2109,7 +2457,7 @@
               ></iframe>
               <div class="pk9-player-watermark is-pdf" aria-hidden="true">
                 <img src="/assets/phuc-k9-favicon.png" alt="" />
-                <span>HỌC CÙNG PHÚC K9 • PDF</span>
+                <span>PHÚC K9 • PDF</span>
               </div>
             </div>
           </div>
@@ -3459,6 +3807,8 @@
     }
     ov.classList.remove('open');
     ov.innerHTML = '';
+    APP._inAppViewerState = null;
+    syncMobileScrollLock();
 
     const sus = APP._suspendedLectureVideo;
     if (sus) {
@@ -3486,7 +3836,7 @@
   }
 
   // ==========================================================================
-  // IN-APP VIEWER MODAL (XEM TÀI LIỆU / VIDEO / KHÓA HỌC THẲNG TRONG WEB)
+  // IN-APP VIEWER MODAL (XEM PDF / TÀI LIỆU / VIDEO CHUẨN MOBILE & PC)
   // ==========================================================================
   function openInAppViewer(title, rawUrl, subTitle = '') {
     let overlay = document.getElementById('pk9-inapp-viewer-overlay');
@@ -3497,19 +3847,55 @@
       document.body.appendChild(overlay);
     }
 
-    let embedUrl = String(rawUrl || '').trim();
+    const rawTrimmed = String(rawUrl || '').trim();
+    let embedUrl = rawTrimmed;
     let isYtModal = false;
+    let isSheetModal = false;
+    let isDirectPdf = false;
+    let isExternalBlockedWeb = false;
+    let externalHostLabel = '';
+    let nativePdfUrl = '';
+    let gviewPdfUrl = '';
+    let activeEngine = 'native';
+
     const ytId = extractYtId(embedUrl);
     if (ytId) {
       isYtModal = true;
       embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1&autoplay=1`;
     } else if (embedUrl.includes('docs.google.com/spreadsheets/d/')) {
+      isSheetModal = true;
       const m = embedUrl.match(/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
       const gidMatch = embedUrl.match(/gid=([0-9]+)/);
       const gid = gidMatch ? gidMatch[1] : '662446747';
       if (m) embedUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/htmlview?gid=${gid}&widget=true&headers=false`;
     } else if (embedUrl.includes('drive.google.com/') || embedUrl.includes('docs.google.com/')) {
       embedUrl = toDrivePreviewUrl(embedUrl);
+    } else if (/\.pdf($|[?#])/i.test(embedUrl)) {
+      isDirectPdf = true;
+      const absUrl = /^https?:\/\//i.test(embedUrl)
+        ? embedUrl
+        : `${window.location.origin}${embedUrl.startsWith('/') ? '' : '/'}${embedUrl}`;
+      const isPublicHttps = /^https:\/\//i.test(absUrl) && !/localhost|127\.0\.0\.1/i.test(absUrl);
+      nativePdfUrl = embedUrl.includes('#') ? embedUrl : `${embedUrl}#view=FitH&navpanes=0`;
+      if (isPublicHttps) {
+        gviewPdfUrl = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(absUrl)}`;
+        if (window.innerWidth <= 768) {
+          activeEngine = 'gview';
+          embedUrl = gviewPdfUrl;
+        } else {
+          embedUrl = nativePdfUrl;
+        }
+      } else {
+        embedUrl = nativePdfUrl;
+      }
+    } else if (/^https?:\/\//i.test(embedUrl)) {
+      try {
+        const parsed = new URL(embedUrl);
+        if (parsed.origin !== window.location.origin) {
+          isExternalBlockedWeb = true;
+          externalHostLabel = parsed.hostname.replace(/^www\./, '');
+        }
+      } catch {}
     }
 
     // Prevent dual simultaneous video/audio playback: suspend inline lecture video before mounting fullscreen modal
@@ -3518,7 +3904,7 @@
     const lectLiveSrc = lectureIfr && lectureIfr.src && !lectureIfr.src.startsWith('about:blank') ? lectureIfr.src : '';
     const lectYtId = extractYtId(lectureIfr?.dataset?.ytBase || lectLiveSrc);
     const lectDriveId = extractDriveFileId(lectureIfr?.dataset?.externalUrl || lectureIfr?.dataset?.ytBase || lectLiveSrc);
-    const targetDriveId = extractDriveFileId(rawUrl || embedUrl);
+    const targetDriveId = extractDriveFileId(rawTrimmed || embedUrl);
     const isOpeningVideo = isYtModal || (lectKind === 'drive' && Boolean(lectDriveId && targetDriveId && lectDriveId === targetDriveId));
 
     if (lectureIfr && lectLiveSrc && (lectKind === 'youtube' || lectKind === 'drive')) {
@@ -3531,10 +3917,10 @@
             kind: lectKind,
             resumeSec: curSec,
             ytId: lectYtId,
-            modalRawUrl: rawUrl
+            modalRawUrl: rawTrimmed
           };
         } else {
-          APP._suspendedLectureVideo.modalRawUrl = rawUrl;
+          APP._suspendedLectureVideo.modalRawUrl = rawTrimmed;
         }
         lectureIfr.src = 'about:blank';
         document.getElementById('pk9-video-frame-wrap')?.classList.add('is-suspended');
@@ -3546,36 +3932,35 @@
       }
     }
 
+    const dlUrl = !/youtube\.com|youtu\.be|spreadsheets/i.test(rawTrimmed) ? toDirectDownloadUrl(rawTrimmed) : '';
+    const badgeText = isYtModal ? 'PHÚC K9 • VIDEO HD' : (isSheetModal ? 'PHÚC K9 • BẢNG DỮ LIỆU' : 'PHÚC K9 • ĐỌC PDF');
+    APP._inAppViewerState = { rawUrl: rawTrimmed, nativePdfUrl, gviewPdfUrl, activeEngine, isDirectPdf };
+
     overlay.innerHTML = `
-      <div class="pk9-inapp-viewer-box">
-        <div class="pk9-sheet-toolbar" style="background:linear-gradient(135deg,#071022 0%,#102442 75%,#0d2b3e 100%);color:#f8fafc;border-bottom:1px solid rgba(250,204,21,0.32);">
-          <div style="display:flex;align-items:center;gap:0.65rem;min-width:0;flex:1;">
-            <img src="/assets/phuc-k9-favicon.png" alt="Logo Học Cùng Phúc K9" class="pk9-brand-crest-img" style="width:36px;height:36px;border-radius:10px;" />
-            <div style="min-width:0;flex:1;">
-              <div style="font-size:0.7rem;font-weight:900;color:#fde047;letter-spacing:0.05em;text-transform:uppercase;">
-                HỌC CÙNG PHÚC K9 • ${isYtModal ? 'STUDIO VIDEO ĐỘC QUYỀN' : 'TRÌNH ĐỌC PDF & TÀI LIỆU ĐỘC QUYỀN'}
-              </div>
-              <div style="font-weight:900;font-size:0.96rem;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${esc(title || 'Thư Viện Công Khai')}
-              </div>
-              ${subTitle ? `<div style="font-size:0.74rem;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(subTitle)}</div>` : ''}
+      <div class="pk9-inapp-viewer-box ${isYtModal ? 'is-video' : 'is-doc'}">
+        <div class="pk9-viewer-header">
+          <div class="pk9-viewer-brand-wrap">
+            <img src="/assets/phuc-k9-favicon.png" alt="Logo Học Cùng Phúc K9" class="pk9-brand-crest-img pk9-viewer-crest" />
+            <div class="pk9-viewer-titles">
+              <div class="pk9-viewer-eyebrow">${badgeText}</div>
+              <div class="pk9-viewer-title">${esc(title || 'Tài Liệu Học Cùng Phúc K9')}</div>
+              ${subTitle ? `<div class="pk9-viewer-sub">${esc(subTitle)}</div>` : ''}
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:0.42rem;flex-wrap:wrap;">
-            ${!/youtube\.com|youtu\.be|spreadsheets/i.test(rawUrl || '') && toDirectDownloadUrl(rawUrl) ? `
-              <a href="${esc(toDirectDownloadUrl(rawUrl))}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn" style="background:#0284c7;border-color:#38bdf8;">⬇️ Tải về</a>
-            ` : ''}
-            ${rawUrl ? `
-              <a href="${esc(rawUrl)}" target="_blank" rel="noopener" class="pk9-brand-mini-btn">↗️ Mở gốc</a>
-            ` : ''}
-            <button type="button" class="pk9-brand-mini-btn" data-reload-inapp-iframe="1">🔄 Tải lại</button>
-            <button type="button" class="pk9-btn-exam-primary" data-close-inapp-viewer="1" style="padding:0.38rem 0.85rem;background:#e11d48;font-size:0.78rem;">
-              ✕ Đóng
+          <div class="pk9-viewer-head-right">
+            <div class="pk9-viewer-pc-actions">
+              ${gviewPdfUrl ? `<button type="button" class="pk9-brand-mini-btn" data-toggle-viewer-engine="1">${activeEngine === 'gview' ? '📄 Bản gốc' : '🌐 Google PDF'}</button>` : ''}
+              ${dlUrl ? `<a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-brand-mini-btn accent">⬇️ Tải về</a>` : ''}
+              ${rawTrimmed ? `<a href="${esc(rawTrimmed)}" target="_blank" rel="noopener" class="pk9-brand-mini-btn">↗️ Mở gốc</a>` : ''}
+              <button type="button" class="pk9-brand-mini-btn" data-reload-inapp-iframe="1">🔄 Tải lại</button>
+            </div>
+            <button type="button" class="pk9-viewer-close-btn" data-close-inapp-viewer="1" aria-label="Đóng trình xem">
+              <span>✕</span><span class="pk9-viewer-close-txt">Đóng</span>
             </button>
           </div>
         </div>
         ${isYtModal ? `
-          <div class="pk9-player-control-dock" id="pk9-modal-control-dock" style="padding:0.45rem 1rem;">
+          <div class="pk9-player-control-dock" id="pk9-modal-control-dock" style="padding:0.42rem 0.75rem;">
             <div class="pk9-ctrl-group">
               <span class="pk9-brand-time-pill" id="pk9-yt-modal-time-readout">⏱ 00:00</span>
               <button type="button" class="pk9-ctrl-btn" data-yt-slot="modal" data-yt-seek="-30">⏮ -30s</button>
@@ -3591,24 +3976,77 @@
             </div>
           </div>
         ` : ''}
-        <div style="flex:1;background:#ffffff;position:relative;">
-          <iframe
-            id="pk9-inapp-viewer-iframe"
-            data-yt-slot="modal"
-            src="${esc(embedUrl)}"
-            title="${esc(title)}"
-            style="width:100%;height:100%;border:0;display:block;"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowfullscreen
-          ></iframe>
-          <div class="pk9-player-watermark ${isYtModal ? '' : 'is-pdf'}" aria-hidden="true">
-            <img src="/assets/phuc-k9-favicon.png" alt="" />
-            <span>HỌC CÙNG PHÚC K9</span>
-          </div>
+        <div class="pk9-viewer-stage">
+          ${isExternalBlockedWeb ? `
+            <div class="pk9-viewer-ext-card">
+              <img src="/assets/logo-phuc-k9.png?v=2026" alt="Phúc K9" class="pk9-viewer-ext-logo" />
+              <div class="pk9-viewer-ext-pill">🌐 NGUỒN CHÍNH THỨC: ${esc(externalHostLabel || 'Trang ngoài')}</div>
+              <h4>${esc(title || 'Tài liệu tham khảo')}</h4>
+              <p>Trang nguồn <b>${esc(externalHostLabel)}</b> chặn hiển thị bên trong khung nhúng để bảo vệ bản quyền. Bấm nút bên dưới để mở đọc mượt &amp; đầy đủ nhất trên trình duyệt!</p>
+              <div class="pk9-viewer-ext-btns">
+                <a href="${esc(rawTrimmed)}" target="_blank" rel="noopener" class="pk9-btn-exam-primary" style="text-decoration:none;padding:0.72rem 1.35rem;font-size:0.9rem;">
+                  ↗️ Mở Tài Liệu Ngay (${esc(externalHostLabel)})
+                </a>
+                <button type="button" class="pk9-btn-exam-ghost" data-close-inapp-viewer="1" style="padding:0.62rem 1rem;font-size:0.84rem;background:rgba(15,23,42,0.78);color:#f8fafc;border-color:rgba(148,163,184,0.45);">
+                  ← Quay lại Thư viện
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div class="pk9-viewer-loading" id="pk9-viewer-loading">
+              <div class="pk9-viewer-spinner"></div>
+              <div class="pk9-viewer-load-txt">Đang tải ${isYtModal ? 'video bài giảng' : 'tài liệu PDF'}...</div>
+              ${!isYtModal && rawTrimmed ? `<div class="pk9-viewer-load-hint">Nếu điện thoại tải lâu, bấm <b>Mở gốc</b> hoặc <b>Tải PDF</b> ở thanh bên dưới.</div>` : ''}
+            </div>
+            <iframe
+              id="pk9-inapp-viewer-iframe"
+              data-yt-slot="modal"
+              src="${esc(embedUrl)}"
+              title="${esc(title)}"
+              class="pk9-viewer-iframe"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowfullscreen
+            ></iframe>
+            <div class="pk9-player-watermark ${isYtModal ? '' : 'is-pdf'}" aria-hidden="true">
+              <img src="/assets/phuc-k9-favicon.png" alt="" />
+              <span>PHÚC K9</span>
+            </div>
+          `}
         </div>
+        ${!isYtModal ? `
+          <div class="pk9-viewer-mob-bar">
+            <button type="button" class="pk9-viewer-mob-btn" data-reload-inapp-iframe="1">
+              <span>🔄</span><small>Tải lại</small>
+            </button>
+            ${gviewPdfUrl ? `
+              <button type="button" class="pk9-viewer-mob-btn" data-toggle-viewer-engine="1">
+                <span>${activeEngine === 'gview' ? '📄' : '🌐'}</span><small>${activeEngine === 'gview' ? 'Bản gốc' : 'Google PDF'}</small>
+              </button>
+            ` : ''}
+            ${dlUrl ? `
+              <a href="${esc(dlUrl)}" download target="_blank" rel="noopener" class="pk9-viewer-mob-btn primary">
+                <span>⬇️</span><small>Tải PDF</small>
+              </a>
+            ` : ''}
+            ${rawTrimmed ? `
+              <a href="${esc(rawTrimmed)}" target="_blank" rel="noopener" class="pk9-viewer-mob-btn">
+                <span>↗️</span><small>Mở gốc</small>
+              </a>
+            ` : ''}
+          </div>
+        ` : ''}
       </div>
     `;
     overlay.classList.add('open');
+    syncMobileScrollLock();
+
+    const ifrEl = document.getElementById('pk9-inapp-viewer-iframe');
+    const loadEl = document.getElementById('pk9-viewer-loading');
+    const hideLoader = () => { if (loadEl) loadEl.classList.add('hidden'); };
+    if (ifrEl) {
+      ifrEl.addEventListener('load', hideLoader, { once: true });
+      setTimeout(hideLoader, 3200);
+    }
     bindYtBridgeForSlot('modal');
   }
   window.PK9_OPEN_INAPP_VIEWER = openInAppViewer;
@@ -6203,7 +6641,8 @@
           !closeMobHub.hasAttribute('data-open-feedback') &&
           !closeMobHub.hasAttribute('data-open-auth') &&
           !closeMobHub.hasAttribute('data-nav-tab') &&
-          !closeMobHub.hasAttribute('data-open-camera-ai')
+          !closeMobHub.hasAttribute('data-open-camera-ai') &&
+          !closeMobHub.hasAttribute('data-open-onboarding')
         ) {
           return;
         }
@@ -6357,6 +6796,59 @@
         } catch {
           toast(`Thông tin liên hệ: ${val}`, 'info');
         }
+        return;
+      }
+
+      if (e.target.closest('[data-gt-close]')) {
+        const isLast = GAME_TUTORIAL.stepIdx >= GAME_TUTORIAL.steps.length - 1;
+        closeGameTutorial({ celebrate: isLast });
+        return;
+      }
+
+      if (e.target.closest('[data-gt-next]')) {
+        if (GAME_TUTORIAL.stepIdx < GAME_TUTORIAL.steps.length - 1) {
+          GAME_TUTORIAL.stepIdx++;
+          renderGameTutorialStep();
+        } else {
+          closeGameTutorial({ celebrate: true });
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-gt-prev]')) {
+        if (GAME_TUTORIAL.stepIdx > 0) {
+          GAME_TUTORIAL.stepIdx--;
+          renderGameTutorialStep();
+        }
+        return;
+      }
+
+      const gtModeBtn = e.target.closest('[data-gt-mode]');
+      if (gtModeBtn) {
+        const nextMode = gtModeBtn.getAttribute('data-gt-mode') || 'auto';
+        openGameTutorial(nextMode, GAME_TUTORIAL.stepIdx);
+        return;
+      }
+
+      const gtFinishTab = e.target.closest('[data-gt-finish-tab]');
+      if (gtFinishTab) {
+        const targetTab = gtFinishTab.getAttribute('data-gt-finish-tab') || 'lectures';
+        closeGameTutorial({ celebrate: true });
+        switchTab(targetTab);
+        return;
+      }
+
+      if (e.target.closest('[data-gt-finish-camera]')) {
+        closeGameTutorial({ celebrate: true });
+        openAiCameraModal();
+        return;
+      }
+
+      const gtFinishAuth = e.target.closest('[data-gt-finish-auth]');
+      if (gtFinishAuth) {
+        const authMode = gtFinishAuth.getAttribute('data-gt-finish-auth') || 'register';
+        closeGameTutorial();
+        openAuthModal(authMode);
         return;
       }
 
@@ -7394,11 +7886,44 @@
       const reloadInAppBtn = e.target.closest('[data-reload-inapp-iframe]');
       if (reloadInAppBtn) {
         const ifr = document.getElementById('pk9-inapp-viewer-iframe');
+        const loadEl = document.getElementById('pk9-viewer-loading');
+        if (loadEl) {
+          loadEl.classList.remove('hidden');
+          setTimeout(() => loadEl.classList.add('hidden'), 2600);
+        }
         if (ifr && ifr.src) {
           const s = ifr.src;
           ifr.src = s;
           toast('🔄 Đã tải lại khung xem trực tiếp!', 'info');
         }
+        return;
+      }
+
+      const toggleEngineBtn = e.target.closest('[data-toggle-viewer-engine]');
+      if (toggleEngineBtn && APP._inAppViewerState?.gviewPdfUrl) {
+        const st = APP._inAppViewerState;
+        const ifr = document.getElementById('pk9-inapp-viewer-iframe');
+        const loadEl = document.getElementById('pk9-viewer-loading');
+        st.activeEngine = st.activeEngine === 'gview' ? 'native' : 'gview';
+        const nextUrl = st.activeEngine === 'gview' ? st.gviewPdfUrl : st.nativePdfUrl;
+        if (loadEl) {
+          loadEl.classList.remove('hidden');
+          setTimeout(() => loadEl.classList.add('hidden'), 2800);
+        }
+        if (ifr && nextUrl) {
+          ifr.addEventListener('load', () => loadEl?.classList.add('hidden'), { once: true });
+          ifr.src = nextUrl;
+        }
+        document.querySelectorAll('[data-toggle-viewer-engine]').forEach(btn => {
+          if (btn.classList.contains('pk9-viewer-mob-btn')) {
+            btn.innerHTML = st.activeEngine === 'gview'
+              ? '<span>📄</span><small>Bản gốc</small>'
+              : '<span>🌐</span><small>Google PDF</small>';
+          } else {
+            btn.textContent = st.activeEngine === 'gview' ? '📄 Bản gốc' : '🌐 Google PDF';
+          }
+        });
+        toast(st.activeEngine === 'gview' ? '🌐 Đang đọc bằng Google PDF Viewer' : '📄 Đang đọc bằng trình PDF gốc', 'info');
         return;
       }
 
@@ -8386,7 +8911,9 @@
   function syncMobileScrollLock() {
     const sidebarOpen = Boolean(document.getElementById('pk9-sidebar')?.classList.contains('mobile-open'));
     const installOpen = Boolean(document.getElementById('pk9-install-modal'));
-    const locked = sidebarOpen || installOpen;
+    const viewerOpen = Boolean(document.getElementById('pk9-inapp-viewer-overlay')?.classList.contains('open'));
+    const tutorialOpen = Boolean(GAME_TUTORIAL.open);
+    const locked = sidebarOpen || installOpen || viewerOpen || tutorialOpen;
     document.body.classList.toggle('pk9-scroll-lock', locked);
     document.body.style.overflow = locked ? 'hidden' : '';
   }
@@ -8865,13 +9392,11 @@
     } catch {}
     loadCommunityItems();
     try {
-      const onbKey = APP.user?.username
-        ? `pk9_onboard_member_v1_${String(APP.user.username).toLowerCase()}`
-        : 'pk9_onboard_guest_v1';
+      const onbKey = getTutorialStorageKey(APP.user ? 'member' : 'guest');
       if (!localStorage.getItem(onbKey) && !document.querySelector('.pk9-ban-overlay')) {
         setTimeout(() => {
-          openOnboardingModal(APP.user ? 'member' : 'guest');
-        }, 420);
+          openGameTutorial(APP.user ? 'member' : 'guest', 0);
+        }, 480);
       }
     } catch {}
 
