@@ -1,15 +1,16 @@
 /* ============================================================================
  * HỌC CÙNG PHÚC K9 — PRODUCTION SERVICE WORKER (NETWORK-FIRST + SMART CACHE)
  * ============================================================================ */
-const CACHE_NAME = 'phuc-k9-ecosystem-v73';
+const CACHE_NAME = 'phuc-k9-ecosystem-v74';
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/style.css?v=73',
-  '/assets/exam-center.css?v=73',
-  '/assets/pk9-rpg-3d.css?v=73',
+  '/style.css?v=74',
+  '/assets/exam-center.css?v=74',
+  '/assets/pk9-rpg-3d.css?v=74',
   '/assets/pk9-curriculum.js',
+  '/assets/pk9-exam-bank.js?v=74',
   '/assets/pk9-2k9-manifest.js',
   '/assets/2k9-teachers/toan.json',
   '/assets/2k9-teachers/vat-li.json',
@@ -22,11 +23,11 @@ const CORE_ASSETS = [
   '/assets/2k9-teachers/dgnl.json',
   '/assets/pk9-2k8-curated.js',
   '/assets/pk9-2k8-dgnl.js',
-  '/assets/pk9-exam-tools.js?v=73',
-  '/assets/exam-center.js?v=73',
-  '/assets/pk9-rpg-models.js?v=73',
-  '/assets/pk9-rpg.js?v=73',
-  '/assets/pk9-app.js?v=73',
+  '/assets/pk9-exam-tools.js?v=74',
+  '/assets/exam-center.js?v=74',
+  '/assets/pk9-rpg-models.js?v=74',
+  '/assets/pk9-rpg.js?v=74',
+  '/assets/pk9-app.js?v=74',
   '/favicon.ico',
   '/assets/logo-phuc-k9.png',
   '/assets/phuc-k9-favicon.png',
