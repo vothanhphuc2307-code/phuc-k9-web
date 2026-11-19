@@ -11,11 +11,30 @@
     chemistry: 'Hóa học',
     biology: 'Sinh học',
     english: 'Tiếng Anh',
+    literature: 'Ngữ văn',
     history: 'Lịch sử',
+    geography: 'Địa lí',
+    ktpl: 'GDKT&PL',
+    informatics: 'Tin học',
     dgnl: 'ĐGNL'
   };
 
-  function subjLabel(s) {
+  const SUBJECT_ICONS = {
+    'Toán': '📐',
+    'Vật lí': '⚡',
+    'Hóa học': '🧪',
+    'Sinh học': '🧬',
+    'Tiếng Anh': '🇬🇧',
+    'Ngữ văn': '📖',
+    'Lịch sử': '🏛️',
+    'Địa lí': '🌍',
+    'GDKT&PL': '⚖️',
+    'Tin học': '💻',
+    'ĐGNL': '🎯'
+  };
+
+  function subjLabel(s, examId) {
+    if (examId && String(examId).toLowerCase().includes('dgnl')) return 'ĐGNL';
     const raw = String(s || '').trim();
     return SUBJECT_MAP[raw.toLowerCase()] || raw || 'Tổng hợp';
   }
@@ -24,6 +43,8 @@
     view: 'catalog', // 'catalog' | 'sources' | 'bookmarks' | 'wrong-bank' | 'diagnostics' | 'arena' | 'taking' | 'result'
     subjectFilter: 'ALL',
     statusFilter: 'ALL', // 'ALL' | 'todo' | 'done'
+    examTypeFilter: 'ALL', // 'ALL' | 'thi-thu' | 'chuyen-de'
+    visibleLimit: 18,
     paperTheme: (() => {
       try {
         const p = localStorage.getItem('pk9_paper_theme');
@@ -505,6 +526,10 @@
   }
 
   function findFullSeedExam(examId) {
+    if (window.PK9_EXAM_BANK && typeof window.PK9_EXAM_BANK.getFullExam === 'function') {
+      const fromBank = window.PK9_EXAM_BANK.getFullExam(examId);
+      if (fromBank) return fromBank;
+    }
     const seedList = Array.isArray(window.PK9_SEED_EXAMS) ? window.PK9_SEED_EXAMS : [];
     return seedList.find(x => x.id === examId) || STATE.exams.find(x => x.id === examId) || null;
   }
@@ -998,8 +1023,10 @@
     const refDocs = Array.isArray(window.PHUC_PDF_REFERENCE_V27) ? window.PHUC_PDF_REFERENCE_V27 : [];
 
     const filteredBySubjAndQ = STATE.exams.filter(ex => {
-      const sName = subjLabel(ex.subject);
+      const sName = subjLabel(ex.subject, ex.id);
       if (STATE.subjectFilter !== 'ALL' && sName !== STATE.subjectFilter) return false;
+      if (STATE.examTypeFilter === 'thi-thu' && ex.examType === 'chuyen-de') return false;
+      if (STATE.examTypeFilter === 'chuyen-de' && ex.examType !== 'chuyen-de') return false;
       if (!q) return true;
       return `${ex.title} ${sName} ${ex.source || ex.sourceOrg || ''} ${ex.periodLabel || ''}`.toLowerCase().includes(q);
     });
@@ -1011,6 +1038,8 @@
       if (STATE.statusFilter === 'done' && !isDone) return false;
       return true;
     });
+    const visibleExams = filtered.slice(0, Math.max(18, STATE.visibleLimit || 18));
+    const remainingCount = Math.max(0, filtered.length - visibleExams.length);
 
     return `
       ${STATE.view === 'catalog' ? `
@@ -1024,6 +1053,17 @@
           <button type="button" class="pk9-exam-chip ${STATE.statusFilter === 'done' ? 'active' : ''}" data-exam-status="done">
             ✅ Đã làm (${doneCount})
           </button>
+          <button type="button" class="pk9-exam-chip ${STATE.examTypeFilter === 'thi-thu' ? 'active' : ''}" data-exam-type="${STATE.examTypeFilter === 'thi-thu' ? 'ALL' : 'thi-thu'}">
+            🏛️ Đề Thi Thử / Sở-Bộ
+          </button>
+          <button type="button" class="pk9-exam-chip ${STATE.examTypeFilter === 'chuyen-de' ? 'active' : ''}" data-exam-type="${STATE.examTypeFilter === 'chuyen-de' ? 'ALL' : 'chuyen-de'}">
+            📘 Đề Chuyên Đề
+          </button>
+          ${filtered.length ? `
+            <button type="button" class="pk9-exam-chip" data-exam-random="1" style="background:linear-gradient(135deg,rgba(245,158,11,0.16),rgba(14,165,233,0.16));border-color:rgba(245,158,11,0.45);font-weight:800;">
+              🎲 Bốc Ngẫu Nhiên 1 Đề
+            </button>
+          ` : ''}
         </div>
       ` : ''}
 
@@ -1034,9 +1074,10 @@
         : STATE.view === 'arena' ? renderArenaSection()
         : `
         <div class="pk9-exam-grid">
-          ${filtered.length ? filtered.map(ex => {
-            const qCount = ex.questionCount || (ex.questions ? ex.questions.length : 22);
-            const sName = subjLabel(ex.subject);
+          ${visibleExams.length ? visibleExams.map(ex => {
+            const qCount = ex.questionCount || (ex.questions ? ex.questions.length : 20);
+            const sName = subjLabel(ex.subject, ex.id);
+            const sIco = SUBJECT_ICONS[sName] || '📘';
             const pdfPath = ex.sourceFile || ex.pdfUrl || '';
             const duration = ex.duration || ex.durationMinutes || 50;
             const isDone = doneIds.has(String(ex.id));
@@ -1045,9 +1086,9 @@
               <article class="pk9-exam-card">
                 <div>
                   <div class="pk9-exam-card-badges">
-                    <span class="pk9-badge pk9-badge-subj">📘 ${esc(sName)} • Khối ${esc(ex.grade || '12')}</span>
+                    <span class="pk9-badge pk9-badge-subj">${sIco} ${esc(sName)} • Khối ${esc(ex.grade || '12')}</span>
                     ${hasDraft ? `<span class="pk9-badge pk9-badge-draft">⏳ Đang làm dở</span>` : ''}
-                    <span class="pk9-badge pk9-badge-verified">${isDone ? '✅ Đã làm' : '✓ Nguồn thật đã kiểm duyệt'}</span>
+                    <span class="pk9-badge pk9-badge-verified">${isDone ? '✅ Đã làm' : (pdfPath ? '✓ Đề Sở/Bộ có PDF gốc' : '✓ Chuẩn GDPT 2018')}</span>
                   </div>
                   <h4>${esc(ex.title)}</h4>
                   <div class="pk9-exam-origin">
@@ -1082,6 +1123,20 @@
             </div>
           `}
         </div>
+        ${remainingCount > 0 ? `
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0.65rem;margin-top:1.15rem;">
+            <button type="button" class="pk9-btn-exam-primary" data-exam-more="1" style="padding:0.62rem 1.35rem;font-size:0.86rem;">
+              ➕ Xem thêm đề (đang hiện ${visibleExams.length}/${filtered.length} đề • còn ${remainingCount} đề)
+            </button>
+            <button type="button" class="pk9-btn-exam-ghost" data-exam-show-all="1" style="padding:0.62rem 1rem;font-size:0.82rem;">
+              📋 Hiện tất cả (${filtered.length} đề)
+            </button>
+          </div>
+        ` : (filtered.length > 0 ? `
+          <div style="text-align:center;margin-top:0.85rem;font-size:0.78rem;color:var(--pk9-text-muted);">
+            ✓ Đang hiển thị đầy đủ <b>${filtered.length}</b> đề thi có chấm tự động 3 phần &amp; lời giải chi tiết.
+          </div>
+        ` : '')}
       `}
     `;
   }
@@ -1168,7 +1223,12 @@
   }
 
   function renderCatalogView(root) {
-    const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Lịch sử', 'ĐGNL'];
+    const subjects = ['ALL', 'Toán', 'Vật lí', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Ngữ văn', 'Lịch sử', 'Địa lí', 'GDKT&PL', 'Tin học', 'ĐGNL'];
+    const subjCounts = { ALL: STATE.exams.length };
+    for (const ex of STATE.exams) {
+      const lbl = subjLabel(ex.subject, ex.id);
+      subjCounts[lbl] = (subjCounts[lbl] || 0) + 1;
+    }
     const bookmarks = getBookmarksList();
     const wrongList = getWrongBankList();
 
@@ -1185,23 +1245,23 @@
           <div class="pk9-exam-hero-grid">
             <div>
               <div style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.3rem 0.8rem;border-radius:999px;background:rgba(56,189,248,0.18);border:1px solid rgba(56,189,248,0.35);font-size:0.76rem;font-weight:800;margin-bottom:0.75rem;">
-                <span>🏛️ KHO LUYỆN ĐỀ NGUỒN GỐC THẬT • CHUẨN GDPT 2018</span>
+                <span>🏛️ KHO LUYỆN ĐỀ ${STATE.exams.length}+ ĐỀ • ĐỦ 11 MÔN CHUẨN GDPT 2018</span>
               </div>
               <h2 style="font-size:1.65rem;font-weight:900;margin:0 0 0.55rem;line-height:1.25;">
-                Phòng Thi Ảo & Hệ Thống Chấm Điểm Tự Động Phúc K9
+                Phòng Thi Ảo &amp; Hệ Thống Chấm Điểm Tự Động Phúc K9
               </h2>
               <p style="margin:0;color:rgba(255,255,255,0.86);font-size:0.92rem;line-height:1.6;">
-                Tích hợp đề thi thật từ các Sở GD&ĐT (Lâm Đồng, Điện Biên, Hà Nội, Nghệ An...), THPT Ngô Gia Tự, Bộ GD&ĐT và ĐGNL HSA/V-ACT. Hỗ trợ Ngân hàng Câu Sai, Chẩn đoán Điểm Yếu, Đấu Trường 1v1, Bảng Nháp & Máy Tính Khoa Học!
+                Bao phủ trọn vẹn <b>11 môn thi</b> (Toán, Vật lí, Hóa học, Sinh học, Tiếng Anh, Ngữ văn, Lịch sử, Địa lí, GDKT&amp;PL, Tin học &amp; ĐGNL/ĐGTD) — chấm điểm tự động 3 phần chuẩn Bộ GD&amp;ĐT kèm <b>lời giải chi tiết từng câu</b>, máy tính Casio, bảng nháp &amp; chẩn đoán điểm yếu!
               </p>
             </div>
             <div class="pk9-exam-kpis">
               <div class="pk9-exam-kpi">
                 <strong>${STATE.exams.length} Đề</strong>
-                <span>Tương tác chấm điểm tự động</span>
+                <span>Chấm 3 phần + Giải chi tiết</span>
               </div>
               <div class="pk9-exam-kpi">
-                <strong>${sourcesList.length + refDocs.length}+</strong>
-                <span>Đề gốc Sở/Bộ & PDF đối chiếu</span>
+                <strong>11 Môn</strong>
+                <span>Bao phủ đủ THPT &amp; ĐGNL</span>
               </div>
               <div class="pk9-exam-kpi">
                 <strong>${hist.length} Lượt</strong>
@@ -1221,14 +1281,14 @@
           <div class="pk9-exam-tabs">
             ${subjects.map(sub => `
               <button type="button" class="pk9-exam-chip ${STATE.subjectFilter === sub && STATE.view === 'catalog' ? 'active' : ''}" data-exam-subj="${esc(sub)}">
-                ${sub === 'ALL' ? '🔥 Tất cả môn' : esc(sub)}
+                ${sub === 'ALL' ? `🔥 Tất cả (${subjCounts.ALL || 0})` : `${SUBJECT_ICONS[sub] || '📘'} ${esc(sub)} (${subjCounts[sub] || 0})`}
               </button>
             `).join('')}
             <button type="button" class="pk9-exam-chip ${STATE.view === 'wrong-bank' ? 'active' : ''}" data-exam-view="wrong-bank">
               ❌ Câu sai (${wrongList.length})
             </button>
             <button type="button" class="pk9-exam-chip ${STATE.view === 'diagnostics' ? 'active' : ''}" data-exam-view="diagnostics">
-              📊 Điểm yếu & Gợi ý
+              📊 Điểm yếu &amp; Gợi ý
             </button>
             <button type="button" class="pk9-exam-chip ${STATE.view === 'arena' ? 'active' : ''}" data-exam-view="arena">
               ⚔️ Đấu Trường 1v1
@@ -1242,7 +1302,7 @@
           </div>
           <div class="pk9-exam-search">
             <span class="pk9-exam-search-icon">🔍</span>
-            <input type="search" id="pk9-exam-search-input" placeholder="Tìm tên đề, Sở GD&ĐT, mã đề..." value="${esc(STATE.searchQuery)}" />
+            <input type="search" id="pk9-exam-search-input" placeholder="Tìm theo tên môn, chuyên đề, Sở GD&ĐT, HSA/V-ACT..." value="${esc(STATE.searchQuery)}" />
           </div>
         </div>
 
@@ -2235,6 +2295,7 @@
       const subjBtn = e.target.closest('[data-exam-subj]');
       if (subjBtn) {
         STATE.subjectFilter = subjBtn.getAttribute('data-exam-subj') || 'ALL';
+        STATE.visibleLimit = 18;
         STATE.view = 'catalog';
         renderExamCenter();
         return;
@@ -2243,8 +2304,46 @@
       const statusBtn = e.target.closest('[data-exam-status]');
       if (statusBtn) {
         STATE.statusFilter = statusBtn.getAttribute('data-exam-status') || 'ALL';
+        STATE.visibleLimit = 18;
         STATE.view = 'catalog';
         updateCatalogDynamicDOM();
+        return;
+      }
+
+      const typeBtn = e.target.closest('[data-exam-type]');
+      if (typeBtn) {
+        STATE.examTypeFilter = typeBtn.getAttribute('data-exam-type') || 'ALL';
+        STATE.visibleLimit = 18;
+        STATE.view = 'catalog';
+        updateCatalogDynamicDOM();
+        return;
+      }
+
+      if (e.target.closest('[data-exam-more]')) {
+        STATE.visibleLimit = (STATE.visibleLimit || 18) + 18;
+        updateCatalogDynamicDOM();
+        return;
+      }
+
+      if (e.target.closest('[data-exam-show-all]')) {
+        STATE.visibleLimit = Math.max(500, STATE.exams.length + 50);
+        updateCatalogDynamicDOM();
+        return;
+      }
+
+      if (e.target.closest('[data-exam-random]')) {
+        const pool = STATE.exams.filter(ex => {
+          const sName = subjLabel(ex.subject, ex.id);
+          if (STATE.subjectFilter !== 'ALL' && sName !== STATE.subjectFilter) return false;
+          if (STATE.examTypeFilter === 'thi-thu' && ex.examType === 'chuyen-de') return false;
+          if (STATE.examTypeFilter === 'chuyen-de' && ex.examType !== 'chuyen-de') return false;
+          return true;
+        });
+        const pickPool = pool.length ? pool : STATE.exams;
+        if (pickPool.length) {
+          const chosen = pickPool[Math.floor(Math.random() * pickPool.length)];
+          startExamById(chosen.id, false);
+        }
         return;
       }
 

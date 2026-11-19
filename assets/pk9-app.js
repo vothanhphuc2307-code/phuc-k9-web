@@ -2155,32 +2155,37 @@
 
       <div class="pk9-sec-head">
         <div>
-          <h2>🏛️ Đề Thi Thật Nổi Bật — Chấm Điểm Tự Động Chuẩn Bộ GD&ĐT</h2>
-          <p>Đề thi có nguồn gốc rõ ràng từ các Sở GD&ĐT, trường THPT và Bộ GD&ĐT kèm đáp án và lời giải chi tiết.</p>
+          <h2>🏛️ Kho ${stats.interactiveExamCount} Đề Thi Chấm Tự Động — Bao Phủ Đủ 11 Môn Chuẩn GDPT 2018</h2>
+          <p>Đề thi chuẩn cấu trúc 3 phần Bộ GD&amp;ĐT (Toán, Lí, Hóa, Sinh, Anh, Văn, Sử, Địa, GDKT&amp;PL, Tin học &amp; ĐGNL) kèm đáp án và lời giải chi tiết từng câu.</p>
         </div>
         <button type="button" class="pk9-btn-exam-ghost" data-nav-tab="exams">
-          Xem toàn bộ kho luyện đề →
+          Xem toàn bộ ${stats.interactiveExamCount} đề thi (11 môn) →
         </button>
       </div>
 
       <div class="pk9-grid-4">
-        ${seedExams.map(ex => `
+        ${seedExams.map(ex => {
+          const sMap = { math: 'Toán', physics: 'Vật lí', chemistry: 'Hóa học', biology: 'Sinh học', english: 'Tiếng Anh', literature: 'Ngữ văn', history: 'Lịch sử', geography: 'Địa lí', ktpl: 'GDKT&PL', informatics: 'Tin học', dgnl: 'ĐGNL' };
+          const sLabel = String(ex.id || '').includes('dgnl') ? 'ĐGNL' : (sMap[String(ex.subject || '').toLowerCase()] || ex.subject || 'Tổng hợp');
+          const qCnt = ex.questionCount || (ex.questions || []).length || 20;
+          return `
           <article class="pk9-card" style="display:flex;flex-direction:column;justify-content:space-between;">
             <div>
               <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.6rem;">
-                <span class="pk9-badge pk9-badge-subj">${esc(ex.subject)}</span>
-                <span class="pk9-badge pk9-badge-verified">✓ ${esc(ex.sourceOrg || 'Sở GD&ĐT')}</span>
+                <span class="pk9-badge pk9-badge-subj">${esc(sLabel)}</span>
+                <span class="pk9-badge pk9-badge-verified">✓ ${esc(ex.sourceOrg || ex.examSession || 'Sở GD&ĐT')}</span>
               </div>
               <h4 style="margin:0 0 0.45rem;font-size:0.98rem;font-weight:800;">${esc(ex.title)}</h4>
               <div style="font-size:0.78rem;color:var(--pk9-text-muted);margin-bottom:0.85rem;">
-                ⏱ ${ex.durationMinutes || 50} phút • 📝 ${(ex.questions || []).length} câu • Thang 10đ
+                ⏱ ${ex.duration || ex.durationMinutes || 50} phút • 📝 ${qCnt} câu • Thang 10đ
               </div>
             </div>
             <button type="button" class="pk9-btn-exam-primary" data-quick-start-exam="${esc(ex.id)}" style="width:100%;">
-              ⚡ Vào thi & Chấm điểm
+              ⚡ Vào thi &amp; Chấm điểm
             </button>
           </article>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
 
       <div class="pk9-sec-head">
