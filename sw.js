@@ -28,6 +28,7 @@ const CORE_ASSETS = [
   '/assets/pk9-rpg-models.js?v=74',
   '/assets/pk9-rpg.js?v=74',
   '/assets/pk9-app.js?v=74',
+  '/assets/pk9-bxh-ecosystem.js?v=74',
   '/favicon.ico',
   '/assets/logo-phuc-k9.png',
   '/assets/phuc-k9-favicon.png',

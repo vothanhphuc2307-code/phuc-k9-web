@@ -22,6 +22,21 @@
         }
       ],
       "destination": "/api/og-meta"
+    },
+    {
+      "source": "/u/:sbd",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Zalo|ZaloPC|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Discordbot|WhatsApp|LinkedInBot).*"
+        }
+      ],
+      "destination": "/api/og-meta?card=:sbd"
+    },
+    {
+      "source": "/u/:sbd",
+      "destination": "/index.html?card=:sbd"
     }
   ],
   "headers": [
@@ -60,6 +75,12 @@
           "value": "public, max-age=86400, stale-while-revalidate=604800"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/dashboard?action=settle-week",
+      "schedule": "5 17 * * 0"
     }
   ]
 }
