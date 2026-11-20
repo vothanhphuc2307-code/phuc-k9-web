@@ -674,7 +674,12 @@
     if (data.message) toast(data.message, 'success');
     if (data.journey) RPG_UI.journeyData = data.journey;
     applyRpgUpdate(data.rpg, { xp: data.xp, weekly_xp: data.weekly_xp });
-    if (['rpg-checkin', 'rpg-claim-mission', 'rpg-practice-finish', 'rpg-journey-submit', 'rpg-equip'].includes(action)) {
+    if ([
+      'rpg-checkin', 'rpg-claim-mission', 'rpg-practice-finish', 'rpg-journey-submit',
+      'rpg-equip', 'rpg-buy', 'rpg-redeem-shards', 'rpg-pomodoro-complete',
+      'rpg-ai-vision-verify', 'rpg-claim-weekly-chest', 'rpg-showcase-save',
+      'rpg-showcase-preset', 'rpg-privacy-save', 'rpg-claim-rookie-chest'
+    ].includes(action)) {
       if (typeof window.PK9_REFRESH_LEADERBOARD === 'function') {
         window.PK9_REFRESH_LEADERBOARD({ force: true, quiet: true });
       }
@@ -1261,10 +1266,11 @@
       : 'https://thanhphuc.vercel.app';
     const origin = rawOrigin.replace(/\/+$/, '');
     const uname = (user?.username || '').trim().toLowerCase();
-    const sbd = (rpg?.sbd || 'K9-STUDENT').trim();
+    const isAnon = Boolean(rpg?.privacy?.anonymous_bxh);
+    const sbd = (isAnon ? (rpg?.anon_sbd || rpg?.sbd || 'PK9-ANON') : (rpg?.sbd || 'K9-STUDENT')).trim();
     const grade = (user?.settings?.preferred_grade || '2K9').trim();
     if (uname && uname !== 'guest' && uname !== 'khach_k9') {
-      return `${origin}/?card=${encodeURIComponent(uname)}&sbd=${encodeURIComponent(sbd)}`;
+      return `${origin}/?card=${encodeURIComponent(sbd)}&ref=${encodeURIComponent(sbd)}`;
     }
     const disp = (user?.display_name || 'Học Viên Phúc K9').trim();
     return `${origin}/?card=guest&sbd=${encodeURIComponent(sbd)}&g=${encodeURIComponent(grade)}&n=${encodeURIComponent(disp)}`;
@@ -1275,8 +1281,10 @@
       <div class="pk9-rpg-wallet">
         <span class="pk9-wallet-pill gold" title="Vàng học tập dùng mua vật phẩm & mở ô Tuần Hoàn">🪙 <b>${rpg.gold ?? 180}</b> Vàng</span>
         <span class="pk9-wallet-pill diamond" title="Kim cương cao cấp dùng mở vật phẩm Huyền Thoại">💎 <b>${rpg.diamonds ?? 5}</b> Kim cương</span>
+        <span class="pk9-wallet-pill" title="Mảnh Vật Phẩm Siêu Thị 3D (6 Mảnh đổi Hiếm, 12 Mảnh Sử Thi, 20 Mảnh Huyền Thoại)">🧩 Mảnh 3D: <b>${rpg.shop_shards || 0}</b></span>
+        <span class="pk9-wallet-pill" title="Vé mở ô Bảng Tuần Hoàn 118 Nguyên Tố IUPAC">🎫 Vé IUPAC: <b>${rpg.periodic_tickets || 0}</b></span>
         <span class="pk9-wallet-pill" title="Lượt nhân đôi EXP còn lại">🚀 x2 EXP: <b>${rpg.consumables?.xp_boost || 0}</b></span>
-        <span class="pk9-wallet-pill" title="Lượt Bùa +25% Vàng còn lại">🧿 Bùa Vàng: <b>${rpg.consumables?.gold_charm || 0}</b></span>
+        <span class="pk9-wallet-pill" title="Lượt Bùa +25% Vàng còn lại (Trần +400 Vàng/ngày)">🧿 Bùa Vàng: <b>${rpg.consumables?.gold_charm || 0}</b></span>
       </div>
     `;
   }
@@ -1877,7 +1885,7 @@
                 `}
                 <div style="font-weight:900;font-size:0.93rem;margin-top:0.2rem;line-height:1.3;">${esc(it.name)}</div>
                 <div style="font-size:0.76rem;color:var(--pk9-text-muted);line-height:1.45;flex:1;margin:0.1rem 0 0.45rem;">${esc(it.desc)}</div>
-                <div class="pk9-shop-foot">
+                <div class="pk9-shop-foot" style="flex-wrap:wrap;gap:0.35rem;">
                   <span class="pk9-shop-price" style="font-weight:800;font-size:0.8rem;color:${isAdminFull ? '#eab308' : (it.currency === 'diamonds' ? '#a855f7' : '#d97706')};">${priceLabel}</span>
                   ${it.consumable ? `
                     <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-buy="${esc(it.id)}">${isAdminFull ? '👑 Nhận miễn phí' : '🛒 Mua & Dùng'}</button>
@@ -1887,9 +1895,16 @@
                       : `<span class="pk9-badge pk9-badge-verified">✓ Đang trang bị</span>`}
                   ` : owned ? `
                     <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-equip="${esc(it.id)}">⚡ Trang bị</button>
-                  ` : `
-                    <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-buy="${esc(it.id)}">🛒 Mua ngay</button>
-                  `}
+                  ` : (() => {
+                    const reqShards = it.currency === 'gold' ? 6 : (Number(it.price || 0) <= 8 ? 12 : 20);
+                    const curShards = Number(rpg.shop_shards || 0);
+                    return `
+                      <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+                        <button type="button" class="pk9-btn-exam-primary pk9-shop-act-btn" data-rpg-buy="${esc(it.id)}">🛒 Mua ngay</button>
+                        <button type="button" class="pk9-btn-exam-ghost pk9-shop-act-btn" data-rpg-redeem-shards="${esc(it.id)}" title="Đổi bằng ${reqShards} Mảnh Vật Phẩm 3D (Hiện có: ${curShards} 🧩)" style="font-size:0.72rem;padding:0.28rem 0.5rem;border-color:${curShards >= reqShards ? 'rgba(16,185,129,0.5)' : 'var(--pk9-border)'};color:${curShards >= reqShards ? '#10b981' : 'var(--pk9-text-muted)'};">🧩 Đổi ${reqShards} Mảnh</button>
+                      </div>
+                    `;
+                  })()}
                 </div>
               </article>
             `;
@@ -2127,16 +2142,19 @@
                   <button type="button" class="pk9-btn-exam-ghost" data-open-auth="login" style="padding:0.42rem 0.78rem;font-size:0.78rem;">🔑 Đăng nhập</button>
                 </div>
               </div>
-            ` : leaders.length ? leaders.map(row => `
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0.65rem;border-radius:0.75rem;background:${row.has_flag ? 'rgba(245,158,11,0.12)' : 'var(--pk9-surface-2)'};border:1px solid var(--pk9-border);margin-bottom:0.45rem;font-size:0.82rem;">
+            ` : leaders.length ? leaders.map(row => {
+              const canInspect = !row.hide_pin_identity || Boolean(row.sbd);
+              return `
+              <div ${canInspect ? `class="pk9-clickable-profile" data-inspect-profile="1" data-profile-u="${esc(row.hide_pin_identity ? '' : (row.username || ''))}" data-profile-sbd="${esc(row.sbd || '')}" title="🔍 Bấm để soi Hồ Sơ Học Viên 4 Tầng"` : 'title="🛡️ Bảo vệ danh tính học đường (Safe-by-Default)"'} style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0.65rem;border-radius:0.75rem;background:${row.has_flag ? 'rgba(245,158,11,0.12)' : 'var(--pk9-surface-2)'};border:1px solid var(--pk9-border);margin-bottom:0.45rem;font-size:0.82rem;${canInspect ? 'cursor:pointer;' : ''}">
                 <div style="display:flex;align-items:center;gap:0.45rem;min-width:0;">
                   <b>${row.has_flag ? '🚩 #1' : `#${row.rank}`}</b>
                   <span>${esc(row.outfit_icon || '🧑‍🎓')}</span>
                   <span style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(row.display_name)}</span>
                 </div>
-                <span class="pk9-badge pk9-badge-subj">${row.best_score} đ</span>
+                <span class="pk9-badge pk9-badge-subj">${row.best_score} đ${canInspect ? ' · 🔍' : ' · 🛡️'}</span>
               </div>
-            `).join('') : `
+            `;
+            }).join('') : `
               <div style="font-size:0.82rem;color:var(--pk9-text-muted);padding:1rem;text-align:center;">
                 Chưa có ai giữ Cờ tuần này — hãy chơi 1 Đảo để giật Cờ #1 đầu tiên!
               </div>
@@ -2544,12 +2562,19 @@
 
   function checkUrlForScannedStudentCard() {
     try {
+      if (window.PK9_BXH_ECOSYSTEM && typeof window.PK9_BXH_ECOSYSTEM.bootFromUrlParams === 'function') {
+        window.PK9_BXH_ECOSYSTEM.bootFromUrlParams();
+        return;
+      }
       const search = window.location && window.location.search ? window.location.search : '';
       if (!search) return;
       const params = new URLSearchParams(search);
       const cardParam = params.get('card') || params.get('student_card');
       if (!cardParam) return;
-      openScannedStudentCardModal({
+      const opener = (window.PK9_RPG && typeof window.PK9_RPG.openScannedStudentCard === 'function')
+        ? window.PK9_RPG.openScannedStudentCard
+        : openScannedStudentCardModal;
+      opener({
         username: cardParam,
         sbd: params.get('sbd') || '',
         name: params.get('n') || params.get('name') || '',
@@ -2614,11 +2639,18 @@
   }
 
   function renderActiveRpgTab() {
-    if (document.getElementById('tab-missions')?.classList.contains('active')) renderMissionsTab();
-    if (document.getElementById('tab-shop')?.classList.contains('active')) renderShopTab();
-    if (document.getElementById('tab-periodic')?.classList.contains('active')) renderPeriodicTab();
-    if (document.getElementById('tab-journey')?.classList.contains('active')) renderJourneyTab();
-    if (document.getElementById('tab-idcard')?.classList.contains('active')) renderIdCardTab();
+    const dispatchTab = (tabId, fallbackFn) => {
+      if (window.PK9_RPG && typeof window.PK9_RPG.renderTab === 'function') {
+        window.PK9_RPG.renderTab(tabId);
+      } else {
+        fallbackFn();
+      }
+    };
+    if (document.getElementById('tab-missions')?.classList.contains('active')) dispatchTab('missions', renderMissionsTab);
+    if (document.getElementById('tab-shop')?.classList.contains('active')) dispatchTab('shop', renderShopTab);
+    if (document.getElementById('tab-periodic')?.classList.contains('active')) dispatchTab('periodic', renderPeriodicTab);
+    if (document.getElementById('tab-journey')?.classList.contains('active')) dispatchTab('journey', renderJourneyTab);
+    if (document.getElementById('tab-idcard')?.classList.contains('active')) dispatchTab('idcard', renderIdCardTab);
   }
 
   function bindEvents() {
@@ -2741,6 +2773,12 @@
         if (res.ok) RPG_UI.shopPreview = {};
         return;
       }
+      const shardBtn = e.target.closest('[data-rpg-redeem-shards]');
+      if (shardBtn) {
+        const res = await rpgPost('rpg-redeem-shards', { item_id: shardBtn.getAttribute('data-rpg-redeem-shards') });
+        if (res.ok) RPG_UI.shopPreview = {};
+        return;
+      }
       const equipBtn = e.target.closest('[data-rpg-equip]');
       if (equipBtn) {
         const res = await rpgPost('rpg-equip', { item_id: equipBtn.getAttribute('data-rpg-equip') });
@@ -2825,7 +2863,10 @@
       if (openScannedBtn) {
         const zModal = document.getElementById('pk9-qr-zoom-modal');
         if (zModal) zModal.remove();
-        openScannedStudentCardModal({
+        const opener = (window.PK9_RPG && typeof window.PK9_RPG.openScannedStudentCard === 'function')
+          ? window.PK9_RPG.openScannedStudentCard
+          : openScannedStudentCardModal;
+        opener({
           username: openScannedBtn.getAttribute('data-card-u') || '',
           sbd: openScannedBtn.getAttribute('data-card-sbd') || '',
           name: openScannedBtn.getAttribute('data-card-name') || '',
@@ -2838,13 +2879,21 @@
         const sModal = document.getElementById('pk9-scanned-card-modal');
         if (sModal) sModal.remove();
         try {
-          if (window.location?.search && (window.location.search.includes('card=') || window.location.search.includes('student_card='))) {
-            const url = new URL(window.location.href);
+          const url = new URL(window.location.href);
+          let changed = false;
+          if (/^\/u\/[^/?#]+/i.test(url.pathname)) {
+            url.pathname = '/';
+            changed = true;
+          }
+          if (url.search && (url.search.includes('card=') || url.search.includes('student_card='))) {
             url.searchParams.delete('card');
             url.searchParams.delete('student_card');
             url.searchParams.delete('sbd');
             url.searchParams.delete('n');
             url.searchParams.delete('g');
+            changed = true;
+          }
+          if (changed) {
             window.history.replaceState({}, '', url.pathname + (url.search || '') + (url.hash || ''));
           }
         } catch {}

@@ -35,9 +35,13 @@
     },
     docSearch: '',
     docSubject: 'ALL',
+    docNoteOpenId: '',
     fcDeckIdx: 0,
     fcCardIdx: 0,
     fcFlipped: false,
+    fcCardShownAt: Date.now(),
+    fcMasteredCountSession: 0,
+    fcMicroCheckItemId: '',
     fcFilter: 'ALL', // 'ALL' | 'new' | 'learning' | 'mastered' | 'star'
     pomoSec: 25 * 60,
     pomoRunning: false,
@@ -716,7 +720,12 @@
     }
     APP.lbLoading = true;
     try {
-      const lbResp = await fetch(`/api/dashboard?action=leaderboard&_=${Date.now()}`, {
+      const qs = new URLSearchParams({ action: 'leaderboard', _: String(Date.now()) });
+      const gFilter = opts.grade || window.PK9_BXH_ECOSYSTEM?.UI?.grade || '';
+      const dFilter = opts.division || window.PK9_BXH_ECOSYSTEM?.UI?.division || '';
+      if (gFilter) qs.set('grade', gFilter);
+      if (dFilter) qs.set('division', dFilter);
+      const lbResp = await fetch(`/api/dashboard?${qs.toString()}`, {
         credentials: 'include',
         cache: 'no-store'
       });
@@ -729,6 +738,7 @@
         const lbJson = await lbResp.json();
         if (lbJson?.ok && !lbJson.locked) {
           APP.lbData = {
+            ...lbJson,
             locked: false,
             week_key: lbJson.week_key || '',
             total_students: Number(lbJson.total_students || 0),
@@ -839,6 +849,7 @@
   window.PK9_REFRESH_AUTH_AND_LEADERBOARD = fetchAuthAndLeaderboard;
   window.PK9_GET_USER = () => (APP.user ? { ...APP.user } : null);
   window.PK9_GET_CSRF = () => APP.csrf;
+  window.PK9_GET_LB_DATA = () => APP.lbData;
   window.PK9_OPEN_AUTH = mode => openAuthModal(mode);
   window.PK9_ON_RPG_SYNC = (rpg, extra = {}) => {
     if (APP.user && rpg) APP.user.rpg = rpg;
@@ -892,7 +903,6 @@
     }
 
     const xpVal = APP.user ? Math.max(0, Number(APP.user.xp ?? 0)) : 0;
-    const wkXpVal = APP.user ? Math.max(0, Number(APP.user.weekly_xp ?? 0)) : 0;
     const levelVal = Math.floor(xpVal / 100) + 1;
     const streakVal = APP.user ? Math.max(1, Number(APP.user.streak || 1)) : 0;
 
@@ -3339,6 +3349,10 @@
   // TAB 4: WEEKLY & ALL-TIME TOP LEADERBOARD
   // ==========================================================================
   function renderLeaderboardTab() {
+    if (window.PK9_BXH_ECOSYSTEM && typeof window.PK9_BXH_ECOSYSTEM.renderLeaderboardTab === 'function') {
+      window.PK9_BXH_ECOSYSTEM.renderLeaderboardTab();
+      return;
+    }
     const root = document.getElementById('tab-leaderboard');
     if (!root) return;
 
@@ -3692,12 +3706,16 @@
       if (!q) return true;
       return `${d.title} ${d.subject} ${d.kind} ${d.source}`.toLowerCase().includes(q);
     });
-    return filtered.map(d => `
+    return filtered.map(d => {
+      const noteOpen = APP.docNoteOpenId === d.id;
+      const savedDocNote = APP.notesMap[`pdf:${d.id}`] || '';
+      return `
       <article class="pk9-exam-card">
         <div>
           <div class="pk9-exam-card-badges">
             <span class="pk9-badge pk9-badge-subj">${esc(d.subject)}</span>
             <span class="pk9-badge pk9-badge-code">${esc(d.kind)}</span>
+            ${savedDocNote ? '<span class="pk9-badge pk9-badge-verified">✓ Đã lưu ghi chú</span>' : ''}
           </div>
           <h4>${esc(d.title)}</h4>
           <div class="pk9-exam-origin">🏛️ Nguồn: ${esc(d.source)}</div>
@@ -3705,6 +3723,9 @@
         <div class="pk9-exam-actions">
           <button type="button" class="pk9-btn-exam-primary" data-open-inapp-url="${esc(d.url)}" data-open-inapp-title="${esc(d.title)}" data-open-inapp-sub="${esc(d.subject)} • ${esc(d.source)}">
             👁️ Đọc trực tiếp trong Web
+          </button>
+          <button type="button" class="pk9-btn-exam-ghost" data-pdf-toggle-note="${esc(d.id)}" style="flex:0 0 auto;padding:0.55rem 0.72rem;" title="Lưu ghi chú sau khi đọc PDF để nhận +10 ĐXH Tuần (tối đa 3 tài liệu/ngày)">
+            📝 Ghi chú (+10 ĐXH)
           </button>
           ${!isDriveFolderUrl(d.url) ? `
             <a href="${esc(toDirectDownloadUrl(d.url) || d.url)}" download target="_blank" rel="noopener" class="pk9-btn-exam-ghost" style="text-decoration:none;flex:0 0 auto;padding:0.55rem 0.78rem;" title="Tải PDF về máy">
@@ -3715,8 +3736,23 @@
             ↗
           </a>
         </div>
+        ${noteOpen ? `
+          <div style="margin-top:0.65rem;padding:0.65rem 0.75rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
+            <div style="font-size:0.74rem;font-weight:800;margin-bottom:0.35rem;color:var(--pk9-primary);">
+              📝 Ghi chú tóm tắt sau khi đọc PDF Pro (tối thiểu 10 ký tự • Nhận +10 ĐXH Tuần, tối đa 3 tài liệu/ngày):
+            </div>
+            <textarea class="pk9-input" id="pk9-pdf-note-input-${esc(d.id)}" rows="2" placeholder="Tóm tắt 1-2 ý trọng tâm bạn vừa đọc trong tài liệu này..." style="margin:0 0 0.45rem;font-size:0.78rem;">${esc(savedDocNote)}</textarea>
+            <div style="display:flex;justify-content:flex-end;gap:0.4rem;">
+              <button type="button" class="pk9-admin-btn-xs" data-pdf-toggle-note="${esc(d.id)}">Đóng</button>
+              <button type="button" class="pk9-btn-exam-primary" data-pdf-submit-note="${esc(d.id)}" style="padding:0.36rem 0.75rem;font-size:0.75rem;">
+                ✅ Xác nhận đọc & lưu (+10 ĐXH)
+              </button>
+            </div>
+          </div>
+        ` : ''}
       </article>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderDocsTab() {
@@ -4369,6 +4405,10 @@
     const safeIdx = ((APP.fcCardIdx % cards.length) + cards.length) % cards.length;
     const card = cards[safeIdx] || cards[0];
     const cardState = fcMap[card._key] || { status: 'new', star: false };
+    if (APP._fcLastRenderedKey !== card._key) {
+      APP._fcLastRenderedKey = card._key;
+      APP.fcCardShownAt = Date.now();
+    }
 
     root.innerHTML = `
       <div class="pk9-exam-hub">
@@ -4417,7 +4457,23 @@
           </div>
         </div>
 
-        <div class="pk9-fc-swipe-hint">👈 Vuốt trái / phải để đổi thẻ • Chạm vào thẻ để lật 3D</div>
+        <div class="pk9-fc-swipe-hint">👈 Vuốt trái / phải để đổi thẻ • Chạm vào thẻ để lật 3D • Đọc kỹ tối thiểu <b>6 giây/thẻ</b> để nhận <b>+8 ĐXH Tuần</b> (tối đa 20 thẻ/ngày)</div>
+
+        ${APP.fcMicroCheckItemId === card._key ? `
+          <div style="margin:0.55rem 0;padding:0.75rem 0.9rem;border-radius:0.85rem;background:rgba(245,158,11,0.14);border:1.5px solid rgba(245,158,11,0.5);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+            <div style="font-size:0.8rem;">
+              <b>🧠 Micro-Check định kỳ (mỗi 5 thẻ):</b> Bạn đã tự nhẩm lại chính xác công thức/đáp án mặt sau của thẻ này chưa?
+            </div>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+              <button type="button" class="pk9-btn-exam-primary" data-fc-micro-confirm="${esc(card._key)}" data-fc-micro-result="pass" style="padding:0.38rem 0.75rem;font-size:0.76rem;">
+                ✅ Đã nhớ chắc (+8 ĐXH)
+              </button>
+              <button type="button" class="pk9-btn-exam-ghost" data-fc-micro-confirm="${esc(card._key)}" data-fc-micro-result="fail" style="padding:0.38rem 0.75rem;font-size:0.76rem;">
+                🔄 Chưa chắc (Chuyển SRS 0 ĐXH)
+              </button>
+            </div>
+          </div>
+        ` : ''}
 
         <div class="pk9-fc-controls">
           <button type="button" class="pk9-btn-exam-ghost" data-fc-prev="1">← Thẻ trước</button>
@@ -4428,8 +4484,8 @@
           <button type="button" class="pk9-btn-exam-ghost" data-fc-learning="${esc(card._key)}">
             📖 Đang học
           </button>
-          <button type="button" class="pk9-btn-exam-primary" data-fc-mastered="${esc(card._key)}" style="max-width:240px;">
-            ✅ Đã thuộc thẻ này (+20 XP)
+          <button type="button" class="pk9-btn-exam-primary" data-fc-mastered="${esc(card._key)}" style="max-width:260px;">
+            ✅ Đã thuộc thẻ này (+8 ĐXH · +20 XP)
           </button>
           <button type="button" class="pk9-btn-exam-ghost" data-fc-next="1">Thẻ tiếp →</button>
         </div>
@@ -4564,6 +4620,9 @@
         </div>
       </div>
     `;
+    if (window.PK9_BXH_ECOSYSTEM && typeof window.PK9_BXH_ECOSYSTEM.enhancePlannerTabDom === 'function') {
+      window.PK9_BXH_ECOSYSTEM.enhancePlannerTabDom();
+    }
   }
 
   // ==========================================================================
@@ -4580,18 +4639,6 @@
       }
     } catch {}
     return { provider: 'gemini', key: '' };
-  }
-
-  function saveAiClientKeyConfig(provider, key) {
-    try {
-      const cleanKey = String(key || '').trim();
-      const cleanProv = String(provider || 'gemini').toLowerCase();
-      if (!cleanKey) {
-        localStorage.removeItem('pk9_ai_client_cfg');
-      } else {
-        localStorage.setItem('pk9_ai_client_cfg', JSON.stringify({ provider: cleanProv, key: cleanKey }));
-      }
-    } catch {}
   }
 
   async function refreshAiStatusBadge() {
@@ -4841,6 +4888,9 @@
       setAiPendingImage(APP.aiPendingImageData, APP.aiPendingImageName || 'Ảnh bài tập đã chọn');
     }
     refreshAiStatusBadge();
+    if (window.PK9_BXH_ECOSYSTEM && typeof window.PK9_BXH_ECOSYSTEM.enhanceAiTabDom === 'function') {
+      window.PK9_BXH_ECOSYSTEM.enhanceAiTabDom();
+    }
   }
 
   // ==========================================================================
@@ -7240,10 +7290,10 @@
                 if (typeof recData.xp_total === 'number') APP.user.xp = recData.xp_total;
                 if (typeof recData.weekly_xp === 'number') APP.user.weekly_xp = recData.weekly_xp;
                 if (recData.rpg) APP.user.rpg = recData.rpg;
-                if (recData.xp_earned > 0) {
-                  earnedMsg = `🎉 Đã hoàn thành bài giảng! +${recData.xp_earned} XP (+${recData.gold_earned || 0} vàng) lên BXH!`;
+                if (recData.xp_earned > 0 || recData.dxh_earned > 0) {
+                  earnedMsg = `🎉 Đã hoàn thành bài giảng!${recData.dxh_earned > 0 ? ` +${recData.dxh_earned} ĐXH Tuần ·` : ''} +${recData.xp_earned || 0} XP (+${recData.gold_earned || 0} vàng) lên BXH!`;
                 } else if (recData.xp_earned === 0) {
-                  earnedMsg = '✅ Đã đánh dấu hoàn thành bài giảng (đã nhận XP trước đó).';
+                  earnedMsg = recData.dxh_note || '✅ Đã đánh dấu hoàn thành bài giảng (đã nhận XP trước đó).';
                 }
               }
             } catch {}
@@ -7434,6 +7484,64 @@
         return;
       }
 
+      const pdfToggleBtn = e.target.closest('[data-pdf-toggle-note]');
+      if (pdfToggleBtn) {
+        const docId = pdfToggleBtn.getAttribute('data-pdf-toggle-note') || '';
+        APP.docNoteOpenId = APP.docNoteOpenId === docId ? '' : docId;
+        const grid = document.getElementById('pk9-doc-cards-grid');
+        if (grid) grid.innerHTML = buildDocsCardsHtml();
+        return;
+      }
+
+      const pdfSubmitBtn = e.target.closest('[data-pdf-submit-note]');
+      if (pdfSubmitBtn) {
+        const docId = pdfSubmitBtn.getAttribute('data-pdf-submit-note') || '';
+        const inputEl = document.getElementById(`pk9-pdf-note-input-${docId}`);
+        const noteText = String(inputEl?.value || '').trim();
+        if (noteText.length < 10) {
+          toast('⚠️ Vui lòng nhập ghi chú tóm tắt tối thiểu 10 ký tự có nghĩa để xác nhận đọc PDF Pro!', 'warning');
+          return;
+        }
+        APP.notesMap[`pdf:${docId}`] = noteText;
+        saveLocalStudyState();
+        APP.docNoteOpenId = '';
+        if (APP.user) {
+          fetch('/api/dashboard?action=record-study', {
+            method: 'POST',
+            credentials: 'include',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+            body: JSON.stringify({ type: 'pdf', item_id: docId, read_ratio: 1, note_saved: true, note_text: noteText })
+          })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(async ({ ok, d }) => {
+              if (ok && d?.ok) {
+                if (typeof d.xp_total === 'number') APP.user.xp = d.xp_total;
+                if (typeof d.weekly_xp === 'number') APP.user.weekly_xp = d.weekly_xp;
+                if (d.rpg) {
+                  APP.user.rpg = d.rpg;
+                  window.PK9_RPG_STATE = d.rpg;
+                }
+                if (d.dxh_earned > 0 || d.xp_earned > 0) {
+                  toast(`📚 Đã xác nhận đọc PDF Pro! +${d.dxh_earned || 0} ĐXH Tuần · +${d.xp_earned || 0} XP · +${d.gold_earned || 0} Vàng`, 'success');
+                } else {
+                  toast(d.dxh_note || '📝 Đã lưu ghi chú PDF Pro thành công!', 'info');
+                }
+                await fetchAuthAndLeaderboard();
+                updateHeaderAuthUI();
+              } else {
+                toast(d?.error || 'Không thể đồng bộ ghi chú PDF lúc này.', 'warning');
+              }
+            })
+            .catch(() => toast('📝 Đã lưu ghi chú cục bộ.', 'info'));
+        } else {
+          toast('📝 Đã lưu ghi chú PDF cục bộ. Đăng nhập để nhận +10 ĐXH Tuần!', 'info');
+        }
+        const grid = document.getElementById('pk9-doc-cards-grid');
+        if (grid) grid.innerHTML = buildDocsCardsHtml();
+        return;
+      }
+
       const fcDeckBtn = e.target.closest('[data-fc-deck]');
       if (fcDeckBtn) {
         APP.fcDeckIdx = Number(fcDeckBtn.getAttribute('data-fc-deck'));
@@ -7502,49 +7610,89 @@
         return;
       }
 
+      const submitFlashcardMastery = (itemId, { microFailed = false, viewSec = 6 } = {}) => {
+        APP.fcMicroCheckItemId = '';
+        if (!APP.user) {
+          if (APP.fcFilter !== 'new' && APP.fcFilter !== 'learning') APP.fcCardIdx += 1;
+          APP.fcFlipped = false;
+          APP.fcCardShownAt = Date.now();
+          updateFlashcardItemState(itemId, { status: microFailed ? 'learning' : 'mastered' }, { skipServerSync: true });
+          renderFlashcardsTab();
+          toast('✅ Đã ghi nhớ thẻ cục bộ (Chế độ Khách). Đăng nhập để nhận +8 ĐXH Tuần & +20 XP lên BXH!', 'info');
+          return;
+        }
+        fetch('/api/dashboard?action=record-study', {
+          method: 'POST',
+          credentials: 'include',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
+          body: JSON.stringify({
+            type: 'flashcard',
+            item_id: itemId,
+            view_sec: viewSec,
+            micro_check_passed: !microFailed,
+            micro_check_failed: microFailed
+          })
+        })
+          .then(r => r.json().then(d => ({ ok: r.ok, d })))
+          .then(async ({ ok, d }) => {
+            if (ok && d?.ok) {
+              if (typeof d.xp_total === 'number') APP.user.xp = d.xp_total;
+              if (typeof d.weekly_xp === 'number') APP.user.weekly_xp = d.weekly_xp;
+              if (d.rpg) {
+                APP.user.rpg = d.rpg;
+                window.PK9_RPG_STATE = d.rpg;
+              }
+              if (microFailed) {
+                updateFlashcardItemState(itemId, { status: 'learning' }, { skipServerSync: true });
+                toast(d.dxh_note || '🔄 Đã đưa thẻ về SRS ôn lại (0 ĐXH).', 'info');
+                renderFlashcardsTab();
+                return;
+              }
+              if (viewSec < 6 && Number(d.dxh_earned || 0) === 0 && Number(d.xp_earned || 0) === 0 && /6 giây/i.test(String(d.dxh_note || ''))) {
+                toast(d.dxh_note || '⏳ Hãy đọc kỹ mặt trước & sau tối thiểu 6 giây trước khi đánh dấu thuộc thẻ!', 'warning');
+                renderFlashcardsTab();
+                return;
+              }
+              APP.fcMasteredCountSession = (APP.fcMasteredCountSession || 0) + 1;
+              if (APP.fcFilter !== 'new' && APP.fcFilter !== 'learning') APP.fcCardIdx += 1;
+              APP.fcFlipped = false;
+              APP.fcCardShownAt = Date.now();
+              updateFlashcardItemState(itemId, { status: 'mastered' }, { skipServerSync: true });
+              renderFlashcardsTab();
+              if (d.xp_earned > 0 || d.dxh_earned > 0) {
+                toast(`⚡ Đã thuộc thẻ! +${d.dxh_earned || 0} ĐXH Tuần · +${d.xp_earned || 0} XP · +${d.gold_earned || 0} Vàng`, 'success');
+              } else {
+                toast(d.dxh_note || '⚡ Đã ghi nhớ thẻ công thức (SRS ôn lại trong ngày: 0 ĐXH)!', 'info');
+              }
+              await fetchAuthAndLeaderboard();
+              updateHeaderAuthUI();
+            }
+          })
+          .catch(() => {});
+      };
+
+      const fcMicroBtn = e.target.closest('[data-fc-micro-confirm]');
+      if (fcMicroBtn) {
+        const itemId = fcMicroBtn.getAttribute('data-fc-micro-confirm');
+        const isFail = fcMicroBtn.getAttribute('data-fc-micro-result') === 'fail';
+        const viewSec = Math.max(0, Math.round((Date.now() - (APP.fcCardShownAt || Date.now())) / 1000));
+        submitFlashcardMastery(itemId, { microFailed: isFail, viewSec });
+        return;
+      }
+
       const fcMastered = e.target.closest('[data-fc-mastered]');
       if (fcMastered) {
         const itemId = fcMastered.getAttribute('data-fc-mastered');
-        if (APP.fcFilter !== 'new' && APP.fcFilter !== 'learning') {
-          APP.fcCardIdx += 1;
+        const viewSec = Math.max(0, Math.round((Date.now() - (APP.fcCardShownAt || Date.now())) / 1000));
+        // Cứ mỗi 5 thẻ thuộc liên tiếp bật Micro-Check 1-chạm trực quan (không chặn alert/confirm)
+        if (APP.user && ((APP.fcMasteredCountSession || 0) + 1) % 5 === 0 && APP.fcMicroCheckItemId !== itemId) {
+          APP.fcMicroCheckItemId = itemId;
+          renderFlashcardsTab();
+          toast('🧠 Micro-Check mỗi 5 thẻ: Hãy xác nhận bạn thực sự thuộc thẻ này bên trên!', 'info');
+          return;
         }
-        APP.fcFlipped = false;
-        // Skip duplicate rpg-settings POST when logged in because record-study atomically saves flashcard mastery + XP
-        updateFlashcardItemState(itemId, { status: 'mastered' }, { skipServerSync: Boolean(APP.user) });
-        renderFlashcardsTab();
-        let fcMsg = APP.user
-          ? '⚡ Đã ghi nhớ thẻ công thức!'
-          : '✅ Đã ghi nhớ thẻ cục bộ (Chế độ Khách). Đăng nhập để nhận +20 XP lên BXH!';
-        if (APP.user) {
-          fetch('/api/dashboard?action=record-study', {
-            method: 'POST',
-            credentials: 'include',
-            cache: 'no-store',
-            headers: { 'Content-Type': 'application/json', 'x-csrf-token': APP.csrf },
-            body: JSON.stringify({ type: 'flashcard', item_id: itemId })
-          })
-            .then(r => r.json().then(d => ({ ok: r.ok, d })))
-            .then(async ({ ok, d }) => {
-              if (ok && d?.ok) {
-                if (typeof d.xp_total === 'number') APP.user.xp = d.xp_total;
-                if (typeof d.weekly_xp === 'number') APP.user.weekly_xp = d.weekly_xp;
-                if (d.rpg) {
-                  APP.user.rpg = d.rpg;
-                  window.PK9_RPG_STATE = d.rpg;
-                }
-                if (d.xp_earned > 0) {
-                  toast(`⚡ Đã ghi nhớ thẻ! +${d.xp_earned} XP · +${d.gold_earned || 0} Vàng lên BXH!`, 'success');
-                } else {
-                  toast('⚡ Đã ghi nhớ thẻ công thức!', 'info');
-                }
-                await fetchAuthAndLeaderboard();
-                updateHeaderAuthUI();
-              }
-            })
-            .catch(() => {});
-        } else {
-          toast(fcMsg, 'info');
-        }
+        submitFlashcardMastery(itemId, { microFailed: false, viewSec });
         return;
       }
 
@@ -7572,8 +7720,11 @@
             if (APP.pomoSec === 0) {
               clearInterval(APP.pomoTimer);
               APP.pomoRunning = false;
-              toast('🍅 Hoàn thành phiên tập trung Pomodoro!', 'success');
+              toast('🍅 Hoàn thành phiên tập trung Pomodoro! Hãy nhập Check-in 1 dòng bên dưới để nhận ĐXH Tuần & +15% Cộng Hưởng!', 'success');
               renderPlannerTab();
+              setTimeout(() => {
+                document.getElementById('pk9-r4-pomo-note')?.focus();
+              }, 120);
             }
           }, 1000);
         } else if (APP.pomoTimer) {
@@ -8558,6 +8709,12 @@
         const mode = form.getAttribute('data-mode') || 'register';
         const fd = new FormData(form);
         const payload = Object.fromEntries(fd.entries());
+        if (mode === 'register') {
+          try {
+            const savedRef = localStorage.getItem('pk9_qr_referral_sbd');
+            if (savedRef && !payload.referred_by) payload.referred_by = savedRef;
+          } catch {}
+        }
         try {
           const resp = await fetch(`/api/auth?action=${mode}`, {
             method: 'POST',
@@ -9414,6 +9571,9 @@
         window.PK9_EXAM_CENTER.openDuelByCode(duelCode);
       } else if (tabParam && ['home', 'lectures', 'exams', 'leaderboard', 'docs', 'khoa-chui', 'archive', 'flashcards', 'community', 'planner', 'ai', 'missions', 'journey', 'shop', 'periodic', 'idcard'].includes(tabParam)) {
         switchTab(tabParam, { force: true });
+      }
+      if (window.PK9_BXH_ECOSYSTEM && typeof window.PK9_BXH_ECOSYSTEM.bootFromUrlParams === 'function') {
+        window.PK9_BXH_ECOSYSTEM.bootFromUrlParams();
       }
     } catch {}
 

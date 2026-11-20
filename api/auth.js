@@ -6,7 +6,7 @@ const {
   isAdminUsername, isAdminAccount, rejectIfBanned, getBanRecord, getRequestVisitorId
 } = require('../lib/auth');
 const crypto = require('crypto');
-const { ensureUserRpgState } = require('../lib/rpg');
+const { ensureUserRpgState, bxhEngine } = require('../lib/rpg');
 
 async function ensureDefaultAdmin(redis) {
   try {
@@ -330,6 +330,8 @@ module.exports = async function handler(req, res) {
         });
       }
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Họ và tên cần từ 2 đến 80 ký tự.' });
+      const nameCheck = bxhEngine.validateProactiveContent(displayName, 'Họ và tên hiển thị');
+      if (!nameCheck.ok) return sendJson(res, 422, { ok: false, message: nameCheck.message });
       if (password.length < 6 || password.length > 128) return sendJson(res, 422, { ok: false, message: 'Mật khẩu cần từ 6 đến 128 ký tự.' });
       if (recoveryPin && (recoveryPin.length < 4 || recoveryPin.length > 32)) {
         return sendJson(res, 422, { ok: false, message: 'Mã bảo mật khôi phục cần từ 4 đến 32 ký tự.' });
@@ -362,6 +364,11 @@ module.exports = async function handler(req, res) {
         avatar_url: null
       };
       ensureUserRpgState(user, now);
+      const rawRef = String(body.referred_by || body.ref || '').trim();
+      if (rawRef && normalizeUsername(rawRef) !== username) {
+        user.rpg.social.referral.referred_by = rawRef.slice(0, 48);
+        user.rpg.social.referral.signup_ip = getClientIp(req);
+      }
       const created = await redis.set(`${USER_PREFIX}${username}`, user, { nx: true });
       if (!created) return sendJson(res, 409, { ok: false, message: 'Tên đăng nhập đã tồn tại.' });
       try { await redis.sadd('phuc:users:index', username); } catch {}
@@ -515,6 +522,10 @@ module.exports = async function handler(req, res) {
         : String(user.settings?.recovery_email || '');
       const recoveryPin = String(body.recovery_pin || '').trim();
       if (displayName.length < 2 || displayName.length > 80) return sendJson(res, 422, { ok: false, message: 'Tên hiển thị cần từ 2 đến 80 ký tự.', csrf });
+      const nameCheck = bxhEngine.validateProactiveContent(displayName, 'Tên hiển thị');
+      if (!nameCheck.ok) return sendJson(res, 422, { ok: false, message: nameCheck.message, csrf });
+      const bioCheck = bxhEngine.validateProactiveContent(bio, 'Giới thiệu ngắn');
+      if (!bioCheck.ok) return sendJson(res, 422, { ok: false, message: bioCheck.message, csrf });
       if (!['2K9', '2K8', 'DGNL', '2K11', '2K12'].includes(preferred)) return sendJson(res, 422, { ok: false, message: 'Khối ưu tiên không hợp lệ.', csrf });
       if (recoveryPin && (recoveryPin.length < 4 || recoveryPin.length > 32)) {
         return sendJson(res, 422, { ok: false, message: 'Mã bảo mật khôi phục cần từ 4 đến 32 ký tự.', csrf });

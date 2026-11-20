@@ -1,7 +1,8 @@
 const { getRedis } = require('../lib/redis');
-const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, sendAdminGuardError, normalizeUsername, isAdminUsername, isAdminAccount, getUserByUsername, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
+const { USER_PREFIX, getSession, getCsrf, requireCsrf, sendJson, sendAdminGuardError, normalizeUsername, isAdminAccount, rejectIfBanned, requireAdminOrBanIntruder } = require('../lib/auth');
 const { normalizeScoring, questionNeedsReview, validateExamStructure } = require('../lib/exam-utils');
 const {
+  bxhEngine,
   vnWeekKey,
   ensureUserRpgState,
   buildPublicRpgSnapshot,
@@ -47,12 +48,6 @@ function computeExamBadges(user, bestScore, attempts) {
 const key = (...p) => 'phuc:exam:' + p.join(':');
 const clean = (v, max = 400) => String(v ?? '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, max);
 
-async function isAdminSession(session) {
-  if (!session?.username) return false;
-  const u = await getUserByUsername(session.username);
-  if (!u && isAdminUsername(session.username)) return true;
-  return isAdminAccount(u);
-}
 function csrfOk(req, session) {
   return !session || String(req.headers['x-csrf-token'] || '') === String(session.csrf || '');
 }
@@ -729,7 +724,8 @@ async function handler(req, res) {
       }
 
       if (action === 'duel-submit') {
-        const subOut = await arena.submitDuelRoom(r, body.code, uProfile, body.answers || {}, body.time_sec || 60);
+        const rawDuelTime = body.time_sec !== undefined && body.time_sec !== null ? body.time_sec : 60;
+        const subOut = await arena.submitDuelRoom(r, body.code, uProfile, body.answers || {}, rawDuelTime);
         if (!subOut.ok) return sendJson(res, subOut.status || 400, { ok: false, message: subOut.message });
         return sendJson(res, 200, {
           ok: true,
@@ -748,6 +744,20 @@ async function handler(req, res) {
     if (action === 'start') {
       const e = await getExam(r, clean(body.id || body.exam_id, 200));
       if (!e || e.published === false) return sendJson(res, 404, { ok: false, message: 'Đề chưa được phát hành.' });
+      let crossGradeWarning = null;
+      let outsidePrimaryGrade = false;
+      if (currentUser !== 'guest' && !isGuestName(currentUser)) {
+        const uProfile = await redisJsonGet(r, `${USER_PREFIX}${normalizeUsername(currentUser)}`);
+        if (uProfile) {
+          ensureUserRpgState(uProfile);
+          const bxh = uProfile.rpg?.bxh;
+          const examGrade = bxhEngine.normalizeGrade(e.grade || e.program || bxh?.primary_grade || '2K9', bxh?.primary_grade || '2K9');
+          if (bxh?.primary_grade_locked && examGrade !== bxh.primary_grade) {
+            outsidePrimaryGrade = true;
+            crossGradeWarning = `Đề này thuộc hệ ${examGrade} (khác Hệ Chính Tuần ${bxh.primary_grade} của bạn) — kết quả sẽ tính 0 ĐXH Tuần cho BXH (vẫn cộng EXP & lưu kết quả cá nhân).`;
+          }
+        }
+      }
       const attemptId = crypto.randomUUID();
       const now = Date.now();
       const a = {
@@ -767,7 +777,9 @@ async function handler(req, res) {
         exam: publicExam(e),
         startedAt: now,
         expiresAt: a.expiresAt,
-        guest: currentUser === 'guest'
+        guest: currentUser === 'guest',
+        outside_primary_grade: outsidePrimaryGrade,
+        cross_grade_warning: crossGradeWarning
       });
     }
 
@@ -823,7 +835,7 @@ async function handler(req, res) {
       a.result = result;
       await r.set(key('attempt', a.id), JSON.stringify(a), { ex: 60 * 60 * 24 * 30 });
 
-      let xpEarned = 0, goldEarned = 0, diamondsEarned = 0, xpTotal = 0, weeklyXp = 0, rpgSnap = null;
+      let xpEarned = 0, goldEarned = 0, diamondsEarned = 0, dxhEarned = 0, dxhNote = '', xpTotal = 0, weeklyXp = 0, rpgSnap = null;
       const normUser = session?.username ? normalizeUsername(session.username) : '';
 
       if (normUser && !isGuestName(normUser)) {
@@ -909,13 +921,35 @@ async function handler(req, res) {
                 }
               }
               recordExamDiagnostics(uProfile, a.exam, result);
+              let matchedContest = null;
               if (body.contestId) {
                 try {
                   const allContests = await arena.listContests(r);
-                  const matchedContest = allContests.find(c => c.id === clean(body.contestId, 80) && c.status === 'live');
-                  if (matchedContest && matchedContest.examId === a.exam.id) {
-                    const elapsedSec = Math.max(10, Math.round((a.submittedAt - Number(a.startedAt || (a.submittedAt - 60000))) / 1000));
-                    await arena.recordContestSubmission(r, matchedContest.id, uProfile, result, elapsedSec);
+                  matchedContest = allContests.find(c => c.id === clean(body.contestId, 80) && c.status === 'live' && c.examId === a.exam.id) || null;
+                } catch {}
+              }
+              const willAwardContestDxh = Boolean(matchedContest && !isAdm && !uProfile.rpg?.bxh?.weekly_stats?.contest_9plus_done);
+              let passedExamGate = true;
+              if (!isAdm) {
+                const elapsedSecForGate = Math.max(0, Math.round((a.submittedAt - Number(a.startedAt || (a.submittedAt - 1800000))) / 1000));
+                const dxhRes = bxhEngine.recordExamDxhAndStats(
+                  uProfile,
+                  a.exam,
+                  { ...result, elapsed_sec: elapsedSecForGate },
+                  new Date(),
+                  { skipNormalDxh: willAwardContestDxh }
+                );
+                passedExamGate = dxhRes?.passedQualityGate !== false;
+                dxhEarned = Number(dxhRes?.dxhGranted || 0);
+                if (dxhRes?.message) dxhNote = dxhRes.message;
+              }
+              if (matchedContest) {
+                try {
+                  const elapsedSec = Math.max(1, Math.round((a.submittedAt - Number(a.startedAt || (a.submittedAt - 60000))) / 1000));
+                  const cOut = await arena.recordContestSubmission(r, matchedContest.id, uProfile, result, elapsedSec, { passedQualityGate: passedExamGate });
+                  if (Number(cOut?.dxhGranted || 0) > 0) {
+                    dxhEarned += Number(cOut.dxhGranted);
+                    dxhNote = `🏆 Đấu Trường 9+: +${cOut.dxhGranted} ĐXH (gồm +${cOut.pctBonus} ĐXH thưởng phân vị)!`;
                   }
                 } catch {}
               }
@@ -938,6 +972,8 @@ async function handler(req, res) {
                 xp_earned: xpEarned,
                 gold_earned: goldEarned,
                 diamonds_earned: diamondsEarned,
+                dxh_earned: dxhEarned,
+                dxh_note: dxhNote,
                 recorded_by: 'exams'
               }), { ex: 60 * 60 * 24 * 365 });
             }
@@ -956,6 +992,8 @@ async function handler(req, res) {
         xp_earned: xpEarned,
         gold_earned: goldEarned,
         diamonds_earned: diamondsEarned,
+        dxh_earned: dxhEarned,
+        dxh_note: dxhNote,
         xp_total: xpTotal,
         weekly_xp: weeklyXp,
         rpg: rpgSnap

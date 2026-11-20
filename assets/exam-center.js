@@ -82,6 +82,9 @@
     xpAwarded: 0,
     goldAwarded: 0,
     diamondsAwarded: 0,
+    dxhAwarded: 0,
+    dxhNote: '',
+    crossGradeWarning: '',
     contests: [],
     openDuels: [],
     contestCountdownTimer: null,
@@ -697,6 +700,7 @@
     let fullExam = findFullSeedExam(examId);
     const draft = readExamDraft(examId);
     let attemptId = draft?.attemptId || `local-${examId}-${Date.now()}`;
+    let crossGradeWarning = '';
 
     try {
       const resp = await fetch('/api/exams?action=start', {
@@ -721,6 +725,9 @@
             }))
           };
           attemptId = data.attemptId || data.attempt_id || attemptId;
+          if (data.outside_primary_grade && data.cross_grade_warning) {
+            crossGradeWarning = String(data.cross_grade_warning);
+          }
         }
       }
     } catch {}
@@ -743,6 +750,9 @@
     STATE.activeExam = fullExam;
     STATE.activeContestId = contestId || null;
     STATE.attemptId = attemptId;
+    STATE.crossGradeWarning = crossGradeWarning;
+    STATE.dxhAwarded = 0;
+    STATE.dxhNote = '';
     STATE.answers = draft?.answers || {};
     STATE.flagged = draft?.flagged || {};
     STATE.currentQIdx = Math.max(0, Math.min((fullExam.questions || []).length - 1, Number(draft?.currentQIdx || 0)));
@@ -759,7 +769,9 @@
     renderExamCenter();
     startTimer();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (hadProgress && window.PK9_TOAST) {
+    if (crossGradeWarning && window.PK9_TOAST) {
+      window.PK9_TOAST(`⚠️ ${crossGradeWarning}`, 'warning');
+    } else if (hadProgress && window.PK9_TOAST) {
       window.PK9_TOAST('🔄 Đã khôi phục bài làm dở, câu đánh dấu & thời gian còn lại!', 'info');
     }
   }
@@ -884,6 +896,10 @@
     let xpEarned = 0;
     let goldEarned = 0;
     let diamondsEarned = 0;
+    let dxhEarned = 0;
+    let dxhNote = '';
+    const elapsedSecNow = Math.max(10, Math.round((Date.now() - Number(STATE.startedAt || (Date.now() - 60000))) / 1000));
+    const answeredCountNow = (STATE.activeExam.questions || []).filter(q => isQuestionAnswered(q, STATE.answers[q.id])).length;
 
     if (isCustomWrong) {
       let resolvedNow = 0;
@@ -931,6 +947,8 @@
         if (Number(data?.xp_earned) > 0) xpEarned = Number(data.xp_earned);
         if (Number(data?.gold_earned) > 0) goldEarned = Number(data.gold_earned);
         if (Number(data?.diamonds_earned) > 0) diamondsEarned = Number(data.diamonds_earned);
+        if (Number(data?.dxh_earned) > 0) dxhEarned = Number(data.dxh_earned);
+        if (data?.dxh_note) dxhNote = String(data.dxh_note);
         if (data?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
           window.PK9_APPLY_RPG_UPDATE(data.rpg, { xp: data.xp_total, weekly_xp: data.weekly_xp });
         }
@@ -954,6 +972,9 @@
             title: STATE.activeExam.title,
             subject: subjLabel(STATE.activeExam.subject),
             grade: STATE.activeExam.program?.toUpperCase() || '2K9',
+            duration: Number(STATE.activeExam.duration || STATE.activeExam.durationMinutes || 50),
+            elapsed_sec: elapsedSecNow,
+            answered: answeredCountNow,
             score: graded.score,
             correct: graded.correct,
             total_questions: graded.total,
@@ -967,6 +988,8 @@
           if (Number(recData?.xp_earned) > 0) xpEarned = Number(recData.xp_earned);
           if (Number(recData?.gold_earned) > 0) goldEarned = Number(recData.gold_earned);
           if (Number(recData?.diamonds_earned) > 0) diamondsEarned = Number(recData.diamonds_earned);
+          if (Number(recData?.dxh_earned) > 0) dxhEarned = Number(recData.dxh_earned);
+          if (recData?.dxh_note && !dxhNote) dxhNote = String(recData.dxh_note);
           if (recData?.rpg && typeof window.PK9_APPLY_RPG_UPDATE === 'function') {
             window.PK9_APPLY_RPG_UPDATE(recData.rpg, { xp: recData.xp_total, weekly_xp: recData.weekly_xp });
           }
@@ -1001,17 +1024,20 @@
     STATE.xpAwarded = xpEarned;
     STATE.goldAwarded = goldEarned;
     STATE.diamondsAwarded = diamondsEarned;
+    STATE.dxhAwarded = dxhEarned;
+    STATE.dxhNote = dxhNote;
     STATE.activeContestId = null;
     STATE.view = 'result';
     renderExamCenter();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.PK9_TOAST) {
       const rewardStr = [
+        dxhEarned ? `+${dxhEarned} ĐXH Tuần` : '',
         xpEarned ? `+${xpEarned} XP` : '',
         goldEarned ? `+${goldEarned} Vàng` : '',
         diamondsEarned ? `+${diamondsEarned} 💎` : ''
       ].filter(Boolean).join(' · ');
-      window.PK9_TOAST(`Đã chấm bài hoàn tất: ${Number(graded.score || 0).toFixed(2)}/10 điểm!${rewardStr ? ` (${rewardStr})` : ''}`, 'success');
+      window.PK9_TOAST(`Đã chấm bài hoàn tất: ${Number(graded.score || 0).toFixed(2)}/10 điểm!${rewardStr ? ` (${rewardStr})` : ''}${!dxhEarned && dxhNote ? ` — ${dxhNote}` : ''}`, 'success');
     }
   }
 
@@ -1333,11 +1359,11 @@
           ${entries.length ? `
             <div style="display:flex;flex-direction:column;gap:0.45rem;">
               ${entries.slice(0, 30).map((r, i) => `
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.65rem;padding:0.6rem 0.85rem;border-radius:0.8rem;background:var(--pk9-surface-2,#f8fafc);border:1px solid var(--pk9-border,#e2e8f0);">
+                <div class="pk9-clickable-profile" data-inspect-profile="1" data-profile-u="${esc(r.username || '')}" title="Bấm để Soi Hồ Sơ Học Tập Công Khai" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:0.65rem;padding:0.6rem 0.85rem;border-radius:0.8rem;background:var(--pk9-surface-2,#f8fafc);border:1px solid var(--pk9-border,#e2e8f0);">
                   <div style="display:flex;align-items:center;gap:0.6rem;min-width:0;">
                     <span style="font-weight:900;font-size:0.95rem;width:28px;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</span>
                     <div style="min-width:0;">
-                      <div style="font-weight:800;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.displayName || r.username)}</div>
+                      <div style="font-weight:800;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.displayName || r.username)} <span style="font-size:0.68rem;color:#38bdf8;font-weight:800;">🔍 Soi</span></div>
                       <div style="font-size:0.74rem;color:var(--pk9-text-muted,#64748b);">Đúng ${r.correct}/${r.total} câu • Thời gian ${formatClock(r.timeSec || 60)}</div>
                     </div>
                   </div>
@@ -1379,7 +1405,7 @@
       <div class="pk9-diag-card" style="display:flex;align-items:center;justify-content:space-between;gap:0.85rem;flex-wrap:wrap;">
         <div>
           <h4 style="margin:0 0 0.25rem;font-size:1.02rem;font-weight:900;">❌ Ngân Hàng "Câu Sai Của Riêng Tôi" (${list.length} câu cần vá)</h4>
-          <p style="margin:0;font-size:0.83rem;color:var(--pk9-text-muted);">Hệ thống tự gom câu sai từ các đề thi Sở/Bộ. Làm đúng lại sẽ được cộng <b>+8 🪙 Vàng & +5 ⚡ EXP</b> mỗi câu!</p>
+          <p style="margin:0;font-size:0.83rem;color:var(--pk9-text-muted);">Hệ thống tự gom câu sai từ các đề thi Sở/Bộ. Làm đúng lại sẽ được cộng <b>+8 🪙 Vàng & +5 ⚡ EXP</b> mỗi câu (tối đa <b>15 câu/ngày = 120 🪙</b>)!</p>
         </div>
         <button type="button" class="pk9-btn-exam-primary" data-practice-wrong-all="1" ${list.length ? '' : 'disabled'}>
           ⚡ Luyện lại ${Math.min(25, list.length)} câu sai ngay
@@ -1536,7 +1562,7 @@
             </div>
             <div style="text-align:right;">
               <div style="font-size:0.72rem;font-weight:800;color:#38bdf8;">ĐỐI THỦ • ${opp && room.winner?.username === opp.username ? '👑 NGƯỜI THẮNG' : ''}</div>
-              <div style="font-size:1.15rem;font-weight:900;margin:0.15rem 0;">${opp ? esc(opp.displayName || opp.username) : '⏳ Đang chờ bạn bè vào...'}</div>
+              <div style="font-size:1.15rem;font-weight:900;margin:0.15rem 0;" ${opp ? `class="pk9-clickable-profile" data-inspect-profile="1" data-profile-u="${esc(opp.username || '')}" title="Bấm để Soi Hồ Sơ Đối Thủ" style="cursor:pointer;"` : ''}>${opp ? `${esc(opp.displayName || opp.username)} <span style="font-size:0.72rem;color:#38bdf8;">🔍</span>` : '⏳ Đang chờ bạn bè vào...'}</div>
               <div style="font-size:0.88rem;color:#e2e8f0;font-weight:700;">
                 ${!opp ? `Gửi mã ${esc(room.code)} để đối thủ vào đấu` : opp.status === 'submitted' ? `${opp.score} điểm • Đúng ${opp.correct}/${qs.length} (${formatClock(opp.timeSec || 0)})` : '⏳ Đối thủ đang làm bài...'}
               </div>
@@ -1546,7 +1572,7 @@
           <div class="pk9-diag-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.65rem;">
             <div>
               <b>${bothDone ? (room.winner?.type === 'draw' ? '🤝 Hai đấu thủ hòa điểm!' : `🏆 Chiến thắng thuộc về ${esc(room.winner?.displayName || '')}!`) : '📡 Đang tự động cập nhật kết quả đối thủ mỗi 3 giây...'}</b>
-              ${STATE.duelLastReward ? `<div style="font-size:0.8rem;color:#10b981;font-weight:800;margin-top:0.2rem;">🎁 Phần thưởng đã nhận: +${STATE.duelLastReward.gold || 0} 🪙 Vàng · +${STATE.duelLastReward.xp || 0} ⚡ EXP</div>` : ''}
+              ${STATE.duelLastReward ? `<div style="font-size:0.8rem;color:#10b981;font-weight:800;margin-top:0.2rem;">🎁 Phần thưởng đã nhận: +${STATE.duelLastReward.gold || 0} 🪙 Vàng · +${STATE.duelLastReward.xp || 0} ⚡ EXP${STATE.duelLastReward.dxh ? ` · +${STATE.duelLastReward.dxh} 🔥 ĐXH Tuần` : ''}${STATE.duelLastReward.early_quit_strike ? ` <span style="color:#ef4444;">(⚠️ Thoát sớm <15s: cảnh báo #${STATE.duelLastReward.early_quit_strike}/3)</span>` : ''}</div>` : ''}
             </div>
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
               <button type="button" class="pk9-btn-exam-ghost" data-copy-duel-link="${esc(shareUrl)}">📋 Chép Link Mời (${esc(room.code)})</button>
@@ -1641,7 +1667,7 @@
               <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.55rem 0.75rem;border-radius:0.75rem;background:var(--pk9-surface-2);border:1px solid var(--pk9-border);">
                 <div style="min-width:0;">
                   <div style="font-weight:800;font-size:0.84rem;">${esc(r.title)} <span class="pk9-badge pk9-badge-code">${esc(r.code)}</span></div>
-                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);">Chủ phòng: ${esc(r.hostName)} • ${r.playerCount || 1}/2 đấu thủ</div>
+                  <div style="font-size:0.74rem;color:var(--pk9-text-muted);">Chủ phòng: <span class="pk9-clickable-profile" data-inspect-profile="1" data-profile-u="${esc(r.host || '')}" style="cursor:pointer;font-weight:800;color:#2563eb;" title="Bấm để Soi Hồ Sơ Chủ Phòng">${esc(r.hostName)} 🔍</span> • ${r.playerCount || 1}/2 đấu thủ</div>
                 </div>
                 <button type="button" class="pk9-admin-btn-xs" data-duel-join-code="${esc(r.code)}" ${r.playerCount >= 2 ? 'disabled' : ''}>
                   ${r.playerCount >= 2 ? (r.status === 'finished' ? '🏁 Đã xong' : 'Đủ người') : '⚔️ Thách đấu'}
@@ -1840,6 +1866,13 @@
             </button>
           </div>
         </div>
+
+        ${STATE.crossGradeWarning ? `
+          <div style="margin:0.65rem 0;padding:0.7rem 1rem;border-radius:0.85rem;background:rgba(245,158,11,0.16);border:1.5px solid rgba(245,158,11,0.55);color:#92400e;font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:0.55rem;">
+            <span style="font-size:1.1rem;">⚠️</span>
+            <span>${esc(STATE.crossGradeWarning)}</span>
+          </div>
+        ` : ''}
 
         ${activeSec ? `
           <div class="pk9-section-lock-bar">
@@ -2130,6 +2163,9 @@
                 : (typeof window.PK9_GET_USER === 'function' && window.PK9_GET_USER())
                 ? `<span class="pk9-badge" style="background:rgba(255,255,255,0.16);color:#fff;">✓ Đã chấm điểm & lưu vào hồ sơ cá nhân</span>`
                 : `<span class="pk9-badge" style="background:rgba(245,158,11,0.25);color:#fde68a;border:1px solid rgba(251,191,36,0.45);">🔒 Chế độ Khách — Điểm không tính lên BXH</span><button type="button" class="pk9-btn-exam-primary" data-open-auth="register" style="padding:0.32rem 0.75rem;font-size:0.78rem;">✨ Đăng ký lưu điểm & mở BXH</button>`}
+              ${STATE.dxhAwarded > 0
+                ? `<span class="pk9-badge" style="background:linear-gradient(135deg,#0284c7,#0d9488);color:#fff;">🏆 +${STATE.dxhAwarded} ĐXH Tuần</span>`
+                : (STATE.dxhNote ? `<span class="pk9-badge" style="background:rgba(245,158,11,0.22);color:#fde68a;border:1px solid rgba(251,191,36,0.45);">⚠️ ${esc(STATE.dxhNote)}</span>` : '')}
               ${STATE.goldAwarded > 0 ? `<span class="pk9-badge" style="background:#f59e0b;color:#fff;">🪙 +${STATE.goldAwarded} Vàng</span>` : ''}
               ${STATE.diamondsAwarded > 0 ? `<span class="pk9-badge" style="background:#6366f1;color:#fff;">💎 +${STATE.diamondsAwarded} Kim cương</span>` : ''}
             </div>
